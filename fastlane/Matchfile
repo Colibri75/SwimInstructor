@@ -1,13 +1,13 @@
 # Separates PRIVATES Repo, das nur Zertifikate/Profile enthält – niemals das
 # App-Repo selbst, auch wenn das public ist. Beispiel:
-# git_url("https://github.com/Colibri75/SwimApp-certificates.git")
+# git_url("https://github.com/Colibri75/SwimInstructor-certificates.git")
 git_url(ENV["MATCH_GIT_URL"])
 
 storage_mode("git")
 type("appstore")
 
 app_identifier([
-  "com.steffenkellner.SwimApp",
-  "com.steffenkellner.SwimApp.watchkitapp"
+  "com.steffenkellner.SwimInstructor",
+  "com.steffenkellner.SwimInstructor.watchkitapp"
 ])
 username(ENV["APPLE_ID"])

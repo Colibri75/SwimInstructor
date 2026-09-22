@@ -1,4 +1,4 @@
-name: SwimApp
+name: SwimInstructor
 options:
   bundleIdPrefix: com.steffenkellner
   deploymentTarget:
@@ -7,44 +7,44 @@ options:
   createIntermediateGroups: true
 
 packages:
-  SwimAppCore:
-    path: Packages/SwimAppCore
+  SwimInstructorCore:
+    path: Packages/SwimInstructorCore
 
 targets:
-  SwimApp:
+  SwimInstructor:
     type: application
     platform: iOS
     sources:
       - path: App
     dependencies:
-      - package: SwimAppCore
-      - target: SwimAppWatch
+      - package: SwimInstructorCore
+      - target: SwimInstructorWatch
         embed: true
         codeSignOnCopy: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.steffenkellner.SwimApp
+        PRODUCT_BUNDLE_IDENTIFIER: com.steffenkellner.SwimInstructor
         INFOPLIST_FILE: App/Info.plist
-        CODE_SIGN_ENTITLEMENTS: App/SwimApp.entitlements
+        CODE_SIGN_ENTITLEMENTS: App/SwimInstructor.entitlements
         SWIFT_VERSION: "5.0"
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1"
     scheme:
       testTargets:
-        - SwimAppCoreTests
+        - SwimInstructorCoreTests
 
-  SwimAppWatch:
+  SwimInstructorWatch:
     type: application
     platform: watchOS
     sources:
       - path: WatchApp
     dependencies:
-      - package: SwimAppCore
+      - package: SwimInstructorCore
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.steffenkellner.SwimApp.watchkitapp
+        PRODUCT_BUNDLE_IDENTIFIER: com.steffenkellner.SwimInstructor.watchkitapp
         INFOPLIST_FILE: WatchApp/Info.plist
-        CODE_SIGN_ENTITLEMENTS: WatchApp/SwimAppWatch.entitlements
+        CODE_SIGN_ENTITLEMENTS: WatchApp/SwimInstructorWatch.entitlements
         SWIFT_VERSION: "5.0"
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "4"

@@ -2,10 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleDisplayName</key>
+	<string>SwimInstructor</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>SwimApp liest deine Schwimm-Workouts und Vitaldaten aus Health, um dir einen tagesaktuellen Trainingsplan zu erstellen.</string>
+	<string>SwimInstructor liest deine Schwimm-Workouts und Vitaldaten aus Health, um dir einen tagesaktuellen Trainingsplan zu erstellen.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>SwimApp kann zukünftig Trainingsergebnisse in Health speichern.</string>
+	<string>SwimInstructor kann zukünftig Trainingsergebnisse in Health speichern.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UIApplicationSceneManifest</key>

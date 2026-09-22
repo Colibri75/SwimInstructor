@@ -1,5 +1,5 @@
 import SwiftUI
-import SwimAppCore
+import SwimInstructorCore
 
 struct WatchTodayView: View {
     @StateObject private var healthKitManager = HealthKitManager()
@@ -8,7 +8,7 @@ struct WatchTodayView: View {
         VStack(spacing: 8) {
             Image(systemName: "figure.pool.swim")
                 .font(.title2)
-            Text("SwimApp")
+            Text("SwimInstructor")
                 .font(.headline)
             Text(healthKitManager.isAuthorized ? "Health verbunden ✓" : "Health-Zugriff nötig")
                 .font(.caption2)

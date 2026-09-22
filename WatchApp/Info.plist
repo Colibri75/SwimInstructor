@@ -5,10 +5,10 @@
 	<key>WKApplication</key>
 	<true/>
 	<key>WKCompanionAppBundleIdentifier</key>
-	<string>com.steffenkellner.SwimApp</string>
+	<string>com.steffenkellner.SwimInstructor</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>SwimApp liest deine Schwimm-Workouts und Vitaldaten aus Health, um dir direkt an der Uhr deinen Trainingsplan zu zeigen.</string>
+	<string>SwimInstructor liest deine Schwimm-Workouts und Vitaldaten aus Health, um dir direkt an der Uhr deinen Trainingsplan zu zeigen.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>SwimApp kann zukünftig Trainingsergebnisse in Health speichern.</string>
+	<string>SwimInstructor kann zukünftig Trainingsergebnisse in Health speichern.</string>
 </dict>
 </plist>

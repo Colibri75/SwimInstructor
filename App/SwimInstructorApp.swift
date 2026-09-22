@@ -1,10 +1,10 @@
 import SwiftUI
 
 @main
-struct SwimAppWatchApp: App {
+struct SwimInstructorApp: App {
     var body: some Scene {
         WindowGroup {
-            WatchTodayView()
+            ContentView()
         }
     }
 }

@@ -10,7 +10,7 @@ platform :ios do
   lane :test do
     generate_project
     run_tests(
-      scheme: "SwimApp",
+      scheme: "SwimInstructor",
       devices: ["iPhone 15"]
     )
   end
@@ -30,11 +30,11 @@ platform :ios do
 
     increment_build_number(
       build_number: (latest_testflight_build_number + 1).to_s,
-      xcodeproj: "SwimApp.xcodeproj"
+      xcodeproj: "SwimInstructor.xcodeproj"
     )
 
     build_app(
-      scheme: "SwimApp",
+      scheme: "SwimInstructor",
       export_method: "app-store"
     )
 

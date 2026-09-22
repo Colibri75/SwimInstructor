@@ -1,5 +1,5 @@
 import SwiftUI
-import SwimAppCore
+import SwimInstructorCore
 
 struct ContentView: View {
     @StateObject private var healthKitManager = HealthKitManager()
@@ -41,7 +41,7 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationTitle("SwimApp")
+            .navigationTitle("SwimInstructor")
         }
     }
 

@@ -1,6 +1,6 @@
 import XCTest
 import HealthKit
-@testable import SwimAppCore
+@testable import SwimInstructorCore
 
 final class SwimWorkoutRepositoryTests: XCTestCase {
     func testMapComputesPaceAndKeepsRawValues() {

@@ -1,5 +1,5 @@
 # Muss exakt der PRODUCT_BUNDLE_IDENTIFIER aus project.yml entsprechen.
-app_identifier("com.steffenkellner.SwimApp")
+app_identifier("com.steffenkellner.SwimInstructor")
 
 # Nur für lokale, interaktive Fastlane-Läufe relevant (z.B. einmaliges match-Setup).
 apple_id(ENV["APPLE_ID"])
