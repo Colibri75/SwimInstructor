@@ -1,0 +1,32 @@
+name: SwimApp
+options:
+  bundleIdPrefix: com.steffenkellner
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+targets:
+  SwimApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.steffenkellner.SwimApp
+        INFOPLIST_FILE: App/Info.plist
+        CODE_SIGN_ENTITLEMENTS: App/SwimApp.entitlements
+        SWIFT_VERSION: "5.0"
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1"
+    scheme:
+      testTargets:
+        - SwimAppTests
+
+  SwimAppTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests/SwimAppTests
+    dependencies:
+      - target: SwimApp

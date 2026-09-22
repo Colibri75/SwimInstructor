@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSHealthShareUsageDescription</key>
+	<string>SwimApp liest deine Schwimm-Workouts und Vitaldaten aus Health, um dir einen tagesaktuellen Trainingsplan zu erstellen.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>SwimApp kann zukünftig Trainingsergebnisse in Health speichern.</string>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
+</dict>
+</plist>
