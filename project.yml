@@ -3,7 +3,12 @@ options:
   bundleIdPrefix: com.steffenkellner
   deploymentTarget:
     iOS: "17.0"
+    watchOS: "10.0"
   createIntermediateGroups: true
+
+packages:
+  SwimAppCore:
+    path: Packages/SwimAppCore
 
 targets:
   SwimApp:
@@ -11,6 +16,11 @@ targets:
     platform: iOS
     sources:
       - path: App
+    dependencies:
+      - package: SwimAppCore
+      - target: SwimAppWatch
+        embed: true
+        codeSignOnCopy: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.steffenkellner.SwimApp
@@ -21,12 +31,21 @@ targets:
         TARGETED_DEVICE_FAMILY: "1"
     scheme:
       testTargets:
-        - SwimAppTests
+        - SwimAppCoreTests
 
-  SwimAppTests:
-    type: bundle.unit-test
-    platform: iOS
+  SwimAppWatch:
+    type: application
+    platform: watchOS
     sources:
-      - path: Tests/SwimAppTests
+      - path: WatchApp
     dependencies:
-      - target: SwimApp
+      - package: SwimAppCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.steffenkellner.SwimApp.watchkitapp
+        INFOPLIST_FILE: WatchApp/Info.plist
+        CODE_SIGN_ENTITLEMENTS: WatchApp/SwimAppWatch.entitlements
+        SWIFT_VERSION: "5.0"
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "4"
+        SKIP_INSTALL: "NO"

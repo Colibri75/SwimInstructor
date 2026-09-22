@@ -1,13 +1,31 @@
 # SwimApp
 
-iOS-App, die Schwimm-Trainingsdaten aus Apple Health liest und darauf basierend
-einen tagesaktuellen, von Claude generierten Trainingsplan erstellt. Ziel:
-3.800 m unter 60 Minuten bis zum 04.07.2027.
+iOS- und watchOS-App, die Schwimm-Trainingsdaten aus Apple Health liest und
+darauf basierend einen tagesaktuellen, von Claude generierten Trainingsplan
+erstellt. Ziel: 3.800 m unter 60 Minuten bis zum 04.07.2027.
 
 Der Code wird auf einem beliebigen Rechner (z.B. Windows) bearbeitet. Bauen,
 Signieren und Verteilen läuft vollautomatisch über GitHub Actions + Fastlane +
 TestFlight (Apple Developer Program vorausgesetzt) – ein eigener Mac ist dafür
 nicht nötig. Details siehe [CI/CD-Setup](#cicd-setup--testflight) unten.
+
+## Architektur: iOS + watchOS
+
+Die Watch-App ist eine **Companion-App**, die zusammen mit der iPhone-App im
+selben Build/derselben TestFlight-Installation ausgeliefert wird (kein
+separater Store-Eintrag, keine separate Pipeline nötig). Gemeinsame Logik
+(HealthKit-Zugriff, später Zustandsberechnung und Backend-API-Client) liegt in
+einem lokalen Swift Package `Packages/SwimAppCore`, das von beiden Targets
+genutzt wird – so entsteht kein doppelt gepflegter Code.
+
+- **iOS-App** (`App/`): vollständige UI, Dashboard, Verlauf
+- **watchOS-App** (`WatchApp/`): kompakte "Heute"-Ansicht, später Live-Workout-Tracking direkt am Handgelenk
+- **SwimAppCore** (`Packages/SwimAppCore/`): HealthKit-Zugriff, Zustandsmodell, API-Client – plattformunabhängig, eigene Test-Suite
+
+Die Watch-App fragt HealthKit **eigenständig** an und kann später auch ohne
+gekoppeltes iPhone in Reichweite mit dem Backend sprechen (watchOS-Apps können
+seit watchOS 9 direkt übers eigene WLAN/Mobilfunk ins Netz) – wichtig, weil man
+beim Schwimmen das iPhone nicht dabei hat.
 
 ## CI/CD-Setup & TestFlight
 
@@ -23,6 +41,9 @@ TestFlight-App – kein manuelles Signieren, kein eigener Mac im Alltag.
 2. **App Store Connect:** neuen App-Eintrag anlegen – Bundle-ID
    `com.steffenkellner.SwimApp` (muss exakt zu `project.yml` passen), Name z.B.
    "SwimApp", SKU frei wählbar. Kein Store-Release nötig, nur für TestFlight.
+   Die Watch-App (`com.steffenkellner.SwimApp.watchkitapp`) braucht **keinen**
+   eigenen App-Store-Connect-Eintrag – sie hängt am iOS-Eintrag und wird als
+   Teil desselben Builds mit hochgeladen.
 3. **App Store Connect API Key** erzeugen (Nutzer und Zugriff → Schlüssel →
    Rolle "App Manager"): Key-ID, Issuer-ID notieren, `.p8`-Datei herunterladen
    (nur einmal möglich!).
@@ -101,6 +122,9 @@ In Xcode:
       angefragt ✓", kein Crash
 - [ ] **Testfall B:** App löschen, neu installieren, Zugriff ablehnen → App
       bleibt stabil, kein Crash, keine Endlosschleife
+- [ ] Watch-App installiert sich automatisch mit auf eine gekoppelte Apple
+      Watch, zeigt den Platzhalter-Screen, HealthKit-Dialog erscheint dort
+      unabhängig vom iPhone-Dialog
 
 ### Unit-Tests
 
@@ -108,31 +132,43 @@ In Xcode:
 xcodebuild test -scheme SwimApp -destination 'platform=iOS Simulator,name=iPhone 15'
 ```
 
-`HealthKitManagerTests` prüft, dass alle für M2/M3 benötigten HealthKit-Typen
-(Workouts, Herzfrequenz, Ruhepuls, HRV, Schwimmdistanz, Schlaf) im
-Autorisierungs-Request enthalten sind.
+Läuft über die `SwimApp`-Scheme auch die Tests von `SwimAppCore` (siehe
+unten) mit. `HealthKitManagerTests` prüft, dass alle für M2/M3 benötigten
+HealthKit-Typen (Workouts, Herzfrequenz, Ruhepuls, HRV, Schwimmdistanz,
+Schlaf) im Autorisierungs-Request enthalten sind. Alternativ, nur das Package
+ohne Simulator testen:
+
+```bash
+cd Packages/SwimAppCore && swift test
+```
 
 ## Projektstruktur
 
 ```
-App/
-  SwimAppApp.swift          # App-Einstiegspunkt
-  ContentView.swift          # Platzhalter-UI mit Health-Berechtigungs-Button
-  HealthKit/
-    HealthKitManager.swift   # Autorisierung (Datenzugriff folgt in M2)
+App/                          # iOS-App
+  SwimAppApp.swift             # App-Einstiegspunkt
+  ContentView.swift            # Platzhalter-UI mit Health-Berechtigungs-Button
   Info.plist
-  SwimApp.entitlements       # HealthKit-Capability
-Tests/
-  SwimAppTests/
+  SwimApp.entitlements         # HealthKit-Capability
+WatchApp/                     # watchOS Companion-App
+  SwimAppWatchApp.swift        # App-Einstiegspunkt
+  WatchTodayView.swift         # Platzhalter "Heute"-Ansicht
+  Info.plist                   # inkl. WKCompanionAppBundleIdentifier
+  SwimAppWatch.entitlements    # HealthKit-Capability
+Packages/SwimAppCore/         # Von iOS + Watch geteilte Logik
+  Sources/SwimAppCore/
+    HealthKitManager.swift     # Autorisierung (Datenzugriff folgt in M2)
+  Tests/SwimAppCoreTests/
     HealthKitManagerTests.swift
-project.yml                  # XcodeGen-Konfiguration
+  Package.swift
+project.yml                    # XcodeGen-Konfiguration (beide Targets + Package)
 fastlane/
-  Appfile                     # Bundle-ID, Apple-ID, Team-ID
-  Matchfile                   # Zertifikats-Repo-Konfiguration
-  Fastfile                    # Lanes: test, beta (TestFlight-Upload)
-Gemfile                       # Ruby-Abhängigkeit: fastlane
+  Appfile                       # Bundle-ID, Apple-ID, Team-ID
+  Matchfile                     # Zertifikats-Repo-Konfiguration (iOS + Watch Bundle-IDs)
+  Fastfile                      # Lanes: test, beta (TestFlight-Upload, inkl. Watch-App)
+Gemfile                         # Ruby-Abhängigkeit: fastlane
 .github/workflows/
-  ios-ci.yml                  # Test- und TestFlight-Deploy-Pipeline
+  ios-ci.yml                    # Test- und TestFlight-Deploy-Pipeline
 ```
 
 ## Roadmap

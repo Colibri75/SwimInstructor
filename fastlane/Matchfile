@@ -6,5 +6,8 @@ git_url(ENV["MATCH_GIT_URL"])
 storage_mode("git")
 type("appstore")
 
-app_identifier(["com.steffenkellner.SwimApp"])
+app_identifier([
+  "com.steffenkellner.SwimApp",
+  "com.steffenkellner.SwimApp.watchkitapp"
+])
 username(ENV["APPLE_ID"])

@@ -1,4 +1,5 @@
 import SwiftUI
+import SwimAppCore
 
 struct ContentView: View {
     @StateObject private var healthKitManager = HealthKitManager()

@@ -1,6 +1,6 @@
 import XCTest
 import HealthKit
-@testable import SwimApp
+@testable import SwimAppCore
 
 final class HealthKitManagerTests: XCTestCase {
     func testReadTypesIncludeSwimWorkoutsAndVitals() {
