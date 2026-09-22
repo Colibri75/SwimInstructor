@@ -142,6 +142,44 @@ ohne Simulator testen:
 cd Packages/SwimAppCore && swift test
 ```
 
+## M2 – HealthKit Data Layer
+
+`SwimWorkoutRepository` (in `Packages/SwimAppCore`) liest reale
+`.swimming`-Workouts inkl. Distanz, Dauer, Bahnenzahl, Zügen und
+Durchschnitts-Herzfrequenz. Fetching (I/O gegen HealthKit) und Mapping (reine
+Transformation `HKWorkout` → `SwimWorkout`) sind bewusst getrennt, damit das
+Mapping ganz ohne Gerät/Simulator testbar ist – die Tests konstruieren echte,
+aber nicht gespeicherte `HKWorkout`-Objekte (Apples empfohlener Weg, um
+HealthKit-Code ohne echten Health Store zu testen).
+
+`SwimWorkout.approximateAverageSwolf` ist eine Näherung (Zeit + Züge pro
+Bahn, gemittelt) – ein offizieller SWOLF-Wert existiert in HealthKit nur für
+Workouts, die Apples eigene Schwimm-App mit Lap-Metadaten aufgezeichnet hat.
+
+Die iOS-`ContentView` zeigt nach dem Health-Zugriff eine einfache Liste
+"Meine letzten Schwimmeinheiten" zur Verifikation, dass echte Daten ankommen.
+
+### M2 – Definition of Done (manuell zu verifizieren)
+
+- [ ] Nach Health-Zugriff erscheint mind. 1 reales Workout aus der Health-App
+      korrekt in der Liste (Datum, Distanz, Dauer, Pace)
+- [ ] **Abgleich:** Distanz/Dauer von 3 realen Workouts stimmen mit den
+      Werten in der Health-App überein (Abweichung 0)
+- [ ] Kein Crash, wenn keine Schwimm-Workouts vorhanden sind (Liste zeigt
+      "Noch keine Schwimm-Workouts gefunden")
+- [ ] Kein Crash bei einem Workout ohne Streckenangabe (Distanz/Pace zeigen
+      einfach nichts an, statt abzustürzen)
+
+### Unit-Tests (Package)
+
+```bash
+cd Packages/SwimAppCore && swift test
+```
+
+`SwimWorkoutRepositoryTests` deckt ab: Pace-Berechnung, Verhalten ohne
+Distanz (kein Pace/SWOLF), Bahnenzählung aus `HKWorkoutEvent`s (nur `.lap`,
+nicht `.pause`), `nil` bei fehlenden Lap-Events, SWOLF-Näherung.
+
 ## Projektstruktur
 
 ```
@@ -157,9 +195,12 @@ WatchApp/                     # watchOS Companion-App
   SwimAppWatch.entitlements    # HealthKit-Capability
 Packages/SwimAppCore/         # Von iOS + Watch geteilte Logik
   Sources/SwimAppCore/
-    HealthKitManager.swift     # Autorisierung (Datenzugriff folgt in M2)
+    HealthKitManager.swift     # Autorisierung
+    SwimWorkout.swift          # Domain-Modell (Pace, SWOLF-Näherung)
+    SwimWorkoutRepository.swift # Liest Workouts aus HealthKit + Mapping
   Tests/SwimAppCoreTests/
     HealthKitManagerTests.swift
+    SwimWorkoutRepositoryTests.swift
   Package.swift
 project.yml                    # XcodeGen-Konfiguration (beide Targets + Package)
 fastlane/
