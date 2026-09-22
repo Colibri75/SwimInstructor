@@ -1,0 +1,8 @@
+# Muss exakt der PRODUCT_BUNDLE_IDENTIFIER aus project.yml entsprechen.
+app_identifier("com.steffenkellner.SwimApp")
+
+# Nur für lokale, interaktive Fastlane-Läufe relevant (z.B. einmaliges match-Setup).
+apple_id(ENV["APPLE_ID"])
+
+# Aus developer.apple.com/account -> Membership Details -> Team ID.
+team_id(ENV["APPLE_TEAM_ID"])
