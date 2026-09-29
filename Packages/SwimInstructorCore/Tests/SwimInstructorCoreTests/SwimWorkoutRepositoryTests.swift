@@ -103,4 +103,11 @@ final class SwimWorkoutRepositoryTests: XCTestCase {
         // 600s/20 Bahnen = 30s/Bahn, 400 Züge/20 Bahnen = 20 Züge/Bahn -> SWOLF 50
         XCTAssertEqual(swimWorkout.approximateAverageSwolf ?? -1, 50, accuracy: 0.001)
     }
+
+    func testNoDataErrorIsTreatedAsMissingValueNotFailure() {
+        XCTAssertTrue(HealthKitSwimWorkoutRepository.isNoData(HKError(.errorNoData)))
+        XCTAssertFalse(HealthKitSwimWorkoutRepository.isNoData(HKError(.errorAuthorizationDenied)))
+        XCTAssertFalse(HealthKitSwimWorkoutRepository.isNoData(HKError(.errorAuthorizationNotDetermined)))
+        XCTAssertFalse(HealthKitSwimWorkoutRepository.isNoData(URLError(.notConnectedToInternet)))
+    }
 }
