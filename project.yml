@@ -39,7 +39,10 @@ targets:
           CODE_SIGN_STYLE: Manual
           DEVELOPMENT_TEAM: TTLJUNRA3R
           CODE_SIGN_IDENTITY: "Apple Distribution"
-          PROVISIONING_PROFILE_SPECIFIER: "match AppStore com.kellner.SwimInstructor"
+          # The exact current profile name - match appends a number when a profile gets
+          # regenerated under a cert renewal, so the plain "match AppStore <bundle id>" string
+          # can go stale and silently match a leftover profile tied to an old, revoked cert.
+          PROVISIONING_PROFILE_SPECIFIER: "match AppStore com.kellner.SwimInstructor 1790706585"
 
   SwimInstructorWatch:
     type: application
@@ -63,4 +66,4 @@ targets:
           CODE_SIGN_STYLE: Manual
           DEVELOPMENT_TEAM: TTLJUNRA3R
           CODE_SIGN_IDENTITY: "Apple Distribution"
-          PROVISIONING_PROFILE_SPECIFIER: "match AppStore com.kellner.SwimInstructor.watchkitapp"
+          PROVISIONING_PROFILE_SPECIFIER: "match AppStore com.kellner.SwimInstructor.watchkitapp 1790706588"
