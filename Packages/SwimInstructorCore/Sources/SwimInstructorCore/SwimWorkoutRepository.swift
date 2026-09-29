@@ -54,6 +54,12 @@ public final class HealthKitSwimWorkoutRepository: SwimWorkoutRepository {
         )
     }
 
+    /// `HKStatisticsQuery` reports "no matching samples" (e.g. a workout without stroke counts or
+    /// heart rate) as an error. That is a normal, expected case, not a failure - callers get `nil`.
+    static func isNoData(_ error: Error) -> Bool {
+        (error as? HKError)?.code == .errorNoData
+    }
+
     static func lapCount(from workout: HKWorkout) -> Int? {
         guard let events = workout.workoutEvents else { return nil }
         let laps = events.filter { $0.type == .lap }.count
@@ -96,7 +102,11 @@ public final class HealthKitSwimWorkoutRepository: SwimWorkoutRepository {
                 options: .cumulativeSum
             ) { _, statistics, error in
                 if let error {
-                    continuation.resume(throwing: error)
+                    if Self.isNoData(error) {
+                        continuation.resume(returning: nil)
+                    } else {
+                        continuation.resume(throwing: error)
+                    }
                     return
                 }
                 continuation.resume(returning: statistics?.sumQuantity()?.doubleValue(for: unit))
@@ -117,7 +127,11 @@ public final class HealthKitSwimWorkoutRepository: SwimWorkoutRepository {
                 options: .discreteAverage
             ) { _, statistics, error in
                 if let error {
-                    continuation.resume(throwing: error)
+                    if Self.isNoData(error) {
+                        continuation.resume(returning: nil)
+                    } else {
+                        continuation.resume(throwing: error)
+                    }
                     return
                 }
                 continuation.resume(returning: statistics?.averageQuantity()?.doubleValue(for: unit))
