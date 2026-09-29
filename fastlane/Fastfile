@@ -65,7 +65,9 @@ platform :ios do
 
     build_app(
       scheme: "SwimInstructor",
-      export_method: "app-store"
+      # Xcode renamed this export method string; newer Xcode versions reject the old "app-store"
+      # value outright ("expected one {} but found app-store").
+      export_method: "app-store-connect"
     )
 
     upload_to_testflight(skip_waiting_for_build_processing: true)
