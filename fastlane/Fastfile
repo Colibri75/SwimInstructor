@@ -36,6 +36,23 @@ platform :ios do
 
     match(type: "appstore", readonly: is_ci)
 
+    # project.yml keeps CODE_SIGN_STYLE Automatic for convenient local Xcode use, but xcodebuild
+    # in CI has no GUI to pick a team in, so explicitly switch to the profiles match just fetched.
+    {
+      "SwimInstructor" => "com.kellner.SwimInstructor",
+      "SwimInstructorWatch" => "com.kellner.SwimInstructor.watchkitapp"
+    }.each do |target, bundle_id|
+      update_code_signing_settings(
+        use_automatic_signing: false,
+        path: "SwimInstructor.xcodeproj",
+        team_id: ENV["APPLE_TEAM_ID"],
+        code_sign_identity: "Apple Distribution",
+        bundle_identifier: bundle_id,
+        profile_name: ENV["sigh_#{bundle_id}_appstore_profile-name"],
+        targets: [target]
+      )
+    end
+
     increment_build_number(
       build_number: (latest_testflight_build_number + 1).to_s,
       xcodeproj: "SwimInstructor.xcodeproj"
