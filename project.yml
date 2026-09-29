@@ -27,8 +27,19 @@ targets:
         INFOPLIST_FILE: App/Info.plist
         CODE_SIGN_ENTITLEMENTS: App/SwimInstructor.entitlements
         SWIFT_VERSION: "5.0"
-        CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1"
+      configs:
+        Debug:
+          # Automatic for local Simulator/device debugging (⌘R) - convenient, no profile needed.
+          CODE_SIGN_STYLE: Automatic
+        Release:
+          # Manual with the match App Store profile for Archive - survives every `xcodegen
+          # generate` re-run, unlike a manual Xcode GUI signing override, which gets wiped out
+          # every time the project is regenerated.
+          CODE_SIGN_STYLE: Manual
+          DEVELOPMENT_TEAM: TTLJUNRA3R
+          CODE_SIGN_IDENTITY: "Apple Distribution"
+          PROVISIONING_PROFILE_SPECIFIER: "match AppStore com.kellner.SwimInstructor"
 
   SwimInstructorWatch:
     type: application
@@ -43,6 +54,13 @@ targets:
         INFOPLIST_FILE: WatchApp/Info.plist
         CODE_SIGN_ENTITLEMENTS: WatchApp/SwimInstructorWatch.entitlements
         SWIFT_VERSION: "5.0"
-        CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "4"
         SKIP_INSTALL: "NO"
+      configs:
+        Debug:
+          CODE_SIGN_STYLE: Automatic
+        Release:
+          CODE_SIGN_STYLE: Manual
+          DEVELOPMENT_TEAM: TTLJUNRA3R
+          CODE_SIGN_IDENTITY: "Apple Distribution"
+          PROVISIONING_PROFILE_SPECIFIER: "match AppStore com.kellner.SwimInstructor.watchkitapp"
