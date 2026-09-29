@@ -58,7 +58,11 @@ targets:
         CODE_SIGN_ENTITLEMENTS: WatchApp/SwimInstructorWatch.entitlements
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "4"
-        SKIP_INSTALL: "NO"
+        # Embedded in the iOS app via `embed: true` - must NOT also be installed as a standalone
+        # product, otherwise the archive contains two top-level apps, Xcode classifies it as a
+        # "Generic Xcode Archive" and offers no distribution methods (exportArchive then fails
+        # with `expected one {}` - an empty list of valid methods).
+        SKIP_INSTALL: "YES"
       configs:
         Debug:
           CODE_SIGN_STYLE: Automatic
