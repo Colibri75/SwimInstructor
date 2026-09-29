@@ -1,9 +1,8 @@
 # SwimInstructor
 
-> Hinweis: Das GitHub-Repo heißt weiterhin `Colibri75/SwimApp` (Repo-Umbenennung
-> ist ein separater Schritt, den du bei Bedarf selbst in den GitHub-Einstellungen
-> machst). Die App selbst – Bundle-ID, Xcode-Projekt, Produktname – heißt
-> **SwimInstructor**.
+> Hinweis: Das GitHub-Repo heißt jetzt `Colibri75/SwimInstructor` (umbenannt).
+> Alte Links/Clones auf `Colibri75/SwimApp` werden von GitHub automatisch
+> weitergeleitet, sollten aber aktualisiert werden.
 
 iOS- und watchOS-App, die Schwimm-Trainingsdaten aus Apple Health liest und
 darauf basierend einen tagesaktuellen, von Claude generierten Trainingsplan
@@ -70,7 +69,7 @@ TestFlight-App – kein manuelles Signieren, kein eigener Mac im Alltag.
    Legt Verteilungszertifikat + Provisioning Profile verschlüsselt im
    Certificates-Repo ab. Danach wird dieser Schritt nie wieder manuell
    gebraucht – CI nutzt dieselben Zertifikate schreibgeschützt (`readonly`).
-7. **GitHub Secrets** im `SwimApp`-Repo hinterlegen (Settings → Secrets and
+7. **GitHub Secrets** im `SwimInstructor`-Repo hinterlegen (Settings → Secrets and
    variables → Actions):
 
    | Secret | Wert |
@@ -112,7 +111,7 @@ mal interaktiv debuggen willst (Breakpoints, UI-Vorschau live testen):
 
 ```bash
 brew install xcodegen
-cd SwimApp
+cd SwimInstructor
 xcodegen generate
 open SwimInstructor.xcodeproj
 ```
