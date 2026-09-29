@@ -7,7 +7,7 @@ storage_mode("git")
 type("appstore")
 
 app_identifier([
-  "com.steffenkellner.SwimInstructor",
-  "com.steffenkellner.SwimInstructor.watchkitapp"
+  "com.kellner.SwimInstructor",
+  "com.kellner.SwimInstructor.watchkitapp"
 ])
 username(ENV["APPLE_ID"])

@@ -1,6 +1,6 @@
 name: SwimInstructor
 options:
-  bundleIdPrefix: com.steffenkellner
+  bundleIdPrefix: com.kellner
   deploymentTarget:
     iOS: "17.0"
     watchOS: "10.0"
@@ -23,7 +23,7 @@ targets:
         codeSignOnCopy: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.steffenkellner.SwimInstructor
+        PRODUCT_BUNDLE_IDENTIFIER: com.kellner.SwimInstructor
         INFOPLIST_FILE: App/Info.plist
         CODE_SIGN_ENTITLEMENTS: App/SwimInstructor.entitlements
         SWIFT_VERSION: "5.0"
@@ -42,7 +42,7 @@ targets:
       - package: SwimInstructorCore
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.steffenkellner.SwimInstructor.watchkitapp
+        PRODUCT_BUNDLE_IDENTIFIER: com.kellner.SwimInstructor.watchkitapp
         INFOPLIST_FILE: WatchApp/Info.plist
         CODE_SIGN_ENTITLEMENTS: WatchApp/SwimInstructorWatch.entitlements
         SWIFT_VERSION: "5.0"
