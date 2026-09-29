@@ -58,7 +58,8 @@ final class SwimWorkoutRepositoryTests: XCTestCase {
         let events = [
             HKWorkoutEvent(type: .lap, dateInterval: DateInterval(start: start, duration: 30), metadata: nil),
             HKWorkoutEvent(type: .lap, dateInterval: DateInterval(start: start.addingTimeInterval(30), duration: 30), metadata: nil),
-            HKWorkoutEvent(type: .pause, dateInterval: DateInterval(start: start.addingTimeInterval(60), duration: 10), metadata: nil)
+            // Pause/resume/marker events are instantaneous - HealthKit rejects a nonzero duration here.
+            HKWorkoutEvent(type: .pause, dateInterval: DateInterval(start: start.addingTimeInterval(60), duration: 0), metadata: nil)
         ]
         let workout = HKWorkout(
             activityType: .swimming,
