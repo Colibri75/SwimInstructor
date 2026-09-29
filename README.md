@@ -81,7 +81,7 @@ TestFlight-App – kein manuelles Signieren, kein eigener Mac im Alltag.
    | `MATCH_GIT_BASIC_AUTHORIZATION` | `base64("github-username:PAT")` mit Lesezugriff aufs Certificates-Repo |
    | `APP_STORE_CONNECT_KEY_ID` | aus Schritt 4 |
    | `APP_STORE_CONNECT_ISSUER_ID` | aus Schritt 4 |
-   | `APP_STORE_CONNECT_KEY_CONTENT` | Inhalt der `.p8`-Datei, `base64 -i AuthKey_XXXX.p8` |
+   | `APP_STORE_CONNECT_KEY_CONTENT` | kompletter **roher** Inhalt der `.p8`-Datei (in einem Texteditor öffnen, alles inkl. `-----BEGIN PRIVATE KEY-----`/`-----END PRIVATE KEY-----` 1:1 reinkopieren – **kein** base64) |
 
 8. **TestFlight-App** aus dem App Store auf dein iPhone laden, damit du
    hochgeladene Builds direkt installieren kannst.
