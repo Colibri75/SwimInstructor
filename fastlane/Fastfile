@@ -65,9 +65,12 @@ platform :ios do
 
     build_app(
       scheme: "SwimInstructor",
-      # Xcode renamed this export method string; newer Xcode versions reject the old "app-store"
-      # value outright ("expected one {} but found app-store").
-      export_method: "app-store-connect"
+      # gym's own export_method: param validates against a fixed, outdated list that doesn't
+      # include "app-store-connect" yet, even though this Xcode version requires that value in
+      # the exportOptions plist. export_options: is a free-form hash, not subject to that check.
+      export_options: {
+        method: "app-store-connect"
+      }
     )
 
     upload_to_testflight(skip_waiting_for_build_processing: true)
