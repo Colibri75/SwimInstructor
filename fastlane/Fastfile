@@ -3,7 +3,11 @@ default_platform(:ios)
 platform :ios do
   desc "Generate the Xcode project from project.yml"
   private_lane :generate_project do
-    sh("xcodegen", "generate", chdir: "..")
+    # sh runs from the fastlane/ folder by default; its own chdir: option isn't reliable here,
+    # so change the process working directory explicitly before invoking xcodegen.
+    Dir.chdir("..") do
+      sh("xcodegen generate")
+    end
   end
 
   desc "Run the unit test suite"
