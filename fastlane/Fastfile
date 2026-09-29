@@ -27,8 +27,9 @@ platform :ios do
     app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
       issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      # Raw .p8 PEM content, not base64 - one less encode/decode/copy-paste step to get wrong.
       key_content: ENV["APP_STORE_CONNECT_KEY_CONTENT"],
-      is_key_content_base64: true
+      is_key_content_base64: false
     )
 
     generate_project
