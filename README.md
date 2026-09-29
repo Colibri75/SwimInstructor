@@ -138,19 +138,17 @@ In Xcode:
 
 ### Unit-Tests
 
-```bash
-xcodebuild test -scheme SwimInstructor -destination 'platform=iOS Simulator,name=iPhone 15'
-```
-
-Läuft über die `SwimInstructor`-Scheme auch die Tests von
-`SwimInstructorCore` (siehe unten) mit. `HealthKitManagerTests` prüft, dass
-alle für M2/M3 benötigten HealthKit-Typen (Workouts, Herzfrequenz, Ruhepuls,
-HRV, Schwimmdistanz, Schlaf) im Autorisierungs-Request enthalten sind.
-Alternativ, nur das Package ohne Simulator testen:
+Alle aktuellen Tests leben im `SwimInstructorCore`-Package und laufen direkt
+per `swift test` – ganz ohne Simulator, genau so auch in der CI (`fastlane
+test`-Lane):
 
 ```bash
 cd Packages/SwimInstructorCore && swift test
 ```
+
+`HealthKitManagerTests` prüft, dass alle für M2/M3 benötigten HealthKit-Typen
+(Workouts, Herzfrequenz, Ruhepuls, HRV, Schwimmdistanz, Schlaf) im
+Autorisierungs-Request enthalten sind.
 
 ## M2 – HealthKit Data Layer
 

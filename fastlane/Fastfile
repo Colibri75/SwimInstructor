@@ -12,11 +12,14 @@ platform :ios do
 
   desc "Run the unit test suite"
   lane :test do
+    # generate_project doubles as a project.yml validation smoke test.
     generate_project
-    run_tests(
-      scheme: "SwimInstructor",
-      devices: ["iPhone 15"]
-    )
+
+    # All current tests live in the SwimInstructorCore package; swift test runs them directly
+    # without needing a simulator, and doesn't depend on wiring the package into an Xcode scheme.
+    Dir.chdir("../Packages/SwimInstructorCore") do
+      sh("swift test")
+    end
   end
 
   desc "Build, sign and upload a new build to TestFlight"
