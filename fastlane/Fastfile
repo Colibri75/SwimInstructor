@@ -1,3 +1,5 @@
+require "fileutils"
+
 default_platform(:ios)
 
 platform :ios do
@@ -65,12 +67,16 @@ platform :ios do
       xcodeproj: "SwimInstructor.xcodeproj"
     )
 
-    # gym's export_options: hash silently drops an override for "method" (it still writes its
-    # own default "app-store" into the generated plist regardless), and its export_method: param
-    # validates against a fixed, outdated list that doesn't include "app-store-connect" yet, even
-    # though this Xcode version rejects "app-store" outright. Writing the plist ourselves and
-    # passing its *path* skips gym's generation entirely, so nothing can override it back.
-    export_options_path = File.expand_path("ExportOptions.plist", Dir.pwd)
+    # gym/build_app keeps writing its own "app-store" into the generated plist no matter what's
+    # passed via export_options: (hash or a full custom plist file) - tried both, both got
+    # silently overridden. Only reliable fix left: skip gym for archive+export and call
+    # xcodebuild directly, so nothing can rewrite our exportOptions.plist behind our back.
+    repo_root = File.expand_path("..", __dir__)
+    archive_path = File.join(repo_root, "build", "SwimInstructor.xcarchive")
+    export_dir = File.join(repo_root, "build", "export")
+    export_options_path = File.join(repo_root, "ExportOptions.plist")
+    ipa_path = File.join(export_dir, "SwimInstructor.ipa")
+
     provisioning_profiles_xml = targets_to_bundle_ids.values.map do |bundle_id|
       profile_name = ENV["sigh_#{bundle_id}_appstore_profile-name"]
       "        <key>#{bundle_id}</key>\n        <string>#{profile_name}</string>"
@@ -95,11 +101,30 @@ platform :ios do
       </plist>
     PLIST
 
-    build_app(
-      scheme: "SwimInstructor",
-      export_options: export_options_path
-    )
+    FileUtils.mkdir_p(File.join(repo_root, "build"))
 
-    upload_to_testflight(skip_waiting_for_build_processing: true)
+    Dir.chdir(repo_root) do
+      sh(
+        "xcodebuild",
+        "-scheme", "SwimInstructor",
+        "-project", "SwimInstructor.xcodeproj",
+        "-destination", "generic/platform=iOS",
+        "-archivePath", archive_path,
+        "archive"
+      )
+
+      sh(
+        "xcodebuild",
+        "-exportArchive",
+        "-archivePath", archive_path,
+        "-exportPath", export_dir,
+        "-exportOptionsPlist", export_options_path
+      )
+    end
+
+    upload_to_testflight(
+      ipa: ipa_path,
+      skip_waiting_for_build_processing: true
+    )
   end
 end
