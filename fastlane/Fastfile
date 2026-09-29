@@ -24,6 +24,11 @@ platform :ios do
 
   desc "Build, sign and upload a new build to TestFlight"
   lane :beta do
+    # Without this, codesign can hang forever in headless CI waiting for a keychain-access
+    # prompt that never appears (no one's there to click "Allow") - setup_ci creates a
+    # temporary, non-interactive keychain and grants codesign access to it up front.
+    setup_ci if is_ci
+
     app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
       issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
