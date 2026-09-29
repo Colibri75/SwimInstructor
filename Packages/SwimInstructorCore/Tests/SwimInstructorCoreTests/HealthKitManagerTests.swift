@@ -11,6 +11,7 @@ final class HealthKitManagerTests: XCTestCase {
         XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .restingHeartRate)!))
         XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN)!))
         XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .distanceSwimming)!))
+        XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .swimmingStrokeCount)!))
         XCTAssertTrue(types.contains(HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!))
     }
 }

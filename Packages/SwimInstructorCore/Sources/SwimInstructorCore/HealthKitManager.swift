@@ -29,6 +29,7 @@ public final class HealthKitManager: ObservableObject, HealthDataAuthorizing {
         HKObjectType.quantityType(forIdentifier: .restingHeartRate)!,
         HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN)!,
         HKObjectType.quantityType(forIdentifier: .distanceSwimming)!,
+        HKObjectType.quantityType(forIdentifier: .swimmingStrokeCount)!,
         HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!
     ]
 
