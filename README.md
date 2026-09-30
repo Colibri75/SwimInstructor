@@ -287,6 +287,49 @@ backend/scripts/eval-in-docker.sh   # dasselbe auf dem Server ohne Node (nur Doc
 - [x] Fehlerfall-Tests: API nicht erreichbar, ungültiges JSON, Zeitlimit (und Rate-Limit,
       Serverfehler, Ablehnung, abgeschnittene Antwort)
 
+## M6 – App ↔ Backend & Heute-Bildschirm
+
+Die iPhone-App liest beim Öffnen Workouts und Erholungswerte aus Health, rechnet daraus den
+Snapshot (M3) und holt sich damit den Tagesplan vom Server (M5). Der Platzhalter ist durch einen
+echten **Heute-Bildschirm** ersetzt.
+
+> Eine eigene M6-Beschreibung gab es im Repo nicht (die Roadmap lag in einer früheren Session).
+> Umgesetzt ist, was die Doku bisher für M6 ankündigt: Snapshot-Builder mit Erholungswerten aus
+> Health, API-Client im Package und die Plananzeige auf dem iPhone. Die Watch-App folgt später.
+
+- **Snapshot-Builder** (`SnapshotBuilder`): Workouts der letzten 56 Tage, Ruhepuls, HRV und Schlaf
+  der letzten 31 Tage (`HealthKitDailyVitalsRepository`). Schlaf zählt zum Aufwachtag, überlappende
+  Abschnitte aus mehreren Quellen werden zusammengeführt (`DailyVitalsAggregator`). Fehlen die
+  Erholungswerte, gibt es trotzdem einen Plan (Erholung `unknown`).
+- **API-Client** (`PlanAPIClient`): `POST /v1/plan/today` mit `{"snapshot": …}` und
+  `GET /v1/status` für "Verbindung testen". Zeitlimit 95 s, damit die App nicht vor dem Server
+  (75 s) aufgibt. Fehler kommen als `PlanAPIError` mit deutschem Text.
+- **Wann wird gefragt?** Beim Öffnen liest die App Health immer neu, den Plan holt sie nur, wenn noch
+  keiner von heute da ist (oder der letzte ein Fallback war). Ziehen zum Aktualisieren fragt immer;
+  bei unverändertem Zustand antwortet der Server aus dem Cache, ohne Claude aufzurufen.
+- **Offline:** Der letzte Plan liegt in `Application Support/SwimInstructor/last-plan.json` und
+  bleibt sichtbar, wenn der Server nicht erreichbar ist.
+- **Zugang:** Server-Adresse (Standard `https://swiminstructor.kellner.v6.rocks`) und Token werden
+  einmal in den Einstellungen (Zahnrad) eingetragen. Das Token ist der Wert von `API_TOKEN` auf dem
+  Server und liegt nur im Schlüsselbund des iPhones, nie im Code oder im Build.
+- **CI:** Die `test`-Lane kompiliert jetzt zusätzlich die App samt Watch-App (ohne Signatur), damit
+  Fehler im App-Code schon im Pull Request auffallen und nicht erst beim TestFlight-Build.
+
+### M6 – Definition of Done
+
+- [x] Snapshot wird aus echten Health-Daten gebaut, inkl. Ruhepuls, HRV und Schlaf
+- [x] API-Client im Package, Antwortformat und Fehlerfälle per Unit-Test abgesichert
+      (`PlanAPIClientTests`, `TrainingPlanTests`, `SnapshotBuilderTests`, `TodayPlanLoaderTests`)
+- [x] Heute-Bildschirm zeigt Plan (Art, Umfang, Dauer, Begründung, Abschnitte mit Zielpace und Pause,
+      Hinweise, Korrekturen der Sicherheitsschicht), den Stand und die bisherigen Einheiten
+- [x] Fallback-Plan wird als solcher gekennzeichnet, der letzte Plan bleibt offline sichtbar
+- [ ] **Auf dem iPhone (TestFlight):** Token eintragen, "Verbindung testen" meldet "Verbindung ok"
+- [ ] **Auf dem iPhone:** Beim Öffnen erscheint ein Plan für heute; zweimal Ziehen zum Aktualisieren
+      ohne neue Einheit liefert denselben Plan (Server-Cache, kein neuer Claude-Aufruf im Server-Log)
+- [ ] **Auf dem iPhone:** Flugmodus an, App öffnen: der letzte Plan bleibt stehen, Hinweis auf den
+      Verbindungsfehler statt Absturz
+- [ ] **Auf dem iPhone:** Falsches Token eintragen: verständliche Meldung, kein Absturz
+
 ### Unit-Tests (Package)
 
 ```bash
@@ -301,8 +344,10 @@ nicht `.pause`), `nil` bei fehlenden Lap-Events, SWOLF-Näherung.
 
 ```
 App/                                # iOS-App
-  SwimInstructorApp.swift            # App-Einstiegspunkt
-  ContentView.swift                  # Platzhalter-UI mit Health-Berechtigungs-Button
+  SwimInstructorApp.swift            # App-Einstiegspunkt, verdrahtet Health, Einstellungen, Plan-Loader
+  TodayView.swift                    # Heute-Bildschirm: Plan, Stand, bisherige Einheiten
+  PlanCardView.swift                 # Darstellung des Tagesplans
+  SettingsView.swift                 # Server-Adresse, Token, Verbindung testen
   Info.plist
   SwimInstructor.entitlements        # HealthKit-Capability
 WatchApp/                           # watchOS Companion-App
@@ -320,6 +365,15 @@ Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
     DailyVitals.swift                # Tageswerte Ruhepuls/HRV/Schlaf
     AthleteStateSnapshot.swift       # Snapshot-Modell + JSON-Encoder (Schema v1)
     AthleteStateCalculator.swift     # Berechnung Workouts/Vitals -> Snapshot
+    DailyVitalsRepository.swift      # Liest Ruhepuls, HRV, Schlaf aus HealthKit (M6)
+    DailyVitalsAggregator.swift      # Schlaf pro Nacht, Tageswerte zusammenführen (M6)
+    SnapshotBuilder.swift            # Health -> Snapshot (M6)
+    TrainingPlan.swift               # Plan-Antwort des Servers (M6)
+    PlanAPIClient.swift              # POST /v1/plan/today, GET /v1/status (M6)
+    PlanCache.swift                  # Letzter Plan offline (M6)
+    BackendSettings.swift            # Server-Adresse + Token im Schlüsselbund (M6)
+    PlanFormatting.swift             # Texte für die Plananzeige (M6)
+    TodayPlanLoader.swift            # Ablauf des Heute-Bildschirms (M6)
   Tests/SwimInstructorCoreTests/
     HealthKitManagerTests.swift
     SwimWorkoutRepositoryTests.swift

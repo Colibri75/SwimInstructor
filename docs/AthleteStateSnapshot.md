@@ -116,4 +116,4 @@ Alle Zeitfenster zählen in Kalendertagen ab heute (Tag 0). Die Schwellen stehen
 ## Grenzen
 
 - Die Dauer eines Workouts ist die von Health gemeldete Dauer. Pausen zwischen den Bahnen können darin enthalten sein, dann liegt die Pace über dem echten Schwimmtempo. Eine Pace aus reiner Schwimmzeit kommt später, wenn die Bahnzeiten (Lap-Events) ausgewertet werden.
-- Die Erholungswerte holt der Snapshot-Builder in M6 aus Health. M3 liefert die Berechnung dazu (`DailyVitals` rein, Bewertung raus).
+- Die Erholungswerte holt seit M6 der `SnapshotBuilder` aus Health (`HealthKitDailyVitalsRepository`): Ruhepuls und HRV als Tagesmittel, Schlaf als Summe der Schlafphasen pro Nacht (ohne "im Bett" und "wach"), gezählt zum Aufwachtag. Überlappende Abschnitte mehrerer Quellen zählen nur einmal.
