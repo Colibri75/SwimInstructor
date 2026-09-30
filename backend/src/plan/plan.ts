@@ -20,7 +20,9 @@ export const PlanSetSchema = z.object({
     .nullable()
     .describe("Zielpace in Sekunden pro 100 m, null wenn keine Pace vorgegeben ist"),
   rest_seconds: z.number().int().describe("Pause nach jeder Wiederholung in Sekunden"),
-  instructions: z.string().describe("Kurze Anweisung oder Technikfokus")
+  instructions: z
+    .string()
+    .describe("Anweisung für den Abschnitt. Bei einer Technikübung: Name der Übung plus ein bis zwei Sätze, wie sie geschwommen wird und worauf man achtet")
 });
 
 export const TrainingPlanSchema = z.object({

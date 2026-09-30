@@ -44,6 +44,7 @@ export interface SanityLimits {
   minDurationMinutes: number;
   maxDurationMinutes: number;
   maxRationaleLength: number;
+  maxInstructionLength: number;
   maxNotes: number;
   maxNoteLength: number;
 }
@@ -71,6 +72,7 @@ export const DEFAULT_LIMITS: SanityLimits = {
   minDurationMinutes: 5,
   maxDurationMinutes: 180,
   maxRationaleLength: 1200,
+  maxInstructionLength: 600,
   maxNotes: 5,
   maxNoteLength: 300
 };
@@ -236,7 +238,7 @@ function normalize(plan: TrainingPlan, limits: SanityLimits): TrainingPlan {
   const sets = plan.sets.map((set) => ({
     ...set,
     name: set.name.trim().slice(0, 100),
-    instructions: set.instructions.trim().slice(0, 400),
+    instructions: set.instructions.trim().slice(0, limits.maxInstructionLength),
     repetitions: clamp(Math.round(set.repetitions), 1, limits.maxRepetitions),
     distance_meters: clamp(roundToStep(set.distance_meters), limits.minRepDistance, limits.maxRepDistance),
     rest_seconds: clamp(Math.round(set.rest_seconds), 0, limits.maxRestSeconds),
