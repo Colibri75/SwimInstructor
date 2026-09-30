@@ -197,9 +197,13 @@ Schema, Definitionen und Schwellenwerte: [`docs/AthleteStateSnapshot.md`](docs/A
 - [x] JSON-Schema des Snapshots dokumentiert und per Test gegen Änderungen abgesichert
 - [x] 5 Testszenarien (Anfänger, guter Fortschritt, Trainingspause, kurz vor
       Zieldatum, Übertraining-Warnsignal) mit von Hand nachgerechneten Werten
-- [ ] Coverage der Kernlogik > 80 % (der CI-Job `test` schreibt den Report pro
-      Datei ins Log, abzulesen bei `AthleteStateCalculator.swift` und
-      `SwimWorkoutDeduplicator.swift`)
+- [x] Coverage der Kernlogik > 80 % (Zeilen-Coverage laut CI-Report:
+      `AthleteStateCalculator` 99,6 %, `AthleteStateSnapshot` 100 %,
+      `SwimWorkoutDeduplicator` 100 %, `DailyVitals` 100 %, `AthleteGoal` 88 %).
+      Den Report schreibt der CI-Job `test` pro Datei ins Log. Nicht abgedeckt
+      ist der HealthKit-I/O (`HealthKitManager`, Fetch-Teil von
+      `SwimWorkoutRepository`), der sich nur auf dem Gerät prüfen lässt; darum
+      liegt die Gesamtzahl bei 66,6 %.
 
 ### Unit-Tests (Package)
 
