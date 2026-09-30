@@ -3,10 +3,11 @@
  * den Plan, die Korrekturen der Sicherheitsschicht und die Kosten als Markdown aus.
  *
  * Das ist die manuelle Pruefung fuer die Definition of Done von M5: Du bewertest jeden Plan von
- * Hand als sinnvoll oder nicht und haeltst das Ergebnis fest (docs/plan-eval.md).
+ * Hand als sinnvoll oder nicht und haeltst das Ergebnis fest (docs/plan-eval.md, das gepflegte Dokument).
  *
  * Aufruf (kostet echtes Geld, ca. fuenf Anfragen):
- *   ANTHROPIC_API_KEY=sk-ant-... npm run eval:scenarios > ../docs/plan-eval.md
+ *   mkdir -p ../docs/eval-runs
+ *   ANTHROPIC_API_KEY=sk-ant-... npm run eval:scenarios > ../docs/eval-runs/plan-eval-$(date +%F).md
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { readdirSync, readFileSync } from "node:fs";

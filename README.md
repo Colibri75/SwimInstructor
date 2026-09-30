@@ -269,7 +269,7 @@ Details zu Ablauf, Antwortformat, Regeln, Kosten und Konfiguration:
 ```bash
 cd backend
 npm test                   # Sicherheitsschicht, Fehlerfälle, Route, Szenarien (ohne echte API)
-ANTHROPIC_API_KEY=... npm run eval:scenarios > ../docs/plan-eval.md   # echter Lauf, kostet Geld
+ANTHROPIC_API_KEY=... npm run eval:scenarios > ../docs/eval-runs/plan-eval-$(date +%F).md   # echter Lauf, kostet Geld
 backend/scripts/eval-in-docker.sh   # dasselbe auf dem Server ohne Node (nur Docker nötig)
 ```
 
