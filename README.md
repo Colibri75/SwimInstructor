@@ -178,6 +178,72 @@ Die iOS-`ContentView` zeigt nach dem Health-Zugriff eine einfache Liste
 - [ ] Kein Crash bei einem Workout ohne Streckenangabe (Distanz/Pace zeigen
       einfach nichts an, statt abzustürzen)
 
+## M3 – Athleten-Zustand-Berechnung
+
+`AthleteStateCalculator` (in `Packages/SwimInstructorCore`) rechnet aus Workouts,
+Tageswerten (Ruhepuls, HRV, Schlaf) und dem Ziel den `AthleteStateSnapshot`:
+Wochenvolumen, Pace-Trend, Abstand zum Zielpace, Tage bis zum Zieldatum, Tage
+seit der letzten (harten) Einheit, Erholungsstatus und Warn-Flags. Die Berechnung
+ist eine reine Funktion ohne HealthKit-Zugriff und komplett per Unit-Test prüfbar.
+Doppelte Einträge derselben Einheit (mehrere Quellen in Health) bereinigt
+`SwimWorkoutDeduplicator`.
+
+Schema, Definitionen und Schwellenwerte: [`docs/AthleteStateSnapshot.md`](docs/AthleteStateSnapshot.md).
+
+### M3 – Definition of Done
+
+- [x] Berechnungsfunktionen für Wochenvolumen, Pace-Trend, Tage bis Zieldatum,
+      Tage seit letzter harter Einheit und Erholungsindikatoren
+- [x] JSON-Schema des Snapshots dokumentiert und per Test gegen Änderungen abgesichert
+- [x] 5 Testszenarien (Anfänger, guter Fortschritt, Trainingspause, kurz vor
+      Zieldatum, Übertraining-Warnsignal) mit von Hand nachgerechneten Werten
+- [x] Coverage der Kernlogik > 80 % (Zeilen-Coverage laut CI-Report:
+      `AthleteStateCalculator` 99,6 %, `AthleteStateSnapshot` 100 %,
+      `SwimWorkoutDeduplicator` 100 %, `DailyVitals` 100 %, `AthleteGoal` 88 %).
+      Den Report schreibt der CI-Job `test` pro Datei ins Log. Nicht abgedeckt
+      ist der HealthKit-I/O (`HealthKitManager`, Fetch-Teil von
+      `SwimWorkoutRepository`), der sich nur auf dem Gerät prüfen lässt; darum
+      liegt die Gesamtzahl bei 66,6 %.
+
+## M4 – Backend-Grundgerüst
+
+`backend/` enthält den Server (Node 22, TypeScript, Express 5). Er lauscht nur auf
+`127.0.0.1`, der Reverse-Proxy (nginx) übernimmt HTTPS.
+
+| Route | Auth | Zweck |
+|---|---|---|
+| `GET /health` | keine | Lebenszeichen für Monitoring/Deploy-Check, keine Daten |
+| `GET /v1/status` | Bearer-Token | Prüfroute für die Token-Auth, Basis für M5 (`/v1/plan/today`) |
+
+- **Auth:** `Authorization: Bearer <API_TOKEN>`, Vergleich zeitkonstant über SHA-256.
+  Ohne oder mit falschem Token antwortet der Server mit `401`. Die Prüfung läuft vor dem
+  Body-Parsing.
+- **Konfiguration:** über Umgebungsvariablen (`backend/.env.example`). Ohne `API_TOKEN` startet
+  der Server nicht; in Produktion muss er mindestens 32 Zeichen haben.
+- **Logging:** strukturiertes JSON (pino) für Requests und Fehler. Der Authorization-Header wird
+  geschwärzt, `/health` nicht protokolliert.
+- **Fehler:** interne Fehler liefern `500` ohne Details nach außen, der Stacktrace steht nur im Log.
+
+```bash
+cd backend
+npm ci
+npm test          # Jest + supertest, inkl. Coverage-Schwelle
+npm run dev       # lokal starten (API_TOKEN vorher setzen)
+```
+
+Einrichtung auf dem Server: [`docs/backend-deploy.md`](docs/backend-deploy.md).
+CI: `.github/workflows/backend-ci.yml` (Typecheck, Build, Tests, `npm audit`).
+
+### M4 – Definition of Done
+
+- [ ] Node-Server auf dem VPS deployt, per HTTPS mit gültigem Zertifikat erreichbar
+      (Schritt 8 der Deploy-Anleitung, manuell zu verifizieren)
+- [x] `/health` liefert 200
+- [x] Token-Auth aktiv, unautorisierte Requests liefern 401
+- [x] Minimal-Logging für Requests und Fehler
+- [x] Integrationstests (Jest + supertest): Auth erfolgreich/fehlgeschlagen, Health, Fehlerfälle,
+      Logging, Konfiguration
+
 ### Unit-Tests (Package)
 
 ```bash
@@ -206,9 +272,23 @@ Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
     HealthKitManager.swift           # Autorisierung
     SwimWorkout.swift                # Domain-Modell (Pace, SWOLF-Näherung)
     SwimWorkoutRepository.swift      # Liest Workouts aus HealthKit + Mapping
+    SwimWorkoutDeduplicator.swift    # Entfernt doppelte Einheiten aus mehreren Quellen
+    AthleteGoal.swift                # Ziel (3,8 km < 60 min bis 04.07.2027)
+    DailyVitals.swift                # Tageswerte Ruhepuls/HRV/Schlaf
+    AthleteStateSnapshot.swift       # Snapshot-Modell + JSON-Encoder (Schema v1)
+    AthleteStateCalculator.swift     # Berechnung Workouts/Vitals -> Snapshot
   Tests/SwimInstructorCoreTests/
     HealthKitManagerTests.swift
     SwimWorkoutRepositoryTests.swift
+    SwimWorkoutDeduplicatorTests.swift
+    AthleteStateCalculatorTests.swift  # 5 Szenarien + Randfaelle + Schema
+backend/                            # Node/TypeScript-Server (Proxy fuer Claude, ab M5)
+  src/                               # app.ts, auth.ts, config.ts, logger.ts, server.ts
+  test/                              # Jest + supertest
+  deploy/                            # systemd-Unit, nginx-Vorlage, deploy.sh
+docs/
+  AthleteStateSnapshot.md            # JSON-Schema, Definitionen, Schwellenwerte
+  backend-deploy.md                  # Server-Einrichtung Schritt fuer Schritt
   Package.swift
 project.yml                          # XcodeGen-Konfiguration (beide Targets + Package)
 fastlane/
@@ -218,6 +298,7 @@ fastlane/
 Gemfile                               # Ruby-Abhängigkeit: fastlane
 .github/workflows/
   ios-ci.yml                          # Test- und TestFlight-Deploy-Pipeline
+  backend-ci.yml                      # Backend: Typecheck, Build, Tests, npm audit
 ```
 
 ## Roadmap

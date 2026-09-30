@@ -1,10 +1,21 @@
 name: iOS CI/CD
 
+# Backend, Doku und Markdown loesen keinen (teuren) macOS-Lauf und keinen TestFlight-Build aus.
 on:
   push:
     branches: [main, "claude/**"]
+    paths-ignore:
+      - "backend/**"
+      - "docs/**"
+      - "**.md"
+      - ".github/workflows/backend-ci.yml"
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "backend/**"
+      - "docs/**"
+      - "**.md"
+      - ".github/workflows/backend-ci.yml"
 
 jobs:
   test:

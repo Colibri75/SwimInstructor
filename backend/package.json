@@ -1,0 +1,34 @@
+{
+  "name": "swiminstructor-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Backend-Proxy fuer SwimInstructor: Auth, Claude-Aufrufe, Trainingsplaene",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "jest --coverage"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.20.4",
+    "@types/supertest": "^7.2.1",
+    "jest": "^30.5.2",
+    "supertest": "^7.3.0",
+    "ts-jest": "^29.4.14",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  }
+}
