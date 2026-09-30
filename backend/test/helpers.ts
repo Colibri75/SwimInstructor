@@ -11,7 +11,16 @@ export const testConfig: Config = {
   host: "127.0.0.1",
   port: 0,
   apiToken: TEST_TOKEN,
-  logLevel: "silent"
+  logLevel: "silent",
+  anthropicApiKey: undefined,
+  claudeModel: "claude-opus-5-5",
+  claudeEffort: "medium",
+  claudeTimeoutMs: 75_000,
+  claudeServerFallback: true,
+  dataDir: "./data",
+  planTimezone: "Europe/Berlin",
+  maxGenerationsPerHour: 5,
+  maxGenerationsPerDay: 20
 };
 
 export function buildApp(options: AppOptions = {}): Express {
