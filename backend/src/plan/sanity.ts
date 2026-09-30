@@ -1,0 +1,340 @@
+import { Intensity, PlanSet, TrainingPlan } from "./plan";
+import { Snapshot } from "./snapshot";
+
+/**
+ * Sicherheitsschicht zwischen Claude und der App. Claude kann danebenliegen (zu grosse Spruenge, zu
+ * wenig Erholung, unrealistische Zeiten). Diese Schicht ist reiner Code ohne Netzwerk, korrigiert
+ * solche Plaene deterministisch oder blockt sie, wenn sie nicht mehr zu retten sind.
+ *
+ * Alle Schwellen stehen in `DEFAULT_LIMITS` und sind Startwerte, die sich mit echten Daten justieren
+ * lassen. Die Regeln sind in der README (Abschnitt M5) beschrieben.
+ */
+export interface SanityLimits {
+  /** Eine Einheit darf hoechstens so viel laenger sein wie die laengste der letzten 4 Wochen. */
+  maxSessionGrowthFactor: number;
+  /** Untergrenze fuer das Einheiten-Limit, damit auch ohne Historie geschwommen werden darf. */
+  minSessionCapMeters: number;
+  absoluteMaxSessionMeters: number;
+  /** Wochenumfang inklusive heute darf hoechstens so viel ueber dem Wochenschnitt liegen. */
+  maxWeeklyGrowthFactor: number;
+  minWeeklyCapMeters: number;
+  /** Ab so vielen Einheiten in 7 Tagen ist ein Ruhetag Pflicht. */
+  maxSessionsPerSevenDays: number;
+  /** Nach einer Trainingspause darf eine Einheit hoechstens so lang sein. */
+  pauseCapMeters: number;
+  recoveryPoorDistanceFactor: number;
+  volumeSpikeDistanceFactor: number;
+  /** Bleibt weniger als das uebrig, wird daraus ein Ruhetag. */
+  minMeaningfulSessionMeters: number;
+  /**
+   * Schnellste erlaubte Zielpace relativ zur aktuellen Pace. Die aktuelle Pace im Snapshot ist
+   * Gesamtzeit durch Distanz inklusive Pausen, das echte Schwimmtempo ist also schneller. Der Faktor
+   * ist deshalb locker gewaehlt und faengt nur unsinnige Vorgaben ab.
+   */
+  fastestVsRecentFactor: number;
+  fastestVsGoalFactor: number;
+  /** Ohne Pace-Historie: nicht schneller als Zielpace mal diesen Faktor. */
+  unknownPaceVsGoalFactor: number;
+  slowestPace: number;
+  minRepDistance: number;
+  maxRepDistance: number;
+  maxRepetitions: number;
+  maxRestSeconds: number;
+  maxSets: number;
+  minDurationMinutes: number;
+  maxDurationMinutes: number;
+  maxRationaleLength: number;
+  maxNotes: number;
+  maxNoteLength: number;
+}
+
+export const DEFAULT_LIMITS: SanityLimits = {
+  maxSessionGrowthFactor: 1.25,
+  minSessionCapMeters: 1000,
+  absoluteMaxSessionMeters: 4500,
+  maxWeeklyGrowthFactor: 1.3,
+  minWeeklyCapMeters: 1500,
+  maxSessionsPerSevenDays: 5,
+  pauseCapMeters: 800,
+  recoveryPoorDistanceFactor: 0.5,
+  volumeSpikeDistanceFactor: 0.6,
+  minMeaningfulSessionMeters: 200,
+  fastestVsRecentFactor: 0.6,
+  fastestVsGoalFactor: 0.9,
+  unknownPaceVsGoalFactor: 1.3,
+  slowestPace: 600,
+  minRepDistance: 25,
+  maxRepDistance: 3800,
+  maxRepetitions: 100,
+  maxRestSeconds: 600,
+  maxSets: 20,
+  minDurationMinutes: 5,
+  maxDurationMinutes: 180,
+  maxRationaleLength: 1200,
+  maxNotes: 5,
+  maxNoteLength: 300
+};
+
+export interface SanityResult {
+  /** Der korrigierte Plan. Bei `blocked` der unveraenderte Eingangsplan, er darf nicht genutzt werden. */
+  plan: TrainingPlan;
+  /** Jede vorgenommene Korrektur auf Deutsch, damit die App sie anzeigen und das Log sie nennen kann. */
+  adjustments: string[];
+  /** Grund, warum der Plan unbrauchbar ist und verworfen werden muss, sonst `null`. */
+  blocked: string | null;
+}
+
+const RANK: Record<Intensity, number> = { rest: 0, easy: 1, moderate: 2, hard: 3 };
+const DISTANCE_STEP = 25;
+
+export function sanitizePlan(input: TrainingPlan, snapshot: Snapshot, limits: SanityLimits = DEFAULT_LIMITS): SanityResult {
+  const problem = findStructuralProblem(input, limits);
+  if (problem) return { plan: input, adjustments: [], blocked: problem };
+
+  const adjustments: string[] = [];
+  let plan = normalize(input, limits);
+
+  if (isRestDay(plan)) return done(asRestDay(plan, null), adjustments);
+
+  const computedTotal = totalDistance(plan.sets);
+  if (computedTotal !== input.total_distance_meters) {
+    adjustments.push(`Gesamtdistanz korrigiert: ${input.total_distance_meters} m auf ${computedTotal} m (Summe der Abschnitte)`);
+  }
+
+  // 1. Pflicht-Ruhetag
+  const restReason = requiredRestReason(snapshot, limits);
+  if (restReason) {
+    adjustments.push(`Ruhetag erzwungen: ${restReason}`);
+    return done(asRestDay(plan, restReason), adjustments);
+  }
+
+  // 2. Intensitaet begrenzen
+  const cap = intensityCap(snapshot);
+  if (RANK[plan.intensity] > RANK[cap.max]) {
+    adjustments.push(`Intensität von "${plan.intensity}" auf "${cap.max}" gesenkt: ${cap.reasons.join(", ")}`);
+    plan = downgradeIntensity(plan, cap.max);
+  }
+
+  // 3. Umfang begrenzen
+  const distanceCap = Math.floor(allowedDistance(snapshot, limits));
+  if (distanceCap < limits.minMeaningfulSessionMeters) {
+    const reason = "Wochenumfang ausgeschöpft";
+    adjustments.push(`Ruhetag erzwungen: ${reason}`);
+    return done(asRestDay(plan, reason), adjustments);
+  }
+  const before = totalDistance(plan.sets);
+  if (before > distanceCap) {
+    const trimmed = trimToDistance(plan.sets, distanceCap);
+    const after = totalDistance(trimmed);
+    if (after < limits.minMeaningfulSessionMeters) {
+      const reason = "zu wenig sicherer Restumfang";
+      adjustments.push(`Ruhetag erzwungen: ${reason}`);
+      return done(asRestDay(plan, reason), adjustments);
+    }
+    adjustments.push(`Umfang von ${before} m auf ${after} m gekürzt (Grenze für heute: ${distanceCap} m)`);
+    plan = {
+      ...plan,
+      sets: trimmed,
+      estimated_duration_minutes: clampMinutes(Math.round((plan.estimated_duration_minutes * after) / before), limits)
+    };
+  }
+
+  // 4. Zielpace begrenzen
+  const fastest = Math.round(fastestAllowedPace(snapshot, limits));
+  let paceClamped = false;
+  plan = {
+    ...plan,
+    sets: plan.sets.map((set) => {
+      const pace = set.target_pace_seconds_per_hundred_meters;
+      if (pace !== null && pace < fastest) {
+        paceClamped = true;
+        return { ...set, target_pace_seconds_per_hundred_meters: fastest };
+      }
+      return set;
+    })
+  };
+  if (paceClamped) adjustments.push(`Zielpace auf höchstens ${fastest} s/100 m begrenzt (nicht schneller als realistisch)`);
+
+  return done({ ...plan, total_distance_meters: totalDistance(plan.sets) }, adjustments);
+}
+
+function done(plan: TrainingPlan, adjustments: string[]): SanityResult {
+  return { plan, adjustments, blocked: null };
+}
+
+// --- Strukturpruefung ---
+
+/** Gibt einen Grund zurueck, wenn der Plan so kaputt ist, dass Korrigieren nicht mehr vertrauenswuerdig waere. */
+function findStructuralProblem(plan: TrainingPlan, limits: SanityLimits): string | null {
+  if (plan.rationale.trim() === "") return "Begründung fehlt";
+  if (plan.sets.length > limits.maxSets) return `zu viele Abschnitte (${plan.sets.length})`;
+  if (!Number.isFinite(plan.total_distance_meters) || plan.total_distance_meters < 0) return "Gesamtdistanz ungültig";
+  if (!Number.isFinite(plan.estimated_duration_minutes) || plan.estimated_duration_minutes < 0) return "Dauer ungültig";
+
+  for (const set of plan.sets) {
+    if (![set.repetitions, set.distance_meters, set.rest_seconds].every(Number.isFinite)) return "Zahlenwert in einem Abschnitt ungültig";
+    if (set.repetitions < 1 || set.distance_meters < 1 || set.rest_seconds < 0) return "Abschnitt mit unmöglichen Werten";
+    const pace = set.target_pace_seconds_per_hundred_meters;
+    if (pace !== null && (!Number.isFinite(pace) || pace <= 0)) return "Zielpace ungültig";
+  }
+
+  const restLike = plan.session_type === "rest" || plan.intensity === "rest";
+  if (!restLike && plan.sets.length === 0) return "Plan ohne Abschnitte";
+
+  const total = totalDistance(plan.sets);
+  if (total > limits.absoluteMaxSessionMeters * 3) return `unrealistischer Umfang (${total} m)`;
+  return null;
+}
+
+function isRestDay(plan: TrainingPlan): boolean {
+  return plan.session_type === "rest" || plan.intensity === "rest";
+}
+
+// --- Normalisieren (stille Korrekturen an Formalien, ohne Hinweis) ---
+
+function normalize(plan: TrainingPlan, limits: SanityLimits): TrainingPlan {
+  const sets = plan.sets.map((set) => ({
+    ...set,
+    name: set.name.trim().slice(0, 100),
+    instructions: set.instructions.trim().slice(0, 400),
+    repetitions: clamp(Math.round(set.repetitions), 1, limits.maxRepetitions),
+    distance_meters: clamp(roundToStep(set.distance_meters), limits.minRepDistance, limits.maxRepDistance),
+    rest_seconds: clamp(Math.round(set.rest_seconds), 0, limits.maxRestSeconds),
+    target_pace_seconds_per_hundred_meters:
+      set.target_pace_seconds_per_hundred_meters !== null && set.target_pace_seconds_per_hundred_meters > limits.slowestPace
+        ? null
+        : set.target_pace_seconds_per_hundred_meters
+  }));
+
+  return {
+    ...plan,
+    rationale: plan.rationale.trim().slice(0, limits.maxRationaleLength),
+    coach_notes: plan.coach_notes
+      .map((note) => note.trim().slice(0, limits.maxNoteLength))
+      .filter((note) => note !== "")
+      .slice(0, limits.maxNotes),
+    estimated_duration_minutes: clampMinutes(plan.estimated_duration_minutes, limits),
+    sets
+  };
+}
+
+function asRestDay(plan: TrainingPlan, reason: string | null): TrainingPlan {
+  return {
+    ...plan,
+    session_type: "rest",
+    intensity: "rest",
+    // Die Begruendung des urspruenglichen Plans passt zu einem Ruhetag nicht mehr.
+    rationale: reason === null ? plan.rationale : `Heute ist Ruhe angesagt: ${reason}.`,
+    total_distance_meters: 0,
+    estimated_duration_minutes: 0,
+    sets: []
+  };
+}
+
+// --- Regeln ---
+
+function requiredRestReason(snapshot: Snapshot, limits: SanityLimits): string | null {
+  if (snapshot.flags.includes("overreaching_risk")) return "Erholungswerte schlecht bei hoher Belastung (Übertrainingsrisiko)";
+  if (snapshot.volume.sessions_last_seven_days >= limits.maxSessionsPerSevenDays) {
+    return `schon ${snapshot.volume.sessions_last_seven_days} Einheiten in den letzten 7 Tagen, ein Ruhetag ist fällig`;
+  }
+  return null;
+}
+
+function intensityCap(snapshot: Snapshot): { max: Intensity; reasons: string[] } {
+  let max: Intensity = "hard";
+  const reasons: string[] = [];
+  const apply = (limit: Intensity, reason: string): void => {
+    if (RANK[limit] < RANK[max]) max = limit;
+    reasons.push(reason);
+  };
+
+  const hardDaysAgo = snapshot.load.days_since_last_hard_session;
+  if (snapshot.flags.includes("recovery_poor") || snapshot.recovery.status === "poor") apply("easy", "Erholung schlecht");
+  else if (snapshot.recovery.status === "moderate") apply("moderate", "Erholung mäßig");
+  if (snapshot.flags.includes("training_pause")) apply("easy", "Wiedereinstieg nach Trainingspause");
+  if (snapshot.flags.includes("volume_spike")) apply("moderate", "Umfang zuletzt stark gestiegen");
+  if (hardDaysAgo !== undefined && hardDaysAgo <= 1) apply("moderate", "gestern oder heute schon eine harte Einheit");
+
+  return { max, reasons };
+}
+
+function downgradeIntensity(plan: TrainingPlan, max: Intensity): TrainingPlan {
+  const harsh = plan.session_type === "intervals" || plan.session_type === "threshold" || plan.session_type === "test";
+  return {
+    ...plan,
+    intensity: max,
+    session_type: harsh ? "endurance" : plan.session_type,
+    // Zielzeiten gehoerten zur haerteren Einheit und passen nicht mehr.
+    sets: plan.sets.map((set) => ({ ...set, target_pace_seconds_per_hundred_meters: null }))
+  };
+}
+
+/** Wie viele Meter heute hoechstens erlaubt sind. */
+function allowedDistance(snapshot: Snapshot, limits: SanityLimits): number {
+  const sessionCap = Math.min(
+    Math.max(snapshot.volume.longest_session_meters * limits.maxSessionGrowthFactor, limits.minSessionCapMeters),
+    limits.absoluteMaxSessionMeters
+  );
+  const weeklyCap = Math.max(snapshot.volume.average_weekly_meters * limits.maxWeeklyGrowthFactor, limits.minWeeklyCapMeters);
+  let cap = Math.min(sessionCap, weeklyCap - snapshot.volume.last_seven_days_meters);
+
+  const candidates = [cap];
+  if (snapshot.flags.includes("recovery_poor") || snapshot.recovery.status === "poor") {
+    candidates.push(cap * limits.recoveryPoorDistanceFactor);
+  }
+  if (snapshot.flags.includes("volume_spike")) candidates.push(cap * limits.volumeSpikeDistanceFactor);
+  if (snapshot.flags.includes("training_pause")) candidates.push(limits.pauseCapMeters);
+  cap = Math.min(...candidates);
+  return Math.max(cap, 0);
+}
+
+function fastestAllowedPace(snapshot: Snapshot, limits: SanityLimits): number {
+  const goal = snapshot.goal.target_pace_seconds_per_hundred_meters;
+  const recent = snapshot.pace.recent_pace_seconds_per_hundred_meters;
+  if (recent === undefined) return goal * limits.unknownPaceVsGoalFactor;
+  return Math.max(goal * limits.fastestVsGoalFactor, recent * limits.fastestVsRecentFactor);
+}
+
+/**
+ * Kuerzt den groessten Abschnitt so lange, bis der Plan in die Grenze passt. Einschwimmen und
+ * Ausschwimmen bleiben dadurch meist erhalten, weil der Hauptsatz zuerst schrumpft.
+ */
+function trimToDistance(sets: PlanSet[], maxMeters: number): PlanSet[] {
+  const result = sets.map((set) => ({ ...set }));
+  for (let guard = 0; guard < 10_000 && totalDistance(result) > maxMeters && result.length > 0; guard++) {
+    const excess = totalDistance(result) - maxMeters;
+    let largest = 0;
+    result.forEach((set, index) => {
+      if (set.repetitions * set.distance_meters > result[largest].repetitions * result[largest].distance_meters) largest = index;
+    });
+    const set = result[largest];
+
+    if (set.repetitions > 1) {
+      set.repetitions = Math.max(1, set.repetitions - Math.ceil(excess / set.distance_meters));
+    } else {
+      const shorter = set.distance_meters - Math.ceil(excess / DISTANCE_STEP) * DISTANCE_STEP;
+      if (shorter < DISTANCE_STEP) result.splice(largest, 1);
+      else set.distance_meters = shorter;
+    }
+  }
+  return result;
+}
+
+// --- Hilfsfunktionen ---
+
+function totalDistance(sets: PlanSet[]): number {
+  return sets.reduce((sum, set) => sum + set.repetitions * set.distance_meters, 0);
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
+function roundToStep(value: number): number {
+  return Math.round(value / DISTANCE_STEP) * DISTANCE_STEP;
+}
+
+function clampMinutes(value: number, limits: SanityLimits): number {
+  return clamp(Math.round(value), limits.minDurationMinutes, limits.maxDurationMinutes);
+}
