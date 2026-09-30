@@ -8,7 +8,7 @@ public struct PlanPosition: Equatable, Sendable {
     public let repetition: Int
     public let metersIntoRepetition: Int
 
-    public var metersRemainingInRepetition: Int { set.distanceMeters - metersIntoRepetition }
+    public var metersRemainingInRepetition: Int { self.set.distanceMeters - metersIntoRepetition }
 }
 
 public enum PlanProgressState: Equatable, Sendable {
