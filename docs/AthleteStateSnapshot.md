@@ -22,7 +22,7 @@ Dass die Schlüssel stabil bleiben, prüft `testSnapshotJSONSchemaKeysAreStable`
   "goal": {
     "days_until_goal": 277,
     "distance_meters": 3800,
-    "target_date": "2027-07-03T22:00:00Z",
+    "target_date": "2027-07-04T10:00:00Z",
     "target_duration_seconds": 3600,
     "target_pace_seconds_per_hundred_meters": 94.7
   },
@@ -66,7 +66,7 @@ Dass die Schlüssel stabil bleiben, prüft `testSnapshotJSONSchemaKeysAreStable`
 | `distance_meters` | Zahl | Zieldistanz (3800) |
 | `target_duration_seconds` | Zahl | Zielzeit (3600) |
 | `target_pace_seconds_per_hundred_meters` | Zahl | Zielpace, Zielzeit geteilt durch Zieldistanz in 100 m |
-| `target_date` | Datum | Zieldatum (04.07.2027) |
+| `target_date` | Datum | Zieldatum (04.07.2027), als Mittag gespeichert, damit der Kalendertag in jeder Zeitzone gleich bleibt |
 | `days_until_goal` | Int | Kalendertage bis zum Ziel, mindestens 0 |
 | **volume** | | |
 | `last_seven_days_meters` | Zahl | Distanz der letzten 7 Tage |

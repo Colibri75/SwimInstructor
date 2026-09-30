@@ -18,10 +18,15 @@ public struct AthleteGoal: Codable, Equatable, Sendable {
     }
 
     /// 3,8 km in unter 60 Minuten bis zum 04.07.2027.
+    ///
+    /// Das Datum liegt bewusst auf Mittag (Berlin): Ein Zieltag ist ein Kalendertag, keine
+    /// Uhrzeit. Mittag bleibt in jeder Zeitzone von UTC-10 bis UTC+13 derselbe Kalendertag,
+    /// Mitternacht dagegen würde je nach Gerät um einen Tag verrutschen.
     public static let `default`: AthleteGoal = {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "Europe/Berlin") ?? .current
-        let date = calendar.date(from: DateComponents(year: 2027, month: 7, day: 4)) ?? Date.distantFuture
+        let components = DateComponents(year: 2027, month: 7, day: 4, hour: 12)
+        let date = calendar.date(from: components) ?? Date.distantFuture
         return AthleteGoal(distanceMeters: 3800, targetDurationSeconds: 3600, targetDate: date)
     }()
 }
