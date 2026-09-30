@@ -49,6 +49,8 @@ jobs:
         run: |
           sudo mkdir -p /etc/swiminstructor
           echo "API_TOKEN=ci-token-$(openssl rand -hex 24)" | sudo tee /etc/swiminstructor/backend.env >/dev/null
+          # docker compose liest die Datei als aufrufender Nutzer (auf dem Server ist das root)
+          sudo chown "$USER":"$USER" /etc/swiminstructor/backend.env
           sudo chmod 600 /etc/swiminstructor/backend.env
 
       - name: Image bauen und Container starten
@@ -70,7 +72,7 @@ jobs:
           curl -fsS http://127.0.0.1:3100/health
           echo
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/v1/status)" = "401"
-          TOKEN=$(sudo grep '^API_TOKEN=' /etc/swiminstructor/backend.env | cut -d= -f2)
+          TOKEN=$(grep '^API_TOKEN=' /etc/swiminstructor/backend.env | cut -d= -f2)
           test "$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" http://127.0.0.1:3100/v1/status)" = "200"
           test "$(docker exec swiminstructor-backend id -u)" != "0"
           echo "Smoke-Test ok: Health 200, ohne Token 401, mit Token 200, Container laeuft nicht als root"

@@ -1,23 +1,43 @@
 # Backend auf dem Server einrichten (Docker + Caddy)
 
 Das Backend läuft als Docker-Container und veröffentlicht seinen Port nur auf `127.0.0.1:3100`
-des Servers. Dein bestehender **Caddy** nimmt die Anfragen von außen an, kümmert sich um HTTPS
-und leitet sie an den Container weiter. Die Financial-App bleibt unangetastet: Du ergänzt nur
-einen Abschnitt in der Caddyfile.
+des Servers, genau wie deine anderen Dienste (Vaultwarden, Immich, Financial-App). Dein
+bestehender **Caddy** (läuft im Container) nimmt die Anfragen von außen an, kümmert sich um
+HTTPS und leitet sie an den Container weiter. Die anderen Dienste bleiben unangetastet: Du
+ergänzt nur einen Block in der Caddyfile.
 
-Die Befehle gehen davon aus, dass du als `root` arbeitest (sonst `sudo` davorsetzen) und dass
-Caddy direkt auf dem Server läuft (`systemctl is-active caddy` meldet `active`). Läuft Caddy
-selbst in einem Docker-Container, gilt Schritt 5 anders, sag dann Bescheid.
+Die Befehle laufen als `root` auf dem Server (sonst `sudo` davorsetzen). `docker compose` liest
+die Konfigurationsdatei als aufrufender Nutzer, deshalb auch die Deploys als root ausführen.
 
-## Voraussetzungen
+Die API bekommt den Hostnamen **`swiminstructor.kellner.v6.rocks`**.
 
-- Docker mit Compose-Plugin (`docker compose version` liefert eine Version)
-- Ein Hostname, der auf den Server zeigt (dein DynDNS-Name oder ein zweiter dafür)
-- Port 80 und 443 sind von außen erreichbar (für die Financial-App vermutlich schon)
-- Ein GitHub-Token (PAT) mit Lesezugriff auf das Repo, weil das Repo privat ist
-- Der Host-Port 3100 ist frei: `ss -tlnp | grep ':3100 '` liefert nichts
+## Voraussetzungen prüfen
+
+```bash
+docker compose version                        # Compose vorhanden
+ss -tlnp | grep ':3100 '                      # liefert nichts: Port ist frei
+docker inspect caddy --format '{{.HostConfig.NetworkMode}}'   # soll "host" ausgeben
+```
+
+Die letzte Zeile ist wichtig: Nur mit Host-Netzwerk erreicht Caddy den Backend-Container über
+`127.0.0.1:3100`. Steht dort etwas anderes, hör hier auf und melde dich, dann ändere ich die
+Anbindung.
+
+Außerdem muss der Hostname auf deinen Server zeigen. Prüfe das von deinem Rechner oder vom
+Server aus:
+
+```bash
+dig +short A    swiminstructor.kellner.v6.rocks   # soll 144.91.69.144 zeigen
+dig +short AAAA swiminstructor.kellner.v6.rocks   # falls vorhanden: die IPv6-Adresse des Servers
+```
+
+Kommt bei `A` nichts zurück, ist im DynDNS-Eintrag keine IPv4-Adresse hinterlegt. Trag dort
+`144.91.69.144` ein, sonst kann Caddy kein Zertifikat holen und iPhones im Mobilfunknetz
+erreichen die API womöglich nicht.
 
 ## 1. Code auf den Server holen
+
+Ein GitHub-Token (PAT) mit Lesezugriff auf das Repo wird gebraucht, weil das Repo privat ist.
 
 ```bash
 mkdir -p /opt/swiminstructor
@@ -53,51 +73,48 @@ curl -s http://127.0.0.1:3100/health
 Der erste Build dauert ein bis zwei Minuten. Läuft der Container nicht:
 `docker logs swiminstructor-backend`.
 
-## 4. DNS: Hostname für die API
+## 4. Caddy einrichten
 
-Damit Caddy ein Zertifikat holen kann, muss der Hostname auf den Server zeigen.
-
-- **Variante A (empfohlen):** Lege bei deinem DynDNS-Anbieter einen zweiten Hostnamen an, der auf
-  denselben Server zeigt (z. B. `swim-api.<deine-dyndns-domain>`). Nicht jeder Anbieter erlaubt
-  das, dann Variante B.
-- **Variante B:** Kein zweiter Hostname. Die API hängt dann als Pfad `/swim/` an deinem
-  bestehenden Hostnamen.
-
-## 5. Caddy einrichten
-
-Öffne die Caddyfile (meist `/etc/caddy/Caddyfile`) und ergänze den Abschnitt aus
-`backend/deploy/Caddyfile.example` für deine Variante. Variante A ist ein eigener Block, bei
-Variante B kommt `handle_path /swim/* { ... }` in den bestehenden Block deines Hostnamens.
-
-Erst prüfen, dann laden. Das Laden ist ohne Ausfall, die Financial-App merkt nichts:
+Finde zuerst heraus, wo die Caddyfile auf dem Server liegt:
 
 ```bash
-caddy validate --config /etc/caddy/Caddyfile     # muss "Valid configuration" melden
-systemctl reload caddy
-journalctl -u caddy -n 20 --no-pager             # bei Variante A: Zertifikat wird geholt
+docker inspect caddy --format '{{json .Mounts}}'
 ```
 
-Bei einem Fehler in der Prüfung lädst du nicht neu, dann läuft alles unverändert weiter.
+In der Ausgabe siehst du unter `Source` den Pfad auf dem Server und unter `Destination` den Pfad
+im Container (meist `/etc/caddy/Caddyfile`, bei einem Ordner-Mount liegt sie darin).
 
-## 6. Prüfen (das ist die Definition of Done von M4)
-
-Von deinem Rechner aus, nicht vom Server. Bei Variante B lautet der Pfad `/swim/health`
-statt `/health`:
+Ergänze in der Caddyfile auf dem Server den Block aus `backend/deploy/Caddyfile.example` (als
+eigenen Block, die bestehenden lässt du stehen). Dann erst prüfen, danach laden. Das Laden geht
+ohne Ausfall, die anderen Dienste merken nichts:
 
 ```bash
-curl -i https://<dein-api-hostname>/health
+docker exec caddy caddy validate --config /etc/caddy/Caddyfile     # muss "Valid configuration" melden
+docker exec caddy caddy reload   --config /etc/caddy/Caddyfile
+docker logs --tail 30 caddy                                        # Zertifikat wird geholt
+```
+
+Nimm bei `--config` den `Destination`-Pfad aus dem Inspect. Meldet die Prüfung einen Fehler,
+lädst du nicht neu, dann läuft alles unverändert weiter.
+
+## 5. Prüfen (das ist die Definition of Done von M4)
+
+Von deinem Rechner aus, nicht vom Server:
+
+```bash
+curl -i https://swiminstructor.kellner.v6.rocks/health
 # HTTP/2 200 ... {"status":"ok",...}
 
-curl -i https://<dein-api-hostname>/v1/status
+curl -i https://swiminstructor.kellner.v6.rocks/v1/status
 # HTTP/2 401 ... {"error":"unauthorized"}
 
-curl -i -H "Authorization: Bearer <DEIN-TOKEN>" https://<dein-api-hostname>/v1/status
+curl -i -H "Authorization: Bearer <DEIN-TOKEN>" https://swiminstructor.kellner.v6.rocks/v1/status
 # HTTP/2 200 ... {"status":"authenticated"}
 ```
 
-Im Browser muss beim Aufruf von `https://<dein-api-hostname>/health` ein gültiges Schloss
-erscheinen (keine Zertifikatswarnung). Prüfe außerdem, dass die Financial-App weiter normal
-erreichbar ist.
+Im Browser muss beim Aufruf von `https://swiminstructor.kellner.v6.rocks/health` ein gültiges
+Schloss erscheinen (keine Zertifikatswarnung). Prüfe außerdem, dass deine anderen Dienste (Financial,
+Vaultwarden, Immich, Nextcloud) weiter normal erreichbar sind.
 
 Und von außen darf der Container-Port nicht direkt offen sein:
 
