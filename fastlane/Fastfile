@@ -34,6 +34,20 @@ platform :ios do
         UI.important("Coverage-Report nicht verfuegbar: #{e.message}")
       end
     end
+
+    # App-Code (iPhone + eingebettete Watch-App) mitkompilieren, ohne Signatur. Sonst fielen
+    # Fehler in App/ und WatchApp/ erst in der beta-Lane nach dem Merge auf main auf.
+    Dir.chdir("..") do
+      sh(
+        "xcodebuild", "build",
+        "-project", "SwimInstructor.xcodeproj",
+        "-scheme", "SwimInstructor",
+        "-configuration", "Debug",
+        "-destination", "generic/platform=iOS",
+        "CODE_SIGNING_ALLOWED=NO",
+        "-quiet"
+      )
+    end
   end
 
   desc "Build, sign and upload a new build to TestFlight"
