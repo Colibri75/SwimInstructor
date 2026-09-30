@@ -247,6 +247,44 @@ Deployment nachstellt: Image bauen, Container per `compose.yaml` starten, Smoke-
 - [x] Integrationstests (Jest + supertest): Auth erfolgreich/fehlgeschlagen, Health, Fehlerfälle,
       Logging, Konfiguration
 
+## M5 – Claude-Integration & Sanity-Layer
+
+`POST /v1/plan/today` nimmt den Zustands-Snapshot aus M3 entgegen, lässt Claude daraus einen
+Tagesplan schreiben und prüft ihn, bevor er die App erreicht. Das Backend ist damit der einzige
+Ort, an dem der Anthropic-API-Key liegt.
+
+- **Claude-Aufruf:** fester deutscher System-Prompt, strukturierte JSON-Ausgabe (`output_config.format`),
+  Standardmodell `claude-opus-5-5`, per `CLAUDE_MODEL` wechselbar.
+- **Sicherheitsschicht:** reiner Code, der gefährliche Vorschläge korrigiert oder blockt (zu große
+  Umfangssprünge, fehlende Ruhetage, zwei harte Einheiten hintereinander, schlechte Erholung,
+  unrealistische Zeiten).
+- **Fallback:** Fällt Claude aus, liefert der Server den letzten gültigen Plan, vorher erneut gegen
+  den heutigen Zustand geprüft. Ein Aufrufbudget begrenzt die Kosten.
+- **Eingabe:** Der Snapshot wird streng validiert, unbekannte Felder erreichen Claude nie.
+
+Details zu Ablauf, Antwortformat, Regeln, Kosten und Konfiguration:
+[`docs/plan-generation.md`](docs/plan-generation.md). Einrichtung des API-Keys auf dem Server:
+[`docs/backend-deploy.md`](docs/backend-deploy.md).
+
+```bash
+cd backend
+npm test                   # Sicherheitsschicht, Fehlerfälle, Route, Szenarien (ohne echte API)
+ANTHROPIC_API_KEY=... npm run eval:scenarios > ../docs/plan-eval.md   # echter Lauf, kostet Geld
+```
+
+### M5 – Definition of Done
+
+- [ ] `/v1/plan/today` ruft Claude mit festem System-Prompt und striktem JSON-Schema auf
+      (Code und Tests mit gemocktem SDK fertig, der erste echte Aufruf steht aus)
+- [ ] Für alle 5 Testszenarien aus M3 liefert Claude plausible Pläne, manuell bewertet und
+      dokumentiert (`npm run eval:scenarios`, Ergebnis in `docs/plan-eval.md`)
+- [x] Sanity-Layer korrigiert oder blockt gefährliche Vorschläge
+- [x] Fallback bei Claude-Ausfall: letzter gültiger Plan statt Absturz oder leerer Antwort
+- [x] Grobe Kostenkalkulation dokumentiert (Schätzung, der echte Lauf misst nach)
+- [x] Unit-Tests der Sicherheitsschicht mit absichtlich gefährlichen Claude-Antworten
+- [x] Fehlerfall-Tests: API nicht erreichbar, ungültiges JSON, Zeitlimit (und Rate-Limit,
+      Serverfehler, Ablehnung, abgeschnittene Antwort)
+
 ### Unit-Tests (Package)
 
 ```bash
@@ -287,12 +325,16 @@ Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
     AthleteStateCalculatorTests.swift  # 5 Szenarien + Randfaelle + Schema
 backend/                            # Node/TypeScript-Server (Proxy fuer Claude, ab M5)
   src/                               # app.ts, auth.ts, config.ts, logger.ts, server.ts
+  src/plan/                          # Plan-Erzeugung (M5): Claude-Aufruf, Sicherheitsschicht, Fallback
+  scenarios/                         # die 5 Snapshots aus M3 (Eingabe für npm run eval:scenarios)
+  scripts/eval-scenarios.ts          # echter Lauf gegen die Claude-API zur manuellen Bewertung
   test/                              # Jest + supertest
   Dockerfile, compose.yaml           # Container-Image und Start auf dem Server
   deploy/                            # Caddyfile-Vorlage, deploy.sh
 docs/
   AthleteStateSnapshot.md            # JSON-Schema, Definitionen, Schwellenwerte
   backend-deploy.md                  # Server-Einrichtung Schritt fuer Schritt
+  plan-generation.md                 # /v1/plan/today: Ablauf, Regeln, Kosten, Konfiguration
   Package.swift
 project.yml                          # XcodeGen-Konfiguration (beide Targets + Package)
 fastlane/

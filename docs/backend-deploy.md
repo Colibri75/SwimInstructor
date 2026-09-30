@@ -132,6 +132,32 @@ Und von außen darf der Container-Port nicht direkt offen sein:
 curl -m 5 http://144.91.69.144:3100/health      # muss fehlschlagen (Timeout/Connection refused)
 ```
 
+## Claude-API-Key einrichten (ab M5)
+
+Der Plan-Endpunkt `POST /v1/plan/today` braucht einen Anthropic-API-Key. Ohne Key läuft der Server
+weiter, der Endpunkt liefert dann nur gespeicherte Pläne (oder `503`).
+
+1. Lege in der [Anthropic Console](https://console.anthropic.com) einen API-Key an. Er ist ein
+   eigenes Produkt, getrennt von einem claude.ai-Abo, und wird pro Token abgerechnet.
+2. Setze dort unter *Limits* ein monatliches Ausgabenlimit (Kosten siehe
+   [plan-generation.md](plan-generation.md)).
+3. Trage den Key auf dem Server ein. `read -s` zeigt ihn beim Einfügen nicht an:
+
+```bash
+read -s -p "Anthropic API-Key: " KEY; echo
+printf 'ANTHROPIC_API_KEY=%s\n' "$KEY" >> /etc/swiminstructor/backend.env
+unset KEY
+cd /opt/stack/swiminstructor/backend && docker compose up -d --force-recreate
+```
+
+4. Prüfe, dass der Key ankommt: `docker logs swiminstructor-backend` zeigt beim Start keine Warnung
+   "ANTHROPIC_API_KEY nicht gesetzt" mehr.
+
+Der letzte Plan liegt im Docker-Volume `swim_data` (`/data` im Container) und übersteht
+Neustarts und Updates. Weitere Einstellungen (`CLAUDE_MODEL`, `CLAUDE_EFFORT`, Kostenbremse)
+stehen in [plan-generation.md](plan-generation.md) und lassen sich in derselben Datei
+`/etc/swiminstructor/backend.env` setzen.
+
 ## Hinweis zum Zertifikat
 
 `v6.rocks` ist eine gemeinsame DynDNS-Domain. Let's Encrypt begrenzt neue Zertifikate pro Domain

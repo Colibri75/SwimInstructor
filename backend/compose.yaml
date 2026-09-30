@@ -1,5 +1,6 @@
 # Startet das Backend auf dem Server:  docker compose up -d --build
-# Der API_TOKEN kommt aus /etc/swiminstructor/backend.env (Rechte 600), nie aus dem Repo.
+# Geheimnisse (API_TOKEN, ANTHROPIC_API_KEY) kommen aus /etc/swiminstructor/backend.env (Rechte 600),
+# nie aus dem Repo. Optionale Einstellungen wie CLAUDE_MODEL stehen in backend/.env.example.
 services:
   backend:
     build: .
@@ -17,6 +18,10 @@ services:
       # Nur auf localhost des Servers veroeffentlichen: von aussen kommt man nur ueber Caddy (HTTPS).
       # Host-Port 3100 statt 3000, damit er nicht mit anderen Diensten (z. B. Financial) kollidiert.
       - "127.0.0.1:3100:3000"
+    volumes:
+      # Haelt den letzten gueltigen Plan (Antwort-Cache und Fallback bei Claude-Ausfall) ueber
+      # Neustarts und Updates hinweg.
+      - swim_data:/data
     read_only: true
     tmpfs:
       - /tmp
@@ -29,3 +34,6 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
+
+volumes:
+  swim_data:
