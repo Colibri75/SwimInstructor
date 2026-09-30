@@ -191,12 +191,13 @@ zu lassen kostet etwa fünf Anfragen (geschätzt unter $1). Es gibt zwei Wege, j
 
 **Auf dem Server (kein Node nötig).** Der Produktionsserver hat nur Docker. Das Hilfsskript startet
 einen Wegwerf-Container, liest den Key aus `/etc/swiminstructor/backend.env` (er wird nie
-angezeigt), fragt vorher die Kosten ab und schreibt das Ergebnis nach `docs/plan-eval.md`:
+angezeigt), fragt vorher die Kosten ab und schreibt das Ergebnis nach
+`docs/eval-runs/plan-eval-<Datum-Uhrzeit>.md` (das gepflegte Dokument `docs/plan-eval.md` bleibt unberührt):
 
 ```bash
 cd /opt/stack/swiminstructor && git pull --ff-only origin main
 backend/scripts/eval-in-docker.sh
-cat docs/plan-eval.md
+cat docs/eval-runs/plan-eval-*.md | less      # oder den neuesten Lauf: ls -t docs/eval-runs | head -1
 ```
 
 **Auf einem Rechner mit Node 22:**
@@ -204,12 +205,13 @@ cat docs/plan-eval.md
 ```bash
 cd backend
 npm ci
-ANTHROPIC_API_KEY=sk-ant-... npm run eval:scenarios > ../docs/plan-eval.md
+mkdir -p ../docs/eval-runs
+ANTHROPIC_API_KEY=sk-ant-... npm run eval:scenarios > ../docs/eval-runs/plan-eval-$(date +%F).md
 ```
 
 Das Skript druckt je Szenario den Snapshot, Claudes Rohplan, die Korrekturen der
 Sicherheitsschicht, den korrigierten Plan sowie Token, Dauer und Kosten. Du bewertest jeden Plan
-von Hand und trägst ein Häkchen mit Begründung in `docs/plan-eval.md` ein. Orientierung:
+von Hand. Deine Bewertung kommt in die Tabelle am Ende von `docs/plan-eval.md` (am einfachsten sagst du sie Claude im Chat, der trägt sie ein). Orientierung:
 
 | Szenario | Ein sinnvoller Plan ... |
 |---|---|

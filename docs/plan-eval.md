@@ -4,6 +4,9 @@ Die Szenarien aus M3 liegen als Snapshots in `backend/scenarios/`. Der Lauf gege
 kommt aus `backend/scripts/eval-in-docker.sh` (Server) oder `npm run eval:scenarios` (Rechner mit Node),
 siehe [plan-generation.md](plan-generation.md).
 
+Die Rohausgabe jedes Laufs liegt in `docs/eval-runs/` (Zeitstempel im Namen). Dieses Dokument dagegen ist
+gepflegt und wird vom Skript nie überschrieben.
+
 Dieses Dokument hält fest, was die Läufe gezeigt haben. Die Einschätzungen darin sind die von Claude
 (dem Entwicklungsassistenten) und **keine Trainerfreigabe**. Ob ein Plan sinnvoll ist, entscheidest du
 am Ende in der Tabelle unten. Das ist der manuelle Teil der Definition of Done.
@@ -66,6 +69,11 @@ Bewertung ein.
 
 Bitte nach Lauf 2 ausfüllen. Orientierung, was ein sinnvoller Plan ist, steht in
 [plan-generation.md](plan-generation.md).
+
+**So trägst du sie ein:** Sag Claude im Chat pro Szenario "sinnvoll" oder "nicht sinnvoll" mit einem Satz
+Begründung, zum Beispiel "01 sinnvoll, 02 nicht sinnvoll, weil der Hauptsatz zu kurz ist". Claude trägt
+es hier ein und stellt es als Pull Request bereit. Direkt auf dem Server bearbeiten musst du nichts,
+das würde nur Konflikte beim nächsten `git pull` erzeugen.
 
 | Szenario | sinnvoll | Begründung |
 |---|---|---|

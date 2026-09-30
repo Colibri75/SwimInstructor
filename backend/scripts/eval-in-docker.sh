@@ -3,12 +3,14 @@
 # ohne Node (z. B. den Produktionsserver). Der API-Key kommt aus der Env-Datei und wird nie angezeigt.
 #
 # Aufruf:  backend/scripts/eval-in-docker.sh [Ausgabedatei]
-# Standard-Ausgabe: docs/plan-eval.md im Repo
+# Standard-Ausgabe: docs/eval-runs/plan-eval-<Datum-Uhrzeit>.md im Repo. docs/plan-eval.md ist das gepflegte
+# Bewertungsdokument und wird nie vom Skript ueberschrieben.
 set -euo pipefail
 
 BACKEND_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV_FILE="${ENV_FILE:-/etc/swiminstructor/backend.env}"
-OUT="${1:-$BACKEND_DIR/../docs/plan-eval.md}"
+OUT="${1:-$BACKEND_DIR/../docs/eval-runs/plan-eval-$(date +%Y-%m-%d-%H%M).md}"
+mkdir -p "$(dirname "$OUT")"
 
 if ! grep -q '^ANTHROPIC_API_KEY=.' "$ENV_FILE" 2>/dev/null; then
   echo "In $ENV_FILE fehlt ANTHROPIC_API_KEY. Siehe docs/backend-deploy.md, Abschnitt 'Claude-API-Key einrichten'." >&2
