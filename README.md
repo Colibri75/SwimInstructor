@@ -275,13 +275,14 @@ backend/scripts/eval-in-docker.sh   # dasselbe auf dem Server ohne Node (nur Doc
 
 ### M5 – Definition of Done
 
-- [ ] `/v1/plan/today` ruft Claude mit festem System-Prompt und striktem JSON-Schema auf
-      (Code und Tests mit gemocktem SDK fertig, der erste echte Aufruf steht aus)
+- [x] `/v1/plan/today` ruft Claude mit festem System-Prompt und striktem JSON-Schema auf
+      (30.09.2026 auf dem Server verifiziert: fünf echte Aufrufe, 6 bis 19 s, rund 4 Cent pro Plan)
 - [ ] Für alle 5 Testszenarien aus M3 liefert Claude plausible Pläne, manuell bewertet und
-      dokumentiert (`npm run eval:scenarios`, Ergebnis in `docs/plan-eval.md`)
+      dokumentiert. Der erste Lauf (30.09.) zeigte zwei Schwächen, die behoben sind. Der zweite Lauf
+      und deine Bewertung stehen aus, siehe [`docs/plan-eval.md`](docs/plan-eval.md)
 - [x] Sanity-Layer korrigiert oder blockt gefährliche Vorschläge
 - [x] Fallback bei Claude-Ausfall: letzter gültiger Plan statt Absturz oder leerer Antwort
-- [x] Grobe Kostenkalkulation dokumentiert (Schätzung, der echte Lauf misst nach)
+- [x] Kostenkalkulation dokumentiert und gemessen (rund $0,038 pro Plan, siehe `docs/plan-generation.md`)
 - [x] Unit-Tests der Sicherheitsschicht mit absichtlich gefährlichen Claude-Antworten
 - [x] Fehlerfall-Tests: API nicht erreichbar, ungültiges JSON, Zeitlimit (und Rate-Limit,
       Serverfehler, Ablehnung, abgeschnittene Antwort)

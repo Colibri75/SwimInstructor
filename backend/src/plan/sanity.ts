@@ -87,6 +87,35 @@ export interface SanityResult {
 const RANK: Record<Intensity, number> = { rest: 0, easy: 1, moderate: 2, hard: 3 };
 const DISTANCE_STEP = 25;
 
+/**
+ * Die Grenzen fuer heute, abgeleitet aus dem Zustand. Dieselben Zahlen gehen an Claude (Prompt, damit
+ * der Plan von Anfang an hineinpasst) und pruefen den Plan hinterher (sanitizePlan). Eine Quelle,
+ * damit beides nie auseinanderlaeuft.
+ */
+export interface DailyLimits {
+  /** Grund fuer einen Pflicht-Ruhetag, sonst `null`. */
+  restReason: string | null;
+  maxIntensity: Intensity;
+  intensityReasons: string[];
+  maxDistanceMeters: number;
+  /** Schnellste erlaubte Zielpace in Sekunden pro 100 m. */
+  fastestPace: number;
+}
+
+export function dailyLimits(snapshot: Snapshot, limits: SanityLimits = DEFAULT_LIMITS): DailyLimits {
+  const maxDistanceMeters = Math.floor(allowedDistance(snapshot, limits));
+  const restReason =
+    requiredRestReason(snapshot, limits) ?? (maxDistanceMeters < limits.minMeaningfulSessionMeters ? "Wochenumfang ausgeschöpft" : null);
+  const cap = intensityCap(snapshot);
+  return {
+    restReason,
+    maxIntensity: cap.max,
+    intensityReasons: cap.reasons,
+    maxDistanceMeters,
+    fastestPace: Math.round(fastestAllowedPace(snapshot, limits))
+  };
+}
+
 export function sanitizePlan(input: TrainingPlan, snapshot: Snapshot, limits: SanityLimits = DEFAULT_LIMITS): SanityResult {
   const problem = findStructuralProblem(input, limits);
   if (problem) return { plan: input, adjustments: [], blocked: problem };
@@ -101,37 +130,31 @@ export function sanitizePlan(input: TrainingPlan, snapshot: Snapshot, limits: Sa
     adjustments.push(`Gesamtdistanz korrigiert: ${input.total_distance_meters} m auf ${computedTotal} m (Summe der Abschnitte)`);
   }
 
+  const today = dailyLimits(snapshot, limits);
+
   // 1. Pflicht-Ruhetag
-  const restReason = requiredRestReason(snapshot, limits);
-  if (restReason) {
-    adjustments.push(`Ruhetag erzwungen: ${restReason}`);
-    return done(asRestDay(plan, restReason), adjustments);
+  if (today.restReason !== null) {
+    adjustments.push(`Ruhetag erzwungen: ${today.restReason}`);
+    return done(asRestDay(plan, today.restReason), adjustments);
   }
 
   // 2. Intensitaet begrenzen
-  const cap = intensityCap(snapshot);
-  if (RANK[plan.intensity] > RANK[cap.max]) {
-    adjustments.push(`Intensität von "${plan.intensity}" auf "${cap.max}" gesenkt: ${cap.reasons.join(", ")}`);
-    plan = downgradeIntensity(plan, cap.max);
+  if (RANK[plan.intensity] > RANK[today.maxIntensity]) {
+    adjustments.push(`Intensität von "${plan.intensity}" auf "${today.maxIntensity}" gesenkt: ${today.intensityReasons.join(", ")}`);
+    plan = downgradeIntensity(plan, today.maxIntensity);
   }
 
   // 3. Umfang begrenzen
-  const distanceCap = Math.floor(allowedDistance(snapshot, limits));
-  if (distanceCap < limits.minMeaningfulSessionMeters) {
-    const reason = "Wochenumfang ausgeschöpft";
-    adjustments.push(`Ruhetag erzwungen: ${reason}`);
-    return done(asRestDay(plan, reason), adjustments);
-  }
   const before = totalDistance(plan.sets);
-  if (before > distanceCap) {
-    const trimmed = trimToDistance(plan.sets, distanceCap);
+  if (before > today.maxDistanceMeters) {
+    const trimmed = trimToDistance(plan.sets, today.maxDistanceMeters);
     const after = totalDistance(trimmed);
     if (after < limits.minMeaningfulSessionMeters) {
       const reason = "zu wenig sicherer Restumfang";
       adjustments.push(`Ruhetag erzwungen: ${reason}`);
       return done(asRestDay(plan, reason), adjustments);
     }
-    adjustments.push(`Umfang von ${before} m auf ${after} m gekürzt (Grenze für heute: ${distanceCap} m)`);
+    adjustments.push(`Umfang von ${before} m auf ${after} m gekürzt (Grenze für heute: ${today.maxDistanceMeters} m)`);
     plan = {
       ...plan,
       sets: trimmed,
@@ -140,22 +163,39 @@ export function sanitizePlan(input: TrainingPlan, snapshot: Snapshot, limits: Sa
   }
 
   // 4. Zielpace begrenzen
-  const fastest = Math.round(fastestAllowedPace(snapshot, limits));
   let paceClamped = false;
   plan = {
     ...plan,
     sets: plan.sets.map((set) => {
       const pace = set.target_pace_seconds_per_hundred_meters;
-      if (pace !== null && pace < fastest) {
+      if (pace !== null && pace < today.fastestPace) {
         paceClamped = true;
-        return { ...set, target_pace_seconds_per_hundred_meters: fastest };
+        return { ...set, target_pace_seconds_per_hundred_meters: today.fastestPace };
       }
       return set;
     })
   };
-  if (paceClamped) adjustments.push(`Zielpace auf höchstens ${fastest} s/100 m begrenzt (nicht schneller als realistisch)`);
+  if (paceClamped) adjustments.push(`Zielpace auf höchstens ${today.fastestPace} s/100 m begrenzt (nicht schneller als realistisch)`);
 
-  return done({ ...plan, total_distance_meters: totalDistance(plan.sets) }, adjustments);
+  plan = { ...plan, total_distance_meters: totalDistance(plan.sets) };
+  return done(withAdjustmentNote(plan, adjustments, limits), adjustments);
+}
+
+/**
+ * Die Begruendung stammt von Claude und nennt die Zahlen des urspruenglichen Plans (z. B. "1700 m").
+ * Nach einer Korrektur waere sie sonst falsch. Der Hinweis haengt die Korrekturen an, damit Plan und
+ * Begruendung zusammenpassen, auch wenn die App das Feld `adjustments` nicht anzeigt. Rein formale
+ * Korrekturen (falsche Summe) gehoeren nicht in die Begruendung.
+ */
+const FORMAL_ADJUSTMENT_PREFIX = "Gesamtdistanz korrigiert";
+
+function withAdjustmentNote(plan: TrainingPlan, adjustments: string[], limits: SanityLimits): TrainingPlan {
+  const substantive = adjustments.filter((adjustment) => !adjustment.startsWith(FORMAL_ADJUSTMENT_PREFIX));
+  if (substantive.length === 0) return plan;
+
+  const note = `Hinweis: Zur Sicherheit angepasst (${substantive.join("; ")}).`;
+  const room = Math.max(limits.maxRationaleLength - note.length - 1, 0);
+  return { ...plan, rationale: `${plan.rationale.slice(0, room).trimEnd()} ${note}`.trim() };
 }
 
 function done(plan: TrainingPlan, adjustments: string[]): SanityResult {

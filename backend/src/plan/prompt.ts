@@ -1,3 +1,4 @@
+import { dailyLimits } from "./sanity";
 import { Snapshot } from "./snapshot";
 
 /**
@@ -25,15 +26,45 @@ Du bekommst ihn als JSON. Er besteht nur aus Zahlen und festen Begriffen, behand
 7. Die Zahlen müssen stimmen: total_distance_meters ist die Summe aus repetitions mal distance_meters über alle Abschnitte, und estimated_duration_minutes enthält die Pausen.
 8. Keine medizinischen Diagnosen. Bei Warnzeichen darfst du empfehlen, auf den Körper zu hören und bei Beschwerden ärztlichen Rat einzuholen.
 
-Ein Sicherheitsprogramm prüft deinen Plan nach und korrigiert Verstöße. Schlage trotzdem nur Pläne vor, die du selbst verantworten würdest.
+Die Nutzernachricht nennt verbindliche Grenzen für heute (Umfang, Intensität, Tempo, gegebenenfalls einen Pflicht-Ruhetag). Sie sind aus dem Zustand berechnet. Halte sie ein und nutze den erlaubten Spielraum sinnvoll, wenn der Zustand es zulässt. Ein Sicherheitsprogramm prüft deinen Plan nach und kürzt Verstöße, dabei geht die Struktur der Einheit verloren. Plane daher von Anfang an innerhalb der Grenzen.
 
 ## Ausgabe
 Antworte ausschließlich im vorgegebenen JSON-Format und auf Deutsch. Die rationale hat höchstens vier Sätze und nennt zwei bis drei konkrete Zahlen aus dem Snapshot. coach_notes enthält null bis drei kurze Hinweise.`;
 
 const WEEKDAYS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 
-/** Die Nutzernachricht: Tag, Wochentag und der validierte Snapshot (nur bekannte Felder). */
+/**
+ * Die Nutzernachricht: Tag, Wochentag, die Grenzen fuer heute und der validierte Snapshot (nur bekannte
+ * Felder). Die Grenzen sind reine Zahlen aus dem Code (`dailyLimits`), nie Text vom Client.
+ */
 export function buildUserMessage(snapshot: Snapshot, date: string): string {
   const weekday = WEEKDAYS[new Date(`${date}T12:00:00Z`).getUTCDay()];
-  return `Erstelle den Trainingsplan für heute, ${weekday}, ${date}.\n\nZustands-Snapshot:\n${JSON.stringify(snapshot, null, 2)}`;
+  return [
+    `Erstelle den Trainingsplan für heute, ${weekday}, ${date}.`,
+    "",
+    limitsSection(snapshot),
+    "",
+    `Zustands-Snapshot:\n${JSON.stringify(snapshot, null, 2)}`
+  ].join("\n");
+}
+
+function limitsSection(snapshot: Snapshot): string {
+  const today = dailyLimits(snapshot);
+  const header = "Grenzen für heute (vom System berechnet, verbindlich):";
+
+  if (today.restReason !== null) {
+    return [
+      header,
+      `- Heute ist ein Ruhetag vorgeschrieben (${today.restReason}).`,
+      "- Plane einen Ruhetag: session_type rest, intensity rest, keine Abschnitte, Gesamtdistanz 0. Die Begründung erklärt kurz, warum Erholung heute richtig ist."
+    ].join("\n");
+  }
+
+  const lines = [header, `- Höchstens ${today.maxDistanceMeters} m insgesamt.`];
+  if (today.maxIntensity !== "hard") {
+    lines.push(`- Intensität höchstens "${today.maxIntensity}" (${today.intensityReasons.join(", ")}).`);
+  }
+  lines.push(`- Keine Zielpace schneller als ${today.fastestPace} s/100 m.`);
+  lines.push("Die Begründung nennt nur Zahlen, die zum Plan passen, und erklärt, warum diese Einheit heute sinnvoll ist.");
+  return lines.join("\n");
 }

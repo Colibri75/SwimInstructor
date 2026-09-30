@@ -11,7 +11,8 @@ App ──POST {snapshot}──▶ Server
                           1. Snapshot prüfen (Schema, Wertebereiche, unbekannte Felder verwerfen)
                           2. Gleicher Zustand heute schon geplant?  ──ja──▶ gespeicherten Plan liefern (source: cache)
                           3. Aufrufbudget frei und API-Key da?      ──nein─▶ Fallback
-                          4. Claude aufrufen (fester System-Prompt, strukturierte JSON-Ausgabe)
+                          4. Claude aufrufen (fester System-Prompt, strukturierte JSON-Ausgabe,
+                             dazu die berechneten Grenzen für heute)
                           5. Antwort gegen das Plan-Schema prüfen   ──Fehler─▶ Fallback
                           6. Sicherheitsschicht: korrigieren oder blocken   ──blockiert─▶ Fallback
                           7. Plan speichern, liefern (source: claude)
@@ -89,6 +90,13 @@ Fehlerantworten: `400 invalid_request` (mit `details` je fehlerhaftem Feld), `40
 Reiner Code ohne Netzwerk (`backend/src/plan/sanity.ts`). Sie korrigiert deterministisch und
 schreibt jede Korrektur in `adjustments`. Die Schwellen stehen in `DEFAULT_LIMITS`.
 
+**Zwei Schutzebenen mit denselben Zahlen.** `dailyLimits` berechnet aus dem Zustand die Grenzen für
+heute: Umfang, höchste Intensität, schnellste Zielpace oder einen Pflicht-Ruhetag. Diese Grenzen gehen
+**vorher** als verbindliche Vorgabe an Claude, damit der Plan von Anfang an hineinpasst. Die Prüfung
+**nachher** setzt dieselben Grenzen durch, falls Claude sie trotzdem überschreitet. Das Vorab-Nennen war
+die Konsequenz aus dem ersten echten Lauf: Wenn die Prüfung einen Plan erst hinterher kürzt, verliert die
+Einheit ihre Struktur (aus 4 × 200 m im Hauptsatz wurde ein einzelner 200er).
+
 | Regel | Wirkung |
 |---|---|
 | Übertrainingsrisiko (Flag `overreaching_risk`) | Ruhetag erzwungen |
@@ -107,7 +115,9 @@ schreibt jede Korrektur in `adjustments`. Die Schwellen stehen in `DEFAULT_LIMIT
 Beim Kürzen schrumpft der größte Abschnitt zuerst, Ein- und Ausschwimmen bleiben meist erhalten.
 Eine Herabstufung der Intensität entfernt die Zielzeiten, weil sie zur härteren Einheit gehörten.
 Bei einem erzwungenen Ruhetag ersetzt die Sicherheitsschicht auch die Begründung, weil die von
-Claude zu einem anderen Plan gehörte.
+Claude zu einem anderen Plan gehörte. Bei allen anderen inhaltlichen Korrekturen hängt sie einen
+Hinweis an die Begründung ("Hinweis: Zur Sicherheit angepasst (...)"), damit die Begründung nicht den
+alten Umfang behauptet. Rein rechnerische Korrekturen (falsche Summe) erscheinen dort nicht.
 
 **Geblockt** (nicht korrigiert) wird ein Plan bei unmöglichen Werten (negative oder nicht endliche
 Zahlen), fehlender Begründung, Trainingstag ohne Abschnitte, mehr als 20 Abschnitten oder einem
@@ -127,24 +137,27 @@ Zustand am selben Tag nur einmal geplant (Cache).
 
 Setze außerdem in der Anthropic Console unter *Limits* ein monatliches Ausgabenlimit.
 
-## Kosten (Schätzung)
+## Kosten (gemessen)
 
 Standardmodell ist `claude-opus-5-5` ($4 pro Million Eingabe-Token, $20 pro Million Ausgabe-Token).
-Das ist eine **Schätzung vor dem ersten echten Lauf**, `npm run eval:scenarios` misst die echten Werte.
+Gemessen im ersten echten Lauf am 30.09.2026 (fünf Szenarien, Effort `medium`, siehe
+[plan-eval.md](plan-eval.md)):
 
-| Posten | Token |
-|---|---|
-| System-Prompt | rund 1.000 |
-| Nutzernachricht mit Snapshot | rund 360 |
-| JSON-Schema der strukturierten Ausgabe | einige hundert |
-| Ausgabe (Plan plus adaptives Denken bei Effort `medium`) | geschätzt 2.000 bis 6.000 |
+| | Eingabe-Token | Ausgabe-Token | Dauer | Kosten |
+|---|---|---|---|---|
+| Durchschnitt | rund 3.400 | rund 1.250 | rund 15 s | rund $0,038 |
+| Spanne | 3.318 bis 3.474 | 458 bis 1.731 | 6 bis 19 s | $0,023 bis $0,048 |
 
-Das ergibt grob $0,05 bis $0,13 pro Aufruf mit Opus 5.5, die Hälfte mit `claude-sonnet-5-5`.
-Bei ein bis zwei Plänen pro Tag sind das etwa $2 bis $8 im Monat. Die Kostenbremse deckelt den
-Worst Case bei 20 Aufrufen pro Tag, das wären rund $1 bis $3 pro Tag.
+Ein Ruhetag ist am günstigsten (wenig Text). Die Eingabe ist größer als der reine Prompt (System-Prompt
+rund 1.000, Nutzernachricht rund 400 Token): Der Rest von rund 2.000 Token entfällt vermutlich auf das
+JSON-Schema der strukturierten Ausgabe. Die Ausgabe enthält das adaptive Denken, es fiel bei `medium`
+geringer aus als zuerst geschätzt.
 
-Das Modell lässt sich per `PLAN_MODEL` wechseln (z. B. `claude-sonnet-5-5`), die Denktiefe per
-`PLAN_EFFORT` (`low` bis `max`, Standard `medium`). Jeder Aufruf schreibt Modell, Token und Dauer
+Bei ein bis zwei Plänen pro Tag sind das etwa $1 bis $3 im Monat. Die Kostenbremse deckelt den Worst
+Case bei 20 Aufrufen pro Tag, das wären rund $1 pro Tag (rund $29 im Monat).
+
+Das Modell lässt sich per `PLAN_MODEL` wechseln (z. B. `claude-sonnet-5-5`, halber Preis), die Denktiefe
+per `PLAN_EFFORT` (`low` bis `max`, Standard `medium`). Jeder Aufruf schreibt Modell, Token und Dauer
 ins Server-Log (`docker logs swiminstructor-backend`, Eintrag "plan generated").
 
 ## Datenschutz
