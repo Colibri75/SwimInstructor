@@ -178,6 +178,29 @@ Die iOS-`ContentView` zeigt nach dem Health-Zugriff eine einfache Liste
 - [ ] Kein Crash bei einem Workout ohne Streckenangabe (Distanz/Pace zeigen
       einfach nichts an, statt abzustürzen)
 
+## M3 – Athleten-Zustand-Berechnung
+
+`AthleteStateCalculator` (in `Packages/SwimInstructorCore`) rechnet aus Workouts,
+Tageswerten (Ruhepuls, HRV, Schlaf) und dem Ziel den `AthleteStateSnapshot`:
+Wochenvolumen, Pace-Trend, Abstand zum Zielpace, Tage bis zum Zieldatum, Tage
+seit der letzten (harten) Einheit, Erholungsstatus und Warn-Flags. Die Berechnung
+ist eine reine Funktion ohne HealthKit-Zugriff und komplett per Unit-Test prüfbar.
+Doppelte Einträge derselben Einheit (mehrere Quellen in Health) bereinigt
+`SwimWorkoutDeduplicator`.
+
+Schema, Definitionen und Schwellenwerte: [`docs/AthleteStateSnapshot.md`](docs/AthleteStateSnapshot.md).
+
+### M3 – Definition of Done
+
+- [x] Berechnungsfunktionen für Wochenvolumen, Pace-Trend, Tage bis Zieldatum,
+      Tage seit letzter harter Einheit und Erholungsindikatoren
+- [x] JSON-Schema des Snapshots dokumentiert und per Test gegen Änderungen abgesichert
+- [x] 5 Testszenarien (Anfänger, guter Fortschritt, Trainingspause, kurz vor
+      Zieldatum, Übertraining-Warnsignal) mit von Hand nachgerechneten Werten
+- [ ] Coverage der Kernlogik > 80 % (der CI-Job `test` schreibt den Report pro
+      Datei ins Log, abzulesen bei `AthleteStateCalculator.swift` und
+      `SwimWorkoutDeduplicator.swift`)
+
 ### Unit-Tests (Package)
 
 ```bash
@@ -206,9 +229,18 @@ Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
     HealthKitManager.swift           # Autorisierung
     SwimWorkout.swift                # Domain-Modell (Pace, SWOLF-Näherung)
     SwimWorkoutRepository.swift      # Liest Workouts aus HealthKit + Mapping
+    SwimWorkoutDeduplicator.swift    # Entfernt doppelte Einheiten aus mehreren Quellen
+    AthleteGoal.swift                # Ziel (3,8 km < 60 min bis 04.07.2027)
+    DailyVitals.swift                # Tageswerte Ruhepuls/HRV/Schlaf
+    AthleteStateSnapshot.swift       # Snapshot-Modell + JSON-Encoder (Schema v1)
+    AthleteStateCalculator.swift     # Berechnung Workouts/Vitals -> Snapshot
   Tests/SwimInstructorCoreTests/
     HealthKitManagerTests.swift
     SwimWorkoutRepositoryTests.swift
+    SwimWorkoutDeduplicatorTests.swift
+    AthleteStateCalculatorTests.swift  # 5 Szenarien + Randfaelle + Schema
+docs/
+  AthleteStateSnapshot.md            # JSON-Schema, Definitionen, Schwellenwerte
   Package.swift
 project.yml                          # XcodeGen-Konfiguration (beide Targets + Package)
 fastlane/

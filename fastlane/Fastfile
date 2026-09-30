@@ -20,7 +20,19 @@ platform :ios do
     # All current tests live in the SwimInstructorCore package; swift test runs them directly
     # without needing a simulator, and doesn't depend on wiring the package into an Xcode scheme.
     Dir.chdir("../Packages/SwimInstructorCore") do
-      sh("swift test")
+      sh("swift test --enable-code-coverage")
+
+      # Coverage pro Datei ins CI-Log (Definition of Done M3: Kernlogik > 80 %). Reines
+      # Reporting - ein Problem hier darf die Tests nicht rot machen.
+      begin
+        bundle = Dir.glob(".build/debug/*.xctest").first
+        raise "kein .xctest-Bundle gefunden" if bundle.nil?
+        binary = File.join(bundle, "Contents", "MacOS", File.basename(bundle, ".xctest"))
+        sh("xcrun llvm-cov report '#{binary}' -instr-profile=.build/debug/codecov/default.profdata " \
+           "-ignore-filename-regex='\\.build|Tests'")
+      rescue StandardError => e
+        UI.important("Coverage-Report nicht verfuegbar: #{e.message}")
+      end
     end
   end
 
