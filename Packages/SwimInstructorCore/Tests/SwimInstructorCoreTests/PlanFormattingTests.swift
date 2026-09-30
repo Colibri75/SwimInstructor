@@ -1,0 +1,56 @@
+import XCTest
+@testable import SwimInstructorCore
+
+final class PlanFormattingTests: XCTestCase {
+    func testPace() {
+        XCTAssertEqual(PlanFormatting.pace(140), "2:20")
+        XCTAssertEqual(PlanFormatting.pace(94.7), "1:35")
+        XCTAssertEqual(PlanFormatting.pace(65), "1:05")
+    }
+
+    func testMetersAndRest() {
+        XCTAssertEqual(PlanFormatting.meters(400), "400 m")
+        XCTAssertEqual(PlanFormatting.meters(1600), "1.600 m")
+        XCTAssertEqual(PlanFormatting.rest(30), "30 s")
+        XCTAssertEqual(PlanFormatting.rest(90), "1:30 min")
+    }
+
+    func testSetLines() {
+        let main = PlanSet(name: "Hauptsatz", repetitions: 6, distanceMeters: 200, targetPaceSecondsPerHundredMeters: 140, restSeconds: 30, instructions: "")
+        let warmUp = PlanSet(name: "Einschwimmen", repetitions: 1, distanceMeters: 400, targetPaceSecondsPerHundredMeters: nil, restSeconds: 0, instructions: "")
+
+        XCTAssertEqual(PlanFormatting.setVolume(main), "6 × 200 m")
+        XCTAssertEqual(PlanFormatting.setDetails(main), "2:20 /100 m · 30 s Pause")
+        XCTAssertEqual(PlanFormatting.setVolume(warmUp), "400 m")
+        XCTAssertEqual(PlanFormatting.setDetails(warmUp), "")
+    }
+
+    func testLabelsCoverAllCases() {
+        for type in SessionType.allCases {
+            XCTAssertFalse(PlanFormatting.sessionType(type).isEmpty)
+        }
+        for intensity in PlanIntensity.allCases {
+            XCTAssertFalse(PlanFormatting.intensity(intensity).isEmpty)
+        }
+        XCTAssertEqual(PlanFormatting.sessionType(.rest), "Ruhetag")
+    }
+
+    func testSourceNotice() {
+        XCTAssertNil(PlanFormatting.sourceNotice(TestFixtures.response(source: .claude)))
+        XCTAssertNil(PlanFormatting.sourceNotice(TestFixtures.response(source: .cache)))
+        XCTAssertEqual(
+            PlanFormatting.sourceNotice(TestFixtures.response(date: "2026-09-29", source: .fallback, stale: true)),
+            "Letzter gültiger Plan vom 29.09.2026. Claude war gerade nicht erreichbar."
+        )
+        XCTAssertEqual(
+            PlanFormatting.sourceNotice(TestFixtures.response(source: .fallback, stale: false)),
+            "Früherer Plan von heute. Claude war gerade nicht erreichbar."
+        )
+    }
+
+    func testIsoDay() {
+        XCTAssertEqual(PlanFormatting.isoDay(TestFixtures.now, calendar: TestFixtures.utc), "2026-09-30")
+        XCTAssertEqual(PlanFormatting.germanDate("2026-09-30"), "30.09.2026")
+        XCTAssertEqual(PlanFormatting.germanDate("unbekannt"), "unbekannt")
+    }
+}

@@ -3,6 +3,9 @@ import HealthKit
 
 public protocol SwimWorkoutRepository {
     func fetchRecentSwimWorkouts(limit: Int) async throws -> [SwimWorkout]
+    /// Alle Schwimm-Workouts ab `startDate`, neueste zuerst (für den Zustands-Snapshot, der ein
+    /// festes Zeitfenster braucht statt einer festen Anzahl).
+    func fetchSwimWorkouts(from startDate: Date) async throws -> [SwimWorkout]
 }
 
 /// Reads swim workouts plus the vitals/lap data attached to them. Fetching (this type) is kept
@@ -16,8 +19,14 @@ public final class HealthKitSwimWorkoutRepository: SwimWorkoutRepository {
     }
 
     public func fetchRecentSwimWorkouts(limit: Int = 50) async throws -> [SwimWorkout] {
-        let workouts = try await queryWorkouts(limit: limit)
+        try await details(for: queryWorkouts(limit: limit, startDate: nil))
+    }
 
+    public func fetchSwimWorkouts(from startDate: Date) async throws -> [SwimWorkout] {
+        try await details(for: queryWorkouts(limit: HKObjectQueryNoLimit, startDate: startDate))
+    }
+
+    private func details(for workouts: [HKWorkout]) async throws -> [SwimWorkout] {
         var result: [SwimWorkout] = []
         for workout in workouts {
             let distance = try await sumQuantity(identifier: .distanceSwimming, unit: .meter(), workout: workout)
@@ -66,8 +75,14 @@ public final class HealthKitSwimWorkoutRepository: SwimWorkoutRepository {
         return laps > 0 ? laps : nil
     }
 
-    private func queryWorkouts(limit: Int) async throws -> [HKWorkout] {
-        let predicate = HKQuery.predicateForWorkouts(with: .swimming)
+    private func queryWorkouts(limit: Int, startDate: Date?) async throws -> [HKWorkout] {
+        var predicate = HKQuery.predicateForWorkouts(with: .swimming)
+        if let startDate {
+            predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                predicate,
+                HKQuery.predicateForSamples(withStart: startDate, end: nil, options: .strictStartDate)
+            ])
+        }
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
 
         return try await withCheckedThrowingContinuation { continuation in
