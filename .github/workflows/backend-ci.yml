@@ -37,3 +37,50 @@ jobs:
 
       - name: Auf bekannte Schwachstellen pruefen (nur Produktions-Abhaengigkeiten)
         run: npm audit --omit=dev --audit-level=high
+
+  # Stellt das Deployment auf dem Server nach: gleiche compose.yaml, gleicher Pfad fuer die
+  # Konfigurationsdatei. Faengt Fehler in Dockerfile, Compose-Datei und Healthcheck ab.
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Konfigurationsdatei wie auf dem Server anlegen
+        run: |
+          sudo mkdir -p /etc/swiminstructor
+          echo "API_TOKEN=ci-token-$(openssl rand -hex 24)" | sudo tee /etc/swiminstructor/backend.env >/dev/null
+          # docker compose liest die Datei als aufrufender Nutzer (auf dem Server ist das root)
+          sudo chown "$USER":"$USER" /etc/swiminstructor/backend.env
+          sudo chmod 600 /etc/swiminstructor/backend.env
+
+      - name: Image bauen und Container starten
+        working-directory: backend
+        run: docker compose up -d --build
+
+      - name: Warten, bis der Container gesund ist
+        run: |
+          for _ in $(seq 1 20); do
+            status=$(docker inspect --format '{{.State.Health.Status}}' swiminstructor-backend)
+            [ "$status" = "healthy" ] && exit 0
+            sleep 2
+          done
+          echo "Container wurde nicht gesund (Status: $status)"
+          exit 1
+
+      - name: Smoke-Test gegen den laufenden Container
+        run: |
+          curl -fsS http://127.0.0.1:3100/health
+          echo
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/v1/status)" = "401"
+          TOKEN=$(grep '^API_TOKEN=' /etc/swiminstructor/backend.env | cut -d= -f2)
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" http://127.0.0.1:3100/v1/status)" = "200"
+          test "$(docker exec swiminstructor-backend id -u)" != "0"
+          echo "Smoke-Test ok: Health 200, ohne Token 401, mit Token 200, Container laeuft nicht als root"
+
+      - name: Container-Logs
+        if: failure()
+        run: docker logs swiminstructor-backend || true
+
+      - name: Aufraeumen
+        if: always()
+        run: docker compose -f backend/compose.yaml down || true

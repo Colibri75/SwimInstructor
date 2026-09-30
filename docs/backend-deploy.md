@@ -1,132 +1,126 @@
-# Backend auf dem Ubuntu-Server einrichten
+# Backend auf dem Server einrichten (Docker + Caddy)
 
-Das Backend ist ein kleiner Node-Dienst, der nur auf `127.0.0.1:3000` lauscht. Von außen ist er
-über deinen bestehenden **nginx** erreichbar, der HTTPS übernimmt. Die Financial-App bleibt
-unangetastet: Du legst nur eine neue nginx-Konfigurationsdatei an.
+Das Backend läuft als Docker-Container und veröffentlicht seinen Port nur auf `127.0.0.1:3100`
+des Servers, genau wie deine anderen Dienste (Vaultwarden, Immich, Financial-App). Dein
+bestehender **Caddy** (läuft im Container) nimmt die Anfragen von außen an, kümmert sich um
+HTTPS und leitet sie an den Container weiter. Die anderen Dienste bleiben unangetastet: Du
+ergänzt nur einen Block in der Caddyfile.
 
-Die Anleitung geht von nginx und einem Nutzer mit `sudo` aus. Läuft bei dir Apache oder Caddy,
-sag Bescheid, dann passe ich Schritt 6 an.
+Die Befehle laufen als `root` auf dem Server (sonst `sudo` davorsetzen). `docker compose` liest
+die Konfigurationsdatei als aufrufender Nutzer, deshalb auch die Deploys als root ausführen.
 
-## Voraussetzungen
+Die API bekommt den Hostnamen **`swiminstructor.kellner.v6.rocks`**.
 
-- Ubuntu-Server mit SSH-Zugang und `sudo`
-- Ein Hostname, der auf den Server zeigt (dein DynDNS-Name oder ein zweiter dafür)
-- Port 80 und 443 sind von außen erreichbar (für die Financial-App vermutlich schon)
-- Ein GitHub-Token (PAT) mit Lesezugriff auf das Repo, weil das Repo privat ist
-
-## 1. Node.js 22 installieren
+## Voraussetzungen prüfen
 
 ```bash
-node -v   # falls schon >= 20 vorhanden, weiter mit Schritt 2
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt-get install -y nodejs git
-node -v   # v22.x
+docker compose version                        # Compose vorhanden
+ss -tlnp | grep ':3100 '                      # liefert nichts: Port ist frei
+docker inspect caddy --format '{{.HostConfig.NetworkMode}}'   # soll "host" ausgeben
 ```
 
-## 2. Dienst-Nutzer und Code anlegen
+Die letzte Zeile ist wichtig: Nur mit Host-Netzwerk erreicht Caddy den Backend-Container über
+`127.0.0.1:3100`. Steht dort etwas anderes, hör hier auf und melde dich, dann ändere ich die
+Anbindung.
+
+Außerdem muss der Hostname auf deinen Server zeigen. Prüfe das von deinem Rechner oder vom
+Server aus:
 
 ```bash
-# Eigener Nutzer ohne Login-Shell: der Dienst läuft nie als root
-sudo useradd --system --no-create-home --shell /usr/sbin/nologin swiminstructor
+dig +short A    swiminstructor.kellner.v6.rocks   # soll 144.91.69.144 zeigen
+dig +short AAAA swiminstructor.kellner.v6.rocks   # falls vorhanden: die IPv6-Adresse des Servers
+```
 
-sudo mkdir -p /opt/swiminstructor && sudo chown "$USER":"$USER" /opt/swiminstructor
+Kommt bei `A` nichts zurück, ist im DynDNS-Eintrag keine IPv4-Adresse hinterlegt. Trag dort
+`144.91.69.144` ein, sonst kann Caddy kein Zertifikat holen und iPhones im Mobilfunknetz
+erreichen die API womöglich nicht.
+
+## 1. Code auf den Server holen
+
+Ein GitHub-Token (PAT) mit Lesezugriff auf das Repo wird gebraucht, weil das Repo privat ist.
+
+```bash
+mkdir -p /opt/swiminstructor
 git clone https://github.com/Colibri75/SwimInstructor.git /opt/swiminstructor
 # Benutzername: Colibri75, Passwort: dein PAT (kein GitHub-Passwort)
-
-cd /opt/swiminstructor/backend
-npm ci
-npm run build
-npm prune --omit=dev
 ```
 
-## 3. Geheimen Token und Konfiguration anlegen
+## 2. Geheimen Token und Konfiguration anlegen
 
 ```bash
-sudo mkdir -p /etc/swiminstructor
+mkdir -p /etc/swiminstructor
 TOKEN=$(openssl rand -hex 32)
-sudo tee /etc/swiminstructor/backend.env >/dev/null <<EOF
-API_TOKEN=$TOKEN
-NODE_ENV=production
-HOST=127.0.0.1
-PORT=3000
-EOF
-sudo chmod 600 /etc/swiminstructor/backend.env
-echo "Dein API-Token (jetzt sicher notieren, er wird für die App gebraucht):"
+printf 'API_TOKEN=%s\n' "$TOKEN" > /etc/swiminstructor/backend.env
+chmod 600 /etc/swiminstructor/backend.env
+echo "Dein API-Token (jetzt sicher notieren, die App braucht ihn später):"
 echo "$TOKEN"
 ```
 
 Der Token steht danach nur in dieser Datei (lesbar nur für root). Er gehört später in die App
-und nie in das Repo.
+und nie in das Repo. Die übrigen Einstellungen (Port, Produktionsmodus) stehen in
+`backend/compose.yaml`.
 
-## 4. Dienst starten
+## 3. Container starten
 
 ```bash
-sudo cp /opt/swiminstructor/backend/deploy/swiminstructor-backend.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now swiminstructor-backend
-systemctl status swiminstructor-backend --no-pager
-
-curl -s http://127.0.0.1:3000/health
+cd /opt/swiminstructor/backend
+docker compose up -d --build
+docker compose ps                 # Status sollte "healthy" werden (nach ca. 5-10 s)
+curl -s http://127.0.0.1:3100/health
 # {"status":"ok","uptimeSeconds":3}
 ```
 
-Läuft der Dienst nicht: `journalctl -u swiminstructor-backend -n 50 --no-pager`.
+Der erste Build dauert ein bis zwei Minuten. Läuft der Container nicht:
+`docker logs swiminstructor-backend`.
 
-## 5. Firewall prüfen
+## 4. Caddy einrichten
 
-Port 3000 darf **nicht** von außen offen sein (der Dienst lauscht ohnehin nur lokal):
-
-```bash
-sudo ufw status   # 80 und 443 erlaubt, 3000 nicht aufgeführt
-```
-
-## 6. nginx einrichten
-
-Kopiere die Vorlage, trag deinen Hostnamen ein und prüfe die Konfiguration, bevor du nginx
-neu lädst:
+Finde zuerst heraus, wo die Caddyfile auf dem Server liegt:
 
 ```bash
-sudo cp /opt/swiminstructor/backend/deploy/nginx-swiminstructor.conf.example \
-        /etc/nginx/sites-available/swiminstructor
-sudo nano /etc/nginx/sites-available/swiminstructor     # server_name anpassen
-sudo ln -s /etc/nginx/sites-available/swiminstructor /etc/nginx/sites-enabled/
-sudo nginx -t                                            # muss "syntax is ok" melden
-sudo systemctl reload nginx
+docker inspect caddy --format '{{json .Mounts}}'
 ```
 
-Die Vorlage enthält zwei Varianten (steht im Kopf der Datei):
+In der Ausgabe siehst du unter `Source` den Pfad auf dem Server und unter `Destination` den Pfad
+im Container (meist `/etc/caddy/Caddyfile`, bei einem Ordner-Mount liegt sie darin).
 
-- **A (empfohlen):** eigener Hostname nur für die API. Sauber getrennt von der Financial-App.
-- **B:** kein zweiter Hostname möglich. Dann hängst du einen `location /swim/`-Block an deinen
-  bestehenden HTTPS-Server-Block. Die API liegt dann unter `https://<dein-hostname>/swim/`.
-
-## 7. HTTPS-Zertifikat (Variante A)
+Ergänze in der Caddyfile auf dem Server den Block aus `backend/deploy/Caddyfile.example` (als
+eigenen Block, die bestehenden lässt du stehen). Dann erst prüfen, danach laden. Das Laden geht
+ohne Ausfall, die anderen Dienste merken nichts:
 
 ```bash
-sudo apt-get install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d <dein-api-hostname>
+docker exec caddy caddy validate --config /etc/caddy/Caddyfile     # muss "Valid configuration" melden
+docker exec caddy caddy reload   --config /etc/caddy/Caddyfile
+docker logs --tail 30 caddy                                        # Zertifikat wird geholt
 ```
 
-certbot ergänzt den 443-Block und die Weiterleitung von HTTP auf HTTPS selbst und erneuert das
-Zertifikat automatisch. Bei Variante B ist das Zertifikat deines bestehenden Hostnamens schon da.
+Nimm bei `--config` den `Destination`-Pfad aus dem Inspect. Meldet die Prüfung einen Fehler,
+lädst du nicht neu, dann läuft alles unverändert weiter.
 
-## 8. Prüfen (das ist die Definition of Done von M4)
+## 5. Prüfen (das ist die Definition of Done von M4)
 
 Von deinem Rechner aus, nicht vom Server:
 
 ```bash
-curl -i https://<dein-api-hostname>/health
+curl -i https://swiminstructor.kellner.v6.rocks/health
 # HTTP/2 200 ... {"status":"ok",...}
 
-curl -i https://<dein-api-hostname>/v1/status
+curl -i https://swiminstructor.kellner.v6.rocks/v1/status
 # HTTP/2 401 ... {"error":"unauthorized"}
 
-curl -i -H "Authorization: Bearer <DEIN-TOKEN>" https://<dein-api-hostname>/v1/status
+curl -i -H "Authorization: Bearer <DEIN-TOKEN>" https://swiminstructor.kellner.v6.rocks/v1/status
 # HTTP/2 200 ... {"status":"authenticated"}
 ```
 
-Auch im Browser muss beim Aufruf von `https://<dein-api-hostname>/health` ein gültiges Schloss
-erscheinen (keine Zertifikatswarnung). Bei Variante B lautet der Pfad `/swim/health`.
+Im Browser muss beim Aufruf von `https://swiminstructor.kellner.v6.rocks/health` ein gültiges
+Schloss erscheinen (keine Zertifikatswarnung). Prüfe außerdem, dass deine anderen Dienste (Financial,
+Vaultwarden, Immich, Nextcloud) weiter normal erreichbar sind.
+
+Und von außen darf der Container-Port nicht direkt offen sein:
+
+```bash
+curl -m 5 http://144.91.69.144:3100/health      # muss fehlschlagen (Timeout/Connection refused)
+```
 
 ## Aktualisieren
 
@@ -136,25 +130,26 @@ Nach jedem Merge, der das Backend ändert:
 /opt/swiminstructor/backend/deploy/deploy.sh
 ```
 
-Das Skript holt den neuesten Stand aus `main`, baut, startet den Dienst neu und prüft `/health`.
+Das Skript holt den neuesten Stand aus `main`, baut das Image, startet den Container neu und
+wartet auf den Healthcheck.
 
 ## Logs
 
 ```bash
-journalctl -u swiminstructor-backend -f          # live mitlesen
-journalctl -u swiminstructor-backend --since today
+docker logs -f swiminstructor-backend             # live mitlesen
+docker logs --since 1h swiminstructor-backend
 ```
 
-Jeder Request und jeder Fehler steht als JSON-Zeile im Journal. Der Token wird nie geloggt.
-Health-Checks werden bewusst nicht protokolliert.
+Jeder Request und jeder Fehler steht als JSON-Zeile im Log (rotiert bei 10 MB, 5 Dateien).
+Der Token wird nie geloggt. Health-Checks werden bewusst nicht protokolliert.
 
 ## Token wechseln
 
 Falls der Token je in falsche Hände gerät:
 
 ```bash
-sudo nano /etc/swiminstructor/backend.env    # neuen Wert: openssl rand -hex 32
-sudo systemctl restart swiminstructor-backend
+nano /etc/swiminstructor/backend.env              # neuen Wert: openssl rand -hex 32
+cd /opt/swiminstructor/backend && docker compose up -d --force-recreate
 ```
 
 Danach den neuen Token in der App eintragen.

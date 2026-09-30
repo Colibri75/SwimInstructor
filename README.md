@@ -207,8 +207,9 @@ Schema, Definitionen und Schwellenwerte: [`docs/AthleteStateSnapshot.md`](docs/A
 
 ## M4 – Backend-Grundgerüst
 
-`backend/` enthält den Server (Node 22, TypeScript, Express 5). Er lauscht nur auf
-`127.0.0.1`, der Reverse-Proxy (nginx) übernimmt HTTPS.
+`backend/` enthält den Server (Node 22, TypeScript, Express 5). Er läuft als Docker-Container,
+veröffentlicht seinen Port nur auf `127.0.0.1` des Servers, und der Reverse-Proxy (Caddy) übernimmt
+HTTPS.
 
 | Route | Auth | Zweck |
 |---|---|---|
@@ -231,8 +232,9 @@ npm test          # Jest + supertest, inkl. Coverage-Schwelle
 npm run dev       # lokal starten (API_TOKEN vorher setzen)
 ```
 
-Einrichtung auf dem Server: [`docs/backend-deploy.md`](docs/backend-deploy.md).
-CI: `.github/workflows/backend-ci.yml` (Typecheck, Build, Tests, `npm audit`).
+Einrichtung auf dem Server (Docker + Caddy): [`docs/backend-deploy.md`](docs/backend-deploy.md).
+CI: `.github/workflows/backend-ci.yml` (Typecheck, Build, Tests, `npm audit`) plus ein Job, der das
+Deployment nachstellt: Image bauen, Container per `compose.yaml` starten, Smoke-Test.
 
 ### M4 – Definition of Done
 
@@ -285,7 +287,8 @@ Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
 backend/                            # Node/TypeScript-Server (Proxy fuer Claude, ab M5)
   src/                               # app.ts, auth.ts, config.ts, logger.ts, server.ts
   test/                              # Jest + supertest
-  deploy/                            # systemd-Unit, nginx-Vorlage, deploy.sh
+  Dockerfile, compose.yaml           # Container-Image und Start auf dem Server
+  deploy/                            # Caddyfile-Vorlage, deploy.sh
 docs/
   AthleteStateSnapshot.md            # JSON-Schema, Definitionen, Schwellenwerte
   backend-deploy.md                  # Server-Einrichtung Schritt fuer Schritt
@@ -298,7 +301,7 @@ fastlane/
 Gemfile                               # Ruby-Abhängigkeit: fastlane
 .github/workflows/
   ios-ci.yml                          # Test- und TestFlight-Deploy-Pipeline
-  backend-ci.yml                      # Backend: Typecheck, Build, Tests, npm audit
+  backend-ci.yml                      # Backend: Typecheck, Build, Tests, npm audit, Docker-Smoke-Test
 ```
 
 ## Roadmap

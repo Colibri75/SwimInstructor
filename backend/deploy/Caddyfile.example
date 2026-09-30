@@ -1,0 +1,25 @@
+# Abschnitt fuer die Caddyfile des Servers. Bestehende Eintraege (z. B. die Financial-App)
+# bleiben unveraendert, dies kommt als eigener Block dazu.
+#
+# Caddy laeuft bei dir im Container mit Host-Netzwerk, daher erreicht er den Backend-Container
+# ueber 127.0.0.1:3100 (dort veroeffentlicht ihn compose.yaml).
+#
+# Vor dem Neuladen immer pruefen (Pfad in der Caddyfile-Datei im Container, meist /etc/caddy):
+#   docker exec caddy caddy validate --config /etc/caddy/Caddyfile
+# Dann ohne Ausfall neu laden:
+#   docker exec caddy caddy reload --config /etc/caddy/Caddyfile
+
+swiminstructor.kellner.v6.rocks {
+	encode zstd gzip
+
+	request_body {
+		max_size 200KB
+	}
+
+	reverse_proxy 127.0.0.1:3100 {
+		# Claude-Aufrufe (ab M5) koennen laenger dauern.
+		transport http {
+			response_header_timeout 90s
+		}
+	}
+}
