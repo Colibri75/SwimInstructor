@@ -1,5 +1,6 @@
-import { estimateCostUsd, formatPlan } from "../../src/plan/report";
-import { goodPlan, plan } from "./fixtures";
+import { estimateCostUsd, formatLimits, formatPlan } from "../../src/plan/report";
+import { dailyLimits } from "../../src/plan/sanity";
+import { goodPlan, plan, snapshot } from "./fixtures";
 
 describe("estimateCostUsd", () => {
   it("rechnet Token mit den Preisen pro Million (Opus 5.5: 4 Dollar ein, 20 Dollar aus)", () => {
@@ -36,3 +37,17 @@ describe("formatPlan", () => {
     expect(text).not.toContain("| Abschnitt |");
   });
 });
+
+describe("formatLimits", () => {
+  it("nennt Umfang und Pace, und die Intensitaet nur bei einer Einschraenkung", () => {
+    expect(formatLimits(dailyLimits(snapshot()))).toBe("höchstens 2400 m, Pace nicht schneller als 85 s/100 m");
+    expect(formatLimits(dailyLimits(snapshot({ flags: ["training_pause"] })))).toBe(
+      "höchstens 800 m, Intensität höchstens locker, Pace nicht schneller als 85 s/100 m"
+    );
+  });
+
+  it("nennt einen Pflicht-Ruhetag mit Grund", () => {
+    expect(formatLimits(dailyLimits(snapshot({ flags: ["overreaching_risk"] })))).toContain("Pflicht-Ruhetag");
+  });
+});
+

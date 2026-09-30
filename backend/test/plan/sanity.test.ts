@@ -1,4 +1,4 @@
-import { DEFAULT_LIMITS, sanitizePlan } from "../../src/plan/sanity";
+import { DEFAULT_LIMITS, dailyLimits, sanitizePlan } from "../../src/plan/sanity";
 import { goodPlan, plan, planOfMeters, set, snapshot, sum } from "./fixtures";
 
 describe("sanitizePlan: sinnvolle Plaene bleiben unveraendert", () => {
@@ -300,3 +300,70 @@ describe("sanitizePlan: unbrauchbare Plaene werden geblockt", () => {
     expect(result.adjustments).toEqual([]);
   });
 });
+
+describe("sanitizePlan: Begruendung bleibt nach Korrekturen stimmig", () => {
+  it("haengt die Korrekturen an die Begruendung, damit sie nicht mehr den alten Umfang behauptet", () => {
+    const original = plan({ ...planOfMeters(4000), rationale: "Mit 4000 m bleibt der Umfang moderat." });
+
+    const result = sanitizePlan(original, snapshot());
+
+    expect(result.plan.rationale).toContain("Mit 4000 m bleibt der Umfang moderat.");
+    expect(result.plan.rationale).toContain("Hinweis: Zur Sicherheit angepasst");
+    expect(result.plan.rationale).toContain("Umfang von 4000 m auf");
+  });
+
+  it("laesst die Begruendung unveraendert, wenn nichts korrigiert wurde", () => {
+    expect(sanitizePlan(goodPlan, snapshot()).plan.rationale).toBe(goodPlan.rationale);
+  });
+
+  it("erwaehnt eine rein rechnerische Korrektur (falsche Summe) nicht in der Begruendung", () => {
+    const result = sanitizePlan(plan({ total_distance_meters: 3000 }), snapshot());
+
+    expect(result.adjustments.join(" ")).toContain("Gesamtdistanz korrigiert");
+    expect(result.plan.rationale).toBe(goodPlan.rationale);
+  });
+
+  it("haelt die Begruendung auch mit Hinweis unter der Laengengrenze und bleibt idempotent", () => {
+    const long = plan({ ...planOfMeters(4000), rationale: "x".repeat(DEFAULT_LIMITS.maxRationaleLength) });
+
+    const first = sanitizePlan(long, snapshot());
+    const second = sanitizePlan(first.plan, snapshot());
+
+    expect(first.plan.rationale.length).toBeLessThanOrEqual(DEFAULT_LIMITS.maxRationaleLength);
+    expect(first.plan.rationale).toContain("Hinweis: Zur Sicherheit angepasst");
+    expect(second.plan).toEqual(first.plan);
+  });
+});
+
+describe("dailyLimits", () => {
+  it("fasst Umfang, Intensitaet und Tempo fuer heute zusammen", () => {
+    expect(dailyLimits(snapshot())).toEqual({
+      restReason: null,
+      maxIntensity: "hard",
+      intensityReasons: [],
+      maxDistanceMeters: 2400,
+      fastestPace: 85
+    });
+  });
+
+  it("nennt einen Pflicht-Ruhetag mit Grund", () => {
+    const strained = snapshot({ flags: ["overreaching_risk"] });
+
+    expect(dailyLimits(strained).restReason).toContain("Übertrainingsrisiko");
+  });
+
+  it("macht aus einem erschoepften Wochenumfang einen Ruhetag", () => {
+    expect(dailyLimits(snapshot({ volume: { last_seven_days_meters: 3900 } })).restReason).toBe("Wochenumfang ausgeschöpft");
+  });
+
+  it("stimmt mit dem ueberein, was sanitizePlan tatsaechlich durchsetzt", () => {
+    const tired = snapshot({ recovery: { status: "poor", warning_signals: ["short_sleep", "low_heart_rate_variability"] }, flags: ["recovery_poor"] });
+    const limits = dailyLimits(tired);
+
+    const result = sanitizePlan(planOfMeters(4000, { intensity: "hard", session_type: "intervals" }), tired);
+
+    expect(result.plan.intensity).toBe(limits.maxIntensity);
+    expect(result.plan.total_distance_meters).toBeLessThanOrEqual(limits.maxDistanceMeters);
+  });
+});
+

@@ -13,8 +13,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { ClaudePlanGenerator } from "../src/plan/generator";
 import { TrainingPlanSchema } from "../src/plan/plan";
-import { estimateCostUsd, formatPlan } from "../src/plan/report";
-import { sanitizePlan } from "../src/plan/sanity";
+import { estimateCostUsd, formatLimits, formatPlan } from "../src/plan/report";
+import { dailyLimits, sanitizePlan } from "../src/plan/sanity";
 import { SnapshotSchema } from "../src/plan/snapshot";
 
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const;
@@ -51,6 +51,7 @@ async function main(): Promise<void> {
   for (const file of files) {
     const snapshot = SnapshotSchema.parse(JSON.parse(readFileSync(path.join(dir, file), "utf8")));
     out.push(`## ${file.replace(/\.json$/, "")}`, "", "```json", JSON.stringify(snapshot, null, 2), "```", "");
+    out.push(`**Grenzen für heute (gehen auch an Claude):** ${formatLimits(dailyLimits(snapshot))}`, "");
 
     const started = Date.now();
     try {

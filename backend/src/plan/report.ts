@@ -1,4 +1,5 @@
 import { TrainingPlan } from "./plan";
+import { DailyLimits } from "./sanity";
 
 /** Preise in US-Dollar pro Million Token (Stand 25.09.2026, Anthropic-Preisliste). */
 export const PRICES_PER_MILLION_TOKENS: Record<string, { input: number; output: number }> = {
@@ -42,3 +43,13 @@ export function formatPlan(plan: TrainingPlan): string {
   }
   return lines.join("\n");
 }
+
+/** Die Grenzen fuer heute als eine Zeile, fuer die manuelle Bewertung der Szenarien. */
+export function formatLimits(limits: DailyLimits): string {
+  if (limits.restReason !== null) return `Pflicht-Ruhetag (${limits.restReason})`;
+  const parts = [`höchstens ${limits.maxDistanceMeters} m`];
+  if (limits.maxIntensity !== "hard") parts.push(`Intensität höchstens ${INTENSITY_LABEL[limits.maxIntensity]}`);
+  parts.push(`Pace nicht schneller als ${limits.fastestPace} s/100 m`);
+  return parts.join(", ");
+}
+
