@@ -78,10 +78,10 @@ describe("loadConfig: Claude und Plan", () => {
     const config = loadConfig({
       API_TOKEN: validToken,
       ANTHROPIC_API_KEY: "sk-ant-test",
-      CLAUDE_MODEL: "claude-sonnet-5-5",
-      CLAUDE_EFFORT: "high",
-      CLAUDE_TIMEOUT_MS: "60000",
-      CLAUDE_SERVER_FALLBACK: "false",
+      PLAN_MODEL: "claude-sonnet-5-5",
+      PLAN_EFFORT: "high",
+      PLAN_TIMEOUT_MS: "60000",
+      PLAN_SERVER_FALLBACK: "false",
       DATA_DIR: "/data",
       PLAN_TIMEZONE: "America/New_York",
       PLAN_MAX_GENERATIONS_PER_HOUR: "3",
@@ -102,11 +102,11 @@ describe("loadConfig: Claude und Plan", () => {
   });
 
   it.each([
-    ["CLAUDE_EFFORT", "extrem"],
-    ["CLAUDE_TIMEOUT_MS", "abc"],
-    ["CLAUDE_TIMEOUT_MS", "500"],
-    ["CLAUDE_TIMEOUT_MS", "120000"],
-    ["CLAUDE_SERVER_FALLBACK", "vielleicht"],
+    ["PLAN_EFFORT", "extrem"],
+    ["PLAN_TIMEOUT_MS", "abc"],
+    ["PLAN_TIMEOUT_MS", "500"],
+    ["PLAN_TIMEOUT_MS", "120000"],
+    ["PLAN_SERVER_FALLBACK", "vielleicht"],
     ["PLAN_TIMEZONE", "Mars/Olympus"],
     ["PLAN_MAX_GENERATIONS_PER_HOUR", "0"],
     ["PLAN_MAX_GENERATIONS_PER_DAY", "1.5"]
@@ -115,8 +115,17 @@ describe("loadConfig: Claude und Plan", () => {
   });
 
   it("akzeptiert 1 und 0 als Wahrheitswerte", () => {
-    expect(loadConfig({ API_TOKEN: validToken, CLAUDE_SERVER_FALLBACK: "0" }).claudeServerFallback).toBe(false);
-    expect(loadConfig({ API_TOKEN: validToken, CLAUDE_SERVER_FALLBACK: "1" }).claudeServerFallback).toBe(true);
+    expect(loadConfig({ API_TOKEN: validToken, PLAN_SERVER_FALLBACK: "0" }).claudeServerFallback).toBe(false);
+    expect(loadConfig({ API_TOKEN: validToken, PLAN_SERVER_FALLBACK: "1" }).claudeServerFallback).toBe(true);
+  });
+
+  it("ignoriert die Umgebungsvariablen von Claude Code selbst (CLAUDE_EFFORT, CLAUDE_MODEL)", () => {
+    // Claude Code setzt solche Variablen in seiner eigenen Umgebung. Sie duerfen den Server nie beeinflussen.
+    const config = loadConfig({ API_TOKEN: validToken, CLAUDE_EFFORT: "max", CLAUDE_MODEL: "irgendwas", CLAUDE_TIMEOUT_MS: "abc" });
+
+    expect(config.claudeEffort).toBe("medium");
+    expect(config.claudeModel).toBe("claude-opus-5-5");
+    expect(config.claudeTimeoutMs).toBe(75_000);
   });
 });
 

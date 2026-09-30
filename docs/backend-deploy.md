@@ -154,7 +154,7 @@ cd /opt/stack/swiminstructor/backend && docker compose up -d --force-recreate
    "ANTHROPIC_API_KEY nicht gesetzt" mehr.
 
 Der letzte Plan liegt im Docker-Volume `swim_data` (`/data` im Container) und übersteht
-Neustarts und Updates. Weitere Einstellungen (`CLAUDE_MODEL`, `CLAUDE_EFFORT`, Kostenbremse)
+Neustarts und Updates. Weitere Einstellungen (`PLAN_MODEL`, `PLAN_EFFORT`, Kostenbremse)
 stehen in [plan-generation.md](plan-generation.md) und lassen sich in derselben Datei
 `/etc/swiminstructor/backend.env` setzen.
 

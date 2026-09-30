@@ -254,7 +254,7 @@ Tagesplan schreiben und prüft ihn, bevor er die App erreicht. Das Backend ist d
 Ort, an dem der Anthropic-API-Key liegt.
 
 - **Claude-Aufruf:** fester deutscher System-Prompt, strukturierte JSON-Ausgabe (`output_config.format`),
-  Standardmodell `claude-opus-5-5`, per `CLAUDE_MODEL` wechselbar.
+  Standardmodell `claude-opus-5-5`, per `PLAN_MODEL` wechselbar.
 - **Sicherheitsschicht:** reiner Code, der gefährliche Vorschläge korrigiert oder blockt (zu große
   Umfangssprünge, fehlende Ruhetage, zwei harte Einheiten hintereinander, schlechte Erholung,
   unrealistische Zeiten).
@@ -270,6 +270,7 @@ Details zu Ablauf, Antwortformat, Regeln, Kosten und Konfiguration:
 cd backend
 npm test                   # Sicherheitsschicht, Fehlerfälle, Route, Szenarien (ohne echte API)
 ANTHROPIC_API_KEY=... npm run eval:scenarios > ../docs/plan-eval.md   # echter Lauf, kostet Geld
+backend/scripts/eval-in-docker.sh   # dasselbe auf dem Server ohne Node (nur Docker nötig)
 ```
 
 ### M5 – Definition of Done

@@ -1,6 +1,6 @@
 # Startet das Backend auf dem Server:  docker compose up -d --build
 # Geheimnisse (API_TOKEN, ANTHROPIC_API_KEY) kommen aus /etc/swiminstructor/backend.env (Rechte 600),
-# nie aus dem Repo. Optionale Einstellungen wie CLAUDE_MODEL stehen in backend/.env.example.
+# nie aus dem Repo. Optionale Einstellungen wie PLAN_MODEL stehen in backend/.env.example.
 services:
   backend:
     build: .

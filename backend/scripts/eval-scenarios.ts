@@ -26,10 +26,10 @@ async function main(): Promise<void> {
     console.error("ANTHROPIC_API_KEY fehlt. Setze ihn in der Umgebung, er gehört nie ins Repo.");
     process.exit(1);
   }
-  const model = process.env.CLAUDE_MODEL ?? "claude-opus-5-5";
-  const effort = (process.env.CLAUDE_EFFORT ?? "medium") as Effort;
+  const model = process.env.PLAN_MODEL ?? "claude-opus-5-5";
+  const effort = (process.env.PLAN_EFFORT ?? "medium") as Effort;
   if (!EFFORTS.includes(effort)) {
-    console.error(`CLAUDE_EFFORT ungültig: ${effort} (erlaubt: ${EFFORTS.join(", ")})`);
+    console.error(`PLAN_EFFORT ungültig: ${effort} (erlaubt: ${EFFORTS.join(", ")})`);
     process.exit(1);
   }
 
@@ -37,7 +37,7 @@ async function main(): Promise<void> {
     model,
     effort,
     timeoutMs: 85_000,
-    serverFallback: process.env.CLAUDE_SERVER_FALLBACK !== "false"
+    serverFallback: process.env.PLAN_SERVER_FALLBACK !== "false"
   });
 
   const dir = path.join(__dirname, "..", "scenarios");
