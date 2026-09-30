@@ -51,3 +51,72 @@ describe("loadConfig", () => {
     expect(loadConfig({ API_TOKEN: validToken, NODE_ENV: "test" }).logLevel).toBe("silent");
   });
 });
+
+describe("loadConfig: Claude und Plan", () => {
+  it("nutzt Standardwerte: Opus 5.5, Effort medium, 75 s Zeitlimit, Server-Fallback an", () => {
+    const config = loadConfig({ API_TOKEN: validToken });
+
+    expect(config).toMatchObject({
+      anthropicApiKey: undefined,
+      claudeModel: "claude-opus-5-5",
+      claudeEffort: "medium",
+      claudeTimeoutMs: 75_000,
+      claudeServerFallback: true,
+      dataDir: "./data",
+      planTimezone: "Europe/Berlin",
+      maxGenerationsPerHour: 5,
+      maxGenerationsPerDay: 20
+    });
+  });
+
+  it("startet auch ohne ANTHROPIC_API_KEY (dann liefert der Plan-Endpunkt nur gespeicherte Plaene)", () => {
+    expect(loadConfig({ API_TOKEN: validToken }).anthropicApiKey).toBeUndefined();
+    expect(loadConfig({ API_TOKEN: validToken, ANTHROPIC_API_KEY: "   " }).anthropicApiKey).toBeUndefined();
+  });
+
+  it("uebernimmt gesetzte Werte", () => {
+    const config = loadConfig({
+      API_TOKEN: validToken,
+      ANTHROPIC_API_KEY: "sk-ant-test",
+      CLAUDE_MODEL: "claude-sonnet-5-5",
+      CLAUDE_EFFORT: "high",
+      CLAUDE_TIMEOUT_MS: "60000",
+      CLAUDE_SERVER_FALLBACK: "false",
+      DATA_DIR: "/data",
+      PLAN_TIMEZONE: "America/New_York",
+      PLAN_MAX_GENERATIONS_PER_HOUR: "3",
+      PLAN_MAX_GENERATIONS_PER_DAY: "10"
+    });
+
+    expect(config).toMatchObject({
+      anthropicApiKey: "sk-ant-test",
+      claudeModel: "claude-sonnet-5-5",
+      claudeEffort: "high",
+      claudeTimeoutMs: 60_000,
+      claudeServerFallback: false,
+      dataDir: "/data",
+      planTimezone: "America/New_York",
+      maxGenerationsPerHour: 3,
+      maxGenerationsPerDay: 10
+    });
+  });
+
+  it.each([
+    ["CLAUDE_EFFORT", "extrem"],
+    ["CLAUDE_TIMEOUT_MS", "abc"],
+    ["CLAUDE_TIMEOUT_MS", "500"],
+    ["CLAUDE_TIMEOUT_MS", "120000"],
+    ["CLAUDE_SERVER_FALLBACK", "vielleicht"],
+    ["PLAN_TIMEZONE", "Mars/Olympus"],
+    ["PLAN_MAX_GENERATIONS_PER_HOUR", "0"],
+    ["PLAN_MAX_GENERATIONS_PER_DAY", "1.5"]
+  ])("verweigert den Start bei ungueltigem %s=%s", (name, value) => {
+    expect(() => loadConfig({ API_TOKEN: validToken, [name]: value })).toThrow(name);
+  });
+
+  it("akzeptiert 1 und 0 als Wahrheitswerte", () => {
+    expect(loadConfig({ API_TOKEN: validToken, CLAUDE_SERVER_FALLBACK: "0" }).claudeServerFallback).toBe(false);
+    expect(loadConfig({ API_TOKEN: validToken, CLAUDE_SERVER_FALLBACK: "1" }).claudeServerFallback).toBe(true);
+  });
+});
+

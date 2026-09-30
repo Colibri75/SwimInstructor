@@ -77,6 +77,26 @@ jobs:
           test "$(docker exec swiminstructor-backend id -u)" != "0"
           echo "Smoke-Test ok: Health 200, ohne Token 401, mit Token 200, Container laeuft nicht als root"
 
+      - name: Smoke-Test Plan-Endpunkt (ohne ANTHROPIC_API_KEY, also ohne echten Claude-Aufruf)
+        run: |
+          TOKEN=$(grep '^API_TOKEN=' /etc/swiminstructor/backend.env | cut -d= -f2)
+          URL=http://127.0.0.1:3100/v1/plan/today
+          jq '{snapshot: .}' backend/scenarios/02-fortschritt.json > /tmp/body.json
+
+          # Datenverzeichnis ist im schreibgeschuetzten Container beschreibbar
+          docker exec swiminstructor-backend sh -c 'touch /data/.probe && rm /data/.probe'
+
+          # ohne Token
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' --data @/tmp/body.json $URL)" = "401"
+          # mit Token, aber ungueltigem Snapshot
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' --data '{}' $URL)" = "400"
+          # mit Token und gueltigem Snapshot: ohne Key und ohne gespeicherten Plan gibt es 503, keinen Absturz
+          BODY=$(curl -s -w '\n%{http_code}' -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' --data @/tmp/body.json $URL)
+          echo "$BODY"
+          test "$(echo "$BODY" | tail -n1)" = "503"
+          echo "$BODY" | head -n1 | jq -e '.error == "plan_unavailable" and .reason == "not_configured"'
+          echo "Plan-Endpunkt ok: 401 ohne Token, 400 bei ungueltigem Body, 503 ohne API-Key"
+
       - name: Container-Logs
         if: failure()
         run: docker logs swiminstructor-backend || true

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-09-30T12:00:00Z",
+  "goal": {
+    "distance_meters": 3800,
+    "target_duration_seconds": 3600,
+    "target_pace_seconds_per_hundred_meters": 94.7,
+    "target_date": "2027-07-04T10:00:00Z",
+    "days_until_goal": 277
+  },
+  "volume": {
+    "last_seven_days_meters": 400.0,
+    "average_weekly_meters": 350.0,
+    "weekly_change_percent": -20.0,
+    "sessions_last_seven_days": 1,
+    "sessions_last_four_weeks": 3,
+    "longest_session_meters": 500.0
+  },
+  "pace": {
+    "recent_pace_seconds_per_hundred_meters": 257.1,
+    "gap_to_target_seconds_per_hundred_meters": 162.4
+  },
+  "load": {
+    "days_since_last_workout": 2
+  },
+  "recovery": {
+    "status": "unknown",
+    "warning_signals": []
+  },
+  "flags": []
+}

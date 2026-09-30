@@ -14,6 +14,10 @@ WORKDIR /app
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
+# Datenverzeichnis fuer den letzten gueltigen Plan. Gehoert dem Nutzer "node", damit das Docker-Volume
+# beim ersten Anlegen diese Besitzrechte uebernimmt (der restliche Container ist schreibgeschuetzt).
+RUN mkdir -p /data && chown node:node /data
+ENV DATA_DIR=/data
 # Nie als root: das offizielle Image bringt den Nutzer "node" mit.
 USER node
 EXPOSE 3000
