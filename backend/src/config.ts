@@ -46,11 +46,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     apiToken,
     logLevel: env.LOG_LEVEL?.trim() || (environment === "test" ? "silent" : "info"),
     anthropicApiKey: env.ANTHROPIC_API_KEY?.trim() || undefined,
-    claudeModel: env.CLAUDE_MODEL?.trim() || "claude-opus-5-5",
-    claudeEffort: parseEffort(env.CLAUDE_EFFORT),
+    claudeModel: env.PLAN_MODEL?.trim() || "claude-opus-5-5",
+    claudeEffort: parseEffort(env.PLAN_EFFORT),
     // 75 s: bleibt unter dem 90-s-Limit des Reverse-Proxys (siehe deploy/Caddyfile.example).
-    claudeTimeoutMs: parseInteger("CLAUDE_TIMEOUT_MS", env.CLAUDE_TIMEOUT_MS, 75_000, 1_000, 85_000),
-    claudeServerFallback: parseBoolean("CLAUDE_SERVER_FALLBACK", env.CLAUDE_SERVER_FALLBACK, true),
+    claudeTimeoutMs: parseInteger("PLAN_TIMEOUT_MS", env.PLAN_TIMEOUT_MS, 75_000, 1_000, 85_000),
+    claudeServerFallback: parseBoolean("PLAN_SERVER_FALLBACK", env.PLAN_SERVER_FALLBACK, true),
     dataDir: env.DATA_DIR?.trim() || "./data",
     planTimezone: parseTimezone(env.PLAN_TIMEZONE),
     maxGenerationsPerHour: parseInteger("PLAN_MAX_GENERATIONS_PER_HOUR", env.PLAN_MAX_GENERATIONS_PER_HOUR, 5, 1, 1_000),
@@ -77,7 +77,7 @@ function parseEffort(value: string | undefined): Effort {
   if (value === undefined || value.trim() === "") return "medium";
   const effort = value.trim();
   if (effort === "low" || effort === "medium" || effort === "high" || effort === "xhigh" || effort === "max") return effort;
-  throw new Error(`CLAUDE_EFFORT ungueltig: "${value}" (erlaubt: low, medium, high, xhigh, max)`);
+  throw new Error(`PLAN_EFFORT ungueltig: "${value}" (erlaubt: low, medium, high, xhigh, max)`);
 }
 
 function parseInteger(name: string, value: string | undefined, fallback: number, min: number, max: number): number {

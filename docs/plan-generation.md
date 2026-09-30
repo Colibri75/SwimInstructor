@@ -143,8 +143,8 @@ Das ergibt grob $0,05 bis $0,13 pro Aufruf mit Opus 5.5, die Hälfte mit `claude
 Bei ein bis zwei Plänen pro Tag sind das etwa $2 bis $8 im Monat. Die Kostenbremse deckelt den
 Worst Case bei 20 Aufrufen pro Tag, das wären rund $1 bis $3 pro Tag.
 
-Das Modell lässt sich per `CLAUDE_MODEL` wechseln (z. B. `claude-sonnet-5-5`), die Denktiefe per
-`CLAUDE_EFFORT` (`low` bis `max`, Standard `medium`). Jeder Aufruf schreibt Modell, Token und Dauer
+Das Modell lässt sich per `PLAN_MODEL` wechseln (z. B. `claude-sonnet-5-5`), die Denktiefe per
+`PLAN_EFFORT` (`low` bis `max`, Standard `medium`). Jeder Aufruf schreibt Modell, Token und Dauer
 ins Server-Log (`docker logs swiminstructor-backend`, Eintrag "plan generated").
 
 ## Datenschutz
@@ -158,10 +158,10 @@ den letzten Plan, den Snapshot selbst nicht.
 | Variable | Standard | Bedeutung |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | (leer) | Ohne Key startet der Server trotzdem, der Plan-Endpunkt liefert dann nur Cache und Fallback |
-| `CLAUDE_MODEL` | `claude-opus-5-5` | Modell für die Pläne |
-| `CLAUDE_EFFORT` | `medium` | Denktiefe: `low`, `medium`, `high`, `xhigh`, `max` |
-| `CLAUDE_TIMEOUT_MS` | `75000` | Zeitlimit pro Aufruf (1.000 bis 85.000, bleibt unter dem 90-s-Limit von Caddy) |
-| `CLAUDE_SERVER_FALLBACK` | `true` | Bei Ablehnung durch Claudes Sicherheitsklassifikatoren automatisch ein anderes Modell versuchen |
+| `PLAN_MODEL` | `claude-opus-5-5` | Modell für die Pläne |
+| `PLAN_EFFORT` | `medium` | Denktiefe: `low`, `medium`, `high`, `xhigh`, `max` |
+| `PLAN_TIMEOUT_MS` | `75000` | Zeitlimit pro Aufruf (1.000 bis 85.000, bleibt unter dem 90-s-Limit von Caddy) |
+| `PLAN_SERVER_FALLBACK` | `true` | Bei Ablehnung durch Claudes Sicherheitsklassifikatoren automatisch ein anderes Modell versuchen |
 | `DATA_DIR` | `./data` (im Container `/data`) | Hier liegt der letzte Plan |
 | `PLAN_TIMEZONE` | `Europe/Berlin` | Zeitzone für "heute" |
 | `PLAN_MAX_GENERATIONS_PER_HOUR` | `5` | Kostenbremse |
@@ -174,7 +174,19 @@ den letzten Plan, die App kann es später noch einmal versuchen.
 ## Die fünf Szenarien bewerten (Definition of Done M5)
 
 Die Szenarien aus M3 liegen als Snapshots in `backend/scenarios/`. Sie gegen die echte API laufen
-zu lassen kostet etwa fünf Anfragen (geschätzt unter $1):
+zu lassen kostet etwa fünf Anfragen (geschätzt unter $1). Es gibt zwei Wege, je nachdem, wo du bist.
+
+**Auf dem Server (kein Node nötig).** Der Produktionsserver hat nur Docker. Das Hilfsskript startet
+einen Wegwerf-Container, liest den Key aus `/etc/swiminstructor/backend.env` (er wird nie
+angezeigt), fragt vorher die Kosten ab und schreibt das Ergebnis nach `docs/plan-eval.md`:
+
+```bash
+cd /opt/stack/swiminstructor && git pull --ff-only origin main
+backend/scripts/eval-in-docker.sh
+cat docs/plan-eval.md
+```
+
+**Auf einem Rechner mit Node 22:**
 
 ```bash
 cd backend
