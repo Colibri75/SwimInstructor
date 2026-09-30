@@ -238,8 +238,9 @@ Deployment nachstellt: Image bauen, Container per `compose.yaml` starten, Smoke-
 
 ### M4 – Definition of Done
 
-- [ ] Node-Server auf dem VPS deployt, per HTTPS mit gültigem Zertifikat erreichbar
-      (Schritt 8 der Deploy-Anleitung, manuell zu verifizieren)
+- [x] Server auf dem VPS deployt, per HTTPS mit gültigem Zertifikat erreichbar
+      (30.09.2026 verifiziert: `https://swiminstructor.kellner.v6.rocks/health` liefert 200;
+      Zertifikat von ZeroSSL, weil das Let's-Encrypt-Limit für `v6.rocks` erreicht war)
 - [x] `/health` liefert 200
 - [x] Token-Auth aktiv, unautorisierte Requests liefern 401
 - [x] Minimal-Logging für Requests und Fehler

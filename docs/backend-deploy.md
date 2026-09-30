@@ -112,6 +112,16 @@ curl -i -H "Authorization: Bearer <DEIN-TOKEN>" https://swiminstructor.kellner.v
 # HTTP/2 200 ... {"status":"authenticated"}
 ```
 
+Der Token-Test auf einem Windows-Rechner (PowerShell, `curl.exe` mit Endung). Der Token wird
+beim Einfügen nicht angezeigt:
+
+```powershell
+$s = Read-Host -AsSecureString -Prompt "Token"
+$t = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s))
+curl.exe -i -H "Authorization: Bearer $t" https://swiminstructor.kellner.v6.rocks/v1/status
+Remove-Variable s, t
+```
+
 Im Browser muss beim Aufruf von `https://swiminstructor.kellner.v6.rocks/health` ein gültiges
 Schloss erscheinen (keine Zertifikatswarnung). Prüfe außerdem, dass deine anderen Dienste (Financial,
 Vaultwarden, Immich, Nextcloud) weiter normal erreichbar sind.
@@ -121,6 +131,14 @@ Und von außen darf der Container-Port nicht direkt offen sein:
 ```bash
 curl -m 5 http://144.91.69.144:3100/health      # muss fehlschlagen (Timeout/Connection refused)
 ```
+
+## Hinweis zum Zertifikat
+
+`v6.rocks` ist eine gemeinsame DynDNS-Domain. Let's Encrypt begrenzt neue Zertifikate pro Domain
+(50 pro Woche), und dieses Limit ist dort oft ausgeschöpft. Im Caddy-Log steht dann `HTTP 429 ...
+rateLimited`. Das ist unkritisch: Caddy weicht automatisch auf ZeroSSL aus und holt das
+Zertifikat dort (`certificate obtained successfully`). Es ist genauso gültig. Die Ausstellung
+dauert dann nur etwa eine Minute länger, und ein Aufruf in dieser Zeit schlägt fehl.
 
 ## Aktualisieren
 
