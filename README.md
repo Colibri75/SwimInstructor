@@ -23,13 +23,13 @@ einem lokalen Swift Package `Packages/SwimInstructorCore`, das von beiden
 Targets genutzt wird – so entsteht kein doppelt gepflegter Code.
 
 - **iOS-App** (`App/`): vollständige UI, Dashboard, Verlauf
-- **watchOS-App** (`WatchApp/`): kompakte "Heute"-Ansicht, später Live-Workout-Tracking direkt am Handgelenk
+- **watchOS-App** (`WatchApp/`): Tagesplan vom iPhone und Live-Aufzeichnung im Becken (ab M7)
 - **SwimInstructorCore** (`Packages/SwimInstructorCore/`): HealthKit-Zugriff, Zustandsmodell, API-Client – plattformunabhängig, eigene Test-Suite
 
-Die Watch-App fragt HealthKit **eigenständig** an und kann später auch ohne
-gekoppeltes iPhone in Reichweite mit dem Backend sprechen (watchOS-Apps können
-seit watchOS 9 direkt übers eigene WLAN/Mobilfunk ins Netz) – wichtig, weil man
-beim Schwimmen das iPhone nicht dabei hat.
+Die Watch-App fragt HealthKit **eigenständig** an und zeichnet Einheiten ohne
+iPhone in Reichweite auf – wichtig, weil man beim Schwimmen das iPhone nicht
+dabei hat. Den Plan spricht sie nicht selbst beim Server ab: Sie bekommt ihn vom
+iPhone und hält ihn lokal vor (siehe M7).
 
 ## CI/CD-Setup & TestFlight
 
@@ -330,6 +330,47 @@ echten **Heute-Bildschirm** ersetzt.
       Verbindungsfehler statt Absturz
 - [ ] **Auf dem iPhone:** Falsches Token eintragen: verständliche Meldung, kein Absturz
 
+## M7 – Watch-App: Tagesplan & Live-Aufzeichnung im Becken
+
+Die Watch zeigt den Plan von heute und zeichnet die Einheit im Becken auf: Bahnen, Strecke, Züge,
+Puls, Pace. Während des Schwimmens sieht man, in welchem Abschnitt des Plans man steckt und wie viel
+von der laufenden Wiederholung noch fehlt. Das Workout landet in Health, das iPhone liest es beim
+nächsten Öffnen und der nächste Plan berücksichtigt es.
+
+> Auch für M7 gab es keine Beschreibung im Repo; umgesetzt ist Option 1 aus dem Projekt-Chat
+> ("Watch-App ausbauen: Tagesplan zeigen, Bahnen und Züge live aufzeichnen").
+
+- **Plan aufs Handgelenk** (`PhonePlanSync` auf dem iPhone, `WatchPlanStore` auf der Watch,
+  Format `PlanSyncCodec` im Package): Jeder neue Plan geht per WatchConnectivity als Application
+  Context an die Watch; die Watch speichert ihn (`FilePlanCache`) und zeigt ihn auch ohne iPhone in
+  der Nähe. "Vom iPhone holen" fragt aktiv nach, das iPhone antwortet sofort mit seinem Plan und
+  schickt einen neueren nach. Die Watch bekommt **kein** Token und spricht nie selbst mit dem
+  Server; ist der Plan nicht von heute, sagt sie das.
+- **Aufzeichnung** (`SwimWorkoutManager`): `HKWorkoutSession` als Beckenschwimmen mit der gewählten
+  Bahnlänge (25 m, 50 m oder 10–100 m per Digital Crown, wird gemerkt), Live-Werte über den
+  `HKLiveWorkoutBuilder`, Wassersperre beim Start wie in Apples Schwimm-App. Pause, Fortsetzen,
+  Beenden; beim Beenden wird das Workout mit Bahnlänge in Health gespeichert.
+- **Anzeige beim Schwimmen** (seitlich wischen): Steuerung · Zeit, Strecke, Bahnen, Pace (Schnitt
+  inkl. Pausen), Züge pro Bahn, Puls · Stand im Plan ("Hauptsatz, 3 von 6 × 200 m, noch 150 m").
+  Die Zuordnung zum Plan läuft nur über die Meter (`PlanProgress`), nicht über Pausen.
+- **Health-Rechte:** Die Watch fragt jetzt auch Schreibrechte an (Workout, Strecke, Züge, Puls,
+  Energie), einmal beim Öffnen, damit der Dialog nicht erst am Beckenrand kommt.
+
+### M7 – Definition of Done
+
+- [x] Plan-Übertragung, Stand im Plan, Live-Werte und neue Texte per Unit-Test abgesichert
+      (`PlanSyncCodecTests`, `PlanProgressTests`, `LiveSwimMetricsTests`, `PlanFormattingTests`)
+- [x] iPhone- und Watch-Code kompilieren in der CI (`test`-Lane)
+- [ ] **Auf der Watch (TestFlight):** Nach dem Öffnen der iPhone-App erscheint derselbe Plan auf der
+      Watch; iPhone in Flugmodus, Watch-App neu öffnen: der Plan ist noch da
+- [ ] **Auf der Watch:** "Vom iPhone holen" liefert den Plan, bei ausgeschaltetem iPhone kommt eine
+      verständliche Meldung
+- [ ] **Im Becken:** Beckenlänge wählen, starten, Wassersperre ist an; Bahnen, Strecke und Züge
+      zählen mit; der Plan-Bildschirm springt nach dem Einschwimmen in den Hauptsatz
+- [ ] **Im Becken:** Pause und Fortsetzen funktionieren, Beenden zeigt die Zusammenfassung
+- [ ] **Danach:** Das Workout steht in der Fitness-App als Beckenschwimmen mit Bahnen; die
+      iPhone-App zeigt es unter "Bisherige Einheiten"
+
 ### Unit-Tests (Package)
 
 ```bash
@@ -345,15 +386,19 @@ nicht `.pause`), `nil` bei fehlenden Lap-Events, SWOLF-Näherung.
 ```
 App/                                # iOS-App
   SwimInstructorApp.swift            # App-Einstiegspunkt, verdrahtet Health, Einstellungen, Plan-Loader
+  PhonePlanSync.swift                # Schickt den Tagesplan an die Watch (M7)
   TodayView.swift                    # Heute-Bildschirm: Plan, Stand, bisherige Einheiten
   PlanCardView.swift                 # Darstellung des Tagesplans
   SettingsView.swift                 # Server-Adresse, Token, Verbindung testen
   Info.plist
   SwimInstructor.entitlements        # HealthKit-Capability
 WatchApp/                           # watchOS Companion-App
-  SwimInstructorWatchApp.swift       # App-Einstiegspunkt
-  WatchTodayView.swift               # Platzhalter "Heute"-Ansicht
-  Info.plist                         # inkl. WKCompanionAppBundleIdentifier
+  SwimInstructorWatchApp.swift       # App-Einstiegspunkt, wechselt zwischen Plan, Einheit, Zusammenfassung
+  WatchTodayView.swift               # Start, Beckenlänge, Tagesplan (M7)
+  WatchWorkoutView.swift             # Laufende Einheit und Zusammenfassung (M7)
+  WatchPlanStore.swift               # Empfängt und speichert den Plan vom iPhone (M7)
+  SwimWorkoutManager.swift           # HKWorkoutSession + Live-Werte, speichert in Health (M7)
+  Info.plist                         # inkl. WKCompanionAppBundleIdentifier, Hintergrundmodus Workout
   SwimInstructorWatch.entitlements   # HealthKit-Capability
 Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
   Sources/SwimInstructorCore/
@@ -374,6 +419,9 @@ Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
     BackendSettings.swift            # Server-Adresse + Token im Schlüsselbund (M6)
     PlanFormatting.swift             # Texte für die Plananzeige (M6)
     TodayPlanLoader.swift            # Ablauf des Heute-Bildschirms (M6)
+    PlanSync.swift                   # Format der Plan-Übertragung iPhone -> Watch (M7)
+    PlanProgress.swift               # Stand im Plan nach geschwommenen Metern (M7)
+    LiveSwimMetrics.swift            # Live-Werte und Beckenlänge der Watch (M7)
   Tests/SwimInstructorCoreTests/
     HealthKitManagerTests.swift
     SwimWorkoutRepositoryTests.swift

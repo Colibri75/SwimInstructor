@@ -14,4 +14,14 @@ final class HealthKitManagerTests: XCTestCase {
         XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .swimmingStrokeCount)!))
         XCTAssertTrue(types.contains(HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!))
     }
+
+    func testWorkoutShareTypesCoverWhatTheWatchRecords() {
+        let types = HealthKitManager.workoutShareTypes
+
+        XCTAssertTrue(types.contains(HKObjectType.workoutType()))
+        XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .distanceSwimming)!))
+        XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .swimmingStrokeCount)!))
+        XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .heartRate)!))
+        XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!))
+    }
 }
