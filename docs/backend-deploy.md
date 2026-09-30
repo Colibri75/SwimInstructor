@@ -40,8 +40,8 @@ erreichen die API womöglich nicht.
 Ein GitHub-Token (PAT) mit Lesezugriff auf das Repo wird gebraucht, weil das Repo privat ist.
 
 ```bash
-mkdir -p /opt/swiminstructor
-git clone https://github.com/Colibri75/SwimInstructor.git /opt/swiminstructor
+mkdir -p /opt/stack
+git clone https://github.com/Colibri75/SwimInstructor.git /opt/stack/swiminstructor
 # Benutzername: Colibri75, Passwort: dein PAT (kein GitHub-Passwort)
 ```
 
@@ -63,7 +63,7 @@ und nie in das Repo. Die übrigen Einstellungen (Port, Produktionsmodus) stehen 
 ## 3. Container starten
 
 ```bash
-cd /opt/swiminstructor/backend
+cd /opt/stack/swiminstructor/backend
 docker compose up -d --build
 docker compose ps                 # Status sollte "healthy" werden (nach ca. 5-10 s)
 curl -s http://127.0.0.1:3100/health
@@ -127,7 +127,7 @@ curl -m 5 http://144.91.69.144:3100/health      # muss fehlschlagen (Timeout/Con
 Nach jedem Merge, der das Backend ändert:
 
 ```bash
-/opt/swiminstructor/backend/deploy/deploy.sh
+/opt/stack/swiminstructor/backend/deploy/deploy.sh
 ```
 
 Das Skript holt den neuesten Stand aus `main`, baut das Image, startet den Container neu und
@@ -149,7 +149,7 @@ Falls der Token je in falsche Hände gerät:
 
 ```bash
 nano /etc/swiminstructor/backend.env              # neuen Wert: openssl rand -hex 32
-cd /opt/swiminstructor/backend && docker compose up -d --force-recreate
+cd /opt/stack/swiminstructor/backend && docker compose up -d --force-recreate
 ```
 
 Danach den neuen Token in der App eintragen.

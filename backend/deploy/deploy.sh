@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Aktualisiert das Backend auf dem Server: neuester Stand aus main, Image neu bauen, Container neu starten.
-# Aufruf auf dem Server:  /opt/swiminstructor/backend/deploy/deploy.sh
+# Aufruf auf dem Server:  <Repo-Ordner>/backend/deploy/deploy.sh   (z. B. /opt/stack/swiminstructor)
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/opt/swiminstructor}"
+# Repo-Ordner aus dem Ort des Skripts ableiten (backend/deploy/ -> zwei Ebenen hoch), damit es
+# egal ist, wohin das Repo geklont wurde.
+APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 HOST_PORT="${HOST_PORT:-3100}"
 
 cd "$APP_DIR"
