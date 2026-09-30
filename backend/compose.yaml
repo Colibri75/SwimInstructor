@@ -1,0 +1,31 @@
+# Startet das Backend auf dem Server:  docker compose up -d --build
+# Der API_TOKEN kommt aus /etc/swiminstructor/backend.env (Rechte 600), nie aus dem Repo.
+services:
+  backend:
+    build: .
+    image: swiminstructor-backend:latest
+    container_name: swiminstructor-backend
+    restart: unless-stopped
+    env_file: /etc/swiminstructor/backend.env
+    environment:
+      NODE_ENV: production
+      # Im Container muss der Server auf allen Schnittstellen lauschen, sonst erreicht ihn das
+      # veroeffentlichte Port-Mapping nicht. Von aussen abgeschirmt wird er durch das Mapping unten.
+      HOST: 0.0.0.0
+      PORT: "3000"
+    ports:
+      # Nur auf localhost des Servers veroeffentlichen: von aussen kommt man nur ueber Caddy (HTTPS).
+      # Host-Port 3100 statt 3000, damit er nicht mit anderen Diensten (z. B. Financial) kollidiert.
+      - "127.0.0.1:3100:3000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"

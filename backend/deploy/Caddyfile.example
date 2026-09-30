@@ -1,0 +1,35 @@
+# Auszug fuer die Caddyfile des Servers (meist /etc/caddy/Caddyfile).
+# Bestehende Eintraege (z. B. die Financial-App) bleiben unveraendert stehen, dies kommt dazu.
+# Vor dem Neuladen immer pruefen:   caddy validate --config /etc/caddy/Caddyfile
+# Dann ohne Ausfall neu laden:      systemctl reload caddy
+
+# VARIANTE A (empfohlen): eigener Hostname nur fuer die API.
+# Caddy holt und erneuert das HTTPS-Zertifikat selbst, sobald der Name auf den Server zeigt und
+# Port 80/443 erreichbar sind.
+swim-api.example.net {
+	encode zstd gzip
+	request_body {
+		max_size 200KB
+	}
+	reverse_proxy 127.0.0.1:3100 {
+		# Claude-Aufrufe (ab M5) koennen laenger dauern.
+		transport http {
+			response_header_timeout 90s
+		}
+	}
+}
+
+# VARIANTE B: kein zweiter Hostname moeglich. Dann in den bestehenden Block deines Hostnamens
+# diesen Abschnitt einfuegen. handle_path entfernt den Praefix /swim, die App braucht keine
+# Aenderung. Erreichbar unter https://<dein-hostname>/swim/health
+#
+#   handle_path /swim/* {
+#   	request_body {
+#   		max_size 200KB
+#   	}
+#   	reverse_proxy 127.0.0.1:3100 {
+#   		transport http {
+#   			response_header_timeout 90s
+#   		}
+#   	}
+#   }
