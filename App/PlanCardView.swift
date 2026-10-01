@@ -18,6 +18,13 @@ struct PlanCardView: View {
 
             header
 
+            if let wish = response.wishes, !wish.isEmpty {
+                Label("Dein Wunsch: \(wish)", systemImage: "text.bubble")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
             Text(plan.rationale)
                 .font(.callout)
                 .fixedSize(horizontal: false, vertical: true)

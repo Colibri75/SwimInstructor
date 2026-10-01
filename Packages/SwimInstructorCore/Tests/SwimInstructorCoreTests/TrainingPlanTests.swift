@@ -23,6 +23,22 @@ final class TrainingPlanTests: XCTestCase {
         XCTAssertEqual(response.plan.coachNotes, ["Auf lockere Atmung achten."])
     }
 
+    func testWishFromTheServerIsDecodedAndMissingWishIsNil() throws {
+        let without = try PlanResponse.jsonDecoder().decode(PlanResponse.self, from: Data(TestFixtures.responseJSON.utf8))
+        XCTAssertNil(without.wishes)
+
+        let json = TestFixtures.responseJSON.replacingOccurrences(
+            of: "\"stale\": false,",
+            with: "\"stale\": false, \"wishes\": \"Mehr Technik, Schulter schonen\","
+        )
+        let with = try PlanResponse.jsonDecoder().decode(PlanResponse.self, from: Data(json.utf8))
+        XCTAssertEqual(with.wishes, "Mehr Technik, Schulter schonen")
+
+        // Der Wunsch übersteht den Zwischenspeicher.
+        let encoded = try PlanResponse.jsonEncoder().encode(with)
+        XCTAssertEqual(try PlanResponse.jsonDecoder().decode(PlanResponse.self, from: encoded).wishes, with.wishes)
+    }
+
     func testDecodesFallbackAndRestDay() throws {
         let json = """
         {"source":"fallback","date":"2026-09-29","generated_at":"2026-09-29T06:00:00Z","stale":true,

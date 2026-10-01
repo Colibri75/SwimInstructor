@@ -104,6 +104,9 @@ struct TodayView: View {
                     if text.count > DailyWish.maxLength {
                         wishDraft = String(text.prefix(DailyWish.maxLength))
                     }
+                    // Sofort speichern: Ziehen zum Aktualisieren nutzt den gespeicherten Wunsch und
+                    // soll auch dann mit ihm planen, wenn der Knopf nicht getippt wurde.
+                    loader.setWish(wishDraft)
                 }
             Button {
                 Task { await loader.replan(withWish: wishDraft) }
@@ -120,7 +123,7 @@ struct TodayView: View {
         } header: {
             Text("Dein Wunsch für heute")
         } footer: {
-            Text("Gilt nur für heute. Claude berücksichtigt ihn, soweit er in die Sicherheitsgrenzen passt (Umfang, Intensität, Ruhetag). Ziehen zum Aktualisieren nutzt ihn ebenfalls.")
+            Text("Gilt nur für heute. Claude berücksichtigt ihn, soweit er in die Sicherheitsgrenzen passt (Umfang, Intensität, Ruhetag). Er wird beim Tippen gespeichert, Ziehen zum Aktualisieren nutzt ihn ebenfalls. Steht er nach dem Erstellen über dem Plan, ist er beim Server angekommen.")
         }
         .onAppear { wishDraft = loader.wish }
         .onChange(of: loader.wish) { old, new in

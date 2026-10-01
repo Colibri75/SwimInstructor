@@ -20,6 +20,8 @@ export interface PlanResult {
   /** Korrekturen der Sicherheitsschicht, auf Deutsch. */
   adjustments: string[];
   fallbackReason?: FallbackReason;
+  /** Der Wunsch, mit dem der Plan erzeugt wurde (nur bei claude und cache). Die App zeigt ihn an, so ist sichtbar, dass er angekommen ist. */
+  wishes?: string;
 }
 
 export interface PlanServiceDeps {
@@ -55,7 +57,15 @@ export class PlanService {
     const stored = await this.latestOrNull();
     if (options.regenerate !== true && stored && stored.date === today && stored.snapshotHash === hash) {
       logger.info({ date: today }, "plan served from cache");
-      return { source: "cache", date: stored.date, generatedAt: stored.generatedAt, stale: false, plan: stored.plan, adjustments: stored.adjustments };
+      return {
+        source: "cache",
+        date: stored.date,
+        generatedAt: stored.generatedAt,
+        stale: false,
+        plan: stored.plan,
+        adjustments: stored.adjustments,
+        ...(wishes ? { wishes } : {})
+      };
     }
 
     if (generator === null) return this.fallback("not_configured", snapshot, today, stored);
@@ -92,11 +102,20 @@ export class PlanService {
           inputTokens: generated.usage.inputTokens,
           outputTokens: generated.usage.outputTokens,
           latencyMs: Date.now() - started,
-          adjustments: sanitized.adjustments.length
+          adjustments: sanitized.adjustments.length,
+          wishChars: wishes?.length ?? 0
         },
         "plan generated"
       );
-      return { source: "claude", date: today, generatedAt: record.generatedAt, stale: false, plan: record.plan, adjustments: record.adjustments };
+      return {
+        source: "claude",
+        date: today,
+        generatedAt: record.generatedAt,
+        stale: false,
+        plan: record.plan,
+        adjustments: record.adjustments,
+        ...(wishes ? { wishes } : {})
+      };
     } catch (error) {
       const reason = error instanceof PlanGenerationError ? error.reason : "unknown";
       // auth und bad_request sind Konfigurations- oder Programmierfehler und gehoeren laut ins Log.
