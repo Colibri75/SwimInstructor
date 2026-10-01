@@ -87,6 +87,35 @@ public enum PlanFormatting {
         }
     }
 
+    /// Hinweis auf der Watch, wenn der gezeigte Plan nicht von heute ist, sonst `nil`.
+    public static func dayNotice(_ response: PlanResponse, now: Date, calendar: Calendar = .current) -> String? {
+        guard response.date != isoDay(now, calendar: calendar) else { return nil }
+        return "Plan vom \(germanDate(response.date)). Öffne die iPhone-App für den Plan von heute."
+    }
+
+    /// 754 → "12:34", 3723 → "1:02:03".
+    public static func elapsed(_ seconds: TimeInterval) -> String {
+        let total = max(0, Int(seconds))
+        let hours = total / 3600
+        let minutes = (total % 3600) / 60
+        let secs = total % 60
+        return hours > 0
+            ? String(format: "%d:%02d:%02d", hours, minutes, secs)
+            : String(format: "%d:%02d", minutes, secs)
+    }
+
+    /// "3 von 6 × 200 m" bzw. "400 m" bei einer Wiederholung.
+    public static func repetition(_ position: PlanPosition) -> String {
+        position.set.repetitions > 1
+            ? "\(position.repetition) von \(position.set.repetitions) × \(meters(position.set.distanceMeters))"
+            : meters(position.set.distanceMeters)
+    }
+
+    /// "noch 150 m".
+    public static func remaining(_ position: PlanPosition) -> String {
+        "noch \(meters(position.metersRemainingInRepetition))"
+    }
+
     /// "2026-09-29" → "29.09.2026"; unbekannte Formate bleiben unverändert.
     public static func germanDate(_ isoDay: String) -> String {
         let parts = isoDay.split(separator: "-")

@@ -18,6 +18,7 @@ public final class HealthKitManager: ObservableObject, HealthDataAuthorizing {
     @Published public private(set) var lastError: String?
 
     private let healthStore = HKHealthStore()
+    private let shareTypes: Set<HKSampleType>
 
     /// All types M2 (data layer) will read: swim workouts plus the vitals the training-state
     /// calculation in M3 needs (heart rate, resting HR, HRV, sleep).
@@ -33,14 +34,29 @@ public final class HealthKitManager: ObservableObject, HealthDataAuthorizing {
         HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!
     ]
 
-    public init() {}
+    /// Was die Watch beim Aufzeichnen einer Einheit in Health schreibt (Workout, Strecke, Züge,
+    /// Puls, Energie). Das iPhone schreibt nichts.
+    public nonisolated static let workoutShareTypes: Set<HKSampleType> = [
+        HKObjectType.workoutType(),
+        HKObjectType.quantityType(forIdentifier: .distanceSwimming)!,
+        HKObjectType.quantityType(forIdentifier: .swimmingStrokeCount)!,
+        HKObjectType.quantityType(forIdentifier: .heartRate)!,
+        HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!
+    ]
+
+    /// - Parameter shareTypes: zusätzlich zu schreibende Typen; die werden auch gelesen, damit die
+    ///   Watch ihre Live-Werte (z. B. Energie) anzeigen darf.
+    public init(shareTypes: Set<HKSampleType> = []) {
+        self.shareTypes = shareTypes
+    }
 
     public func requestAuthorization() async throws {
         guard HKHealthStore.isHealthDataAvailable() else {
             throw HealthKitAuthorizationError.notAvailableOnDevice
         }
         do {
-            try await healthStore.requestAuthorization(toShare: [], read: Self.readTypes)
+            let readTypes = Self.readTypes.union(shareTypes.map { $0 as HKObjectType })
+            try await healthStore.requestAuthorization(toShare: shareTypes, read: readTypes)
             // HealthKit never reveals per-type grant/deny status for read access (privacy by
             // design), so "authorized" here only means the request completed without error.
             isAuthorized = true

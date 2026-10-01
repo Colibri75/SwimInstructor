@@ -53,4 +53,36 @@ final class PlanFormattingTests: XCTestCase {
         XCTAssertEqual(PlanFormatting.germanDate("2026-09-30"), "30.09.2026")
         XCTAssertEqual(PlanFormatting.germanDate("unbekannt"), "unbekannt")
     }
+
+    // MARK: - Watch
+
+    func testDayNoticeOnlyForOtherDays() {
+        XCTAssertNil(PlanFormatting.dayNotice(TestFixtures.response(date: "2026-09-30"), now: TestFixtures.now, calendar: TestFixtures.utc))
+        XCTAssertEqual(
+            PlanFormatting.dayNotice(TestFixtures.response(date: "2026-09-29"), now: TestFixtures.now, calendar: TestFixtures.utc),
+            "Plan vom 29.09.2026. Öffne die iPhone-App für den Plan von heute."
+        )
+    }
+
+    func testElapsed() {
+        XCTAssertEqual(PlanFormatting.elapsed(0), "0:00")
+        XCTAssertEqual(PlanFormatting.elapsed(754), "12:34")
+        XCTAssertEqual(PlanFormatting.elapsed(3723), "1:02:03")
+        XCTAssertEqual(PlanFormatting.elapsed(-5), "0:00")
+    }
+
+    func testRepetitionAndRemaining() {
+        let set = PlanSet(name: "Hauptsatz", repetitions: 6, distanceMeters: 200, targetPaceSecondsPerHundredMeters: nil, restSeconds: 0, instructions: "")
+        let position = PlanPosition(setIndex: 1, set: set, repetition: 3, metersIntoRepetition: 50)
+        let single = PlanPosition(
+            setIndex: 0,
+            set: PlanSet(name: "Einschwimmen", repetitions: 1, distanceMeters: 1200, targetPaceSecondsPerHundredMeters: nil, restSeconds: 0, instructions: ""),
+            repetition: 1,
+            metersIntoRepetition: 0
+        )
+
+        XCTAssertEqual(PlanFormatting.repetition(position), "3 von 6 × 200 m")
+        XCTAssertEqual(PlanFormatting.remaining(position), "noch 150 m")
+        XCTAssertEqual(PlanFormatting.repetition(single), "1.200 m")
+    }
 }

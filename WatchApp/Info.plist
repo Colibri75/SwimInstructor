@@ -27,6 +27,10 @@
 	<key>NSHealthShareUsageDescription</key>
 	<string>SwimInstructor liest deine Schwimm-Workouts und Vitaldaten aus Health, um dir direkt an der Uhr deinen Trainingsplan zu zeigen.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>SwimInstructor kann zukünftig Trainingsergebnisse in Health speichern.</string>
+	<string>SwimInstructor speichert deine Schwimmeinheiten mit Bahnen, Zügen und Puls in Health.</string>
+	<key>WKBackgroundModes</key>
+	<array>
+		<string>workout-processing</string>
+	</array>
 </dict>
 </plist>
