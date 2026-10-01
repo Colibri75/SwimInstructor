@@ -23,9 +23,15 @@ final class TodayPlanLoaderTests: XCTestCase {
     private final class CountingProvider: PlanProviding, @unchecked Sendable {
         let result: Result<PlanResponse, Error>
         private(set) var calls = 0
+        private(set) var newPlanCalls = 0
         init(_ result: Result<PlanResponse, Error>) { self.result = result }
         func fetchTodayPlan(for snapshot: AthleteStateSnapshot) async throws -> PlanResponse {
             calls += 1
+            return try result.get()
+        }
+        func fetchNewPlan(for snapshot: AthleteStateSnapshot) async throws -> PlanResponse {
+            calls += 1
+            newPlanCalls += 1
             return try result.get()
         }
     }
@@ -92,6 +98,28 @@ final class TodayPlanLoaderTests: XCTestCase {
         let loader = makeLoader(cache: MemoryCache(TestFixtures.response()), provider: provider)
 
         await loader.refresh()
+
+        XCTAssertEqual(provider.calls, 1)
+    }
+
+    func testPullAsksForANewPlanButOpeningDoesNot() async {
+        let provider = CountingProvider(.success(TestFixtures.response()))
+        let loader = makeLoader(provider: provider)
+
+        await loader.refreshIfNeeded()
+        XCTAssertEqual(provider.newPlanCalls, 0)
+
+        await loader.refresh()
+        XCTAssertEqual(provider.newPlanCalls, 1)
+    }
+
+    func testOpeningTheAppAgainOnTheSameDayDoesNotAskTheServer() async {
+        let provider = CountingProvider(.success(TestFixtures.response()))
+        let loader = makeLoader(provider: provider)
+
+        await loader.refreshIfNeeded()
+        await loader.refreshIfNeeded()
+        await loader.refreshIfNeeded()
 
         XCTAssertEqual(provider.calls, 1)
     }

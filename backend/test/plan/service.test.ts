@@ -88,6 +88,27 @@ describe("PlanService: frischer Plan", () => {
 });
 
 describe("PlanService: Cache", () => {
+  it("fragt Claude bei regenerate neu, auch wenn fuer denselben Zustand ein Plan vorliegt", async () => {
+    const { service, generate } = setup();
+
+    await service.planForToday(snapshot());
+    const again = await service.planForToday(snapshot(), { regenerate: true });
+
+    expect(generate).toHaveBeenCalledTimes(2);
+    expect(again.source).toBe("claude");
+  });
+
+  it("zaehlt regenerate gegen das Budget und faellt bei erschoepftem Budget auf den letzten Plan zurueck", async () => {
+    const budget = new GenerationBudget(1, 100);
+    const { service, generate } = setup({ budget });
+
+    await service.planForToday(snapshot());
+    const again = await service.planForToday(snapshot(), { regenerate: true });
+
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(again).toMatchObject({ source: "fallback", fallbackReason: "budget_exceeded" });
+  });
+
   it("ruft Claude bei demselben Zustand am selben Tag nur einmal auf", async () => {
     const { service, generate } = setup();
 

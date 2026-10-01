@@ -27,6 +27,10 @@ Anfrage: `Authorization: Bearer <Token>` und als Body `{"snapshot": { ... }}` (d
 `AthleteStateSnapshot`). Ungültige Snapshots lehnt der Server mit `400` ab. Unbekannte Felder
 werden verworfen und erreichen Claude nie.
 
+Optional `"regenerate": true`: Der Server überspringt dann seinen Cache und fragt Claude auch bei
+unverändertem Zustand neu (die App schickt das beim Ziehen zum Aktualisieren). Das zählt gegen das
+Budget, bei Ausfall oder erschöpftem Budget kommt wie sonst der letzte Plan. Kein Boolean: `400`.
+
 Antwort `200`:
 
 ```json
@@ -133,7 +137,7 @@ Der Server ruft Claude höchstens 5-mal pro Stunde und 20-mal pro Tag auf (`PLAN
 `PLAN_MAX_GENERATIONS_PER_DAY`). Darüber liefert er den letzten gültigen Plan
 (`fallback_reason: budget_exceeded`). Ein durchgesickerter Token kann so nur begrenzt Kosten
 erzeugen. Der Zähler liegt im Speicher und beginnt nach einem Neustart neu. Zusätzlich wird derselbe
-Zustand am selben Tag nur einmal geplant (Cache).
+Zustand am selben Tag nur einmal geplant (Cache), außer die Anfrage verlangt `regenerate`.
 
 Setze außerdem in der Anthropic Console unter *Limits* ein monatliches Ausgabenlimit.
 

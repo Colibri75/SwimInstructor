@@ -4,7 +4,8 @@ import { PlanUnavailableError } from "./errors";
 import { PlanResult, PlanService } from "./service";
 import { SnapshotSchema } from "./snapshot";
 
-const PlanRequestSchema = z.object({ snapshot: SnapshotSchema });
+/** `regenerate`: Claude auch dann neu fragen, wenn fuer denselben Zustand heute schon ein Plan vorliegt (Ziehen in der App). */
+const PlanRequestSchema = z.object({ snapshot: SnapshotSchema, regenerate: z.boolean().optional() });
 
 /** Haengt `POST /v1/plan/today` ein (die Token-Pruefung sitzt schon davor, siehe app.ts). */
 export function planRoutes(service: PlanService): (router: Router) => void {
@@ -20,7 +21,7 @@ export function planRoutes(service: PlanService): (router: Router) => void {
       }
 
       try {
-        res.json(toResponse(await service.planForToday(parsed.data.snapshot)));
+        res.json(toResponse(await service.planForToday(parsed.data.snapshot, { regenerate: parsed.data.regenerate === true })));
       } catch (error) {
         if (error instanceof PlanUnavailableError) {
           res.status(503).json({ error: "plan_unavailable", reason: error.reason });

@@ -305,8 +305,9 @@ echten **Heute-Bildschirm** ersetzt.
   `GET /v1/status` für "Verbindung testen". Zeitlimit 95 s, damit die App nicht vor dem Server
   (75 s) aufgibt. Fehler kommen als `PlanAPIError` mit deutschem Text.
 - **Wann wird gefragt?** Beim Öffnen liest die App Health immer neu, den Plan holt sie nur, wenn noch
-  keiner von heute da ist (oder der letzte ein Fallback war). Ziehen zum Aktualisieren fragt immer;
-  bei unverändertem Zustand antwortet der Server aus dem Cache, ohne Claude aufzurufen.
+  keiner von heute da ist (oder der letzte ein Fallback war). Ziehen zum Aktualisieren holt immer
+  einen **neuen** Plan (`regenerate` im Request, der Server überspringt dann seinen Cache). Das kostet
+  einen Claude-Aufruf und zählt gegen das Budget des Servers.
 - **Offline:** Der letzte Plan liegt in `Application Support/SwimInstructor/last-plan.json` und
   bleibt sichtbar, wenn der Server nicht erreichbar ist.
 - **Zugang:** Server-Adresse (Standard `https://swiminstructor.kellner.v6.rocks`) und Token werden
@@ -324,8 +325,9 @@ echten **Heute-Bildschirm** ersetzt.
       Hinweise, Korrekturen der Sicherheitsschicht), den Stand und die bisherigen Einheiten
 - [x] Fallback-Plan wird als solcher gekennzeichnet, der letzte Plan bleibt offline sichtbar
 - [ ] **Auf dem iPhone (TestFlight):** Token eintragen, "Verbindung testen" meldet "Verbindung ok"
-- [ ] **Auf dem iPhone:** Beim Öffnen erscheint ein Plan für heute; zweimal Ziehen zum Aktualisieren
-      ohne neue Einheit liefert denselben Plan (Server-Cache, kein neuer Claude-Aufruf im Server-Log)
+- [ ] **Auf dem iPhone:** Beim ersten Öffnen am Tag erscheint ein Plan für heute; erneutes Öffnen holt
+      keinen neuen (kein Aufruf im Server-Log), **Ziehen zum Aktualisieren** holt einen neuen Plan
+      (neuer Claude-Aufruf im Server-Log, `plan generated`)
 - [ ] **Auf dem iPhone:** Flugmodus an, App öffnen: der letzte Plan bleibt stehen, Hinweis auf den
       Verbindungsfehler statt Absturz
 - [ ] **Auf dem iPhone:** Falsches Token eintragen: verständliche Meldung, kein Absturz
@@ -509,8 +511,10 @@ Meilensteins). Offen:
 - **M9 – Automatisierung: bewusst gestrichen.** Eine Erinnerung zur Uhrzeit und ein Plan im Hintergrund
   brächten wenig: Bei gesperrtem iPhone kann die App Health nicht lesen (Apple schützt die Daten), und
   wann iOS Hintergrundläufe erlaubt, lässt sich nicht erzwingen. Stattdessen entsteht der Plan, **wenn du
-  die App morgens öffnest** (dauert rund 15 Sekunden, danach liegt er auch auf der Watch). Ein Aufruf
-  pro Tag reicht: Weitere Öffnungen am selben Tag holen keinen neuen Plan, solange sich nichts ändert.
+  die App morgens öffnest** (dauert rund 15 Sekunden, danach liegt er auch auf der Watch). Das geschieht
+  nur beim ersten Öffnen des Tages. **Ziehen zum Aktualisieren** holt dagegen immer einen neuen Plan von
+  Claude, auch bei unverändertem Zustand (rund 4 Cent, der Server begrenzt auf 5 Pläne pro Stunde und
+  20 pro Tag).
   Der verworfene Entwurf steht in PR #25.
 - **M10 – Realer Betatest:** Mehrere Wochen im echten Training, Planqualität und Zahlen gegenprüfen.
 - **M11 – Feinschliff:** Fehlermeldungen, Barrierefreiheit, UI-Tests, Übungslexikon statt wiederholter
