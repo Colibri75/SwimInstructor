@@ -277,9 +277,9 @@ backend/scripts/eval-in-docker.sh   # dasselbe auf dem Server ohne Node (nur Doc
 
 - [x] `/v1/plan/today` ruft Claude mit festem System-Prompt und striktem JSON-Schema auf
       (30.09.2026 auf dem Server verifiziert: fünf echte Aufrufe, 6 bis 19 s, rund 4 Cent pro Plan)
-- [ ] Für alle 5 Testszenarien aus M3 liefert Claude plausible Pläne, manuell bewertet und
-      dokumentiert. Der erste Lauf (30.09.) zeigte zwei Schwächen, die behoben sind. Der zweite Lauf
-      und deine Bewertung stehen aus, siehe [`docs/plan-eval.md`](docs/plan-eval.md)
+- [x] Für alle 5 Testszenarien aus M3 liefert Claude plausible Pläne, manuell bewertet und
+      dokumentiert. Lauf 2 (30.09.) mit allen fünf Plänen als "sinnvoll" bewertet. Offener Wunsch aus der
+      Bewertung (Übungen erklären) ist per Prompt umgesetzt, siehe [`docs/plan-eval.md`](docs/plan-eval.md)
 - [x] Sanity-Layer korrigiert oder blockt gefährliche Vorschläge
 - [x] Fallback bei Claude-Ausfall: letzter gültiger Plan statt Absturz oder leerer Antwort
 - [x] Kostenkalkulation dokumentiert und gemessen (rund $0,038 pro Plan, siehe `docs/plan-generation.md`)

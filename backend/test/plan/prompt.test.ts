@@ -76,5 +76,10 @@ describe("Prompt", () => {
   it("verweist im System-Prompt auf die Grenzen in der Nutzernachricht", () => {
     expect(SYSTEM_PROMPT).toContain("verbindliche Grenzen für heute");
   });
+
+  it("verlangt, dass Technikuebungen erklaert werden und kein Fachbegriff unerklaert bleibt", () => {
+    expect(SYSTEM_PROMPT).toContain("Erkläre jede Technikübung");
+    expect(SYSTEM_PROMPT).toContain("Zipper");
+  });
 });
 

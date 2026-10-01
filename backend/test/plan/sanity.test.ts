@@ -266,6 +266,16 @@ describe("sanitizePlan: Rechenfehler und Formalien", () => {
     expect(result.plan.estimated_duration_minutes).toBe(0);
   });
 
+  it("laesst eine ausfuehrliche Uebungserklaerung unveraendert und kuerzt erst weit darueber", () => {
+    const explained = "Zipper: Der Daumen streift beim Armzug an Bauch und Brust entlang, der Ellbogen bleibt hoch. ".repeat(3).trim();
+    const plain = plan({ sets: [set({ repetitions: 4, instructions: explained })], total_distance_meters: 800 });
+    const endless = plan({ sets: [set({ repetitions: 4, instructions: "y".repeat(5000) })], total_distance_meters: 800 });
+
+    expect(explained.length).toBeLessThan(DEFAULT_LIMITS.maxInstructionLength);
+    expect(sanitizePlan(plain, snapshot()).plan.sets[0].instructions).toBe(explained);
+    expect(sanitizePlan(endless, snapshot()).plan.sets[0].instructions).toHaveLength(DEFAULT_LIMITS.maxInstructionLength);
+  });
+
   it("kuerzt zu lange Texte und begrenzt die Zahl der Hinweise", () => {
     const wordy = plan({ rationale: "x".repeat(5000), coach_notes: Array.from({ length: 12 }, () => "y".repeat(1000)) });
 

@@ -59,26 +59,46 @@ Beide Korrekturen sind per Test abgesichert. Ob sie in der Praxis wirken, zeigt 
 - Ein einzelner Lauf je Szenario ist keine Stichprobe. Claude kann bei demselben Snapshot andere Pläne
   liefern.
 
-## Lauf 2: nach den Korrekturen
+## Lauf 2 (30.09.2026): nach den Korrekturen
 
-*Steht aus.* Er kostet wieder rund $0,20 und zeigt, ob die Pläne jetzt von Anfang an in die Grenzen
-passen (die Zeile "Grenzen für heute" steht im Bericht über jedem Plan). Danach trägst du hier deine
-Bewertung ein.
+Gleiche Einstellungen wie Lauf 1 (`claude-opus-5-5`, Effort `medium`), ausgeführt auf dem Produktionsserver.
+Die Rohausgabe entstand noch mit der alten Skriptversion und steht deshalb nicht in `docs/eval-runs/`.
+
+**Die Sicherheitsschicht musste in keinem Szenario eingreifen.** Claude hielt die vorab genannten
+Grenzen ein und erhielt dadurch die Struktur der Einheiten. Gesamtkosten rund $0,19, wie in Lauf 1.
+
+| Szenario | Plan von Claude | Grenze für heute | Einschätzung |
+|---|---|---|---|
+| **01 Anfänger** | Technik, 500 m | 1.000 m | Sinnvoll, etwas länger als in Lauf 1 und näher an dem, was der Athlet schwimmt. |
+| **02 Fortschritt** | Technik, locker, 850 m, Aufbau erhalten | 855 m | Die Schwäche aus Lauf 1 ist behoben: Claude plant direkt passend, nichts wird zerschnitten. |
+| **03 Trainingspause** | 700 m, vorsichtiger Wiedereinstieg | 800 m | Sinnvoll. |
+| **04 Zieldatum nah** | Schwelle, hart, 1.500 m, Hauptsatz 8 × 100 m mit 95 s Pace | 1.500 m | Zielpace-spezifisch und trotz der Wochengrenze mit vollem Kern. Die Einheit bleibt erhalten. |
+| **05 Übertraining** | Ruhetag mit konkreten Zahlen | Pflicht-Ruhetag | Weiter das beste Ergebnis. |
+
+Beide Korrekturen aus Lauf 1 haben damit gewirkt.
 
 ## Deine Bewertung (Definition of Done)
 
-Bitte nach Lauf 2 ausfüllen. Orientierung, was ein sinnvoller Plan ist, steht in
-[plan-generation.md](plan-generation.md).
-
-**So trägst du sie ein:** Sag Claude im Chat pro Szenario "sinnvoll" oder "nicht sinnvoll" mit einem Satz
-Begründung, zum Beispiel "01 sinnvoll, 02 nicht sinnvoll, weil der Hauptsatz zu kurz ist". Claude trägt
-es hier ein und stellt es als Pull Request bereit. Direkt auf dem Server bearbeiten musst du nichts,
-das würde nur Konflikte beim nächsten `git pull` erzeugen.
+Bewertung von Lauf 2 durch Steffen am 30.09.2026.
 
 | Szenario | sinnvoll | Begründung |
 |---|---|---|
-| 01 Anfänger | [ ] | |
-| 02 Fortschritt | [ ] | |
-| 03 Trainingspause | [ ] | |
-| 04 Zieldatum nah | [ ] | |
-| 05 Übertraining | [ ] | |
+| 01 Anfänger | [x] | |
+| 02 Fortschritt | [x] | "Aber die Übungen sollten erklärt werden, also sowas wie Zipper." |
+| 03 Trainingspause | [x] | |
+| 04 Zieldatum nah | [x] | |
+| 05 Übertraining | [x] | |
+
+### Folge aus der Bewertung: Übungen erklären
+
+Die Pläne nennen Technikübungen (etwa "Zipper" oder "Abschlagschwimmen"), ohne zu sagen, wie sie
+gehen. Wer ohne Trainer schwimmt, kann damit nichts anfangen.
+
+*Umsetzung:* Der System-Prompt verlangt jetzt, jede Technikübung im Feld `instructions` in ein bis zwei
+Sätzen zu erklären und keinen Fachbegriff unerklärt zu lassen. Die Beschreibung des Feldes im Schema sagt
+dasselbe. Die Sicherheitsschicht kürzt Anweisungen erst ab 600 Zeichen statt wie bisher ab 400, damit
+die Erklärung nicht abgeschnitten wird.
+
+*Nicht nachbewertet:* Diese Prompt-Änderung kam nach Lauf 2 und wurde noch nicht gegen die echte API
+gelaufen. Ein weiterer Lauf (rund $0,20) zeigt, ob die Erklärungen tatsächlich kommen. Langfristig
+(M7) wäre ein Übungslexikon in der App sinnvoll, statt die Erklärung in jedem Plan zu wiederholen.
