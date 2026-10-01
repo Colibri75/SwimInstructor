@@ -4,8 +4,18 @@ import { PlanUnavailableError } from "./errors";
 import { PlanResult, PlanService } from "./service";
 import { SnapshotSchema } from "./snapshot";
 
-/** `regenerate`: Claude auch dann neu fragen, wenn fuer denselben Zustand heute schon ein Plan vorliegt (Ziehen in der App). */
-const PlanRequestSchema = z.object({ snapshot: SnapshotSchema, regenerate: z.boolean().optional() });
+export const MAX_WISH_LENGTH = 500;
+
+/**
+ * `regenerate`: Claude auch dann neu fragen, wenn fuer denselben Zustand heute schon ein Plan vorliegt
+ * (Ziehen in der App). `wishes`: Freitext des Athleten fuer heute, hoechstens 500 Zeichen. Leer oder
+ * nur Leerraum zaehlt als kein Wunsch.
+ */
+const PlanRequestSchema = z.object({
+  snapshot: SnapshotSchema,
+  regenerate: z.boolean().optional(),
+  wishes: z.string().max(MAX_WISH_LENGTH).optional()
+});
 
 /** Haengt `POST /v1/plan/today` ein (die Token-Pruefung sitzt schon davor, siehe app.ts). */
 export function planRoutes(service: PlanService): (router: Router) => void {
@@ -21,7 +31,7 @@ export function planRoutes(service: PlanService): (router: Router) => void {
       }
 
       try {
-        res.json(toResponse(await service.planForToday(parsed.data.snapshot, { regenerate: parsed.data.regenerate === true })));
+        res.json(toResponse(await service.planForToday(parsed.data.snapshot, { regenerate: parsed.data.regenerate === true, wishes: parsed.data.wishes })));
       } catch (error) {
         if (error instanceof PlanUnavailableError) {
           res.status(503).json({ error: "plan_unavailable", reason: error.reason });

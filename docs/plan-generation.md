@@ -27,6 +27,11 @@ Anfrage: `Authorization: Bearer <Token>` und als Body `{"snapshot": { ... }}` (d
 `AthleteStateSnapshot`). Ungültige Snapshots lehnt der Server mit `400` ab. Unbekannte Felder
 werden verworfen und erreichen Claude nie.
 
+Optional `"wishes": "…"`: Freitext des Athleten für heute (höchstens 500 Zeichen, die App sendet bis 300,
+leer oder nur Leerraum zählt als kein Wunsch). Er steht in der Nutzernachricht als JSON-String und als Daten
+gekennzeichnet, kann die Grenzen für heute nie ändern und gehört zum Cache-Schlüssel: Ein anderer Wunsch bei
+gleichem Zustand ergibt einen neuen Plan. Zu lang oder kein String: `400`.
+
 Optional `"regenerate": true`: Der Server überspringt dann seinen Cache und fragt Claude auch bei
 unverändertem Zustand neu (die App schickt das beim Ziehen zum Aktualisieren). Das zählt gegen das
 Budget, bei Ausfall oder erschöpftem Budget kommt wie sonst der letzte Plan. Kein Boolean: `400`.

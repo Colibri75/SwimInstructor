@@ -29,11 +29,14 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
     @Published private(set) var metrics = LiveSwimMetrics.zero
     @Published private(set) var poolLengthMeters = PoolLength.defaultMeters
     @Published private(set) var errorMessage: String?
+    /// Strecke (Meter), bei der der Athlet "nächster Abschnitt" ausgelöst hat (Crown nach oben).
+    @Published private(set) var sectionAdvances: [Double] = []
 
     private let healthStore = HKHealthStore()
     private var session: HKWorkoutSession?
     private var builder: HKLiveWorkoutBuilder?
     private var lapEvents = 0
+    private var waterLock = WaterLockControl()
 
     func start(poolLengthMeters: Int) async {
         guard !phase.isActive else { return }
@@ -41,6 +44,8 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         self.poolLengthMeters = poolLength
         metrics = .zero
         lapEvents = 0
+        sectionAdvances = []
+        waterLock = WaterLockControl()
         errorMessage = nil
         phase = .starting
 
@@ -71,8 +76,7 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
                 HKMetadataKeySwimmingLocationType: NSNumber(value: HKWorkoutSwimmingLocationType.pool.rawValue)
             ])
             phase = .running
-            // Wassersperre wie bei Apples Schwimm-App: Entsperren mit der Digital Crown.
-            WKInterfaceDevice.current().enableWaterLock()
+            lockWater()
         } catch {
             errorMessage = "Training konnte nicht starten: \(error.localizedDescription)"
             session?.end()
@@ -84,6 +88,44 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
 
     func pause() {
         session?.pause()
+    }
+
+    // MARK: - Wassersperre und Crown
+
+    /// Wassersperre wie bei Apples Schwimm-App: Entsperren mit der Digital Crown. Sie ist an, solange
+    /// die Einheit läuft, und geht nach Fortsetzen, nach einem Abschnittswechsel und nach einer Weile
+    /// ohne Eingabe wieder an.
+    private func lockWater() {
+        WKInterfaceDevice.current().enableWaterLock()
+    }
+
+    /// Etwa zweimal pro Sekunde aufrufen, solange der Bildschirm der Einheit sichtbar ist: erkennt das
+    /// Entsperren und sperrt nach einer Weile ohne Eingabe wieder.
+    func tickWaterLock(now: Date = Date()) {
+        let isLocked = WKInterfaceDevice.current().isWaterLockEnabled
+        if waterLock.update(isRunning: phase == .running, isLocked: isLocked, now: now) == .lock {
+            lockWater()
+        }
+    }
+
+    /// Jede Eingabe nach dem Entsperren verschiebt die automatische Sperre.
+    func noteInput(now: Date = Date()) {
+        waterLock.noteInput(now: now)
+    }
+
+    /// Die Crown wurde weit genug nach oben gedreht: nächster Abschnitt, aber nur, wenn die Sperre
+    /// schon einen Moment aus ist (die Drehung, die entsperrt hat, zählt nicht).
+    func crownTurnedUp(now: Date = Date()) {
+        guard phase == .running, waterLock.acceptsCrown(now: now) else { return }
+        advanceSection()
+    }
+
+    /// Beendet den aktuellen Abschnitt des Plans an der aktuellen Strecke und sperrt wieder.
+    func advanceSection() {
+        guard phase == .running else { return }
+        sectionAdvances.append(metrics.distanceMeters)
+        WKInterfaceDevice.current().play(.directionUp)
+        lockWater()
     }
 
     func resume() {
@@ -102,6 +144,7 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         guard !phase.isActive else { return }
         phase = .idle
         metrics = .zero
+        sectionAdvances = []
         errorMessage = nil
     }
 
@@ -114,6 +157,8 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         switch state {
         case .running:
             phase = .running
+            // Auch nach "Weiter": Wer schwimmt, hat die Wassersperre an.
+            lockWater()
         case .paused:
             phase = .paused
         case .ended:

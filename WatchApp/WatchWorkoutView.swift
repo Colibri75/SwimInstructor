@@ -5,6 +5,7 @@ import SwimInstructorCore
 struct WatchWorkoutView: View {
     @EnvironmentObject private var workoutManager: SwimWorkoutManager
     @State private var page = 1
+    @State private var crown = 0.0
 
     var body: some View {
         TabView(selection: $page) {
@@ -19,6 +20,23 @@ struct WatchWorkoutView: View {
         .onChange(of: workoutManager.phase) { _, _ in
             // Nach Pause oder Fortsetzen zurück zu den Werten.
             withAnimation { page = 1 }
+        }
+        // Crown nach oben schaltet den nächsten Abschnitt weiter, sobald die Wassersperre aus ist.
+        // Das Entsperren selbst übernimmt das System.
+        .focusable()
+        .digitalCrownRotation($crown, from: -20, through: 20, by: 1, sensitivity: .medium, isContinuous: false, isHapticFeedbackEnabled: true)
+        .onChange(of: crown) { _, value in
+            workoutManager.noteInput()
+            if value > 0 {
+                // Nach unten gedreht zählt nicht und darf den Weg nach oben nicht verlängern.
+                crown = 0
+            } else if WaterLockControl.isAdvance(crownValue: value) {
+                workoutManager.crownTurnedUp()
+                crown = 0
+            }
+        }
+        .onReceive(Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()) { _ in
+            workoutManager.tickWaterLock()
         }
     }
 }
@@ -83,6 +101,9 @@ private struct WorkoutPlanView: View {
                         .font(.footnote.monospacedDigit())
                         .foregroundStyle(.secondary)
                 }
+                Text("Krone nach oben: nächster Abschnitt")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
             case let .completed(extraMeters)?:
                 Label("Plan geschafft", systemImage: "checkmark.circle.fill")
                     .foregroundStyle(.green)
@@ -97,7 +118,11 @@ private struct WorkoutPlanView: View {
 
     private var progress: PlanProgressState? {
         guard let plan = planStore.response?.plan else { return nil }
-        return PlanProgress.state(sets: plan.sets, swumMeters: workoutManager.metrics.distanceMeters)
+        return PlanProgress.state(
+            sets: plan.sets,
+            swumMeters: workoutManager.metrics.distanceMeters,
+            advancedAt: workoutManager.sectionAdvances
+        )
     }
 }
 

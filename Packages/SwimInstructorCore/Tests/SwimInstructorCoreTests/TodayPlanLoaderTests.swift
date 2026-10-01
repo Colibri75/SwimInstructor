@@ -22,17 +22,23 @@ final class TodayPlanLoaderTests: XCTestCase {
 
     private final class CountingProvider: PlanProviding, @unchecked Sendable {
         let result: Result<PlanResponse, Error>
-        private(set) var calls = 0
-        private(set) var newPlanCalls = 0
+        private(set) var receivedOptions: [PlanRequestOptions] = []
         init(_ result: Result<PlanResponse, Error>) { self.result = result }
-        func fetchTodayPlan(for snapshot: AthleteStateSnapshot) async throws -> PlanResponse {
-            calls += 1
+        var calls: Int { receivedOptions.count }
+        var newPlanCalls: Int { receivedOptions.filter(\.regenerate).count }
+        func fetchPlan(for snapshot: AthleteStateSnapshot, options: PlanRequestOptions) async throws -> PlanResponse {
+            receivedOptions.append(options)
             return try result.get()
         }
-        func fetchNewPlan(for snapshot: AthleteStateSnapshot) async throws -> PlanResponse {
-            calls += 1
-            newPlanCalls += 1
-            return try result.get()
+    }
+
+    private final class MemoryWishes: DailyWishStoring {
+        var stored: [String: String]
+        init(_ stored: [String: String] = [:]) { self.stored = stored }
+        func wish(for day: String) -> String? { stored[day] }
+        func setWish(_ text: String?, for day: String) {
+            let cleaned = (text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            stored[day] = cleaned.isEmpty ? nil : cleaned
         }
     }
 
@@ -46,6 +52,7 @@ final class TodayPlanLoaderTests: XCTestCase {
     private func makeLoader(
         cache: MemoryCache = MemoryCache(),
         history: PlanHistoryStoring? = nil,
+        wishes: DailyWishStoring? = nil,
         provider: CountingProvider?,
         workouts: FakeWorkoutRepository = FakeWorkoutRepository(workouts: [TestFixtures.workout(daysAgo: 1, meters: 1500)]),
         authorizer: Authorizer = Authorizer()
@@ -60,6 +67,7 @@ final class TodayPlanLoaderTests: XCTestCase {
             planProvider: { provider },
             cache: cache,
             history: history,
+            wishStore: wishes,
             now: { TestFixtures.now },
             calendar: TestFixtures.utc
         )
@@ -221,5 +229,61 @@ final class TodayPlanLoaderTests: XCTestCase {
 
         XCTAssertTrue(loader.planHistory.isEmpty)
         XCTAssertNotNil(loader.response)
+    }
+
+    // MARK: - Wunsch für heute
+
+    func testWishGoesToTheServerWithEveryRequestOfTheDay() async {
+        let provider = CountingProvider(.success(TestFixtures.response()))
+        let loader = makeLoader(wishes: MemoryWishes(["2026-09-30": "Heute lieber Technik"]), provider: provider)
+
+        XCTAssertEqual(loader.wish, "Heute lieber Technik")
+        await loader.refresh()
+
+        XCTAssertEqual(provider.receivedOptions, [PlanRequestOptions(regenerate: true, wishes: "Heute lieber Technik")])
+    }
+
+    func testReplanSavesTheWishAndAsksForANewPlan() async {
+        let wishes = MemoryWishes()
+        let provider = CountingProvider(.success(TestFixtures.response()))
+        let loader = makeLoader(wishes: wishes, provider: provider)
+
+        await loader.replan(withWish: "  Schulter zwickt  ")
+
+        XCTAssertEqual(wishes.stored, ["2026-09-30": "Schulter zwickt"])
+        XCTAssertEqual(loader.wish, "Schulter zwickt")
+        XCTAssertEqual(provider.receivedOptions, [PlanRequestOptions(regenerate: true, wishes: "Schulter zwickt")])
+    }
+
+    func testEmptyWishRemovesItAndIsNotSent() async {
+        let wishes = MemoryWishes(["2026-09-30": "alt"])
+        let provider = CountingProvider(.success(TestFixtures.response()))
+        let loader = makeLoader(wishes: wishes, provider: provider)
+
+        await loader.replan(withWish: "   ")
+
+        XCTAssertEqual(loader.wish, "")
+        XCTAssertTrue(wishes.stored.isEmpty)
+        XCTAssertNil(provider.receivedOptions.first?.wishes)
+    }
+
+    func testYesterdaysWishDoesNotApplyToday() async {
+        let provider = CountingProvider(.success(TestFixtures.response()))
+        let loader = makeLoader(wishes: MemoryWishes(["2026-09-29": "gestern"]), provider: provider)
+
+        await loader.refreshIfNeeded()
+
+        XCTAssertEqual(loader.wish, "")
+        XCTAssertEqual(provider.receivedOptions, [PlanRequestOptions(regenerate: false, wishes: nil)])
+    }
+
+    func testSavingAWishAloneDoesNotCallTheServer() async {
+        let provider = CountingProvider(.success(TestFixtures.response()))
+        let loader = makeLoader(wishes: MemoryWishes(), provider: provider)
+
+        loader.setWish("mehr Ausdauer")
+
+        XCTAssertEqual(provider.calls, 0)
+        XCTAssertEqual(loader.wish, "mehr Ausdauer")
     }
 }

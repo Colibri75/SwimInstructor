@@ -308,6 +308,14 @@ echten **Heute-Bildschirm** ersetzt.
   keiner von heute da ist (oder der letzte ein Fallback war). Ziehen zum Aktualisieren holt immer
   einen **neuen** Plan (`regenerate` im Request, der Server überspringt dann seinen Cache). Das kostet
   einen Claude-Aufruf und zählt gegen das Budget des Servers.
+- **Wunsch für heute:** Auf dem Heute-Bildschirm steht unter dem Plan das Feld "Dein Wunsch für heute"
+  (Freitext, höchstens 300 Zeichen, zum Beispiel "Heute lieber Technik, die Schulter zwickt"). Der Knopf
+  "Plan mit Wunsch neu erstellen" speichert ihn und holt sofort einen neuen Plan. Der Wunsch gilt nur
+  für diesen Kalendertag und geht bei jeder Plananfrage des Tages mit (auch beim Ziehen). Er ist Teil
+  des Server-Cache-Schlüssels. Claude berücksichtigt ihn, **soweit er in die Sicherheitsgrenzen passt**:
+  Mehr Umfang als erlaubt oder eine harte Einheit an einem Ruhetag bekommst du nicht, die Begründung
+  sagt dann in einem Satz, warum. Der Wunsch steht im Prompt als JSON-String und ist als Daten
+  gekennzeichnet, die Sicherheitsschicht prüft den Plan unabhängig davon.
 - **Offline:** Der letzte Plan liegt in `Application Support/SwimInstructor/last-plan.json` und
   bleibt sichtbar, wenn der Server nicht erreichbar ist.
 - **Zugang:** Server-Adresse (Standard `https://swiminstructor.kellner.v6.rocks`) und Token werden
@@ -355,6 +363,15 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
 - **Anzeige beim Schwimmen** (seitlich wischen): Steuerung · Zeit, Strecke, Bahnen, Pace (Schnitt
   inkl. Pausen), Züge pro Bahn, Puls · Stand im Plan ("Hauptsatz, 3 von 6 × 200 m, noch 150 m").
   Die Zuordnung zum Plan läuft nur über die Meter (`PlanProgress`), nicht über Pausen.
+- **Wassersperre und Crown-Steuerung:** Solange die Einheit läuft, ist die Wassersperre an. Sie geht
+  nach "Weiter", nach einem Abschnittswechsel und nach 20 Sekunden ohne Eingabe von selbst wieder an.
+  Entsperren übernimmt das System (Crown drehen). **Danach schaltet eine weitere Drehung der Crown nach
+  oben den nächsten Abschnitt des Plans weiter** (zwei Rastungen, mit Haptik). Der laufende Abschnitt
+  gilt dann an der aktuellen Strecke als beendet, der nächste beginnt dort (`PlanProgress` mit
+  `advancedAt`), danach sperrt die Uhr wieder. Die Drehung, die entsperrt hat, zählt nicht (1 Sekunde
+  Beruhigungszeit, `WaterLockControl`). Nach unten drehen macht nichts.
+  Ob "oben" die richtige Richtung ist, lässt sich nur an der Uhr prüfen: Die Konstante steht in
+  `WaterLockControl.isAdvance` (ein Vorzeichen).
 - **Health-Rechte:** Die Watch fragt jetzt auch Schreibrechte an (Workout, Strecke, Züge, Puls,
   Energie), einmal beim Öffnen, damit der Dialog nicht erst am Beckenrand kommt.
 
@@ -369,7 +386,12 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
       verständliche Meldung
 - [ ] **Im Becken:** Beckenlänge wählen, starten, Wassersperre ist an; Bahnen, Strecke und Züge
       zählen mit; der Plan-Bildschirm springt nach dem Einschwimmen in den Hauptsatz
-- [ ] **Im Becken:** Pause und Fortsetzen funktionieren, Beenden zeigt die Zusammenfassung
+- [ ] **Im Becken:** Pause und Fortsetzen funktionieren, nach "Weiter" ist die Wassersperre wieder an,
+      Beenden zeigt die Zusammenfassung
+- [ ] **Im Becken:** Wassersperre ist beim Schwimmen an. Crown drehen entsperrt, eine weitere Drehung
+      **nach oben** springt zum nächsten Abschnitt (Haptik, der Plan-Bildschirm zeigt ihn), danach ist
+      die Wassersperre wieder an. Falls die Richtung verkehrt ist, melde dich (Vorzeichen in
+      `WaterLockControl.isAdvance`)
 - [ ] **Danach:** Das Workout steht in der Fitness-App als Beckenschwimmen mit Bahnen; die
       iPhone-App zeigt es unter "Bisherige Einheiten"
 
@@ -390,7 +412,7 @@ bleibt bewusst bei Tagesplan und Live-Aufzeichnung, ein verkleinertes Dashboard 
 
 - **Dashboard** (Swift Charts): Weg zum Ziel (Tage, längste Einheit gegen 3.800 m, Pace gegen Zielpace und
   Trend), **Wochenumfang** der letzten 8 Kalenderwochen (Montag bis Sonntag, die laufende Woche blasser) und
-  **Pace pro Einheit** mit der Zielpace als gestrichelter Linie. Einheiten unter 200 m und ohne Strecke
+  **Pace pro Einheit** mit der Zielpace als gestrichelter grüner Linie (schon ab einer Einheit). Einheiten unter 200 m und ohne Strecke
   fehlen im Pace-Diagramm, weil sie nichts über das Tempo sagen. Die Pace enthält wie überall die Pausen
   (Health meldet die gesamte Dauer).
 - **Verlauf: geplant gegen tatsächlich.** Die App speichert ab jetzt jeden Tagesplan auf dem Gerät

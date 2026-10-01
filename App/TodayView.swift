@@ -7,11 +7,13 @@ struct TodayView: View {
     @EnvironmentObject private var settings: BackendSettings
     @Environment(\.scenePhase) private var scenePhase
     @State private var showsSettings = false
+    @State private var wishDraft = ""
 
     var body: some View {
         NavigationStack {
             List {
                 planSection
+                wishSection
                 if let reading = loader.reading {
                     Section("Dein Stand") {
                         StateSummaryView(reading: reading)
@@ -88,6 +90,42 @@ struct TodayView: View {
         } else {
             Text("Noch kein Plan. Zum Aktualisieren nach unten ziehen.")
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: - Wunsch
+
+    /// Freitext für heute. Er geht mit jeder Plananfrage des Tages mit und gilt morgen nicht mehr.
+    private var wishSection: some View {
+        Section {
+            TextField("z. B. Heute lieber Technik, die Schulter zwickt", text: $wishDraft, axis: .vertical)
+                .lineLimit(2...5)
+                .onChange(of: wishDraft) { _, text in
+                    if text.count > DailyWish.maxLength {
+                        wishDraft = String(text.prefix(DailyWish.maxLength))
+                    }
+                }
+            Button {
+                Task { await loader.replan(withWish: wishDraft) }
+            } label: {
+                if loader.isLoadingPlan {
+                    Text("Claude schreibt …")
+                } else {
+                    Text(wishDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                         ? "Plan ohne Wunsch neu erstellen"
+                         : "Plan mit Wunsch neu erstellen")
+                }
+            }
+            .disabled(loader.isLoadingPlan || loader.isLoadingHealth || !settings.hasToken)
+        } header: {
+            Text("Dein Wunsch für heute")
+        } footer: {
+            Text("Gilt nur für heute. Claude berücksichtigt ihn, soweit er in die Sicherheitsgrenzen passt (Umfang, Intensität, Ruhetag). Ziehen zum Aktualisieren nutzt ihn ebenfalls.")
+        }
+        .onAppear { wishDraft = loader.wish }
+        .onChange(of: loader.wish) { old, new in
+            // Neuer Tag oder gespeicherter Wunsch geändert: Feld nachziehen, aber nichts Ungespeichertes überschreiben.
+            if wishDraft == old { wishDraft = new }
         }
     }
 

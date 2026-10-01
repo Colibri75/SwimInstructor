@@ -17,6 +17,8 @@ public final class TodayPlanLoader: ObservableObject {
     @Published public private(set) var planError: String?
     /// Kein Token hinterlegt: Die App kann keinen Plan holen, bis es in den Einstellungen steht.
     @Published public private(set) var needsConfiguration = false
+    /// Der Wunsch für heute (leer, wenn keiner hinterlegt ist). Geht bei jeder Plananfrage mit.
+    @Published public private(set) var wish: String = ""
     /// Gespeicherte Pläne der letzten Wochen für den Verlauf, ältester zuerst.
     @Published public private(set) var planHistory: [PlanResponse] = []
 
@@ -25,6 +27,7 @@ public final class TodayPlanLoader: ObservableObject {
     private let planProvider: @MainActor () -> PlanProviding?
     private let cache: PlanCaching
     private let history: PlanHistoryStoring?
+    private let wishStore: DailyWishStoring?
     private let now: () -> Date
     private let calendar: Calendar
 
@@ -35,6 +38,7 @@ public final class TodayPlanLoader: ObservableObject {
         planProvider: @escaping @MainActor () -> PlanProviding?,
         cache: PlanCaching,
         history: PlanHistoryStoring? = nil,
+        wishStore: DailyWishStoring? = nil,
         now: @escaping () -> Date = { Date() },
         calendar: Calendar = .current
     ) {
@@ -43,6 +47,7 @@ public final class TodayPlanLoader: ObservableObject {
         self.planProvider = planProvider
         self.cache = cache
         self.history = history
+        self.wishStore = wishStore
         self.now = now
         self.calendar = calendar
         self.response = cache.load()
@@ -51,6 +56,7 @@ public final class TodayPlanLoader: ObservableObject {
             try? history?.record(cached)
         }
         self.planHistory = history?.load() ?? []
+        self.wish = wishStore?.wish(for: PlanFormatting.isoDay(now(), calendar: calendar)) ?? ""
     }
 
     public var isLoading: Bool { isLoadingHealth || isLoadingPlan }
@@ -75,6 +81,19 @@ public final class TodayPlanLoader: ObservableObject {
         await load(fetchPlan: true, regenerate: true)
     }
 
+    /// Speichert den Wunsch für heute. Er wirkt beim nächsten Plan, ändert aber den angezeigten nicht.
+    public func setWish(_ text: String) {
+        let day = PlanFormatting.isoDay(now(), calendar: calendar)
+        wishStore?.setWish(text, for: day)
+        wish = wishStore?.wish(for: day) ?? ""
+    }
+
+    /// Wunsch speichern und sofort einen neuen Plan dazu holen.
+    public func replan(withWish text: String) async {
+        setWish(text)
+        await refresh()
+    }
+
     private func load(fetchPlan: Bool, regenerate: Bool) async {
         guard !isLoading else { return }
 
@@ -95,12 +114,18 @@ public final class TodayPlanLoader: ObservableObject {
         }
         needsConfiguration = false
 
+        // Den Wunsch erst jetzt lesen: Über Mitternacht offen gelassen, gilt der von gestern nicht mehr.
+        let day = PlanFormatting.isoDay(now(), calendar: calendar)
+        let todaysWish = wishStore?.wish(for: day)
+        wish = todaysWish ?? ""
+
         isLoadingPlan = true
         defer { isLoadingPlan = false }
         do {
-            let fresh = regenerate
-                ? try await provider.fetchNewPlan(for: snapshot)
-                : try await provider.fetchTodayPlan(for: snapshot)
+            let fresh = try await provider.fetchPlan(
+                for: snapshot,
+                options: PlanRequestOptions(regenerate: regenerate, wishes: todaysWish)
+            )
             response = fresh
             planError = nil
             // Speichern ist Komfort; scheitert es, ist der Plan trotzdem da.

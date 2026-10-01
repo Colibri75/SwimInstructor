@@ -42,11 +42,14 @@ export class PlanService {
   /**
    * @param options.regenerate Den Cache uebergehen und Claude neu fragen. Das zaehlt gegen das
    *   Erzeugungsbudget, bei Ausfall oder erschoepftem Budget kommt wie sonst der letzte Plan.
+   * @param options.wishes Freitext-Wunsch des Athleten fuer heute. Er gehoert zum Cache-Schluessel:
+   *   Ein anderer Wunsch bei gleichem Zustand ergibt einen neuen Plan.
    */
-  async planForToday(snapshot: Snapshot, options: { regenerate?: boolean } = {}): Promise<PlanResult> {
+  async planForToday(snapshot: Snapshot, options: { regenerate?: boolean; wishes?: string } = {}): Promise<PlanResult> {
     const { generator, store, budget, logger } = this.deps;
     const today = localDate(this.now(), this.deps.timezone);
-    const hash = snapshotHash(snapshot);
+    const wishes = options.wishes?.trim() || undefined;
+    const hash = snapshotHash(snapshot, wishes);
 
     // Derselbe Zustand am selben Tag: den schon erzeugten Plan wiederverwenden, das spart Claude-Kosten.
     const stored = await this.latestOrNull();
@@ -60,7 +63,7 @@ export class PlanService {
 
     const started = Date.now();
     try {
-      const generated = await generator.generate({ snapshot, date: today });
+      const generated = await generator.generate({ snapshot, date: today, ...(wishes ? { wishes } : {}) });
       const parsed = TrainingPlanSchema.safeParse(generated.raw);
       if (!parsed.success) {
         logger.warn({ issues: parsed.error.issues.slice(0, 5) }, "claude plan does not match schema");
@@ -154,8 +157,12 @@ export function localDate(date: Date, timeZone: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
 }
 
-/** Fingerabdruck des Zustands ohne den Erzeugungszeitpunkt, der sich bei jedem Aufruf aendert. */
-export function snapshotHash(snapshot: Snapshot): string {
+/**
+ * Fingerabdruck des Zustands ohne den Erzeugungszeitpunkt, der sich bei jedem Aufruf aendert. Ein
+ * Wunsch fliesst mit ein; ohne Wunsch bleibt der Wert wie vor der Einfuehrung der Wuensche.
+ */
+export function snapshotHash(snapshot: Snapshot, wishes?: string): string {
   const { generated_at: _ignored, ...rest } = snapshot;
-  return createHash("sha256").update(JSON.stringify(rest)).digest("hex");
+  const material = wishes ? { ...rest, wishes } : rest;
+  return createHash("sha256").update(JSON.stringify(material)).digest("hex");
 }

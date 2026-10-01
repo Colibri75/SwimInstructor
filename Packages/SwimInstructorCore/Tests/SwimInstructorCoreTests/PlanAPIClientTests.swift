@@ -41,6 +41,31 @@ final class PlanAPIClientTests: XCTestCase {
         XCTAssertNotNil(json["snapshot"] as? [String: Any])
     }
 
+    func testWishIsSentTrimmedAndOnlyWhenPresent() async throws {
+        let transport = StubTransport(status: 200, body: TestFixtures.responseJSON)
+        let client = PlanAPIClient(configuration: configuration, transport: transport)
+
+        _ = try await client.fetchPlan(for: TestFixtures.snapshot, options: PlanRequestOptions(wishes: "  Heute nur Technik \n"))
+        _ = try await client.fetchPlan(for: TestFixtures.snapshot, options: PlanRequestOptions(wishes: "   "))
+        _ = try await client.fetchTodayPlan(for: TestFixtures.snapshot)
+
+        let bodies = try transport.requests.map { request -> [String: Any] in
+            let data = try XCTUnwrap(request.httpBody)
+            return try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        }
+        XCTAssertEqual(bodies[0]["wishes"] as? String, "Heute nur Technik")
+        XCTAssertNil(bodies[1]["wishes"])
+        XCTAssertNil(bodies[2]["wishes"])
+        XCTAssertNil(bodies[0]["regenerate"])
+    }
+
+    func testOverlongWishIsCutToTheLimit() {
+        let long = String(repeating: "x", count: DailyWish.maxLength + 50)
+
+        XCTAssertEqual(PlanAPIClient.cleaned(long)?.count, DailyWish.maxLength)
+        XCTAssertNil(PlanAPIClient.cleaned(nil))
+    }
+
     func testUnauthorized() async {
         await assertThrows(status: 401, body: #"{"error":"unauthorized"}"#, expected: .unauthorized)
     }

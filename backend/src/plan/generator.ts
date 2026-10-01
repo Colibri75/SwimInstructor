@@ -15,7 +15,7 @@ export interface GeneratedPlan {
 
 /** Naht fuer Tests: Der Service kennt nur dieses Interface, nie das Anthropic-SDK. */
 export interface PlanGenerator {
-  generate(input: { snapshot: Snapshot; date: string }): Promise<GeneratedPlan>;
+  generate(input: { snapshot: Snapshot; date: string; wishes?: string }): Promise<GeneratedPlan>;
 }
 
 export interface ClaudeOptions {
@@ -34,7 +34,7 @@ export class ClaudePlanGenerator implements PlanGenerator {
     private readonly options: ClaudeOptions
   ) {}
 
-  async generate({ snapshot, date }: { snapshot: Snapshot; date: string }): Promise<GeneratedPlan> {
+  async generate({ snapshot, date, wishes }: { snapshot: Snapshot; date: string; wishes?: string }): Promise<GeneratedPlan> {
     let response;
     try {
       response = await this.client.beta.messages.create(
@@ -47,7 +47,7 @@ export class ClaudePlanGenerator implements PlanGenerator {
           output_config: { effort: this.options.effort, format: zodOutputFormat(TrainingPlanSchema) },
           ...(this.options.serverFallback ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
           system: SYSTEM_PROMPT,
-          messages: [{ role: "user", content: buildUserMessage(snapshot, date) }]
+          messages: [{ role: "user", content: buildUserMessage(snapshot, date, wishes) }]
         },
         // Keine SDK-Wiederholungen: Eine Wiederholung nach Timeout wuerde doppelt kosten und die
         // Gesamtzeit ueber das Zeitlimit des Reverse-Proxys (90 s) treiben. Der Service faellt stattdessen
