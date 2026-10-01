@@ -21,6 +21,61 @@ Fallback = letzter gespeicherter Plan, vorher erneut durch die Sicherheitsschich
 heutigen Zustand geprüft (source: fallback). Gibt es keinen, antwortet der Server mit 503.
 ```
 
+## Wochenplan: `POST /v1/plan/week`
+
+Claude plant die Woche als **Gerüst**: je Tag Typ, Intensität, Umfang, Dauer und ein kurzer Schwerpunkt. Die
+Abschnitte einer Einheit (Wiederholungen, Pausen, Equipment) entstehen erst am Tag selbst über
+`POST /v1/plan/today`, passend zur Vorgabe der Woche. Der Wochenplan ist kurz (rund 1.000 Token Ausgabe).
+
+Anfrage (`Authorization: Bearer <Token>`, Body JSON):
+
+| Feld | Bedeutung |
+|---|---|
+| `snapshot` | der Zustand (wie beim Tagesplan) |
+| `week_start` | Montag der Woche, `YYYY-MM-DD` |
+| `from_date` | erster zu planender Tag: heute (laufende Woche neu planen) oder `week_start` (kommende Woche) |
+| `today` | heute beim Athleten |
+| `unavailable_dates` | Tage ohne Zeit (werden Ruhetage), optional |
+| `swum_this_week` | `[{date, meters}]`: was vor `from_date` schon geschwommen wurde, optional |
+| `wishes` | Wunsch für die Woche, höchstens 500 Zeichen, optional (steht im Prompt als JSON-String, ändert Grenzen nie) |
+
+Ungültige Daten (kein Montag, `from_date` außerhalb der Woche, unmögliche Kalendertage) lehnt der Server mit
+`400` und `details` je Feld ab. Antwort `200`:
+
+```json
+{
+  "week_start": "2026-09-28",
+  "generated_at": "2026-09-30T10:00:00.000Z",
+  "plan": {
+    "rationale": "…",
+    "total_distance_meters": 3600,
+    "days": [
+      { "date": "2026-09-30", "session_type": "endurance", "intensity": "moderate",
+        "target_distance_meters": 1200, "estimated_duration_minutes": 40, "focus": "Ausdauer" }
+    ]
+  },
+  "adjustments": ["Samstag, 03.10.: harte Einheit auf \"moderate\" gesenkt (…)"],
+  "wishes": "mehr Technik"
+}
+```
+
+`days` enthält genau die Tage ab `from_date` bis Sonntag. Der Server **speichert den Wochenplan nicht**: Die App
+hält ihn und die Änderungen des Athleten selbst. Scheitert Claude, antwortet der Server `503` mit
+`reason` (wie beim Tagesplan, ohne Ersatzplan), die App behält ihren bisherigen Wochenplan. Jeder Aufruf zählt
+gegen dasselbe Budget wie ein Tagesplan.
+
+**Sicherheitsschicht** (`weekSanity.ts`, die Grenzen gehen vorab auch an Claude): genau die angefragten Tage
+(fehlende werden Ruhetage, fremde und doppelte verworfen), Tage ohne Zeit sind Ruhetage, die Grenzen für heute
+gelten für den heutigen Tag, keine Einheit über dem Einheiten-Limit (längste Einheit mal 1,25, höchstens 4.500 m),
+höchstens zwei harte Tage und nie an aufeinanderfolgenden Tagen, höchstens fünf Einheiten pro Woche (schon
+geschwommene Tage zählen mit), Wochenumfang höchstens Wochenschnitt mal 1,3 abzüglich Geschwommenem (bei schlechter
+Erholung, Umfangsspitze und Trainingspause gekürzt, aber nur für die laufende Woche), in einer vollen Woche
+mindestens ein Ruhetag. Korrekturen stehen in `adjustments` und an der Begründung.
+
+**Vorgabe für den Tagesplan:** `POST /v1/plan/today` nimmt optional `day_plan` (`session_type`, `intensity`,
+`target_distance_meters`, `focus`). Claude hält sich daran, soweit die Grenzen es erlauben, ein Wunsch geht der
+Vorgabe vor. Die Vorgabe gehört zum Cache-Schlüssel.
+
 ## Anfrage und Antwort
 
 Anfrage: `Authorization: Bearer <Token>` und als Body `{"snapshot": { ... }}` (das JSON aus

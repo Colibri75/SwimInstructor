@@ -145,6 +145,30 @@ describe("PlanService: Cache", () => {
     expect(snapshotHash(snapshot(), "x")).not.toBe(snapshotHash(snapshot()));
   });
 
+  it("gibt die Wochenvorgabe an Claude weiter und plant bei anderer Vorgabe neu", async () => {
+    const { service, generate } = setup();
+    const target = { session_type: "technique" as const, intensity: "easy" as const, target_distance_meters: 1000, focus: "Technik" };
+
+    await service.planForToday(snapshot(), { dayTarget: target });
+    const same = await service.planForToday(snapshot(), { dayTarget: target });
+    const other = await service.planForToday(snapshot(), { dayTarget: { ...target, target_distance_meters: 1500 } });
+    const none = await service.planForToday(snapshot());
+
+    expect(generate.mock.calls[0][0]).toEqual({ snapshot: snapshot(), date: "2026-09-30", dayTarget: target });
+    expect(same.source).toBe("cache");
+    expect(other.source).toBe("claude");
+    expect(none.source).toBe("claude");
+    expect(generate).toHaveBeenCalledTimes(3);
+  });
+
+  it("aendert den Fingerabdruck ohne Vorgabe nicht, mit Vorgabe schon", () => {
+    const target = { session_type: "endurance" as const, intensity: "moderate" as const, target_distance_meters: 1500, focus: "Ausdauer" };
+
+    expect(snapshotHash(snapshot(), undefined, undefined)).toBe(snapshotHash(snapshot()));
+    expect(snapshotHash(snapshot(), undefined, target)).not.toBe(snapshotHash(snapshot()));
+    expect(snapshotHash(snapshot(), "x", target)).not.toBe(snapshotHash(snapshot(), "x"));
+  });
+
   it("zaehlt regenerate gegen das Budget und faellt bei erschoepftem Budget auf den letzten Plan zurueck", async () => {
     const budget = new GenerationBudget(1, 100);
     const { service, generate } = setup({ budget });

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { PlanUnavailableError } from "./errors";
 import { PlanResult, PlanService } from "./service";
 import { SnapshotSchema } from "./snapshot";
+import { DayTargetSchema } from "./week";
 
 export const MAX_WISH_LENGTH = 500;
 
@@ -14,7 +15,9 @@ export const MAX_WISH_LENGTH = 500;
 const PlanRequestSchema = z.object({
   snapshot: SnapshotSchema,
   regenerate: z.boolean().optional(),
-  wishes: z.string().max(MAX_WISH_LENGTH).optional()
+  wishes: z.string().max(MAX_WISH_LENGTH).optional(),
+  /** Vorgabe des Wochenplans fuer heute (Typ, Intensitaet, Umfang, Schwerpunkt). */
+  day_plan: DayTargetSchema.optional()
 });
 
 /** Haengt `POST /v1/plan/today` ein (die Token-Pruefung sitzt schon davor, siehe app.ts). */
@@ -31,7 +34,7 @@ export function planRoutes(service: PlanService): (router: Router) => void {
       }
 
       try {
-        res.json(toResponse(await service.planForToday(parsed.data.snapshot, { regenerate: parsed.data.regenerate === true, wishes: parsed.data.wishes })));
+        res.json(toResponse(await service.planForToday(parsed.data.snapshot, { regenerate: parsed.data.regenerate === true, wishes: parsed.data.wishes, dayTarget: parsed.data.day_plan })));
       } catch (error) {
         if (error instanceof PlanUnavailableError) {
           res.status(503).json({ error: "plan_unavailable", reason: error.reason });

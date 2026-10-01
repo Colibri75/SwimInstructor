@@ -7,6 +7,7 @@ import { TrainingPlan, TrainingPlanSchema } from "./plan";
 import { sanitizePlan } from "./sanity";
 import { Snapshot } from "./snapshot";
 import { PlanStore, StoredPlan } from "./store";
+import { DayTarget } from "./week";
 
 export interface PlanResult {
   /** claude: frisch erzeugt. cache: schon heute fuer denselben Zustand erzeugt. fallback: letzter gueltiger Plan. */
@@ -46,12 +47,14 @@ export class PlanService {
    *   Erzeugungsbudget, bei Ausfall oder erschoepftem Budget kommt wie sonst der letzte Plan.
    * @param options.wishes Freitext-Wunsch des Athleten fuer heute. Er gehoert zum Cache-Schluessel:
    *   Ein anderer Wunsch bei gleichem Zustand ergibt einen neuen Plan.
+   * @param options.dayTarget Vorgabe des Wochenplans fuer heute, ebenfalls Teil des Cache-Schluessels.
    */
-  async planForToday(snapshot: Snapshot, options: { regenerate?: boolean; wishes?: string } = {}): Promise<PlanResult> {
+  async planForToday(snapshot: Snapshot, options: { regenerate?: boolean; wishes?: string; dayTarget?: DayTarget } = {}): Promise<PlanResult> {
     const { generator, store, budget, logger } = this.deps;
     const today = localDate(this.now(), this.deps.timezone);
     const wishes = options.wishes?.trim() || undefined;
-    const hash = snapshotHash(snapshot, wishes);
+    const dayTarget = options.dayTarget;
+    const hash = snapshotHash(snapshot, wishes, dayTarget);
 
     // Derselbe Zustand am selben Tag: den schon erzeugten Plan wiederverwenden, das spart Claude-Kosten.
     const stored = await this.latestOrNull();
@@ -73,7 +76,7 @@ export class PlanService {
 
     const started = Date.now();
     try {
-      const generated = await generator.generate({ snapshot, date: today, ...(wishes ? { wishes } : {}) });
+      const generated = await generator.generate({ snapshot, date: today, ...(wishes ? { wishes } : {}), ...(dayTarget ? { dayTarget } : {}) });
       const parsed = TrainingPlanSchema.safeParse(generated.raw);
       if (!parsed.success) {
         logger.warn({ issues: parsed.error.issues.slice(0, 5) }, "claude plan does not match schema");
@@ -180,8 +183,8 @@ export function localDate(date: Date, timeZone: string): string {
  * Fingerabdruck des Zustands ohne den Erzeugungszeitpunkt, der sich bei jedem Aufruf aendert. Ein
  * Wunsch fliesst mit ein; ohne Wunsch bleibt der Wert wie vor der Einfuehrung der Wuensche.
  */
-export function snapshotHash(snapshot: Snapshot, wishes?: string): string {
+export function snapshotHash(snapshot: Snapshot, wishes?: string, dayTarget?: DayTarget): string {
   const { generated_at: _ignored, ...rest } = snapshot;
-  const material = wishes ? { ...rest, wishes } : rest;
+  const material = { ...rest, ...(wishes ? { wishes } : {}), ...(dayTarget ? { day_target: dayTarget } : {}) };
   return createHash("sha256").update(JSON.stringify(material)).digest("hex");
 }

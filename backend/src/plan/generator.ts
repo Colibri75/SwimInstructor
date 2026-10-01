@@ -1,9 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import { z } from "zod";
 import { PlanGenerationError } from "./errors";
 import { TrainingPlanSchema } from "./plan";
 import { buildUserMessage, SYSTEM_PROMPT } from "./prompt";
 import { Snapshot } from "./snapshot";
+import { DayTarget, WeekPlanSchema } from "./week";
+import { WeekContext } from "./weekSanity";
+import { buildWeekUserMessage, WEEK_SYSTEM_PROMPT } from "./weekPrompt";
 
 export interface GeneratedPlan {
   /** Das geparste, aber noch nicht gegen das Plan-Schema geprueftes JSON von Claude. */
@@ -15,7 +19,12 @@ export interface GeneratedPlan {
 
 /** Naht fuer Tests: Der Service kennt nur dieses Interface, nie das Anthropic-SDK. */
 export interface PlanGenerator {
-  generate(input: { snapshot: Snapshot; date: string; wishes?: string }): Promise<GeneratedPlan>;
+  generate(input: { snapshot: Snapshot; date: string; wishes?: string; dayTarget?: DayTarget }): Promise<GeneratedPlan>;
+}
+
+/** Wie PlanGenerator, fuer den Wochenplan. */
+export interface WeekGenerator {
+  generateWeek(input: { snapshot: Snapshot; context: WeekContext; wishes?: string }): Promise<GeneratedPlan>;
 }
 
 export interface ClaudeOptions {
@@ -28,13 +37,22 @@ export interface ClaudeOptions {
 
 const MAX_TOKENS = 16_000;
 
-export class ClaudePlanGenerator implements PlanGenerator {
+export class ClaudePlanGenerator implements PlanGenerator, WeekGenerator {
   constructor(
     private readonly client: Anthropic,
     private readonly options: ClaudeOptions
   ) {}
 
-  async generate({ snapshot, date, wishes }: { snapshot: Snapshot; date: string; wishes?: string }): Promise<GeneratedPlan> {
+  async generate({ snapshot, date, wishes, dayTarget }: { snapshot: Snapshot; date: string; wishes?: string; dayTarget?: DayTarget }): Promise<GeneratedPlan> {
+    return this.call(SYSTEM_PROMPT, buildUserMessage(snapshot, date, wishes, dayTarget), TrainingPlanSchema);
+  }
+
+  async generateWeek({ snapshot, context, wishes }: { snapshot: Snapshot; context: WeekContext; wishes?: string }): Promise<GeneratedPlan> {
+    return this.call(WEEK_SYSTEM_PROMPT, buildWeekUserMessage(snapshot, context, wishes), WeekPlanSchema);
+  }
+
+  /** Ein Aufruf mit strukturierter Ausgabe nach `schema`; Fehler werden als PlanGenerationError klassifiziert. */
+  private async call(system: string, user: string, schema: z.ZodType): Promise<GeneratedPlan> {
     let response;
     try {
       response = await this.client.beta.messages.create(
@@ -44,10 +62,10 @@ export class ClaudePlanGenerator implements PlanGenerator {
           thinking: { type: "adaptive" },
           // Forcierte Tool-Aufrufe sind auf diesem Modell nicht erlaubt: Das JSON kommt daher ueber
           // strukturierte Ausgaben (output_config.format), nicht ueber ein erzwungenes Tool.
-          output_config: { effort: this.options.effort, format: zodOutputFormat(TrainingPlanSchema) },
+          output_config: { effort: this.options.effort, format: zodOutputFormat(schema) },
           ...(this.options.serverFallback ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
-          system: SYSTEM_PROMPT,
-          messages: [{ role: "user", content: buildUserMessage(snapshot, date, wishes) }]
+          system,
+          messages: [{ role: "user", content: user }]
         },
         // Keine SDK-Wiederholungen: Eine Wiederholung nach Timeout wuerde doppelt kosten und die
         // Gesamtzeit ueber das Zeitlimit des Reverse-Proxys (90 s) treiben. Der Service faellt stattdessen

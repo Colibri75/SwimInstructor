@@ -6,6 +6,8 @@ import { GenerationBudget } from "./plan/budget";
 import { ClaudePlanGenerator } from "./plan/generator";
 import { planRoutes } from "./plan/routes";
 import { PlanService } from "./plan/service";
+import { weekRoutes } from "./plan/weekRoutes";
+import { WeekPlanService } from "./plan/weekService";
 import { FilePlanStore } from "./plan/store";
 
 let config: Config;
@@ -32,15 +34,26 @@ const generator =
         serverFallback: config.claudeServerFallback
       });
 
+// Ein Budget fuer Tages- und Wochenplaene: Beide kosten Claude-Aufrufe.
+const budget = new GenerationBudget(config.maxGenerationsPerHour, config.maxGenerationsPerDay);
+
 const planService = new PlanService({
   generator,
   store: new FilePlanStore(config.dataDir),
-  budget: new GenerationBudget(config.maxGenerationsPerHour, config.maxGenerationsPerDay),
+  budget,
   logger,
   timezone: config.planTimezone
 });
+const weekService = new WeekPlanService({ generator, budget, logger });
 
-const app = createApp(config, logger, { registerV1Routes: planRoutes(planService) });
+const registerPlanRoutes = planRoutes(planService);
+const registerWeekRoutes = weekRoutes(weekService);
+const app = createApp(config, logger, {
+  registerV1Routes: (router) => {
+    registerPlanRoutes(router);
+    registerWeekRoutes(router);
+  }
+});
 
 const server = app.listen(config.port, config.host, () => {
   logger.info({ host: config.host, port: config.port, env: config.env }, "server listening");

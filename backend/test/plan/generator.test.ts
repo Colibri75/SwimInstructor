@@ -2,6 +2,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { ClaudeOptions, ClaudePlanGenerator } from "../../src/plan/generator";
 import { PlanGenerationError } from "../../src/plan/errors";
 import { SYSTEM_PROMPT } from "../../src/plan/prompt";
+import { buildWeekUserMessage, WEEK_SYSTEM_PROMPT } from "../../src/plan/weekPrompt";
+import { context, goodWeek } from "./weekFixtures";
 import { goodPlan, snapshot } from "./fixtures";
 
 const options: ClaudeOptions = { model: "claude-opus-5-5", timeoutMs: 75_000, effort: "medium", serverFallback: true };
@@ -147,3 +149,45 @@ describe("ClaudePlanGenerator: Fehlerfaelle der API", () => {
     expect(failure.cause).toBe(original);
   });
 });
+
+describe("ClaudePlanGenerator: Wochenplan", () => {
+  const weekInput = { snapshot: snapshot(), context: context() };
+
+  it("sendet den Wochen-Prompt, die Wochen-Nachricht und ein eigenes Ausgabeschema", async () => {
+    const create = jest.fn().mockResolvedValue(response({ content: [{ type: "text", text: JSON.stringify(goodWeek()) }] }));
+
+    const result = await generatorWith(create).generateWeek({ ...weekInput, wishes: "mehr Technik" });
+
+    const [body, requestOptions] = create.mock.calls[0];
+    expect(body.system).toBe(WEEK_SYSTEM_PROMPT);
+    expect(body.messages).toEqual([{ role: "user", content: buildWeekUserMessage(snapshot(), context(), "mehr Technik") }]);
+    expect(body.output_config.format.schema.properties.days).toBeDefined();
+    expect(body.output_config.format.schema.properties.sets).toBeUndefined();
+    expect(body.thinking).toEqual({ type: "adaptive" });
+    expect(requestOptions).toEqual({ timeout: 75_000, maxRetries: 0 });
+    expect(result.raw).toEqual(goodWeek());
+  });
+
+  it("klassifiziert Fehler wie beim Tagesplan", async () => {
+    const create = jest.fn().mockRejectedValue(apiError(429, "rate_limit_error"));
+
+    await expect(generatorWith(create).generateWeek(weekInput)).rejects.toMatchObject({ reason: "rate_limited" });
+  });
+
+  it("meldet eine abgeschnittene Antwort", async () => {
+    const create = jest.fn().mockResolvedValue(response({ stop_reason: "max_tokens" }));
+
+    await expect(generatorWith(create).generateWeek(weekInput)).rejects.toMatchObject({ reason: "truncated" });
+  });
+});
+
+describe("ClaudePlanGenerator: Tagesvorgabe", () => {
+  it("nimmt die Vorgabe des Wochenplans in die Nutzernachricht auf", async () => {
+    const create = jest.fn().mockResolvedValue(response());
+
+    await generatorWith(create).generate({ ...input, dayTarget: { session_type: "technique", intensity: "easy", target_distance_meters: 1000, focus: "Technik" } });
+
+    expect(create.mock.calls[0][0].messages[0].content).toContain("Vorgabe aus dem Wochenplan für heute");
+  });
+});
+

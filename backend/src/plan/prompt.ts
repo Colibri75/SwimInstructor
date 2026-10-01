@@ -1,5 +1,6 @@
 import { dailyLimits } from "./sanity";
 import { Snapshot } from "./snapshot";
+import { DayTarget } from "./week";
 
 /**
  * Fester System-Prompt. Er aendert sich zwischen Aufrufen nie (kein Datum, keine Zahlen darin): Alles
@@ -41,16 +42,28 @@ const WEEKDAYS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Fr
  * Die Nutzernachricht: Tag, Wochentag, die Grenzen fuer heute und der validierte Snapshot (nur bekannte
  * Felder). Die Grenzen sind reine Zahlen aus dem Code (`dailyLimits`), nie Text vom Client.
  */
-export function buildUserMessage(snapshot: Snapshot, date: string, wishes?: string): string {
+export function buildUserMessage(snapshot: Snapshot, date: string, wishes?: string, dayTarget?: DayTarget): string {
   const weekday = WEEKDAYS[new Date(`${date}T12:00:00Z`).getUTCDay()];
   const wish = wishes?.trim();
   return [
     `Erstelle den Trainingsplan für heute, ${weekday}, ${date}.`,
     "",
     limitsSection(snapshot),
+    ...(dayTarget ? ["", dayTargetSection(dayTarget)] : []),
     ...(wish ? ["", wishSection(wish)] : []),
     "",
     `Zustands-Snapshot:\n${JSON.stringify(snapshot, null, 2)}`
+  ].join("\n");
+}
+
+/** Die Vorgabe aus dem Wochenplan: Zahlen und feste Begriffe, plus ein kurzer Schwerpunkt als JSON-String. */
+function dayTargetSection(target: DayTarget): string {
+  const rest = target.session_type === "rest" || target.intensity === "rest" || target.target_distance_meters === 0;
+  return [
+    "Vorgabe aus dem Wochenplan für heute (halte dich daran, soweit die Grenzen oben es erlauben; weichen sie ab, gelten die Grenzen; ein Wunsch des Athleten geht der Vorgabe vor):",
+    rest
+      ? `- Ruhetag (Schwerpunkt: ${JSON.stringify(target.focus)}).`
+      : `- Typ ${target.session_type}, Intensität ${target.intensity}, etwa ${target.target_distance_meters} m, Schwerpunkt: ${JSON.stringify(target.focus)}.`
   ].join("\n");
 }
 

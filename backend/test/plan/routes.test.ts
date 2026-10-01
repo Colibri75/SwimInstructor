@@ -77,6 +77,27 @@ describe("POST /v1/plan/today", () => {
     expect(without.body.wishes).toBeUndefined();
   });
 
+  it("reicht die Vorgabe des Wochenplans an Claude weiter", async () => {
+    const generate = ok();
+    const dayPlan = { session_type: "technique", intensity: "easy", target_distance_meters: 1000, focus: "Technik mit Pull Buoy" };
+
+    const response = await request(appWith(generate)).post("/v1/plan/today").set(auth).send({ snapshot: snapshot(), day_plan: dayPlan });
+
+    expect(response.status).toBe(200);
+    expect(generate).toHaveBeenCalledWith(expect.objectContaining({ dayTarget: dayPlan }));
+  });
+
+  it("lehnt eine ungueltige Vorgabe ab", async () => {
+    const app = appWith(ok());
+    const valid = { session_type: "technique", intensity: "easy", target_distance_meters: 1000, focus: "x" };
+
+    const unknownType = await request(app).post("/v1/plan/today").set(auth).send({ snapshot: snapshot(), day_plan: { ...valid, session_type: "wandern" } });
+    const negative = await request(app).post("/v1/plan/today").set(auth).send({ snapshot: snapshot(), day_plan: { ...valid, target_distance_meters: -5 } });
+
+    expect(unknownType.status).toBe(400);
+    expect(negative.status).toBe(400);
+  });
+
   it("lehnt einen zu langen oder falsch getypten Wunsch ab", async () => {
     const app = appWith(ok());
 
