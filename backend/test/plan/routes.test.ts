@@ -58,6 +58,32 @@ describe("POST /v1/plan/today", () => {
     expect(second.body.source).toBe("claude");
   });
 
+  it("reicht den Wunsch an Claude weiter", async () => {
+    const generate = ok();
+
+    const response = await request(appWith(generate)).post("/v1/plan/today").set(auth).send({ snapshot: snapshot(), wishes: "Schulter schonen" });
+
+    expect(response.status).toBe(200);
+    expect(generate).toHaveBeenCalledWith(expect.objectContaining({ wishes: "Schulter schonen" }));
+  });
+
+  it("lehnt einen zu langen oder falsch getypten Wunsch ab", async () => {
+    const app = appWith(ok());
+
+    const tooLong = await request(app).post("/v1/plan/today").set(auth).send({ snapshot: snapshot(), wishes: "x".repeat(501) });
+    const wrongType = await request(app).post("/v1/plan/today").set(auth).send({ snapshot: snapshot(), wishes: 42 });
+
+    expect(tooLong.status).toBe(400);
+    expect(tooLong.body.details[0].path).toBe("wishes");
+    expect(wrongType.status).toBe(400);
+  });
+
+  it("nimmt einen Wunsch mit genau 500 Zeichen an", async () => {
+    const response = await request(appWith(ok())).post("/v1/plan/today").set(auth).send({ snapshot: snapshot(), wishes: "x".repeat(500) });
+
+    expect(response.status).toBe(200);
+  });
+
   it("lehnt ein regenerate ab, das kein Boolean ist", async () => {
     const response = await request(appWith(ok())).post("/v1/plan/today").set(auth).send({ snapshot: snapshot(), regenerate: "ja" });
 

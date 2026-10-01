@@ -23,7 +23,8 @@ struct SwimInstructorApp: App {
                 settings?.configuration.map { PlanAPIClient(configuration: $0) }
             },
             cache: FilePlanCache.standard(),
-            history: FilePlanHistory.standard()
+            history: FilePlanHistory.standard(),
+            wishStore: UserDefaultsDailyWishStore()
         )
         _healthKitManager = StateObject(wrappedValue: healthKitManager)
         _settings = StateObject(wrappedValue: settings)

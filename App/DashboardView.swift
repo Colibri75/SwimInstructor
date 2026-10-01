@@ -145,8 +145,8 @@ private struct PaceSection: View {
 
     var body: some View {
         Section {
-            if samples.count < 2 {
-                Text("Für den Verlauf braucht es mindestens zwei Einheiten mit Strecke ab \(Int(TrainingStatistics.minimumDistanceForPace)) m.")
+            if samples.isEmpty {
+                Text("Noch keine Einheit mit Strecke ab \(Int(TrainingStatistics.minimumDistanceForPace)) m in den letzten 8 Wochen.")
                     .foregroundStyle(.secondary)
             } else {
                 Chart {
@@ -165,7 +165,7 @@ private struct PaceSection: View {
                         .foregroundStyle(.secondary)
                     }
                     RuleMark(y: .value("Ziel", targetPace))
-                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                        .lineStyle(StrokeStyle(lineWidth: 2, dash: [6, 4]))
                         .foregroundStyle(.green)
                         .annotation(position: .top, alignment: .leading) {
                             Text("Ziel \(PlanFormatting.pace(targetPace))")
@@ -191,7 +191,7 @@ private struct PaceSection: View {
         } header: {
             Text("Pace pro Einheit")
         } footer: {
-            Text("Pro 100 m. Niedriger ist schneller. Die Pace enthält Pausen, weil Health die gesamte Dauer meldet.")
+            Text("Pro 100 m. Niedriger ist schneller. Die gestrichelte grüne Linie ist deine Zielpace. Die Pace enthält Pausen, weil Health die gesamte Dauer meldet.")
         }
     }
 

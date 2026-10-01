@@ -62,16 +62,32 @@ extension URLSession: HTTPTransport {
     }
 }
 
+/// Zusätze zur Plananfrage.
+public struct PlanRequestOptions: Equatable, Sendable {
+    /// Claude auch dann neu fragen, wenn für denselben Zustand heute schon ein Plan vorliegt.
+    public var regenerate: Bool
+    /// Freitext-Wunsch des Athleten für heute.
+    public var wishes: String?
+
+    public init(regenerate: Bool = false, wishes: String? = nil) {
+        self.regenerate = regenerate
+        self.wishes = wishes
+    }
+}
+
 public protocol PlanProviding: Sendable {
-    func fetchTodayPlan(for snapshot: AthleteStateSnapshot) async throws -> PlanResponse
-    /// Wie `fetchTodayPlan`, aber der Server fragt Claude auch dann neu, wenn für denselben
-    /// Zustand heute schon ein Plan vorliegt (Ziehen zum Aktualisieren).
-    func fetchNewPlan(for snapshot: AthleteStateSnapshot) async throws -> PlanResponse
+    func fetchPlan(for snapshot: AthleteStateSnapshot, options: PlanRequestOptions) async throws -> PlanResponse
 }
 
 public extension PlanProviding {
+    /// Plan für heute; hat der Server für denselben Zustand schon einen, kommt er aus dem Cache.
+    func fetchTodayPlan(for snapshot: AthleteStateSnapshot) async throws -> PlanResponse {
+        try await fetchPlan(for: snapshot, options: PlanRequestOptions())
+    }
+
+    /// Neuer Plan, auch bei unverändertem Zustand (Ziehen zum Aktualisieren).
     func fetchNewPlan(for snapshot: AthleteStateSnapshot) async throws -> PlanResponse {
-        try await fetchTodayPlan(for: snapshot)
+        try await fetchPlan(for: snapshot, options: PlanRequestOptions(regenerate: true))
     }
 }
 
@@ -90,19 +106,15 @@ public struct PlanAPIClient: PlanProviding {
         self.transport = transport
     }
 
-    public func fetchTodayPlan(for snapshot: AthleteStateSnapshot) async throws -> PlanResponse {
-        try await requestPlan(for: snapshot, regenerate: false)
-    }
-
-    public func fetchNewPlan(for snapshot: AthleteStateSnapshot) async throws -> PlanResponse {
-        try await requestPlan(for: snapshot, regenerate: true)
-    }
-
-    private func requestPlan(for snapshot: AthleteStateSnapshot, regenerate: Bool) async throws -> PlanResponse {
+    public func fetchPlan(for snapshot: AthleteStateSnapshot, options: PlanRequestOptions) async throws -> PlanResponse {
         var request = makeRequest(path: "v1/plan/today", timeout: Self.planTimeout)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try AthleteStateSnapshot.jsonEncoder().encode(PlanRequestBody(snapshot: snapshot, regenerate: regenerate ? true : nil))
+        request.httpBody = try AthleteStateSnapshot.jsonEncoder().encode(PlanRequestBody(
+            snapshot: snapshot,
+            regenerate: options.regenerate ? true : nil,
+            wishes: Self.cleaned(options.wishes)
+        ))
 
         let (data, response) = try await perform(request)
         switch response.statusCode {
@@ -133,10 +145,18 @@ public struct PlanAPIClient: PlanProviding {
 
     // MARK: - Intern
 
+    /// Leerer Wunsch oder nur Leerraum: nichts senden. Länger als erlaubt: kürzen statt vom Server ablehnen lassen.
+    static func cleaned(_ wishes: String?) -> String? {
+        let trimmed = wishes?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? nil : String(trimmed.prefix(DailyWish.maxLength))
+    }
+
     private struct PlanRequestBody: Encodable {
         let snapshot: AthleteStateSnapshot
         /// Fehlt im JSON, wenn `nil`: Der Server nimmt dann seinen Cache.
         let regenerate: Bool?
+        /// Fehlt im JSON ohne Wunsch.
+        let wishes: String?
     }
 
     private struct ErrorBody: Decodable {

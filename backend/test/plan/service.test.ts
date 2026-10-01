@@ -98,6 +98,41 @@ describe("PlanService: Cache", () => {
     expect(again.source).toBe("claude");
   });
 
+  it("gibt einen Wunsch an Claude weiter", async () => {
+    const { service, generate } = setup();
+
+    await service.planForToday(snapshot(), { wishes: "  Heute nur Technik  " });
+
+    expect(generate).toHaveBeenCalledWith({ snapshot: snapshot(), date: "2026-09-30", wishes: "Heute nur Technik" });
+  });
+
+  it("uebergibt ohne Wunsch kein wishes-Feld, auch nicht bei leerem Text", async () => {
+    const { service, generate } = setup();
+
+    await service.planForToday(snapshot(), { wishes: "   " });
+
+    expect(generate.mock.calls[0][0]).not.toHaveProperty("wishes");
+  });
+
+  it("plant bei anderem Wunsch und gleichem Zustand neu, bei gleichem Wunsch aus dem Cache", async () => {
+    const { service, generate } = setup();
+
+    await service.planForToday(snapshot(), { wishes: "mehr Technik" });
+    const same = await service.planForToday(snapshot(), { wishes: "mehr Technik" });
+    const other = await service.planForToday(snapshot(), { wishes: "lieber Ausdauer" });
+    const none = await service.planForToday(snapshot());
+
+    expect(same.source).toBe("cache");
+    expect(other.source).toBe("claude");
+    expect(none.source).toBe("claude");
+    expect(generate).toHaveBeenCalledTimes(3);
+  });
+
+  it("aendert den Fingerabdruck ohne Wunsch nicht gegenueber frueher", () => {
+    expect(snapshotHash(snapshot(), undefined)).toBe(snapshotHash(snapshot()));
+    expect(snapshotHash(snapshot(), "x")).not.toBe(snapshotHash(snapshot()));
+  });
+
   it("zaehlt regenerate gegen das Budget und faellt bei erschoepftem Budget auf den letzten Plan zurueck", async () => {
     const budget = new GenerationBudget(1, 100);
     const { service, generate } = setup({ budget });
