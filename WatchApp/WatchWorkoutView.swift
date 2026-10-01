@@ -24,24 +24,23 @@ struct WatchWorkoutView: View {
             // Die Crown liefert nur Drehungen, solange die Ansicht den Fokus hat.
             crownHasFocus = true
         }
-        // Crown nach oben schaltet den nächsten Abschnitt weiter, sobald die Wassersperre aus ist.
-        // Das Entsperren selbst übernimmt das System.
+        // Nach dem Entsperren schaltet eine weitere Crown-Drehung den nächsten Abschnitt weiter. Das
+        // Entsperren selbst übernimmt das System.
         .focusable()
         .focused($crownHasFocus)
         .onAppear { crownHasFocus = true }
         .digitalCrownRotation($crown, from: -20, through: 20, by: 1, sensitivity: .medium, isContinuous: false, isHapticFeedbackEnabled: true)
         .onChange(of: crown) { _, value in
-            workoutManager.noteInput()
-            if value > 0 {
-                // Nach unten gedreht zählt nicht und darf den Weg nach oben nicht verlängern.
-                crown = 0
-            } else if WaterLockControl.isAdvance(crownValue: value) {
-                workoutManager.crownTurnedUp()
-                crown = 0
-            }
+            if workoutManager.crownMoved(value) { crown = 0 }
         }
         .onReceive(Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()) { _ in
             workoutManager.tickWaterLock()
+            // Reste einer Drehung verfallen, sobald die Uhr wieder gesperrt ist.
+            if workoutManager.isWaterLocked {
+                if crown != 0 { crown = 0 }
+            } else if workoutManager.evaluateCrown(crown) {
+                crown = 0
+            }
         }
     }
 }
@@ -87,6 +86,12 @@ private struct WorkoutPlanView: View {
     @EnvironmentObject private var planStore: WatchPlanStore
 
     var body: some View {
+        ScrollView {
+            planContent
+        }
+    }
+
+    private var planContent: some View {
         VStack(alignment: .leading, spacing: 4) {
             switch progress {
             case nil, .noSets?:
@@ -106,15 +111,7 @@ private struct WorkoutPlanView: View {
                         .font(.footnote.monospacedDigit())
                         .foregroundStyle(.secondary)
                 }
-                Label(
-                    workoutManager.isWaterLocked ? "Gesperrt" : "Entsperrt: Krone nach oben = weiter",
-                    systemImage: workoutManager.isWaterLocked ? "lock.fill" : "lock.open.fill"
-                )
-                .font(.caption2)
-                .foregroundStyle(workoutManager.isWaterLocked ? Color.secondary : Color.yellow)
-                Text("Auch gesperrt: Krone + Seitentaste zweimal kurz")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+
             case let .completed(extraMeters)?:
                 Label("Plan geschafft", systemImage: "checkmark.circle.fill")
                     .foregroundStyle(.green)
@@ -123,8 +120,37 @@ private struct WorkoutPlanView: View {
                         .font(.footnote)
                 }
             }
+            controlHints
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Schloss, Fortschritt der Crown, letzte erkannte Taste und eine Taste für den entsperrten Zustand.
+    /// Die Anzeigen zeigen auch, wo es hakt, falls eine Eingabe nicht ankommt.
+    private var controlHints: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Label(
+                workoutManager.isWaterLocked ? "Gesperrt" : "Entsperrt",
+                systemImage: workoutManager.isWaterLocked ? "lock.fill" : "lock.open.fill"
+            )
+            .font(.caption2)
+            .foregroundStyle(workoutManager.isWaterLocked ? Color.secondary : Color.yellow)
+            if !workoutManager.isWaterLocked {
+                ProgressView(value: workoutManager.crownProgress)
+                    .tint(.yellow)
+                Text("Krone drehen = nächster Abschnitt")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Button("Nächster Abschnitt") {
+                    workoutManager.advanceSection()
+                }
+                .font(.footnote)
+            }
+            Text("Tasten: \(workoutManager.lastGestureNote)")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.top, 4)
     }
 
     private var progress: PlanProgressState? {

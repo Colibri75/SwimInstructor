@@ -71,13 +71,20 @@ final class WaterLockControlTests: XCTestCase {
         XCTAssertFalse(control.acceptsCrown(now: at(10)))
     }
 
-    func testOnlyAnUpwardTurnOfEnoughClicksAdvances() {
+    func testATurnOfEnoughClicksAdvancesInEitherDirection() {
         XCTAssertFalse(WaterLockControl.isAdvance(crownValue: 0))
         XCTAssertFalse(WaterLockControl.isAdvance(crownValue: -1))
+        XCTAssertFalse(WaterLockControl.isAdvance(crownValue: 1.9))
         XCTAssertTrue(WaterLockControl.isAdvance(crownValue: -2))
+        XCTAssertTrue(WaterLockControl.isAdvance(crownValue: 2))
         XCTAssertTrue(WaterLockControl.isAdvance(crownValue: -3.5))
-        // Nach unten gedreht: nichts.
-        XCTAssertFalse(WaterLockControl.isAdvance(crownValue: 2))
-        XCTAssertFalse(WaterLockControl.isAdvance(crownValue: 10))
+        XCTAssertTrue(WaterLockControl.isAdvance(crownValue: 10))
+    }
+
+    func testProgressGrowsWithTheTurnAndStopsAtOne() {
+        XCTAssertEqual(WaterLockControl.progress(crownValue: 0), 0)
+        XCTAssertEqual(WaterLockControl.progress(crownValue: -1), 0.5, accuracy: 0.0001)
+        XCTAssertEqual(WaterLockControl.progress(crownValue: 1), 0.5, accuracy: 0.0001)
+        XCTAssertEqual(WaterLockControl.progress(crownValue: -7), 1)
     }
 }

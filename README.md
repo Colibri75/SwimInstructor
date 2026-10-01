@@ -373,7 +373,10 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
   oben den nächsten Abschnitt des Plans weiter** (zwei Rastungen, mit Haptik). Der laufende Abschnitt
   gilt dann an der aktuellen Strecke als beendet, der nächste beginnt dort (`PlanProgress` mit
   `advancedAt`), danach sperrt die Uhr wieder. Die Drehung, die entsperrt hat, zählt nicht (1 Sekunde
-  Beruhigungszeit, `WaterLockControl`). Nach unten drehen macht nichts.
+  Beruhigungszeit, `WaterLockControl`). Die Richtung der Drehung zählt nicht (beim ersten Versuch blieb
+  "nach oben" wirkungslos, vermutlich wegen des Vorzeichens). Die Plan-Seite zeigt Schloss, einen
+  Fortschrittsbalken der Crown-Drehung, die letzte erkannte Tastenkombination und, solange entsperrt
+  ist, eine Taste "Nächster Abschnitt" zum Tippen.
   Ob "oben" die richtige Richtung ist, lässt sich nur an der Uhr prüfen: Die Konstante steht in
   `WaterLockControl.isAdvance` (ein Vorzeichen).
   **Auch bei Wassersperre, ohne zu entsperren:** *Crown und Seitentaste gleichzeitig zweimal kurz

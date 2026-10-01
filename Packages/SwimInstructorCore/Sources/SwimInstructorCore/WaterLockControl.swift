@@ -3,7 +3,7 @@ import Foundation
 /// Regeln für Wassersperre und Digital Crown während einer Beckeneinheit.
 ///
 /// Die Uhr sperrt den Bildschirm gegen Wassertropfen; Drehen der Crown entsperrt ihn. Dann gilt:
-/// - Eine weitere Drehung der Crown **nach oben** schaltet den nächsten Abschnitt des Plans weiter und
+/// - Eine weitere Drehung der Crown schaltet den nächsten Abschnitt des Plans weiter und
 ///   sperrt den Bildschirm danach wieder.
 /// - Die Drehung, die entsperrt hat, zählt nicht dazu (Beruhigungszeit nach dem Entsperren).
 /// - Passiert nach dem Entsperren nichts, sperrt die Uhr nach einer Weile von selbst wieder.
@@ -56,9 +56,17 @@ public struct WaterLockControl: Equatable, Sendable {
         if unlockedAt != nil { lastInput = now }
     }
 
-    /// `crownValue` ist der Wert der Crown seit dem letzten Zurücksetzen. Nach oben gedreht heißt: kleiner
-    /// als null (in SwiftUI wächst der Wert beim Drehen nach unten, wie beim Scrollen).
+    /// Fortschritt der Crown-Drehung von 0 bis 1, für die Anzeige auf der Uhr.
+    public static func progress(crownValue: Double) -> Double {
+        min(abs(crownValue) / crownThreshold, 1)
+    }
+
+    /// `crownValue` ist der Wert der Crown seit dem letzten Zurücksetzen. Die Richtung zählt nicht:
+    /// Welches Vorzeichen "nach oben" ist, ließ sich nicht verlässlich sagen, und beim ersten Versuch
+    /// blieb die Drehung nach oben wirkungslos. Entsperrt ist die Uhr ohnehin nur nach einer
+    /// bewussten Crown-Drehung, und die Beruhigungszeit fängt das Nachlaufen der entsperrenden
+    /// Drehung ab.
     public static func isAdvance(crownValue: Double) -> Bool {
-        crownValue <= -crownThreshold
+        abs(crownValue) >= crownThreshold
     }
 }

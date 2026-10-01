@@ -33,6 +33,10 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
     @Published private(set) var sectionAdvances: [Double] = []
     /// Wassersperre an? Wird beim Takt der Anzeige aktualisiert und zeigt auf der Uhr, ob die Erkennung des Entsperrens greift.
     @Published private(set) var isWaterLocked = true
+    /// Wie weit die Crown nach dem Entsperren gedreht ist (0 bis 1). Zeigt auf der Uhr, ob Drehungen ankommen.
+    @Published private(set) var crownProgress = 0.0
+    /// Letztes Ereignis der Tastenkombination oder des Abschnittswechsels, als Kontrolle auf der Uhr.
+    @Published private(set) var lastGestureNote = "noch nichts erkannt"
 
     private let healthStore = HKHealthStore()
     private var session: HKWorkoutSession?
@@ -112,27 +116,37 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
     func tickWaterLock(now: Date = Date()) {
         let isLocked = WKInterfaceDevice.current().isWaterLockEnabled
         isWaterLocked = isLocked
+        if isLocked { crownProgress = 0 }
         if waterLock.update(isRunning: phase == .running, isLocked: isLocked, now: now) == .lock {
             lockWater()
         }
     }
 
-    /// Jede Eingabe nach dem Entsperren verschiebt die automatische Sperre.
-    func noteInput(now: Date = Date()) {
+    /// Die Crown wurde bewegt (neuer Wert seit dem letzten Zurücksetzen). Verschiebt die automatische
+    /// Sperre und schaltet den Abschnitt weiter, sobald weit genug gedreht ist und die Sperre schon einen
+    /// Moment aus ist (die Drehung, die entsperrt hat, zählt nicht). `true`: Der Aufrufer setzt die Crown zurück.
+    func crownMoved(_ value: Double, now: Date = Date()) -> Bool {
         waterLock.noteInput(now: now)
+        return evaluateCrown(value, now: now)
     }
 
-    /// Die Crown wurde weit genug nach oben gedreht: nächster Abschnitt, aber nur, wenn die Sperre
-    /// schon einen Moment aus ist (die Drehung, die entsperrt hat, zählt nicht).
-    func crownTurnedUp(now: Date = Date()) {
-        guard phase == .running, waterLock.acceptsCrown(now: now) else { return }
+    /// Prüft den Wert der Crown, ohne ihn als Eingabe zu zählen. Der Takt ruft das mit auf: Wurde schon
+    /// während der Beruhigungszeit weit gedreht, startet der Abschnitt, sobald sie vorbei ist.
+    func evaluateCrown(_ value: Double, now: Date = Date()) -> Bool {
+        crownProgress = WaterLockControl.progress(crownValue: value)
+        guard phase == .running,
+              waterLock.acceptsCrown(now: now),
+              WaterLockControl.isAdvance(crownValue: value) else { return false }
         advanceSection()
+        crownProgress = 0
+        return true
     }
 
     /// Beendet den aktuellen Abschnitt des Plans an der aktuellen Strecke und sperrt wieder.
     func advanceSection() {
         guard phase == .running else { return }
         sectionAdvances.append(metrics.distanceMeters)
+        lastGestureNote = "Abschnitt weiter bei \(Int(metrics.distanceMeters)) m"
         WKInterfaceDevice.current().play(.directionUp)
         lockWater()
     }
@@ -164,17 +178,22 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
     }
 
     private func handle(_ state: HKWorkoutSessionState, date: Date) {
+        let previousPhase = phase
         switch state {
         case .running:
             phase = .running
             // Auch nach "Weiter": Wer schwimmt, hat die Wassersperre an.
             lockWater()
             // Zweimal kurz Crown + Seitentaste (Pause und gleich Weiter): nächster Abschnitt.
-            if sectionGesture.didResume(at: date) {
+            let wasGesture = sectionGesture.didResume(at: date)
+            if wasGesture {
                 advanceSection()
+            } else if case .paused = previousPhase {
+                lastGestureNote = "Weiter, Pause zu lang oder per Tippen"
             }
         case .paused:
             phase = .paused
+            lastGestureNote = pausedByButtonOnScreen ? "Pause per Tippen" : "Pause von der Uhr (Tasten)"
             sectionGesture.didPause(at: date, byButtonOnScreen: pausedByButtonOnScreen)
             pausedByButtonOnScreen = false
         case .ended:
