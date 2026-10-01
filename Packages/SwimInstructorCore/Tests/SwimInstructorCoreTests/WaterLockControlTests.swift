@@ -11,18 +11,6 @@ final class WaterLockControlTests: XCTestCase {
 
         XCTAssertNil(control.update(isRunning: true, isLocked: true, now: at(0)))
         XCTAssertNil(control.update(isRunning: true, isLocked: true, now: at(60)))
-        XCTAssertFalse(control.acceptsCrown(now: at(60)))
-    }
-
-    func testCrownIsIgnoredRightAfterUnlockingAndAcceptedAfterTheSettleTime() {
-        var control = WaterLockControl()
-        _ = control.update(isRunning: true, isLocked: true, now: at(0))
-
-        _ = control.update(isRunning: true, isLocked: false, now: at(10))
-
-        XCTAssertFalse(control.acceptsCrown(now: at(10)))
-        XCTAssertFalse(control.acceptsCrown(now: at(10.5)))
-        XCTAssertTrue(control.acceptsCrown(now: at(11)))
     }
 
     func testRelocksAfterTheIdleTimeWithoutInput() {
@@ -43,48 +31,31 @@ final class WaterLockControlTests: XCTestCase {
         XCTAssertEqual(control.update(isRunning: true, isLocked: false, now: at(35)), .lock)
     }
 
-    func testLockingAgainResetsEverything() {
+    func testLockingAgainStartsTheNextUnlockFromScratch() {
         var control = WaterLockControl()
         _ = control.update(isRunning: true, isLocked: false, now: at(0))
-        XCTAssertTrue(control.acceptsCrown(now: at(5)))
 
         _ = control.update(isRunning: true, isLocked: true, now: at(6))
 
-        XCTAssertFalse(control.acceptsCrown(now: at(7)))
-        // Der nächste Entsperr-Vorgang beginnt wieder mit der Beruhigungszeit.
-        _ = control.update(isRunning: true, isLocked: false, now: at(30))
-        XCTAssertFalse(control.acceptsCrown(now: at(30.2)))
+        // Neu entsperrt bei 30 s: Die 20 Sekunden zählen ab hier, nicht ab dem ersten Entsperren.
+        XCTAssertNil(control.update(isRunning: true, isLocked: false, now: at(30)))
+        XCTAssertNil(control.update(isRunning: true, isLocked: false, now: at(49)))
+        XCTAssertEqual(control.update(isRunning: true, isLocked: false, now: at(50)), .lock)
     }
 
-    func testPausedOrStoppedWorkoutNeverLocksOrAcceptsTheCrown() {
+    func testPausedOrStoppedWorkoutNeverLocks() {
         var control = WaterLockControl()
         _ = control.update(isRunning: true, isLocked: false, now: at(0))
 
         XCTAssertNil(control.update(isRunning: false, isLocked: false, now: at(100)))
-        XCTAssertFalse(control.acceptsCrown(now: at(100)))
     }
 
     func testInputWithoutUnlockIsIgnored() {
         var control = WaterLockControl()
         control.noteInput(now: at(5))
 
-        XCTAssertFalse(control.acceptsCrown(now: at(10)))
-    }
-
-    func testATurnOfEnoughClicksAdvancesInEitherDirection() {
-        XCTAssertFalse(WaterLockControl.isAdvance(crownValue: 0))
-        XCTAssertFalse(WaterLockControl.isAdvance(crownValue: -1))
-        XCTAssertFalse(WaterLockControl.isAdvance(crownValue: 1.9))
-        XCTAssertTrue(WaterLockControl.isAdvance(crownValue: -2))
-        XCTAssertTrue(WaterLockControl.isAdvance(crownValue: 2))
-        XCTAssertTrue(WaterLockControl.isAdvance(crownValue: -3.5))
-        XCTAssertTrue(WaterLockControl.isAdvance(crownValue: 10))
-    }
-
-    func testProgressGrowsWithTheTurnAndStopsAtOne() {
-        XCTAssertEqual(WaterLockControl.progress(crownValue: 0), 0)
-        XCTAssertEqual(WaterLockControl.progress(crownValue: -1), 0.5, accuracy: 0.0001)
-        XCTAssertEqual(WaterLockControl.progress(crownValue: 1), 0.5, accuracy: 0.0001)
-        XCTAssertEqual(WaterLockControl.progress(crownValue: -7), 1)
+        XCTAssertNil(control.update(isRunning: true, isLocked: false, now: at(10)))
+        XCTAssertNil(control.update(isRunning: true, isLocked: false, now: at(29)))
+        XCTAssertEqual(control.update(isRunning: true, isLocked: false, now: at(30)), .lock)
     }
 }

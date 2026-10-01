@@ -370,25 +370,34 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
   Unter dem Namen des Abschnitts steht die Anweisung aus dem Plan ("Locker kraulen", Technikübung mit
   Erklärung), bis zu sechs Zeilen, verkleinert bei langen Texten. In der Plan-Liste vor dem Start steht sie
   in voller Länge.
-- **Wassersperre und Crown-Steuerung:** Solange die Einheit läuft, ist die Wassersperre an. Sie geht
-  nach "Weiter", nach einem Abschnittswechsel und nach 20 Sekunden ohne Eingabe von selbst wieder an.
-  Entsperren übernimmt das System (Crown drehen). **Danach schaltet eine weitere Drehung der Crown nach
-  oben den nächsten Abschnitt des Plans weiter** (zwei Rastungen, mit Haptik). Der laufende Abschnitt
-  gilt dann an der aktuellen Strecke als beendet, der nächste beginnt dort (`PlanProgress` mit
-  `advancedAt`), danach sperrt die Uhr wieder. Die Drehung, die entsperrt hat, zählt nicht (1 Sekunde
-  Beruhigungszeit, `WaterLockControl`). Die Richtung der Drehung zählt nicht (beim ersten Versuch blieb
-  "nach oben" wirkungslos, vermutlich wegen des Vorzeichens). Die Plan-Seite zeigt Schloss, einen
-  Fortschrittsbalken der Crown-Drehung, die letzte erkannte Tastenkombination und, solange entsperrt
-  ist, eine Taste "Nächster Abschnitt" zum Tippen.
-  Ob "oben" die richtige Richtung ist, lässt sich nur an der Uhr prüfen: Die Konstante steht in
-  `WaterLockControl.isAdvance` (ein Vorzeichen).
-  **Auch bei Wassersperre, ohne zu entsperren:** *Crown und Seitentaste gleichzeitig zweimal kurz
-  hintereinander drücken* (Pause und gleich wieder Weiter, höchstens 3 Sekunden) schaltet den nächsten
-  Abschnitt weiter (`SectionGesture`). Das ist die einzige Tastenkombination, die das System einer App
-  bei Wassersperre meldet: Apps sehen die Seitentaste einer Series oder SE **nie allein** (Apple sperrt
-  sie), nur den Zustand "pausiert" und "läuft". Wer am Beckenrand länger pausiert, pausiert normal. Ein
-  Tippen auf "Pause" auf dem Bildschirm zählt nie als Geste. Die kurzen Pausen stehen als Pause/Fortsetzen
-  im Workout in Health. Die Plan-Seite zeigt, ob die Uhr gesperrt ist (Schloss).
+- **Abschnittswechsel** (`SwimWorkoutManager.progress`): Der Manager hält den Stand im Plan und alle
+  Ansichten lesen ihn. Drei Wege führen zum nächsten Abschnitt, jeder mit einem Haptik-Impuls:
+  1. **Automatisch:** Der Abschnitt endet, wenn seine Strecke geschwommen ist. Als Strecke gilt das
+     Größere aus der Distanz von Health und Bahnen mal Beckenlänge (`progressMeters`), damit der Plan nicht
+     stehen bleibt, falls Health die Strecke verspätet meldet.
+  2. **Crown drehen, auch bei Wassersperre:** Am Stück weit genug drehen (entsperrt 3, bei Wassersperre 8
+     Einheiten, `CrownRotationTracker`), in beide Richtungen. Bei Wassersperre ist die Schwelle höher, damit
+     die Drehung, die das System zum Entsperren braucht, nicht schon weiterschaltet ("weiterdrehen, bis
+     der Balken voll ist", wie bei MySwimPro). Eine Drehpause von über 1,2 s zählt von vorn.
+  3. **Taste "Nächster Abschnitt":** auf der Steuerseite (links von den Werten) und auf der Plan-Seite,
+     funktioniert auch bei pausierter Einheit und ohne Streckenangabe.
+  Der laufende Abschnitt gilt dann an der aktuellen Strecke als beendet, der nächste beginnt dort
+  (`PlanProgress` mit `advancedAt`). Die Wassersperre ist an, solange die Einheit läuft, und geht nach
+  "Weiter", nach einem Wechsel und nach 20 Sekunden ohne Eingabe wieder an (`WaterLockControl`).
+- **Tastenkombination:** *Crown und Seitentaste gleichzeitig zweimal kurz hintereinander* (Pause und
+  gleich Weiter, höchstens 3 Sekunden) schaltet ebenfalls weiter (`SectionGesture`). Die Seitentaste
+  allein sehen Apps einer Series oder SE nie (Apple sperrt sie), nur "pausiert" und "läuft". Ein Tippen
+  auf "Pause" zählt nie als Geste.
+- **Die Startseite zeigt, was zu tun ist:** Unter der Zeit (und dem Puls) stehen Nummer und Name des
+  Abschnitts ("2/4 Hauptsatz"), das **Equipment** (z. B. "Pull Buoy, Paddles"), Wiederholung und Reste
+  ("3 von 6 × 200 m · noch 150 m") und die Anweisung (zwei Zeilen). Die Plan-Seite zeigt sie in voller
+  Länge. Ganz unten steht eine Kontrollzeile: Schloss (gesperrt/entsperrt), die letzte Eingabe ("Krone:
+  weiter bei 300 m", "Pause von der Uhr (Tasten)") und beim Drehen ein Balken. Sie ist bewusst da, um
+  zu sehen, ob eine Eingabe die App erreicht.
+- **Equipment:** Claude nennt je Abschnitt die Hilfsmittel (`pull_buoy`, `paddles`, `fins`, `snorkel`,
+  `kickboard`, `ankle_band`, höchstens drei, siehe [plan-generation.md](docs/plan-generation.md)).
+  Die Karte auf dem iPhone und die Watch zeigen "Mitnehmen: …" über dem Plan und das Equipment je
+  Abschnitt. Pläne aus der Zeit davor haben keines (leere Liste).
 - **Health-Rechte:** Die Watch fragt jetzt auch Schreibrechte an (Workout, Strecke, Züge, Puls,
   Energie), einmal beim Öffnen, damit der Dialog nicht erst am Beckenrand kommt.
 
@@ -405,9 +414,14 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
       zählen mit; der Plan-Bildschirm springt nach dem Einschwimmen in den Hauptsatz
 - [ ] **Im Becken:** Pause und Fortsetzen funktionieren, nach "Weiter" ist die Wassersperre wieder an,
       Beenden zeigt die Zusammenfassung
+- [ ] **Trocken (zu Hause), Einheit starten:** Auf der Steuerseite "Nächster Abschnitt" tippen: Auf der
+      Startseite springt der Abschnitt ("2/4 …"), die Kontrollzeile zeigt "Taste: weiter bei 0 m"
+- [ ] **Trocken:** Crown am Stück drehen: Der Balken füllt sich, nach ca. 3 Einheiten (entsperrt) springt
+      der Abschnitt. Dasselbe bei Wassersperre mit längerem Drehen (ca. 8 Einheiten)
+- [ ] **Im Becken:** Der Abschnitt wechselt von selbst, wenn seine Strecke geschwommen ist (Haptik)
 - [ ] **Im Becken, gesperrt:** Crown + Seitentaste gleichzeitig drücken (Pause), gleich noch einmal
-      (Weiter): Haptik, der Plan-Bildschirm springt zum nächsten Abschnitt, die Wassersperre ist an.
-      Länger als 3 Sekunden pausieren bleibt eine normale Pause
+      (Weiter): Haptik, der Abschnitt springt, die Wassersperre ist an. Länger als 3 Sekunden pausieren
+      bleibt eine normale Pause
 - [ ] **Im Becken:** Wassersperre ist beim Schwimmen an. Crown drehen entsperrt, eine weitere Drehung
       **nach oben** springt zum nächsten Abschnitt (Haptik, der Plan-Bildschirm zeigt ihn), danach ist
       die Wassersperre wieder an. Falls die Richtung verkehrt ist, melde dich (Vorzeichen in

@@ -6,6 +6,10 @@ import WatchKit
 /// Zeichnet eine Beckeneinheit auf: HKWorkoutSession mit Beckenlänge, Live-Werte über den
 /// HKLiveWorkoutBuilder, am Ende wird das Workout in Health gespeichert. Das iPhone sieht es dann
 /// beim nächsten Öffnen und der nächste Plan berücksichtigt es.
+///
+/// Der Manager hält auch den Stand im Tagesplan (`progress`): Er läuft mit der Strecke mit, und der
+/// Athlet kann den nächsten Abschnitt von Hand auslösen (Crown, Taste, Tastenkombination). Alle Ansichten
+/// lesen diesen einen Stand, statt ihn selbst zu berechnen.
 @MainActor
 final class SwimWorkoutManager: NSObject, ObservableObject {
     enum Phase: Equatable {
@@ -29,33 +33,44 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
     @Published private(set) var metrics = LiveSwimMetrics.zero
     @Published private(set) var poolLengthMeters = PoolLength.defaultMeters
     @Published private(set) var errorMessage: String?
-    /// Strecke (Meter), bei der der Athlet "nächster Abschnitt" ausgelöst hat (Crown nach oben).
+    /// Die Abschnitte des Plans, mit dem diese Einheit gestartet wurde (leer ohne Plan).
+    @Published private(set) var planSets: [PlanSet] = []
+    /// Stand im Plan: läuft mit der Strecke mit und springt bei einem Wechsel von Hand. `nil` ohne Plan.
+    @Published private(set) var progress: PlanProgressState?
+    /// Strecke (Meter), bei der der Athlet "nächster Abschnitt" von Hand ausgelöst hat.
     @Published private(set) var sectionAdvances: [Double] = []
-    /// Wassersperre an? Wird beim Takt der Anzeige aktualisiert und zeigt auf der Uhr, ob die Erkennung des Entsperrens greift.
+    /// Wassersperre an? Wird zweimal pro Sekunde aktualisiert.
     @Published private(set) var isWaterLocked = true
-    /// Wie weit die Crown nach dem Entsperren gedreht ist (0 bis 1). Zeigt auf der Uhr, ob Drehungen ankommen.
+    /// Wie weit die Crown am Stück gedreht ist (0 bis 1). Zeigt auf der Uhr, ob Drehungen ankommen.
     @Published private(set) var crownProgress = 0.0
-    /// Letztes Ereignis der Tastenkombination oder des Abschnittswechsels, als Kontrolle auf der Uhr.
-    @Published private(set) var lastGestureNote = "noch nichts erkannt"
+    /// Letztes Ereignis (Wechsel, Pause von der Uhr), als Kontrolle auf der Uhr.
+    @Published private(set) var lastGestureNote = "noch nichts"
 
     private let healthStore = HKHealthStore()
     private var session: HKWorkoutSession?
     private var builder: HKLiveWorkoutBuilder?
     private var lapEvents = 0
     private var waterLock = WaterLockControl()
+    private var crown = CrownRotationTracker()
     private var sectionGesture = SectionGesture()
     private var pausedByButtonOnScreen = false
+    private var tickTimer: Timer?
 
-    func start(poolLengthMeters: Int) async {
+    func start(poolLengthMeters: Int, plan: TrainingPlan? = nil) async {
         guard !phase.isActive else { return }
         let poolLength = PoolLength.clamped(poolLengthMeters)
         self.poolLengthMeters = poolLength
         metrics = .zero
         lapEvents = 0
+        planSets = plan?.sets ?? []
         sectionAdvances = []
+        progress = nil
+        recomputeProgress()
         waterLock = WaterLockControl()
+        crown = CrownRotationTracker()
         sectionGesture.reset()
         pausedByButtonOnScreen = false
+        lastGestureNote = "noch nichts"
         errorMessage = nil
         phase = .starting
 
@@ -87,11 +102,13 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
             ])
             phase = .running
             lockWater()
+            startTicking()
         } catch {
             errorMessage = "Training konnte nicht starten: \(error.localizedDescription)"
             session?.end()
             session = nil
             builder = nil
+            stopTicking()
             phase = .idle
         }
     }
@@ -100,55 +117,6 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         // Pause per Tippen auf dem Bildschirm ist nie die Tastengeste (Crown + Seitentaste).
         pausedByButtonOnScreen = true
         session?.pause()
-    }
-
-    // MARK: - Wassersperre und Crown
-
-    /// Wassersperre wie bei Apples Schwimm-App: Entsperren mit der Digital Crown. Sie ist an, solange
-    /// die Einheit läuft, und geht nach Fortsetzen, nach einem Abschnittswechsel und nach einer Weile
-    /// ohne Eingabe wieder an.
-    private func lockWater() {
-        WKInterfaceDevice.current().enableWaterLock()
-    }
-
-    /// Etwa zweimal pro Sekunde aufrufen, solange der Bildschirm der Einheit sichtbar ist: erkennt das
-    /// Entsperren und sperrt nach einer Weile ohne Eingabe wieder.
-    func tickWaterLock(now: Date = Date()) {
-        let isLocked = WKInterfaceDevice.current().isWaterLockEnabled
-        isWaterLocked = isLocked
-        if isLocked { crownProgress = 0 }
-        if waterLock.update(isRunning: phase == .running, isLocked: isLocked, now: now) == .lock {
-            lockWater()
-        }
-    }
-
-    /// Die Crown wurde bewegt (neuer Wert seit dem letzten Zurücksetzen). Verschiebt die automatische
-    /// Sperre und schaltet den Abschnitt weiter, sobald weit genug gedreht ist und die Sperre schon einen
-    /// Moment aus ist (die Drehung, die entsperrt hat, zählt nicht). `true`: Der Aufrufer setzt die Crown zurück.
-    func crownMoved(_ value: Double, now: Date = Date()) -> Bool {
-        waterLock.noteInput(now: now)
-        return evaluateCrown(value, now: now)
-    }
-
-    /// Prüft den Wert der Crown, ohne ihn als Eingabe zu zählen. Der Takt ruft das mit auf: Wurde schon
-    /// während der Beruhigungszeit weit gedreht, startet der Abschnitt, sobald sie vorbei ist.
-    func evaluateCrown(_ value: Double, now: Date = Date()) -> Bool {
-        crownProgress = WaterLockControl.progress(crownValue: value)
-        guard phase == .running,
-              waterLock.acceptsCrown(now: now),
-              WaterLockControl.isAdvance(crownValue: value) else { return false }
-        advanceSection()
-        crownProgress = 0
-        return true
-    }
-
-    /// Beendet den aktuellen Abschnitt des Plans an der aktuellen Strecke und sperrt wieder.
-    func advanceSection() {
-        guard phase == .running else { return }
-        sectionAdvances.append(metrics.distanceMeters)
-        lastGestureNote = "Abschnitt weiter bei \(Int(metrics.distanceMeters)) m"
-        WKInterfaceDevice.current().play(.directionUp)
-        lockWater()
     }
 
     func resume() {
@@ -165,9 +133,12 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
     /// Zurück zur Plananzeige nach der Zusammenfassung.
     func reset() {
         guard !phase.isActive else { return }
+        stopTicking()
         phase = .idle
         metrics = .zero
+        planSets = []
         sectionAdvances = []
+        progress = nil
         sectionGesture.reset()
         errorMessage = nil
     }
@@ -177,6 +148,108 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         builder?.elapsedTime(at: date) ?? metrics.elapsed
     }
 
+    // MARK: - Abschnitte
+
+    /// Nächster Abschnitt von Hand: Der laufende gilt an der aktuellen Strecke als beendet. Das
+    /// funktioniert auch ohne Streckenangabe aus Health (dann bei 0 m) und bei pausierter Einheit.
+    func advanceSection(source: String = "Taste") {
+        guard phase == .running || phase == .paused else {
+            lastGestureNote = "\(source): Einheit läuft nicht"
+            return
+        }
+        guard hasNextSection else {
+            lastGestureNote = planSets.isEmpty ? "\(source): kein Plan" : "\(source): kein weiterer Abschnitt"
+            return
+        }
+        let meters = metrics.progressMeters(poolLengthMeters: poolLengthMeters)
+        sectionAdvances.append(meters)
+        recomputeProgress()
+        lastGestureNote = "\(source): weiter bei \(Int(meters)) m"
+        if phase == .running { lockWater() }
+    }
+
+    private var hasNextSection: Bool {
+        guard let progress else { return false }
+        if case .inProgress = progress { return true }
+        return false
+    }
+
+    /// Rechnet den Stand im Plan aus Strecke und Wechseln von Hand neu. Springt der Abschnitt weiter,
+    /// egal ob durch die Strecke oder von Hand, gibt es einen Haptik-Impuls.
+    private func recomputeProgress() {
+        guard !planSets.isEmpty else {
+            if progress != nil { progress = nil }
+            return
+        }
+        let new = PlanProgress.state(
+            sets: planSets,
+            swumMeters: metrics.progressMeters(poolLengthMeters: poolLengthMeters),
+            advancedAt: sectionAdvances
+        )
+        guard new != progress else { return }
+        let oldIndex = progress?.sectionIndex(setCount: planSets.count)
+        progress = new
+        if let oldIndex, oldIndex != new.sectionIndex(setCount: planSets.count) {
+            WKInterfaceDevice.current().play(.directionUp)
+        }
+    }
+
+    // MARK: - Wassersperre und Crown
+
+    /// Wassersperre wie bei Apples Schwimm-App: Entsperren mit der Digital Crown. Sie ist an, solange
+    /// die Einheit läuft, und geht nach Fortsetzen, nach einem Abschnittswechsel und nach einer Weile
+    /// ohne Eingabe wieder an.
+    private func lockWater() {
+        WKInterfaceDevice.current().enableWaterLock()
+    }
+
+    /// Eigener Takt, unabhängig von den Ansichten: Läuft, solange eine Einheit aktiv ist, auch wenn der
+    /// Athlet zwischen den Seiten wischt.
+    private func startTicking() {
+        tickTimer?.invalidate()
+        tickTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.tick() }
+        }
+    }
+
+    private func stopTicking() {
+        tickTimer?.invalidate()
+        tickTimer = nil
+    }
+
+    /// Erkennt das Entsperren, sperrt nach einer Weile ohne Eingabe wieder und lässt eine liegen
+    /// gebliebene Crown-Drehung verfallen. Setzt nur Werte, die sich ändern, damit die Ansicht nicht
+    /// ohne Grund neu zeichnet.
+    private func tick(now: Date = Date()) {
+        let locked = WKInterfaceDevice.current().isWaterLockEnabled
+        if locked != isWaterLocked { isWaterLocked = locked }
+        crown.resetIfIdle(at: now)
+        let crownValue = crown.progress(isLocked: locked)
+        if crownValue != crownProgress { crownProgress = crownValue }
+        if waterLock.update(isRunning: phase == .running, isLocked: locked, now: now) == .lock {
+            lockWater()
+        }
+    }
+
+    /// Die Crown wurde bewegt (neuer Wert seit dem letzten Zurücksetzen). Weit genug am Stück gedreht:
+    /// nächster Abschnitt, bei Wassersperre und entsperrt, in beide Richtungen. `true`: Der Aufrufer
+    /// setzt die Crown auf 0 zurück.
+    func crownMoved(_ value: Double, now: Date = Date()) -> Bool {
+        let locked = WKInterfaceDevice.current().isWaterLockEnabled
+        waterLock.noteInput(now: now)
+        let reached = crown.moved(to: value, isLocked: locked, at: now)
+        let crownValue = crown.progress(isLocked: locked)
+        if crownValue != crownProgress { crownProgress = crownValue }
+        if reached {
+            advanceSection(source: "Krone")
+        }
+        let needsReset = reached || abs(value) > 30
+        if needsReset { crown.rebase() }
+        return needsReset
+    }
+
+    // MARK: - Sitzung
+
     private func handle(_ state: HKWorkoutSessionState, date: Date) {
         let previousPhase = phase
         switch state {
@@ -185,11 +258,10 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
             // Auch nach "Weiter": Wer schwimmt, hat die Wassersperre an.
             lockWater()
             // Zweimal kurz Crown + Seitentaste (Pause und gleich Weiter): nächster Abschnitt.
-            let wasGesture = sectionGesture.didResume(at: date)
-            if wasGesture {
-                advanceSection()
+            if sectionGesture.didResume(at: date) {
+                advanceSection(source: "Tasten")
             } else if case .paused = previousPhase {
-                lastGestureNote = "Weiter, Pause zu lang oder per Tippen"
+                lastGestureNote = "Weiter (Pause zu lang oder per Tippen)"
             }
         case .paused:
             phase = .paused
@@ -198,6 +270,7 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
             pausedByButtonOnScreen = false
         case .ended:
             sectionGesture.reset()
+            stopTicking()
             Task { await finish(at: date) }
         default:
             break
@@ -237,6 +310,7 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
             distanceMeters: metrics.distanceMeters,
             poolLengthMeters: poolLengthMeters
         )
+        recomputeProgress()
     }
 }
 

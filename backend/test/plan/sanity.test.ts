@@ -276,6 +276,30 @@ describe("sanitizePlan: Rechenfehler und Formalien", () => {
     expect(sanitizePlan(endless, snapshot()).plan.sets[0].instructions).toHaveLength(DEFAULT_LIMITS.maxInstructionLength);
   });
 
+  it("entfernt doppeltes Equipment und begrenzt es auf drei Hilfsmittel je Abschnitt", () => {
+    const crowded = plan({
+      sets: [set({ repetitions: 4, equipment: ["pull_buoy", "pull_buoy", "paddles", "ankle_band", "snorkel", "fins"] })],
+      total_distance_meters: 800
+    });
+
+    const result = sanitizePlan(crowded, snapshot());
+
+    expect(result.plan.sets[0].equipment).toEqual(["pull_buoy", "paddles", "ankle_band"]);
+    expect(result.adjustments).toEqual([]);
+  });
+
+  it("behaelt das Equipment, wenn ein Abschnitt gekuerzt wird", () => {
+    const geared = plan({
+      sets: [set({ name: "Hauptsatz", repetitions: 20, distance_meters: 200, equipment: ["paddles"] })],
+      total_distance_meters: 4000
+    });
+
+    const result = sanitizePlan(geared, snapshot());
+
+    expect(result.plan.sets[0].equipment).toEqual(["paddles"]);
+    expect(result.plan.total_distance_meters).toBeLessThan(4000);
+  });
+
   it("kuerzt zu lange Texte und begrenzt die Zahl der Hinweise", () => {
     const wordy = plan({ rationale: "x".repeat(5000), coach_notes: Array.from({ length: 12 }, () => "y".repeat(1000)) });
 

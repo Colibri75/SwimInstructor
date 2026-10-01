@@ -58,7 +58,8 @@ Antwort `200`:
         "distance_meters": 200,
         "target_pace_seconds_per_hundred_meters": 140,
         "rest_seconds": 30,
-        "instructions": "gleichmäßig"
+        "instructions": "gleichmäßig",
+        "equipment": ["pull_buoy", "paddles"]
       }
     ],
     "coach_notes": ["Auf lockere Atmung achten."]
@@ -77,6 +78,13 @@ Antwort `200`:
 | `plan.intensity` | `rest`, `easy`, `moderate`, `hard` |
 
 Ein Ruhetag hat `session_type: "rest"`, keine `sets` und `total_distance_meters: 0`.
+
+**Equipment:** Jeder Abschnitt hat `equipment`, eine Liste aus `pull_buoy`, `paddles`, `fins`, `snorkel`,
+`kickboard`, `ankle_band` (leer, wenn nichts gebraucht wird). Die Sicherheitsschicht entfernt Doppelte und
+begrenzt auf drei je Abschnitt. Pläne, die vor dieser Änderung gespeichert wurden, haben das Feld nicht: Der
+Server liest sie mit leerer Liste (`StoredTrainingPlanSchema`), die App ebenso. Ein unbekanntes Hilfsmittel in
+einem gespeicherten Plan macht ihn ungültig (kein Fallback darauf). Claude soll Hilfsmittel sparsam einsetzen,
+Wünsche des Athleten dazu berücksichtigen und bei Abschnitten mit Hilfsmitteln keine Zielpace vorgeben.
 
 Fehlerantworten: `400 invalid_request` (mit `details` je fehlerhaftem Feld), `401 unauthorized`,
 `503 plan_unavailable` (mit `reason`, wenn Claude ausfällt und noch kein Plan existiert).

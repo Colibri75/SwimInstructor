@@ -34,4 +34,22 @@ final class LiveSwimMetricsTests: XCTestCase {
         XCTAssertTrue(PoolLength.presets.allSatisfy { PoolLength.range.contains($0) })
         XCTAssertTrue(PoolLength.range.contains(PoolLength.defaultMeters))
     }
+
+    func testProgressUsesDistanceWhenItIsAhead() {
+        let metrics = LiveSwimMetrics(distanceMeters: 130, laps: 5)
+
+        XCTAssertEqual(metrics.progressMeters(poolLengthMeters: 25), 130)
+    }
+
+    func testProgressFallsBackToLapsTimesPoolLengthWhenDistanceIsMissing() {
+        let metrics = LiveSwimMetrics(distanceMeters: 0, laps: 4)
+
+        XCTAssertEqual(metrics.progressMeters(poolLengthMeters: 25), 100)
+    }
+
+    func testProgressIsZeroWithoutDistanceAndLapsAndIgnoresAnInvalidPoolLength() {
+        XCTAssertEqual(LiveSwimMetrics.zero.progressMeters(poolLengthMeters: 25), 0)
+        XCTAssertEqual(LiveSwimMetrics(distanceMeters: 40, laps: 3).progressMeters(poolLengthMeters: 0), 40)
+    }
 }
+

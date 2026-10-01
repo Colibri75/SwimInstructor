@@ -18,6 +18,12 @@ struct PlanCardView: View {
 
             header
 
+            if !plan.equipmentNeeded.isEmpty {
+                Label("Mitnehmen: \(PlanFormatting.equipment(plan.equipmentNeeded))", systemImage: "backpack")
+                    .font(.subheadline.weight(.medium))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
             if let wish = response.wishes, !wish.isEmpty {
                 Label("Dein Wunsch: \(wish)", systemImage: "text.bubble")
                     .font(.footnote)
@@ -101,6 +107,12 @@ private struct PlanSetRow: View {
                 Text(details)
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if !set.equipment.isEmpty {
+                Label(PlanFormatting.equipment(set.equipment), systemImage: "backpack")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.tint)
                     .fixedSize(horizontal: false, vertical: true)
             }
             if !set.instructions.isEmpty {

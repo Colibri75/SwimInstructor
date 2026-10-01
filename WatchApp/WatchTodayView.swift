@@ -34,7 +34,7 @@ struct WatchTodayView: View {
     private var startSection: some View {
         Section {
             Button {
-                Task { await workoutManager.start(poolLengthMeters: poolLengthMeters) }
+                Task { await workoutManager.start(poolLengthMeters: poolLengthMeters, plan: planStore.response?.plan) }
             } label: {
                 Label("Schwimmen", systemImage: "figure.pool.swim")
                     .font(.headline)
@@ -75,6 +75,12 @@ struct WatchTodayView: View {
                     Text(notice)
                         .font(.footnote)
                         .foregroundStyle(.orange)
+                }
+                if !plan.equipmentNeeded.isEmpty {
+                    Label("Mitnehmen: \(PlanFormatting.equipment(plan.equipmentNeeded))", systemImage: "backpack")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.cyan)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 ForEach(Array(plan.sets.enumerated()), id: \.offset) { _, set in
                     WatchPlanSetRow(set: set)
@@ -129,6 +135,12 @@ struct WatchPlanSetRow: View {
                 Text(details)
                     .font(.footnote.monospacedDigit())
                     .foregroundStyle(.secondary)
+            }
+            if !set.equipment.isEmpty {
+                Label(PlanFormatting.equipment(set.equipment), systemImage: "backpack")
+                    .font(.footnote)
+                    .foregroundStyle(.cyan)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if !set.instructions.isEmpty {
                 // Was genau zu tun ist (locker, Technikübung, ...), in voller Länge: Die Liste scrollt.

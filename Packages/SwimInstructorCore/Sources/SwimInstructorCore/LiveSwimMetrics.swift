@@ -33,6 +33,12 @@ public struct LiveSwimMetrics: Equatable, Sendable {
         return elapsed / (distanceMeters / 100)
     }
 
+    /// Strecke für den Stand im Plan. Kommt die Strecke aus Health verspätet oder gar nicht, aber die
+    /// Uhr hat Bahnen gezählt, gelten die Bahnen mal Beckenlänge, damit der Plan nicht stehen bleibt.
+    public func progressMeters(poolLengthMeters: Int) -> Double {
+        max(distanceMeters, Double(laps * max(poolLengthMeters, 0)))
+    }
+
     public var strokesPerLap: Double? {
         guard laps > 0, strokes > 0 else { return nil }
         return strokes / Double(laps)

@@ -55,6 +55,9 @@ public struct PlanSet: Codable, Equatable, Sendable {
     public let targetPaceSecondsPerHundredMeters: Double?
     public let restSeconds: Int
     public let instructions: String
+    /// Hilfsmittel für diesen Abschnitt (`pull_buoy`, `paddles`, `fins`, `snorkel`, `kickboard`,
+    /// `ankle_band`). Leer, wenn keine nötig sind und bei Plänen aus der Zeit vor dem Equipment.
+    public let equipment: [String]
 
     public init(
         name: String,
@@ -62,7 +65,8 @@ public struct PlanSet: Codable, Equatable, Sendable {
         distanceMeters: Int,
         targetPaceSecondsPerHundredMeters: Double?,
         restSeconds: Int,
-        instructions: String
+        instructions: String,
+        equipment: [String] = []
     ) {
         self.name = name
         self.repetitions = repetitions
@@ -70,12 +74,29 @@ public struct PlanSet: Codable, Equatable, Sendable {
         self.targetPaceSecondsPerHundredMeters = targetPaceSecondsPerHundredMeters
         self.restSeconds = restSeconds
         self.instructions = instructions
+        self.equipment = equipment
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case name, repetitions, distanceMeters, targetPaceSecondsPerHundredMeters, restSeconds, instructions, equipment
+    }
+
+    /// Eigenes Dekodieren, damit ein gespeicherter Plan ohne `equipment` (älterer Server, Cache auf dem
+    /// Gerät) weiter lesbar bleibt, statt als kaputt zu gelten.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try container.decode(String.self, forKey: .name)
+        repetitions = try container.decode(Int.self, forKey: .repetitions)
+        distanceMeters = try container.decode(Int.self, forKey: .distanceMeters)
+        targetPaceSecondsPerHundredMeters = try container.decodeIfPresent(Double.self, forKey: .targetPaceSecondsPerHundredMeters)
+        restSeconds = try container.decode(Int.self, forKey: .restSeconds)
+        instructions = try container.decode(String.self, forKey: .instructions)
+        equipment = try container.decodeIfPresent([String].self, forKey: .equipment) ?? []
     }
 
     public var totalMeters: Int { repetitions * distanceMeters }
 }
 
-/// Der Tagesplan, so wie ihn die Sicherheitsschicht des Servers freigegeben hat.
 public struct TrainingPlan: Codable, Equatable, Sendable {
     public let sessionType: SessionType
     public let intensity: PlanIntensity
@@ -104,6 +125,12 @@ public struct TrainingPlan: Codable, Equatable, Sendable {
     }
 
     public var isRestDay: Bool { sessionType == .rest }
+
+    /// Alle Hilfsmittel des Plans, ohne Doppelte, in der Reihenfolge, in der sie gebraucht werden.
+    public var equipmentNeeded: [String] {
+        var seen = Set<String>()
+        return sets.flatMap(\.equipment).filter { seen.insert($0).inserted }
+    }
 }
 
 /// Antwort von `POST /v1/plan/today`.

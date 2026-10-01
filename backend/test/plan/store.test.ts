@@ -56,6 +56,30 @@ describe("FilePlanStore", () => {
     expect(await readdir(dir)).toEqual(["latest-plan.json"]);
   });
 
+  it("liest einen Plan aus der Zeit vor dem Equipment (ohne equipment-Feld) mit leerer Liste", async () => {
+    const old = {
+      ...record,
+      plan: { ...goodPlan, sets: goodPlan.sets.map(({ equipment: _ignored, ...rest }) => rest) }
+    };
+    await writeFile(path.join(dir, "latest-plan.json"), JSON.stringify(old), "utf8");
+
+    const loaded = await new FilePlanStore(dir).latest();
+
+    expect(loaded).not.toBeNull();
+    expect(loaded?.plan.sets.map((s) => s.equipment)).toEqual([[], [], []]);
+    expect(loaded?.plan.sets[1].name).toBe("Hauptsatz");
+  });
+
+  it("behaelt gespeichertes Equipment und verwirft ein unbekanntes Hilfsmittel samt Plan", async () => {
+    const withGear = { ...record, plan: { ...goodPlan, sets: [{ ...goodPlan.sets[0], equipment: ["pull_buoy", "paddles"] }] } };
+    await writeFile(path.join(dir, "latest-plan.json"), JSON.stringify(withGear), "utf8");
+    expect((await new FilePlanStore(dir).latest())?.plan.sets[0].equipment).toEqual(["pull_buoy", "paddles"]);
+
+    const unknown = { ...record, plan: { ...goodPlan, sets: [{ ...goodPlan.sets[0], equipment: ["jetpack"] }] } };
+    await writeFile(path.join(dir, "latest-plan.json"), JSON.stringify(unknown), "utf8");
+    expect(await new FilePlanStore(dir).latest()).toBeNull();
+  });
+
   it("behandelt eine beschaedigte Datei als 'kein Plan'", async () => {
     await writeFile(path.join(dir, "latest-plan.json"), "{kaputt", "utf8");
 

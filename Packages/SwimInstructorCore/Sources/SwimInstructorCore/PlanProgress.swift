@@ -19,6 +19,17 @@ public enum PlanProgressState: Equatable, Sendable {
     case completed(extraMeters: Int)
 }
 
+public extension PlanProgressState {
+    /// Nummer des laufenden Abschnitts (ab 0), `setCount` wenn der Plan geschafft ist, 0 ohne Abschnitte.
+    func sectionIndex(setCount: Int) -> Int {
+        switch self {
+        case .noSets: return 0
+        case let .inProgress(position): return position.setIndex
+        case .completed: return setCount
+        }
+    }
+}
+
 /// Ordnet die Strecke der Uhr den Abschnitten des Plans zu.
 ///
 /// Bewusst nur über die Meter, nicht über Pausen oder Apples Satz-Erkennung: Die Uhr zählt Bahnen

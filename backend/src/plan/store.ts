@@ -1,7 +1,7 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import { TrainingPlanSchema, TrainingPlan } from "./plan";
+import { StoredTrainingPlanSchema, TrainingPlan } from "./plan";
 
 export const StoredPlanSchema = z.object({
   /** Kalendertag (Zeitzone des Servers), fuer den der Plan erstellt wurde, YYYY-MM-DD. */
@@ -9,7 +9,7 @@ export const StoredPlanSchema = z.object({
   snapshotHash: z.string(),
   generatedAt: z.iso.datetime(),
   model: z.string(),
-  plan: TrainingPlanSchema,
+  plan: StoredTrainingPlanSchema,
   adjustments: z.array(z.string())
 });
 

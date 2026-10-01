@@ -138,4 +138,22 @@ final class PlanProgressTests: XCTestCase {
     func testAdvanceDoesNotAffectPlansWithoutSets() {
         XCTAssertEqual(PlanProgress.state(sets: [], swumMeters: 100, advancedAt: [50]), .noSets)
     }
+
+    // MARK: - Nummer des Abschnitts
+
+    func testSectionIndexFollowsTheSetAndEndsAtTheSetCount() {
+        XCTAssertEqual(PlanProgress.state(sets: sets, swumMeters: 0).sectionIndex(setCount: sets.count), 0)
+        XCTAssertEqual(PlanProgress.state(sets: sets, swumMeters: 300).sectionIndex(setCount: sets.count), 1)
+        XCTAssertEqual(PlanProgress.state(sets: sets, swumMeters: 1500).sectionIndex(setCount: sets.count), 2)
+        XCTAssertEqual(PlanProgress.state(sets: sets, swumMeters: 1600).sectionIndex(setCount: sets.count), 3)
+        XCTAssertEqual(PlanProgress.state(sets: [], swumMeters: 50).sectionIndex(setCount: 0), 0)
+    }
+
+    func testAdvancingAtZeroMetersStillMovesToTheNextSet() {
+        // Kommt die Strecke aus Health nicht an (0 m), muss die Taste trotzdem weiterschalten.
+        let state = PlanProgress.state(sets: sets, swumMeters: 0, advancedAt: [0])
+
+        XCTAssertEqual(state.sectionIndex(setCount: sets.count), 1)
+    }
 }
+

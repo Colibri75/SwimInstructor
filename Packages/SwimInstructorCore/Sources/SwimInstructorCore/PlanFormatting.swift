@@ -43,6 +43,24 @@ public enum PlanFormatting {
         return parts.joined(separator: " · ")
     }
 
+    /// Deutscher Name eines Hilfsmittels; Unbekanntes bleibt lesbar (aus `snake_case` wird "Snake Case").
+    public static func equipmentName(_ raw: String) -> String {
+        switch raw {
+        case "pull_buoy": return "Pull Buoy"
+        case "paddles": return "Paddles"
+        case "fins": return "Flossen"
+        case "snorkel": return "Schnorchel"
+        case "kickboard": return "Kickboard"
+        case "ankle_band": return "Beinband"
+        default: return raw.replacingOccurrences(of: "_", with: " ").capitalized
+        }
+    }
+
+    /// "Pull Buoy, Paddles"; leer ohne Hilfsmittel.
+    public static func equipment(_ items: [String]) -> String {
+        items.map(equipmentName).joined(separator: ", ")
+    }
+
     public static func sessionType(_ type: SessionType) -> String {
         switch type {
         case .rest: return "Ruhetag"

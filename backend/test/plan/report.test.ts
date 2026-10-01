@@ -20,12 +20,19 @@ describe("estimateCostUsd", () => {
 });
 
 describe("formatPlan", () => {
+  it("zeigt das Equipment je Abschnitt in einer eigenen Spalte", () => {
+    const geared = plan({ sets: [{ ...goodPlan.sets[1], equipment: ["pull_buoy", "paddles"] }] });
+
+    expect(formatPlan(geared)).toContain("| Equipment |");
+    expect(formatPlan(geared)).toContain("| 30 s | pull_buoy, paddles |");
+  });
+
   it("stellt Kopfzeile, Begruendung, Tabelle und Hinweise dar", () => {
     const text = formatPlan(goodPlan);
 
     expect(text).toContain("**endurance**, moderat, 1600 m, ca. 45 min");
     expect(text).toContain(goodPlan.rationale);
-    expect(text).toContain("| Hauptsatz | 6 × 200 m | 140 s/100 m | 30 s |");
+    expect(text).toContain("| Hauptsatz | 6 × 200 m | 140 s/100 m | 30 s | – |");
     expect(text).toContain("| Einschwimmen | 1 × 200 m | – | 0 s |");
     expect(text).toContain("- Auf lockere Atmung achten.");
   });

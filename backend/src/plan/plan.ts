@@ -10,6 +10,8 @@ import { z } from "zod";
  */
 export const SESSION_TYPES = ["rest", "recovery", "technique", "endurance", "threshold", "intervals", "test"] as const;
 export const INTENSITIES = ["rest", "easy", "moderate", "hard"] as const;
+/** Hilfsmittel, die ein Abschnitt verlangen kann. Die App uebersetzt die Werte in deutsche Namen. */
+export const EQUIPMENT = ["pull_buoy", "paddles", "fins", "snorkel", "kickboard", "ankle_band"] as const;
 
 export const PlanSetSchema = z.object({
   name: z.string().describe("Name des Abschnitts, z. B. Einschwimmen, Technik, Hauptsatz, Ausschwimmen"),
@@ -22,7 +24,10 @@ export const PlanSetSchema = z.object({
   rest_seconds: z.number().int().describe("Pause nach jeder Wiederholung in Sekunden"),
   instructions: z
     .string()
-    .describe("Anweisung für den Abschnitt. Bei einer Technikübung: Name der Übung plus ein bis zwei Sätze, wie sie geschwommen wird und worauf man achtet")
+    .describe("Anweisung für den Abschnitt. Bei einer Technikübung: Name der Übung plus ein bis zwei Sätze, wie sie geschwommen wird und worauf man achtet"),
+  equipment: z
+    .array(z.enum(EQUIPMENT))
+    .describe("Hilfsmittel, die der Athlet für diesen Abschnitt braucht (pull_buoy, paddles, fins, snorkel, kickboard, ankle_band). Leere Liste, wenn keine")
 });
 
 export const TrainingPlanSchema = z.object({
@@ -34,6 +39,20 @@ export const TrainingPlanSchema = z.object({
   sets: z.array(PlanSetSchema),
   coach_notes: z.array(z.string()).describe("Null bis drei kurze Hinweise auf Deutsch")
 });
+
+/**
+ * Schema fuer gespeicherte Plaene. Plaene, die vor der Einfuehrung des Equipments gespeichert wurden,
+ * haben kein `equipment`: Sie bekommen eine leere Liste, statt als ungueltig verworfen zu werden.
+ */
+export const StoredTrainingPlanSchema = z.preprocess((value) => {
+  if (typeof value !== "object" || value === null || !("sets" in value) || !Array.isArray(value.sets)) return value;
+  return {
+    ...value,
+    sets: value.sets.map((set: unknown) =>
+      typeof set === "object" && set !== null && !("equipment" in set) ? { ...set, equipment: [] } : set
+    )
+  };
+}, TrainingPlanSchema);
 
 export type PlanSet = z.infer<typeof PlanSetSchema>;
 export type TrainingPlan = z.infer<typeof TrainingPlanSchema>;

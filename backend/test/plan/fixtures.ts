@@ -54,6 +54,7 @@ export function set(overrides: Partial<PlanSet> = {}): PlanSet {
     target_pace_seconds_per_hundred_meters: null,
     rest_seconds: 20,
     instructions: "gleichmäßig",
+    equipment: [],
     ...overrides
   };
 }

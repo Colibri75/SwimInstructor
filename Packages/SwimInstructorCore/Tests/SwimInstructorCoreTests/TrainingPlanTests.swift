@@ -39,6 +39,37 @@ final class TrainingPlanTests: XCTestCase {
         XCTAssertEqual(try PlanResponse.jsonDecoder().decode(PlanResponse.self, from: encoded).wishes, with.wishes)
     }
 
+    func testPlanWithoutEquipmentFieldStillDecodesWithAnEmptyList() throws {
+        let response = try PlanResponse.jsonDecoder().decode(PlanResponse.self, from: Data(TestFixtures.responseJSON.utf8))
+
+        XCTAssertEqual(response.plan.sets.map(\.equipment), [[], []])
+        XCTAssertEqual(response.plan.equipmentNeeded, [])
+    }
+
+    func testEquipmentIsDecodedPerSetAndSummarizedWithoutDuplicates() throws {
+        let json = TestFixtures.responseJSON
+            .replacingOccurrences(of: "\"instructions\": \"locker\"", with: "\"instructions\": \"locker\", \"equipment\": [\"snorkel\"]")
+            .replacingOccurrences(of: "\"instructions\": \"gleichmäßig\"", with: "\"instructions\": \"gleichmäßig\", \"equipment\": [\"pull_buoy\", \"paddles\", \"snorkel\"]")
+
+        let response = try PlanResponse.jsonDecoder().decode(PlanResponse.self, from: Data(json.utf8))
+
+        XCTAssertEqual(response.plan.sets[0].equipment, ["snorkel"])
+        XCTAssertEqual(response.plan.sets[1].equipment, ["pull_buoy", "paddles", "snorkel"])
+        XCTAssertEqual(response.plan.equipmentNeeded, ["snorkel", "pull_buoy", "paddles"])
+    }
+
+    func testEquipmentSurvivesEncodingForTheWatchAndTheCache() throws {
+        let set = PlanSet(name: "Kraft", repetitions: 4, distanceMeters: 100, targetPaceSecondsPerHundredMeters: nil, restSeconds: 20, instructions: "mit Armzug", equipment: ["pull_buoy", "paddles"])
+        let plan = TrainingPlan(sessionType: .endurance, intensity: .moderate, rationale: "", totalDistanceMeters: 400, estimatedDurationMinutes: 15, sets: [set], coachNotes: [])
+        let response = PlanResponse(source: .claude, date: "2026-09-30", generatedAt: TestFixtures.now, stale: false, plan: plan, adjustments: [])
+
+        let data = try PlanResponse.jsonEncoder().encode(response)
+        let decoded = try PlanResponse.jsonDecoder().decode(PlanResponse.self, from: data)
+
+        XCTAssertEqual(decoded, response)
+        XCTAssertEqual(decoded.plan.sets[0].equipment, ["pull_buoy", "paddles"])
+    }
+
     func testDecodesFallbackAndRestDay() throws {
         let json = """
         {"source":"fallback","date":"2026-09-29","generated_at":"2026-09-29T06:00:00Z","stale":true,

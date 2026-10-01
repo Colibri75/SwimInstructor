@@ -5,162 +5,188 @@ import SwimInstructorCore
 struct WatchWorkoutView: View {
     @EnvironmentObject private var workoutManager: SwimWorkoutManager
     @State private var page = 1
-    @State private var crown = 0.0
-    @FocusState private var crownHasFocus: Bool
 
     var body: some View {
         TabView(selection: $page) {
             WorkoutControlsView()
                 .tag(0)
-            WorkoutMetricsView()
+            WorkoutMetricsView(isCurrentPage: page == 1)
                 .tag(1)
-            WorkoutPlanView()
+            WorkoutPlanView(isCurrentPage: page == 2)
                 .tag(2)
         }
         .tabViewStyle(.page)
         .onChange(of: workoutManager.phase) { _, _ in
             // Nach Pause oder Fortsetzen zurück zu den Werten.
             withAnimation { page = 1 }
-            // Die Crown liefert nur Drehungen, solange die Ansicht den Fokus hat.
-            crownHasFocus = true
-        }
-        // Nach dem Entsperren schaltet eine weitere Crown-Drehung den nächsten Abschnitt weiter. Das
-        // Entsperren selbst übernimmt das System.
-        .focusable()
-        .focused($crownHasFocus)
-        .onAppear { crownHasFocus = true }
-        .digitalCrownRotation($crown, from: -20, through: 20, by: 1, sensitivity: .medium, isContinuous: false, isHapticFeedbackEnabled: true)
-        .onChange(of: crown) { _, value in
-            if workoutManager.crownMoved(value) { crown = 0 }
-        }
-        .onReceive(Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()) { _ in
-            workoutManager.tickWaterLock()
-            // Reste einer Drehung verfallen, sobald die Uhr wieder gesperrt ist.
-            if workoutManager.isWaterLocked {
-                if crown != 0 { crown = 0 }
-            } else if workoutManager.evaluateCrown(crown) {
-                crown = 0
-            }
         }
     }
 }
 
-private struct WorkoutMetricsView: View {
+/// Crown-Steuerung für den Abschnittswechsel. Sitzt an jeder Seite, die sie braucht, und nicht am
+/// Seiten-Container: Die Crown geht an die Ansicht mit dem Fokus, und den bekommt nur die Seite, die
+/// gerade sichtbar ist (`isActive`).
+private struct CrownSectionControl: ViewModifier {
     @EnvironmentObject private var workoutManager: SwimWorkoutManager
+    let isActive: Bool
+    @State private var crown = 0.0
+    @FocusState private var focused: Bool
 
-    private var metrics: LiveSwimMetrics { workoutManager.metrics }
-
-    var body: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { context in
-            VStack(alignment: .leading, spacing: 2) {
-                Text(PlanFormatting.elapsed(workoutManager.elapsedTime(at: context.date)))
-                    .font(.system(.title, design: .rounded).monospacedDigit().weight(.semibold))
-                    .foregroundStyle(workoutManager.phase == .paused ? Color.orange : Color.yellow)
-                Text(PlanFormatting.meters(Int(metrics.distanceMeters)))
-                    .font(.system(.title2, design: .rounded).monospacedDigit())
-                Text("\(metrics.laps) Bahnen à \(workoutManager.poolLengthMeters) m")
-                    .font(.footnote)
-                if let pace = metrics.averagePaceSecondsPer100m {
-                    Text("\(PlanFormatting.pace(pace)) /100 m")
-                        .font(.footnote.monospacedDigit())
-                }
-                HStack(spacing: 8) {
-                    if let strokes = metrics.strokesPerLap {
-                        Text("\(Int(strokes.rounded())) Züge/Bahn")
-                    }
-                    if let heartRate = metrics.heartRate {
-                        Label("\(Int(heartRate.rounded()))", systemImage: "heart.fill")
-                            .foregroundStyle(.red)
-                    }
-                }
-                .font(.footnote.monospacedDigit())
+    func body(content: Content) -> some View {
+        content
+            .focusable(isActive)
+            .focused($focused)
+            .digitalCrownRotation($crown, from: -50.0, through: 50.0, by: 1.0, sensitivity: .high, isContinuous: false, isHapticFeedbackEnabled: true)
+            .onChange(of: crown) { _, value in
+                if workoutManager.crownMoved(value) { crown = 0 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
+            .onAppear { focused = isActive }
+            .onChange(of: isActive) { _, active in focused = active }
     }
 }
 
-/// Wo im Tagesplan man steht, gemessen an der geschwommenen Strecke.
-private struct WorkoutPlanView: View {
+/// Der laufende Abschnitt des Plans: Name, Equipment, Stand und was zu tun ist. Gemeinsam für die
+/// Startseite (kompakt) und die Plan-Seite.
+private struct SectionBlock: View {
     @EnvironmentObject private var workoutManager: SwimWorkoutManager
-    @EnvironmentObject private var planStore: WatchPlanStore
+    let compact: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            switch progress {
-            case nil, .noSets?:
-                Text("Kein Plan für heute")
-                    .foregroundStyle(.secondary)
-            case let .inProgress(position)?:
-                Text(position.set.name)
-                    .font(.headline)
-                // Was genau zu tun ist (locker, Technikübung, ...). Lange Texte werden verkleinert und
-                // nach sechs Zeilen gekürzt, damit Strecke und Schloss sichtbar bleiben.
-                if !position.set.instructions.isEmpty {
-                    Text(position.set.instructions)
-                        .font(.footnote)
-                        .lineLimit(6)
-                        .minimumScaleFactor(0.8)
-                }
-                Text(PlanFormatting.repetition(position))
-                    .font(.body.monospacedDigit())
-                Text(PlanFormatting.remaining(position))
-                    .font(.system(.title2, design: .rounded).monospacedDigit())
-                    .foregroundStyle(.blue)
+        switch workoutManager.progress {
+        case nil, .noSets?:
+            Text("Kein Plan für heute")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        case let .inProgress(position)?:
+            inProgress(position)
+        case let .completed(extraMeters)?:
+            Label("Plan geschafft", systemImage: "checkmark.circle.fill")
+                .font(.footnote)
+                .foregroundStyle(.green)
+            if extraMeters > 0 {
+                Text("+ \(PlanFormatting.meters(extraMeters))")
+                    .font(.caption2)
+            }
+        }
+    }
+
+    private func inProgress(_ position: PlanPosition) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text("\(position.setIndex + 1)/\(workoutManager.planSets.count) \(position.set.name)")
+                .font(compact ? .footnote.weight(.semibold) : .headline)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            if !position.set.equipment.isEmpty {
+                Label(PlanFormatting.equipment(position.set.equipment), systemImage: "backpack")
+                    .font(.caption)
+                    .foregroundStyle(.cyan)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            Text("\(PlanFormatting.repetition(position)) · \(PlanFormatting.remaining(position))")
+                .font(compact ? .caption.monospacedDigit() : .footnote.monospacedDigit())
+                .foregroundStyle(.blue)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            if !compact {
                 let details = PlanFormatting.setDetails(position.set)
                 if !details.isEmpty {
                     Text(details)
                         .font(.footnote.monospacedDigit())
                         .foregroundStyle(.secondary)
                 }
-
-            case let .completed(extraMeters)?:
-                Label("Plan geschafft", systemImage: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
-                if extraMeters > 0 {
-                    Text("+ \(PlanFormatting.meters(extraMeters))")
-                        .font(.footnote)
-                }
             }
-            controlHints
+            if !position.set.instructions.isEmpty {
+                Text(position.set.instructions)
+                    .font(.caption2)
+                    .foregroundStyle(compact ? Color.secondary : Color.primary)
+                    .lineLimit(compact ? 2 : 6)
+                    .minimumScaleFactor(0.8)
+            }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
+}
 
-    /// Schloss, Fortschritt der Crown, letzte erkannte Taste und eine Taste für den entsperrten Zustand.
-    /// Die Anzeigen zeigen auch, wo es hakt, falls eine Eingabe nicht ankommt.
-    private var controlHints: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Label(
-                workoutManager.isWaterLocked ? "Gesperrt" : "Entsperrt",
-                systemImage: workoutManager.isWaterLocked ? "lock.fill" : "lock.open.fill"
-            )
-            .font(.caption2)
-            .foregroundStyle(workoutManager.isWaterLocked ? Color.secondary : Color.yellow)
-            if !workoutManager.isWaterLocked {
+/// Kontrollzeile für Wassersperre, Crown und letzte Eingabe. Zeigt auch, wo es hakt, falls eine
+/// Eingabe nicht ankommt.
+private struct ControlStatusLine: View {
+    @EnvironmentObject private var workoutManager: SwimWorkoutManager
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            if workoutManager.crownProgress > 0 {
                 ProgressView(value: workoutManager.crownProgress)
                     .tint(.yellow)
-                Button("Nächster Abschnitt") {
-                    workoutManager.advanceSection()
-                }
-                .font(.footnote)
             }
-            Text("Tasten: \(workoutManager.lastGestureNote)")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+            Label(
+                workoutManager.lastGestureNote,
+                systemImage: workoutManager.isWaterLocked ? "lock.fill" : "lock.open.fill"
+            )
+            .font(.system(size: 11))
+            .foregroundStyle(workoutManager.isWaterLocked ? Color.secondary : Color.yellow)
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
         }
-        .padding(.top, 4)
     }
+}
 
-    private var progress: PlanProgressState? {
-        guard let plan = planStore.response?.plan else { return nil }
-        return PlanProgress.state(
-            sets: plan.sets,
-            swumMeters: workoutManager.metrics.distanceMeters,
-            advancedAt: workoutManager.sectionAdvances
-        )
+private struct WorkoutMetricsView: View {
+    @EnvironmentObject private var workoutManager: SwimWorkoutManager
+    let isCurrentPage: Bool
+
+    private var metrics: LiveSwimMetrics { workoutManager.metrics }
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(PlanFormatting.elapsed(workoutManager.elapsedTime(at: context.date)))
+                        .font(.system(.title3, design: .rounded).monospacedDigit().weight(.semibold))
+                        .foregroundStyle(workoutManager.phase == .paused ? Color.orange : Color.yellow)
+                    Spacer(minLength: 4)
+                    if let heartRate = metrics.heartRate {
+                        Label("\(Int(heartRate.rounded()))", systemImage: "heart.fill")
+                            .font(.footnote.monospacedDigit())
+                            .foregroundStyle(.red)
+                    }
+                }
+                SectionBlock(compact: true)
+                Spacer(minLength: 0)
+                HStack(spacing: 6) {
+                    Text(PlanFormatting.meters(Int(metrics.distanceMeters)))
+                    Text("\(metrics.laps) Bahnen")
+                    if let pace = metrics.averagePaceSecondsPer100m {
+                        Text(PlanFormatting.pace(pace))
+                    }
+                }
+                .font(.caption2.monospacedDigit())
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                ControlStatusLine()
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .modifier(CrownSectionControl(isActive: isCurrentPage))
+    }
+}
+
+/// Wo im Tagesplan man steht, mit allen Angaben zum Abschnitt.
+private struct WorkoutPlanView: View {
+    @EnvironmentObject private var workoutManager: SwimWorkoutManager
+    let isCurrentPage: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            SectionBlock(compact: false)
+            Spacer(minLength: 0)
+            Button("Nächster Abschnitt") {
+                workoutManager.advanceSection()
+            }
+            .font(.footnote)
+            ControlStatusLine()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .modifier(CrownSectionControl(isActive: isCurrentPage))
     }
 }
 
@@ -168,7 +194,7 @@ private struct WorkoutControlsView: View {
     @EnvironmentObject private var workoutManager: SwimWorkoutManager
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             if workoutManager.phase == .saving || workoutManager.phase == .starting {
                 ProgressView()
                 Text(workoutManager.phase == .saving ? "Speichert …" : "Startet …")
@@ -198,6 +224,13 @@ private struct WorkoutControlsView: View {
                         Text(workoutManager.phase == .paused ? "Weiter" : "Pause").font(.footnote)
                     }
                 }
+                Button {
+                    workoutManager.advanceSection()
+                } label: {
+                    Label("Nächster Abschnitt", systemImage: "forward.end.fill")
+                        .font(.footnote)
+                }
+                ControlStatusLine()
             }
             if let error = workoutManager.errorMessage {
                 Text(error)

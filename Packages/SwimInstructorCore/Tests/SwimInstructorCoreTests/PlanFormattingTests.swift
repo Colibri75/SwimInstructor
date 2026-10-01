@@ -85,4 +85,20 @@ final class PlanFormattingTests: XCTestCase {
         XCTAssertEqual(PlanFormatting.remaining(position), "noch 150 m")
         XCTAssertEqual(PlanFormatting.repetition(single), "1.200 m")
     }
+
+    func testEquipmentNamesAreGermanAndUnknownOnesStayReadable() {
+        XCTAssertEqual(PlanFormatting.equipmentName("pull_buoy"), "Pull Buoy")
+        XCTAssertEqual(PlanFormatting.equipmentName("paddles"), "Paddles")
+        XCTAssertEqual(PlanFormatting.equipmentName("fins"), "Flossen")
+        XCTAssertEqual(PlanFormatting.equipmentName("snorkel"), "Schnorchel")
+        XCTAssertEqual(PlanFormatting.equipmentName("kickboard"), "Kickboard")
+        XCTAssertEqual(PlanFormatting.equipmentName("ankle_band"), "Beinband")
+        XCTAssertEqual(PlanFormatting.equipmentName("hand_weights"), "Hand Weights")
+    }
+
+    func testEquipmentListIsCommaSeparatedAndEmptyWithoutItems() {
+        XCTAssertEqual(PlanFormatting.equipment(["pull_buoy", "paddles"]), "Pull Buoy, Paddles")
+        XCTAssertEqual(PlanFormatting.equipment([]), "")
+    }
 }
+

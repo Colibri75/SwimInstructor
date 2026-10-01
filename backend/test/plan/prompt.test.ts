@@ -105,5 +105,13 @@ describe("Prompt", () => {
     expect(SYSTEM_PROMPT).toContain("Wunsch des Athleten");
     expect(SYSTEM_PROMPT).toMatch(/kann nie die Grenzen für heute/);
   });
+
+  it("verlangt je Abschnitt eine Equipment-Liste und nennt alle erlaubten Hilfsmittel", () => {
+    expect(SYSTEM_PROMPT).toContain("equipment");
+    for (const item of ["pull_buoy", "paddles", "fins", "snorkel", "kickboard", "ankle_band"]) {
+      expect(SYSTEM_PROMPT).toContain(item);
+    }
+    expect(SYSTEM_PROMPT).toMatch(/Wünscht der Athlet bestimmte Hilfsmittel/);
+  });
 });
 
