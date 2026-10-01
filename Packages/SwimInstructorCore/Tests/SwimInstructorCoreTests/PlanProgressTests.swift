@@ -155,5 +155,67 @@ final class PlanProgressTests: XCTestCase {
 
         XCTAssertEqual(state.sectionIndex(setCount: sets.count), 1)
     }
-}
 
+    // MARK: - Abschnitt zurück
+
+    private func state(_ meters: Double, moves: [SectionMove]) -> PlanProgressState {
+        PlanProgress.state(sets: sets, swumMeters: meters, moves: moves)
+    }
+
+    private func move(_ meters: Double, _ direction: SectionDirection) -> SectionMove {
+        SectionMove(meters: meters, direction: direction)
+    }
+
+    func testGoingBackRestartsThePreviousSetAtThatPoint() {
+        // Hauptsatz läuft bei 500 m (zweite Wiederholung), zurück: Einschwimmen beginnt dort von vorn.
+        let atPress = position(state(500, moves: [move(500, .previous)]))
+        XCTAssertEqual(atPress?.set.name, "Einschwimmen")
+        XCTAssertEqual(atPress?.metersIntoRepetition, 0)
+
+        let later = position(state(560, moves: [move(500, .previous)]))
+        XCTAssertEqual(later?.set.name, "Einschwimmen")
+        XCTAssertEqual(later?.metersIntoRepetition, 60)
+    }
+
+    func testForwardAndBackCancelOut() {
+        // Bei 100 m weiter (Hauptsatz ab 100), bei 150 m zurück (Einschwimmen ab 150).
+        let position = position(state(200, moves: [move(100, .next), move(150, .previous)]))
+
+        XCTAssertEqual(position?.set.name, "Einschwimmen")
+        XCTAssertEqual(position?.metersIntoRepetition, 50)
+    }
+
+    func testGoingBackInTheFirstSetRestartsIt() {
+        let position = position(state(120, moves: [move(100, .previous)]))
+
+        XCTAssertEqual(position?.set.name, "Einschwimmen")
+        XCTAssertEqual(position?.metersIntoRepetition, 20)
+    }
+
+    func testGoingBackAfterTheEndReopensTheLastSet() {
+        // Plan nach 1600 m geschafft; bei 1620 m zurück: Ausschwimmen beginnt dort wieder.
+        let position = position(state(1650, moves: [move(1620, .previous)]))
+
+        XCTAssertEqual(position?.set.name, "Ausschwimmen")
+        XCTAssertEqual(position?.metersIntoRepetition, 30)
+    }
+
+    func testMovesAreAppliedInTheOrderTheyHappened() {
+        // Zwei Mal weiter bei 100 m, einmal zurück bei 100 m: Hauptsatz.
+        let position = position(state(100, moves: [move(100, .next), move(100, .next), move(100, .previous)]))
+
+        XCTAssertEqual(position?.set.name, "Hauptsatz")
+        XCTAssertEqual(position?.metersIntoRepetition, 0)
+    }
+
+    func testForwardAfterTheEndDoesNothing() {
+        XCTAssertEqual(state(1700, moves: [move(1650, .next)]), .completed(extraMeters: 100))
+    }
+
+    func testGoingBackWorksWithoutDistanceFromHealth() {
+        // 0 m: weiter, dann zurück ergibt wieder den ersten Abschnitt.
+        let state = PlanProgress.state(sets: sets, swumMeters: 0, moves: [move(0, .next), move(0, .previous)])
+
+        XCTAssertEqual(state.sectionIndex(setCount: sets.count), 0)
+    }
+}

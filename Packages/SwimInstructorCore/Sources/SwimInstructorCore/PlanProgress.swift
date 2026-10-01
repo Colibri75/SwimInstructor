@@ -30,45 +30,91 @@ public extension PlanProgressState {
     }
 }
 
+/// Richtung eines Abschnittswechsels von Hand.
+public enum SectionDirection: Equatable, Sendable {
+    case next
+    case previous
+}
+
+/// Ein Wechsel von Hand: bei welcher Strecke (Meter) und in welche Richtung.
+public struct SectionMove: Equatable, Sendable {
+    public let meters: Double
+    public let direction: SectionDirection
+
+    public init(meters: Double, direction: SectionDirection) {
+        self.meters = meters
+        self.direction = direction
+    }
+}
+
 /// Ordnet die Strecke der Uhr den Abschnitten des Plans zu.
 ///
 /// Bewusst nur über die Meter, nicht über Pausen oder Apples Satz-Erkennung: Die Uhr zählt Bahnen
 /// zuverlässig, Pausen am Beckenrand dagegen nicht immer. Wer einen Abschnitt kürzt, sieht darum
 /// einen Versatz; das ist einfacher zu verstehen als eine Zuordnung, die sich selbst korrigiert.
 ///
-/// Mit `advancedAt` kann der Athlet das von Hand korrigieren: Jeder Eintrag ist die Strecke, bei der er
-/// "nächster Abschnitt" ausgelöst hat. Der Abschnitt, in dem das passierte, gilt dort als beendet und
-/// der nächste beginnt an dieser Stelle.
+/// Mit `moves` kann der Athlet das von Hand korrigieren, in der Reihenfolge, in der er es getan hat:
+/// "nächster" beendet den Abschnitt, in dem er bei dieser Strecke gerade war, und der nächste beginnt
+/// dort; "vorheriger" beginnt den Abschnitt davor (oder den ersten von vorn) an dieser Stelle.
 public enum PlanProgress {
+    /// Wie `state(sets:swumMeters:moves:)`, nur mit Wechseln nach vorn: Jeder Eintrag ist die Strecke,
+    /// bei der der Athlet "nächster Abschnitt" ausgelöst hat.
     public static func state(sets: [PlanSet], swumMeters: Double, advancedAt: [Double] = []) -> PlanProgressState {
+        state(
+            sets: sets,
+            swumMeters: swumMeters,
+            moves: advancedAt.map { SectionMove(meters: $0, direction: .next) }
+        )
+    }
+
+    public static func state(sets: [PlanSet], swumMeters: Double, moves: [SectionMove]) -> PlanProgressState {
         let countable = sets.enumerated().filter { $0.element.repetitions > 0 && $0.element.distanceMeters > 0 }
         guard !countable.isEmpty else { return .noSets }
 
         let swum = max(0, swumMeters.rounded(.down))
-        let advances = advancedAt.map { max(0, $0.rounded(.down)) }.sorted()
-        var nextAdvance = 0
+        let ordered = moves
+            .enumerated()
+            .map { (offset: $0.offset, meters: max(0, $0.element.meters.rounded(.down)), direction: $0.element.direction) }
+            .sorted { ($0.meters, $0.offset) < ($1.meters, $1.offset) }
+
+        // `cursor` zeigt in `countable`; `countable.count` heißt: Plan geschafft. `start` ist die
+        // Strecke, bei der der Abschnitt unter dem Cursor begann.
+        var cursor = 0
         var start = 0.0
 
-        for (index, set) in countable {
-            let autoEnd = start + Double(set.totalMeters)
-            var end = autoEnd
-            // Ein Druck, der vor dem automatischen Ende dieses Abschnitts kam, beendet ihn dort.
-            // Spätere Drücke gehören zu späteren Abschnitten.
-            if nextAdvance < advances.count, advances[nextAdvance] < autoEnd {
-                end = max(advances[nextAdvance], start)
-                nextAdvance += 1
+        /// Läuft von selbst bis zu den Metern `meters` weiter, solange Abschnitte regulär enden.
+        func walk(to meters: Double) {
+            while cursor < countable.count {
+                let end = start + Double(countable[cursor].element.totalMeters)
+                guard meters >= end else { return }
+                start = end
+                cursor += 1
             }
-            if swum < end {
-                let into = Int(swum - start)
-                return .inProgress(PlanPosition(
-                    setIndex: index,
-                    set: set,
-                    repetition: into / set.distanceMeters + 1,
-                    metersIntoRepetition: into % set.distanceMeters
-                ))
-            }
-            start = end
         }
-        return .completed(extraMeters: Int(swum - start))
+
+        for move in ordered where move.meters <= swum {
+            let meters = move.meters
+            walk(to: meters)
+            switch move.direction {
+            case .next:
+                // Nach dem Ende des Plans gibt es nichts mehr weiterzuschalten.
+                guard cursor < countable.count else { continue }
+                cursor += 1
+            case .previous:
+                cursor = max(cursor - 1, 0)
+            }
+            start = meters
+        }
+        walk(to: swum)
+
+        guard cursor < countable.count else { return .completed(extraMeters: Int(swum - start)) }
+        let (index, set) = countable[cursor]
+        let into = Int(swum - start)
+        return .inProgress(PlanPosition(
+            setIndex: index,
+            set: set,
+            repetition: into / set.distanceMeters + 1,
+            metersIntoRepetition: into % set.distanceMeters
+        ))
     }
 }

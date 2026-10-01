@@ -37,12 +37,14 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
     @Published private(set) var planSets: [PlanSet] = []
     /// Stand im Plan: läuft mit der Strecke mit und springt bei einem Wechsel von Hand. `nil` ohne Plan.
     @Published private(set) var progress: PlanProgressState?
-    /// Strecke (Meter), bei der der Athlet "nächster Abschnitt" von Hand ausgelöst hat.
-    @Published private(set) var sectionAdvances: [Double] = []
+    /// Abschnittswechsel von Hand (Strecke und Richtung), in der Reihenfolge, in der sie passierten.
+    @Published private(set) var sectionMoves: [SectionMove] = []
     /// Wassersperre an? Wird zweimal pro Sekunde aktualisiert.
     @Published private(set) var isWaterLocked = true
     /// Wie weit die Crown am Stück gedreht ist (0 bis 1). Zeigt auf der Uhr, ob Drehungen ankommen.
     @Published private(set) var crownProgress = 0.0
+    /// Richtung der laufenden Crown-Drehung (hoch = weiter, runter = zurück), `nil` ohne Drehung.
+    @Published private(set) var crownStep: CrownStep?
     /// Letztes Ereignis (Wechsel, Pause von der Uhr), als Kontrolle auf der Uhr.
     @Published private(set) var lastGestureNote = "noch nichts"
 
@@ -63,7 +65,7 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         metrics = .zero
         lapEvents = 0
         planSets = plan?.sets ?? []
-        sectionAdvances = []
+        sectionMoves = []
         progress = nil
         recomputeProgress()
         waterLock = WaterLockControl()
@@ -137,7 +139,7 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         phase = .idle
         metrics = .zero
         planSets = []
-        sectionAdvances = []
+        sectionMoves = []
         progress = nil
         sectionGesture.reset()
         errorMessage = nil
@@ -150,28 +152,47 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
 
     // MARK: - Abschnitte
 
-    /// Nächster Abschnitt von Hand: Der laufende gilt an der aktuellen Strecke als beendet. Das
-    /// funktioniert auch ohne Streckenangabe aus Health (dann bei 0 m) und bei pausierter Einheit.
+    /// Nächster Abschnitt von Hand: Der laufende gilt an der aktuellen Strecke als beendet.
     func advanceSection(source: String = "Taste") {
+        moveSection(.next, source: source)
+    }
+
+    /// Wechsel von Hand in eine Richtung. Funktioniert auch ohne Streckenangabe aus Health (dann bei
+    /// 0 m) und bei pausierter Einheit.
+    func moveSection(_ direction: SectionDirection, source: String) {
         guard phase == .running || phase == .paused else {
             lastGestureNote = "\(source): Einheit läuft nicht"
             return
         }
-        guard hasNextSection else {
-            lastGestureNote = planSets.isEmpty ? "\(source): kein Plan" : "\(source): kein weiterer Abschnitt"
+        guard !planSets.isEmpty else {
+            lastGestureNote = "\(source): kein Plan"
+            return
+        }
+        guard canMove(direction) else {
+            lastGestureNote = direction == .next ? "\(source): kein weiterer Abschnitt" : "\(source): schon im ersten Abschnitt"
             return
         }
         let meters = metrics.progressMeters(poolLengthMeters: poolLengthMeters)
-        sectionAdvances.append(meters)
+        sectionMoves.append(SectionMove(meters: meters, direction: direction))
         recomputeProgress()
-        lastGestureNote = "\(source): weiter bei \(Int(meters)) m"
+        let name = direction == .next ? "weiter" : "zurück"
+        lastGestureNote = "\(source): \(name) bei \(Int(meters)) m"
         if phase == .running { lockWater() }
     }
 
-    private var hasNextSection: Bool {
+    private func canMove(_ direction: SectionDirection) -> Bool {
         guard let progress else { return false }
-        if case .inProgress = progress { return true }
-        return false
+        switch (direction, progress) {
+        case (.next, .inProgress): return true
+        case (.previous, .inProgress(let position)): return position.setIndex > firstCountableIndex
+        case (.previous, .completed): return true
+        default: return false
+        }
+    }
+
+    /// Erster Abschnitt mit Strecke (Abschnitte ohne Meter zählen nicht).
+    private var firstCountableIndex: Int {
+        planSets.firstIndex { $0.repetitions > 0 && $0.distanceMeters > 0 } ?? 0
     }
 
     /// Rechnet den Stand im Plan aus Strecke und Wechseln von Hand neu. Springt der Abschnitt weiter,
@@ -184,13 +205,16 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         let new = PlanProgress.state(
             sets: planSets,
             swumMeters: metrics.progressMeters(poolLengthMeters: poolLengthMeters),
-            advancedAt: sectionAdvances
+            moves: sectionMoves
         )
         guard new != progress else { return }
         let oldIndex = progress?.sectionIndex(setCount: planSets.count)
         progress = new
-        if let oldIndex, oldIndex != new.sectionIndex(setCount: planSets.count) {
-            WKInterfaceDevice.current().play(.directionUp)
+        if let oldIndex {
+            let newIndex = new.sectionIndex(setCount: planSets.count)
+            if newIndex != oldIndex {
+                WKInterfaceDevice.current().play(newIndex > oldIndex ? .directionUp : .directionDown)
+            }
         }
     }
 
@@ -224,26 +248,32 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         let locked = WKInterfaceDevice.current().isWaterLockEnabled
         if locked != isWaterLocked { isWaterLocked = locked }
         crown.resetIfIdle(at: now)
-        let crownValue = crown.progress(isLocked: locked)
-        if crownValue != crownProgress { crownProgress = crownValue }
+        publishCrown(isLocked: locked)
         if waterLock.update(isRunning: phase == .running, isLocked: locked, now: now) == .lock {
             lockWater()
         }
     }
 
+    /// Setzt nur Werte, die sich ändern, damit die Ansicht nicht ohne Grund neu zeichnet.
+    private func publishCrown(isLocked: Bool) {
+        let value = crown.progress(isLocked: isLocked)
+        if value != crownProgress { crownProgress = value }
+        let step = crown.step
+        if step != crownStep { crownStep = step }
+    }
+
     /// Die Crown wurde bewegt (neuer Wert seit dem letzten Zurücksetzen). Weit genug am Stück gedreht:
-    /// nächster Abschnitt, bei Wassersperre und entsperrt, in beide Richtungen. `true`: Der Aufrufer
-    /// setzt die Crown auf 0 zurück.
+    /// nach oben der nächste, nach unten der vorherige Abschnitt, bei Wassersperre und entsperrt.
+    /// `true`: Der Aufrufer setzt die Crown auf 0 zurück.
     func crownMoved(_ value: Double, now: Date = Date()) -> Bool {
         let locked = WKInterfaceDevice.current().isWaterLockEnabled
         waterLock.noteInput(now: now)
         let reached = crown.moved(to: value, isLocked: locked, at: now)
-        let crownValue = crown.progress(isLocked: locked)
-        if crownValue != crownProgress { crownProgress = crownValue }
-        if reached {
-            advanceSection(source: "Krone")
+        publishCrown(isLocked: locked)
+        if let reached {
+            moveSection(reached.direction, source: "Krone")
         }
-        let needsReset = reached || abs(value) > 30
+        let needsReset = reached != nil || abs(value) > 30
         if needsReset { crown.rebase() }
         return needsReset
     }

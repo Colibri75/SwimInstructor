@@ -36,7 +36,7 @@ private struct CrownSectionControl: ViewModifier {
         content
             .focusable(isActive)
             .focused($focused)
-            .digitalCrownRotation($crown, from: -50.0, through: 50.0, by: 1.0, sensitivity: .high, isContinuous: false, isHapticFeedbackEnabled: true)
+            .digitalCrownRotation($crown, from: -50.0, through: 50.0, by: 1.0, sensitivity: .medium, isContinuous: false, isHapticFeedbackEnabled: true)
             .onChange(of: crown) { _, value in
                 if workoutManager.crownMoved(value) { crown = 0 }
             }
@@ -116,7 +116,7 @@ private struct ControlStatusLine: View {
         VStack(alignment: .leading, spacing: 1) {
             if workoutManager.crownProgress > 0 {
                 ProgressView(value: workoutManager.crownProgress)
-                    .tint(.yellow)
+                    .tint(workoutManager.crownStep == .previous ? Color.orange : Color.yellow)
             }
             Label(
                 workoutManager.lastGestureNote,
