@@ -39,14 +39,18 @@ export class PlanService {
     this.now = deps.now ?? (() => new Date());
   }
 
-  async planForToday(snapshot: Snapshot): Promise<PlanResult> {
+  /**
+   * @param options.regenerate Den Cache uebergehen und Claude neu fragen. Das zaehlt gegen das
+   *   Erzeugungsbudget, bei Ausfall oder erschoepftem Budget kommt wie sonst der letzte Plan.
+   */
+  async planForToday(snapshot: Snapshot, options: { regenerate?: boolean } = {}): Promise<PlanResult> {
     const { generator, store, budget, logger } = this.deps;
     const today = localDate(this.now(), this.deps.timezone);
     const hash = snapshotHash(snapshot);
 
     // Derselbe Zustand am selben Tag: den schon erzeugten Plan wiederverwenden, das spart Claude-Kosten.
     const stored = await this.latestOrNull();
-    if (stored && stored.date === today && stored.snapshotHash === hash) {
+    if (options.regenerate !== true && stored && stored.date === today && stored.snapshotHash === hash) {
       logger.info({ date: today }, "plan served from cache");
       return { source: "cache", date: stored.date, generatedAt: stored.generatedAt, stale: false, plan: stored.plan, adjustments: stored.adjustments };
     }

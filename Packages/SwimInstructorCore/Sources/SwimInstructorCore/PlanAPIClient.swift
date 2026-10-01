@@ -64,6 +64,15 @@ extension URLSession: HTTPTransport {
 
 public protocol PlanProviding: Sendable {
     func fetchTodayPlan(for snapshot: AthleteStateSnapshot) async throws -> PlanResponse
+    /// Wie `fetchTodayPlan`, aber der Server fragt Claude auch dann neu, wenn für denselben
+    /// Zustand heute schon ein Plan vorliegt (Ziehen zum Aktualisieren).
+    func fetchNewPlan(for snapshot: AthleteStateSnapshot) async throws -> PlanResponse
+}
+
+public extension PlanProviding {
+    func fetchNewPlan(for snapshot: AthleteStateSnapshot) async throws -> PlanResponse {
+        try await fetchTodayPlan(for: snapshot)
+    }
 }
 
 /// Spricht mit dem Backend aus M4/M5: `POST /v1/plan/today` und `GET /v1/status`.
@@ -82,10 +91,18 @@ public struct PlanAPIClient: PlanProviding {
     }
 
     public func fetchTodayPlan(for snapshot: AthleteStateSnapshot) async throws -> PlanResponse {
+        try await requestPlan(for: snapshot, regenerate: false)
+    }
+
+    public func fetchNewPlan(for snapshot: AthleteStateSnapshot) async throws -> PlanResponse {
+        try await requestPlan(for: snapshot, regenerate: true)
+    }
+
+    private func requestPlan(for snapshot: AthleteStateSnapshot, regenerate: Bool) async throws -> PlanResponse {
         var request = makeRequest(path: "v1/plan/today", timeout: Self.planTimeout)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try AthleteStateSnapshot.jsonEncoder().encode(PlanRequestBody(snapshot: snapshot))
+        request.httpBody = try AthleteStateSnapshot.jsonEncoder().encode(PlanRequestBody(snapshot: snapshot, regenerate: regenerate ? true : nil))
 
         let (data, response) = try await perform(request)
         switch response.statusCode {
@@ -118,6 +135,8 @@ public struct PlanAPIClient: PlanProviding {
 
     private struct PlanRequestBody: Encodable {
         let snapshot: AthleteStateSnapshot
+        /// Fehlt im JSON, wenn `nil`: Der Server nimmt dann seinen Cache.
+        let regenerate: Bool?
     }
 
     private struct ErrorBody: Decodable {

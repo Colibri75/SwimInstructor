@@ -65,16 +65,17 @@ public final class TodayPlanLoader: ObservableObject {
     /// noch keiner von heute da ist. Jeder Serveraufruf mit geändertem Zustand kann einen
     /// Claude-Aufruf auslösen, darum nicht bei jedem Öffnen.
     public func refreshIfNeeded() async {
-        await load(fetchPlan: !hasFreshPlanForToday)
+        await load(fetchPlan: !hasFreshPlanForToday, regenerate: false)
     }
 
-    /// Ziehen zum Aktualisieren: Health lesen und den Plan in jedem Fall anfragen. Hat sich der
-    /// Zustand nicht geändert, antwortet der Server aus seinem Cache, ohne Claude zu fragen.
+    /// Ziehen zum Aktualisieren: Health lesen und in jedem Fall einen **neuen** Plan von Claude holen,
+    /// auch wenn sich der Zustand nicht geändert hat. Das kostet einen Aufruf (rund 4 Cent); der
+    /// Server begrenzt die Zahl der Pläne pro Stunde und Tag.
     public func refresh() async {
-        await load(fetchPlan: true)
+        await load(fetchPlan: true, regenerate: true)
     }
 
-    private func load(fetchPlan: Bool) async {
+    private func load(fetchPlan: Bool, regenerate: Bool) async {
         guard !isLoading else { return }
 
         isLoadingHealth = true
@@ -97,7 +98,9 @@ public final class TodayPlanLoader: ObservableObject {
         isLoadingPlan = true
         defer { isLoadingPlan = false }
         do {
-            let fresh = try await provider.fetchTodayPlan(for: snapshot)
+            let fresh = regenerate
+                ? try await provider.fetchNewPlan(for: snapshot)
+                : try await provider.fetchTodayPlan(for: snapshot)
             response = fresh
             planError = nil
             // Speichern ist Komfort; scheitert es, ist der Plan trotzdem da.

@@ -29,6 +29,18 @@ final class PlanAPIClientTests: XCTestCase {
         XCTAssertEqual(volume["last_seven_days_meters"] as? Double, 1500)
     }
 
+    func testNewPlanRequestAsksTheServerToRegenerate() async throws {
+        let transport = StubTransport(status: 200, body: TestFixtures.responseJSON)
+        let client = PlanAPIClient(configuration: configuration, transport: transport)
+
+        _ = try await client.fetchNewPlan(for: TestFixtures.snapshot)
+
+        let body = try XCTUnwrap(transport.requests.first?.httpBody)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        XCTAssertEqual(json["regenerate"] as? Bool, true)
+        XCTAssertNotNil(json["snapshot"] as? [String: Any])
+    }
+
     func testUnauthorized() async {
         await assertThrows(status: 401, body: #"{"error":"unauthorized"}"#, expected: .unauthorized)
     }

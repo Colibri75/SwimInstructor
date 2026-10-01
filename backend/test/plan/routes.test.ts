@@ -47,6 +47,23 @@ describe("POST /v1/plan/today", () => {
     expect(response.body.fallback_reason).toBeUndefined();
   });
 
+  it("fragt Claude bei regenerate: true erneut, auch wenn der Zustand gleich ist", async () => {
+    const generate = ok();
+    const app = appWith(generate);
+
+    await request(app).post("/v1/plan/today").set(auth).send({ snapshot: snapshot() });
+    const second = await request(app).post("/v1/plan/today").set(auth).send({ snapshot: snapshot(), regenerate: true });
+
+    expect(generate).toHaveBeenCalledTimes(2);
+    expect(second.body.source).toBe("claude");
+  });
+
+  it("lehnt ein regenerate ab, das kein Boolean ist", async () => {
+    const response = await request(appWith(ok())).post("/v1/plan/today").set(auth).send({ snapshot: snapshot(), regenerate: "ja" });
+
+    expect(response.status).toBe(400);
+  });
+
   it("antwortet beim zweiten Aufruf aus dem Cache, ohne Claude erneut zu fragen", async () => {
     const generate = ok();
     const app = appWith(generate);
