@@ -367,6 +367,9 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
 - **Anzeige beim Schwimmen** (seitlich wischen): Steuerung · Zeit, Strecke, Bahnen, Pace (Schnitt
   inkl. Pausen), Züge pro Bahn, Puls · Stand im Plan ("Hauptsatz, 3 von 6 × 200 m, noch 150 m").
   Die Zuordnung zum Plan läuft nur über die Meter (`PlanProgress`), nicht über Pausen.
+  Unter dem Namen des Abschnitts steht die Anweisung aus dem Plan ("Locker kraulen", Technikübung mit
+  Erklärung), bis zu sechs Zeilen, verkleinert bei langen Texten. In der Plan-Liste vor dem Start steht sie
+  in voller Länge.
 - **Wassersperre und Crown-Steuerung:** Solange die Einheit läuft, ist die Wassersperre an. Sie geht
   nach "Weiter", nach einem Abschnittswechsel und nach 20 Sekunden ohne Eingabe von selbst wieder an.
   Entsperren übernimmt das System (Crown drehen). **Danach schaltet eine weitere Drehung der Crown nach

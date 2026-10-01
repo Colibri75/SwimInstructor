@@ -86,12 +86,6 @@ private struct WorkoutPlanView: View {
     @EnvironmentObject private var planStore: WatchPlanStore
 
     var body: some View {
-        ScrollView {
-            planContent
-        }
-    }
-
-    private var planContent: some View {
         VStack(alignment: .leading, spacing: 4) {
             switch progress {
             case nil, .noSets?:
@@ -100,6 +94,14 @@ private struct WorkoutPlanView: View {
             case let .inProgress(position)?:
                 Text(position.set.name)
                     .font(.headline)
+                // Was genau zu tun ist (locker, Technikübung, ...). Lange Texte werden verkleinert und
+                // nach sechs Zeilen gekürzt, damit Strecke und Schloss sichtbar bleiben.
+                if !position.set.instructions.isEmpty {
+                    Text(position.set.instructions)
+                        .font(.footnote)
+                        .lineLimit(6)
+                        .minimumScaleFactor(0.8)
+                }
                 Text(PlanFormatting.repetition(position))
                     .font(.body.monospacedDigit())
                 Text(PlanFormatting.remaining(position))
@@ -138,9 +140,6 @@ private struct WorkoutPlanView: View {
             if !workoutManager.isWaterLocked {
                 ProgressView(value: workoutManager.crownProgress)
                     .tint(.yellow)
-                Text("Krone drehen = nächster Abschnitt")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
                 Button("Nächster Abschnitt") {
                     workoutManager.advanceSection()
                 }
@@ -149,6 +148,8 @@ private struct WorkoutPlanView: View {
             Text("Tasten: \(workoutManager.lastGestureNote)")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
         }
         .padding(.top, 4)
     }
