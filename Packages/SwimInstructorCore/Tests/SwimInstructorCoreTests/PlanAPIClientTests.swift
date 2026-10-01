@@ -102,6 +102,28 @@ final class PlanAPIClientTests: XCTestCase {
         }
     }
 
+    func testNetworkErrorsAreDescribedInGerman() {
+        XCTAssertTrue(PlanAPIClient.describe(URLError(.cannotFindHost)).contains("auflösen"))
+        XCTAssertTrue(PlanAPIClient.describe(URLError(.dnsLookupFailed)).contains("DNS"))
+        XCTAssertTrue(PlanAPIClient.describe(URLError(.notConnectedToInternet)).contains("keine Internetverbindung"))
+        XCTAssertTrue(PlanAPIClient.describe(URLError(.timedOut)).contains("rechtzeitig"))
+        XCTAssertTrue(PlanAPIClient.describe(URLError(.cannotConnectToHost)).contains("nicht erreichbar"))
+        XCTAssertTrue(PlanAPIClient.describe(URLError(.serverCertificateUntrusted)).contains("Zertifikat"))
+        // Alles andere behält den Systemtext.
+        XCTAssertEqual(PlanAPIClient.describe(URLError(.badURL)), URLError(.badURL).localizedDescription)
+        XCTAssertEqual(PlanAPIClient.describe(TestError(message: "sonst")), "sonst")
+    }
+
+    func testHostLookupFailureReachesTheUserAsGermanText() async {
+        let client = PlanAPIClient(configuration: configuration, transport: StubTransport(error: URLError(.cannotFindHost)))
+        do {
+            _ = try await client.fetchTodayPlan(for: TestFixtures.snapshot)
+            XCTFail("Fehler erwartet")
+        } catch {
+            XCTAssertTrue(error.localizedDescription.hasPrefix("Keine Verbindung zum Server: Der Servername lässt sich nicht auflösen"))
+        }
+    }
+
     func testNetworkFailure() async {
         let client = PlanAPIClient(
             configuration: configuration,

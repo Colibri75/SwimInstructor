@@ -183,7 +183,26 @@ public struct PlanAPIClient: PlanProviding {
         } catch let error as PlanAPIError {
             throw error
         } catch {
-            throw PlanAPIError.network(error.localizedDescription)
+            throw PlanAPIError.network(Self.describe(error))
+        }
+    }
+
+    /// Deutsche, verständliche Meldung statt des Systemtexts (der je nach Gerätesprache englisch kommt).
+    static func describe(_ error: Error) -> String {
+        guard let urlError = error as? URLError else { return error.localizedDescription }
+        switch urlError.code {
+        case .cannotFindHost, .dnsLookupFailed:
+            return "Der Servername lässt sich nicht auflösen (DNS). Probiere WLAN statt Mobilfunk oder umgekehrt und prüfe die Server-Adresse in den Einstellungen."
+        case .notConnectedToInternet, .dataNotAllowed, .internationalRoamingOff:
+            return "Das iPhone hat gerade keine Internetverbindung."
+        case .timedOut:
+            return "Der Server hat nicht rechtzeitig geantwortet."
+        case .cannotConnectToHost, .networkConnectionLost:
+            return "Der Server ist nicht erreichbar."
+        case .secureConnectionFailed, .serverCertificateUntrusted, .serverCertificateHasBadDate, .serverCertificateHasUnknownRoot, .serverCertificateNotYetValid:
+            return "Die gesicherte Verbindung zum Server ist fehlgeschlagen (Zertifikat)."
+        default:
+            return error.localizedDescription
         }
     }
 
