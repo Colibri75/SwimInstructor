@@ -1,21 +1,43 @@
 import SwiftUI
 import SwimInstructorCore
 
-/// Heute-Bildschirm: Plan für heute, Zustand in Kürze, bisherige Einheiten.
+/// Heute-Bildschirm: der Teil des Wochenplans, der heute ansteht, die Einheit für heute und ein paar
+/// allgemeine Statistiken.
 struct TodayView: View {
     @EnvironmentObject private var loader: TodayPlanLoader
+    @EnvironmentObject private var weekLoader: WeekPlanLoader
     @EnvironmentObject private var settings: BackendSettings
     @Environment(\.scenePhase) private var scenePhase
     @State private var showsSettings = false
     @State private var wishDraft = ""
 
+    private let onShowWeek: () -> Void
+    private let progress = WeekProgressCalculator()
+
+    /// - Parameter onShowWeek: wechselt in den Tab "Woche" (für den Hinweis ohne Wochenplan).
+    init(onShowWeek: @escaping () -> Void = {}) {
+        self.onShowWeek = onShowWeek
+    }
+
+    /// Stand der laufenden Woche gegen den Plan, aus Health und dem gespeicherten Wochenplan.
+    private var weekStatuses: [WeekDayStatus] {
+        progress.statuses(
+            plan: weekLoader.week(starting: weekLoader.currentWeekStart),
+            weekStart: weekLoader.currentWeekStart,
+            workouts: loader.reading?.workouts ?? [],
+            now: Date()
+        )
+    }
+
     var body: some View {
         NavigationStack {
             List {
+                weekTodaySection
                 planSection
                 wishSection
                 if let reading = loader.reading {
-                    Section("Dein Stand") {
+                    Section("Statistik") {
+                        WeekStatsRows(summary: progress.summary(of: weekStatuses), hasPlan: weekLoader.week(starting: weekLoader.currentWeekStart) != nil)
                         StateSummaryView(reading: reading)
                     }
                 }
@@ -48,6 +70,52 @@ struct TodayView: View {
         }
     }
 
+    // MARK: - Heute im Wochenplan
+
+    /// Was der Wochenplan für heute vorgibt. Die Details der Einheit stehen darunter.
+    @ViewBuilder
+    private var weekTodaySection: some View {
+        Section {
+            if let entry = weekLoader.todayEntry {
+                let state = weekStatuses.first { $0.date == weekLoader.todayKey }?.state
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(entry.isRestDay
+                             ? (entry.isUnavailable ? "Keine Zeit" : "Ruhetag")
+                             : "\(PlanFormatting.sessionType(entry.sessionType)) · \(PlanFormatting.meters(entry.targetDistanceMeters))")
+                            .font(.headline)
+                        Spacer()
+                        if let state {
+                            Text(PlanFormatting.stateText(state))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    if !entry.focus.isEmpty, !entry.isRestDay {
+                        Text(entry.focus)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if !entry.isRestDay {
+                        Text("ca. \(entry.estimatedDurationMinutes) min · \(PlanFormatting.intensity(entry.intensity))")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.vertical, 2)
+            } else {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Für heute gibt es keinen Eintrag im Wochenplan.")
+                    Button("Zum Wochenplan") { onShowWeek() }
+                }
+                .padding(.vertical, 2)
+            }
+        } header: {
+            Text("Heute im Wochenplan")
+        }
+    }
+
     // MARK: - Plan
 
     @ViewBuilder
@@ -71,7 +139,7 @@ struct TodayView: View {
                     .foregroundStyle(.orange)
             }
         } header: {
-            Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+            Text("Deine Einheit, \(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))")
         }
     }
 
@@ -136,18 +204,37 @@ struct TodayView: View {
 
     @ViewBuilder
     private var workoutsSection: some View {
-        Section("Bisherige Einheiten") {
+        Section("Letzte Einheiten") {
             if loader.isLoadingHealth && loader.reading == nil {
                 ProgressView()
             } else if let error = loader.healthError {
                 Text("Health: \(error)").foregroundStyle(.red)
             } else if let workouts = loader.reading?.workouts, !workouts.isEmpty {
-                ForEach(workouts.prefix(20)) { workout in
+                ForEach(workouts.prefix(5)) { workout in
                     SwimWorkoutRow(workout: workout)
                 }
             } else {
                 Text("Noch keine Schwimm-Workouts gefunden")
                     .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+/// Die Woche in Zahlen: geschwommen gegen geplant, Einheiten.
+private struct WeekStatsRows: View {
+    let summary: WeekSummary
+    let hasPlan: Bool
+
+    var body: some View {
+        LabeledContent("Diese Woche") {
+            Text(hasPlan
+                 ? "\(PlanFormatting.meters(summary.swumMeters)) von \(PlanFormatting.meters(summary.plannedMeters))"
+                 : PlanFormatting.meters(summary.swumMeters))
+        }
+        if hasPlan {
+            LabeledContent("Einheiten der Woche") {
+                Text("\(summary.sessionsDone) von \(summary.sessionsDue) fälligen, \(summary.sessionsPlanned) geplant")
             }
         }
     }

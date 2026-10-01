@@ -35,8 +35,8 @@ public enum PlanAPIError: Error, Equatable, LocalizedError {
         case .invalidRequest(let details):
             let suffix = details.isEmpty ? "" : " (\(details.joined(separator: ", ")))"
             return "Der Server hat die Trainingsdaten abgelehnt\(suffix)."
-        case .planUnavailable:
-            return "Claude ist gerade nicht erreichbar und es gibt noch keinen früheren Plan."
+        case .planUnavailable(let reason):
+            return "Kein neuer Plan: \(PlanFormatting.fallbackReason(reason))"
         case .server(let status):
             return "Der Server hat mit Status \(status) geantwortet."
         case .network(let message):
@@ -68,10 +68,13 @@ public struct PlanRequestOptions: Equatable, Sendable {
     public var regenerate: Bool
     /// Freitext-Wunsch des Athleten für heute.
     public var wishes: String?
+    /// Vorgabe des Wochenplans für heute (Typ, Intensität, Umfang, Schwerpunkt).
+    public var dayPlan: DayPlanTarget?
 
-    public init(regenerate: Bool = false, wishes: String? = nil) {
+    public init(regenerate: Bool = false, wishes: String? = nil, dayPlan: DayPlanTarget? = nil) {
         self.regenerate = regenerate
         self.wishes = wishes
+        self.dayPlan = dayPlan
     }
 }
 
@@ -113,7 +116,8 @@ public struct PlanAPIClient: PlanProviding {
         request.httpBody = try AthleteStateSnapshot.jsonEncoder().encode(PlanRequestBody(
             snapshot: snapshot,
             regenerate: options.regenerate ? true : nil,
-            wishes: Self.cleaned(options.wishes)
+            wishes: Self.cleaned(options.wishes),
+            dayPlan: options.dayPlan
         ))
 
         let (data, response) = try await perform(request)
@@ -157,6 +161,8 @@ public struct PlanAPIClient: PlanProviding {
         let regenerate: Bool?
         /// Fehlt im JSON ohne Wunsch.
         let wishes: String?
+        /// Fehlt im JSON ohne Wochenplan.
+        let dayPlan: DayPlanTarget?
     }
 
     private struct ErrorBody: Decodable {
@@ -210,3 +216,99 @@ public struct PlanAPIClient: PlanProviding {
         status == 401 ? .unauthorized : .server(status: status)
     }
 }
+
+// MARK: - Wochenplan
+
+/// Ein schon geschwommener Tag der Woche, der mit der Wochenplan-Anfrage mitgeht.
+public struct SwumDay: Codable, Equatable, Sendable {
+    public let date: String
+    public let meters: Double
+
+    public init(date: String, meters: Double) {
+        self.date = date
+        self.meters = meters
+    }
+}
+
+/// Anfrage für `POST /v1/plan/week`.
+public struct WeekPlanRequest: Equatable, Sendable {
+    public var snapshot: AthleteStateSnapshot
+    /// Montag der Woche, `yyyy-MM-dd`.
+    public var weekStart: String
+    /// Erster zu planender Tag: heute oder der Montag einer kommenden Woche.
+    public var fromDate: String
+    public var today: String
+    /// Tage ohne Zeit, sie werden Ruhetage.
+    public var unavailableDates: [String]
+    /// Was vor `fromDate` in dieser Woche schon geschwommen wurde.
+    public var swumThisWeek: [SwumDay]
+    public var wishes: String?
+
+    public init(
+        snapshot: AthleteStateSnapshot,
+        weekStart: String,
+        fromDate: String,
+        today: String,
+        unavailableDates: [String] = [],
+        swumThisWeek: [SwumDay] = [],
+        wishes: String? = nil
+    ) {
+        self.snapshot = snapshot
+        self.weekStart = weekStart
+        self.fromDate = fromDate
+        self.today = today
+        self.unavailableDates = unavailableDates
+        self.swumThisWeek = swumThisWeek
+        self.wishes = wishes
+    }
+}
+
+public protocol WeekPlanProviding: Sendable {
+    func fetchWeekPlan(_ request: WeekPlanRequest) async throws -> WeekPlanResponse
+}
+
+extension PlanAPIClient: WeekPlanProviding {
+    public func fetchWeekPlan(_ weekRequest: WeekPlanRequest) async throws -> WeekPlanResponse {
+        var request = makeRequest(path: "v1/plan/week", timeout: Self.planTimeout)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try AthleteStateSnapshot.jsonEncoder().encode(WeekRequestBody(
+            snapshot: weekRequest.snapshot,
+            weekStart: weekRequest.weekStart,
+            fromDate: weekRequest.fromDate,
+            today: weekRequest.today,
+            unavailableDates: weekRequest.unavailableDates,
+            swumThisWeek: weekRequest.swumThisWeek,
+            wishes: Self.cleaned(weekRequest.wishes)
+        ))
+
+        let (data, response) = try await perform(request)
+        switch response.statusCode {
+        case 200:
+            do {
+                return try PlanResponse.jsonDecoder().decode(WeekPlanResponse.self, from: data)
+            } catch {
+                throw PlanAPIError.invalidResponse(String(describing: error))
+            }
+        case 400:
+            let body = try? JSONDecoder().decode(ErrorBody.self, from: data)
+            throw PlanAPIError.invalidRequest(details: body?.details?.map { "\($0.path): \($0.message)" } ?? [])
+        case 503:
+            let body = try? JSONDecoder().decode(ErrorBody.self, from: data)
+            throw PlanAPIError.planUnavailable(reason: body?.reason)
+        default:
+            throw statusError(response.statusCode)
+        }
+    }
+
+    private struct WeekRequestBody: Encodable {
+        let snapshot: AthleteStateSnapshot
+        let weekStart: String
+        let fromDate: String
+        let today: String
+        let unavailableDates: [String]
+        let swumThisWeek: [SwumDay]
+        let wishes: String?
+    }
+}
+

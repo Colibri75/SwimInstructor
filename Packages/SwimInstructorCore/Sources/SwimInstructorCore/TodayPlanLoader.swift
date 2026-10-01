@@ -28,6 +28,7 @@ public final class TodayPlanLoader: ObservableObject {
     private let cache: PlanCaching
     private let history: PlanHistoryStoring?
     private let wishStore: DailyWishStoring?
+    private let dayTarget: @MainActor () -> DayPlanTarget?
     private let now: () -> Date
     private let calendar: Calendar
 
@@ -39,6 +40,7 @@ public final class TodayPlanLoader: ObservableObject {
         cache: PlanCaching,
         history: PlanHistoryStoring? = nil,
         wishStore: DailyWishStoring? = nil,
+        dayTarget: @escaping @MainActor () -> DayPlanTarget? = { nil },
         now: @escaping () -> Date = { Date() },
         calendar: Calendar = .current
     ) {
@@ -48,6 +50,7 @@ public final class TodayPlanLoader: ObservableObject {
         self.cache = cache
         self.history = history
         self.wishStore = wishStore
+        self.dayTarget = dayTarget
         self.now = now
         self.calendar = calendar
         self.response = cache.load()
@@ -124,7 +127,7 @@ public final class TodayPlanLoader: ObservableObject {
         do {
             let fresh = try await provider.fetchPlan(
                 for: snapshot,
-                options: PlanRequestOptions(regenerate: regenerate, wishes: todaysWish)
+                options: PlanRequestOptions(regenerate: regenerate, wishes: todaysWish, dayPlan: dayTarget())
             )
             response = fresh
             planError = nil

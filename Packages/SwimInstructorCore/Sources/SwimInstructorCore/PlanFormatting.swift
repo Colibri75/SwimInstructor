@@ -135,6 +135,36 @@ public enum PlanFormatting {
     }
 
     /// "2026-09-29" → "29.09.2026"; unbekannte Formate bleiben unverändert.
+    /// Wie ein Tag der Woche im Vergleich zum Plan steht, als kurzer Text.
+    public static func stateText(_ state: WeekDayState) -> String {
+        switch state {
+        case .unplanned: return "nicht geplant"
+        case .upcoming: return "geplant"
+        case .today: return "heute"
+        case .followed: return "umgesetzt"
+        case .shorter: return "kürzer"
+        case .longer: return "länger"
+        case .missed: return "nicht geschwommen"
+        case .restKept: return "Ruhetag eingehalten"
+        case .restBroken: return "trotz Ruhetag geschwommen"
+        case .skipped: return "keine Zeit"
+        }
+    }
+
+    /// Kurze Beschreibung eines Tages: "Technik, 1.000 m" oder "Ruhetag".
+    public static func daySummary(_ day: WeekDayPlan?) -> String {
+        guard let day else { return "nicht geplant" }
+        if day.isRestDay { return day.isUnavailable ? "keine Zeit" : "Ruhetag" }
+        return "\(sessionType(day.sessionType)), \(meters(day.targetDistanceMeters))"
+    }
+
+    /// "30.09." für `2026-09-30`.
+    public static func shortGermanDate(_ isoDay: String) -> String {
+        let parts = isoDay.split(separator: "-")
+        guard parts.count == 3 else { return isoDay }
+        return "\(parts[2]).\(parts[1])."
+    }
+
     public static func germanDate(_ isoDay: String) -> String {
         let parts = isoDay.split(separator: "-")
         guard parts.count == 3 else { return isoDay }

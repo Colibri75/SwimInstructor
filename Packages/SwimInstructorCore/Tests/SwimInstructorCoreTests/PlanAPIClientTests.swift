@@ -168,4 +168,118 @@ final class PlanAPIClientTests: XCTestCase {
             XCTAssertEqual(error as? PlanAPIError, expected, line: line)
         }
     }
+
+    // MARK: - Wochenplan und Tagesvorgabe
+
+    func testDayPlanTargetGoesToTheServerInSnakeCase() async throws {
+        let transport = StubTransport(status: 200, body: TestFixtures.responseJSON)
+        let client = PlanAPIClient(configuration: configuration, transport: transport)
+        let target = DayPlanTarget(sessionType: .technique, intensity: .easy, targetDistanceMeters: 1000, focus: "Technik")
+
+        _ = try await client.fetchPlan(for: TestFixtures.snapshot, options: PlanRequestOptions(dayPlan: target))
+        _ = try await client.fetchTodayPlan(for: TestFixtures.snapshot)
+
+        let bodies = try transport.requests.map { request -> [String: Any] in
+            try XCTUnwrap(JSONSerialization.jsonObject(with: try XCTUnwrap(request.httpBody)) as? [String: Any])
+        }
+        let sent = try XCTUnwrap(bodies[0]["day_plan"] as? [String: Any])
+        XCTAssertEqual(sent["session_type"] as? String, "technique")
+        XCTAssertEqual(sent["intensity"] as? String, "easy")
+        XCTAssertEqual(sent["target_distance_meters"] as? Int, 1000)
+        XCTAssertEqual(sent["focus"] as? String, "Technik")
+        XCTAssertNil(bodies[1]["day_plan"])
+    }
+
+    func testWeekPlanRequestAndResponse() async throws {
+        let transport = StubTransport(status: 200, body: WeekFixtures.responseJSON)
+        let client = PlanAPIClient(configuration: configuration, transport: transport)
+        let request = WeekPlanRequest(
+            snapshot: TestFixtures.snapshot,
+            weekStart: "2026-09-28",
+            fromDate: "2026-09-30",
+            today: "2026-09-30",
+            unavailableDates: ["2026-10-02"],
+            swumThisWeek: [SwumDay(date: "2026-09-28", meters: 900)],
+            wishes: "  mehr Technik  "
+        )
+
+        let response = try await client.fetchWeekPlan(request)
+
+        XCTAssertEqual(response.weekPlan.days.count, 3)
+        let sent = try XCTUnwrap(transport.requests.first)
+        XCTAssertEqual(sent.url?.absoluteString, "https://example.test/v1/plan/week")
+        XCTAssertEqual(sent.httpMethod, "POST")
+        XCTAssertEqual(sent.value(forHTTPHeaderField: "Authorization"), "Bearer geheim")
+        XCTAssertEqual(sent.timeoutInterval, PlanAPIClient.planTimeout)
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: try XCTUnwrap(sent.httpBody)) as? [String: Any])
+        XCTAssertEqual(body["week_start"] as? String, "2026-09-28")
+        XCTAssertEqual(body["from_date"] as? String, "2026-09-30")
+        XCTAssertEqual(body["today"] as? String, "2026-09-30")
+        XCTAssertEqual(body["unavailable_dates"] as? [String], ["2026-10-02"])
+        XCTAssertEqual(body["wishes"] as? String, "mehr Technik")
+        let swum = try XCTUnwrap(body["swum_this_week"] as? [[String: Any]])
+        XCTAssertEqual(swum.first?["date"] as? String, "2026-09-28")
+        XCTAssertEqual(swum.first?["meters"] as? Double, 900)
+        XCTAssertNotNil(body["snapshot"] as? [String: Any])
+    }
+
+    func testWeekPlanRequestWithoutWishSendsNone() async throws {
+        let transport = StubTransport(status: 200, body: WeekFixtures.responseJSON)
+        let client = PlanAPIClient(configuration: configuration, transport: transport)
+
+        _ = try await client.fetchWeekPlan(WeekPlanRequest(snapshot: TestFixtures.snapshot, weekStart: "2026-09-28", fromDate: "2026-09-28", today: "2026-09-28", wishes: "   "))
+
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: try XCTUnwrap(transport.requests.first?.httpBody)) as? [String: Any])
+        XCTAssertNil(body["wishes"])
+        XCTAssertEqual(body["unavailable_dates"] as? [String], [])
+    }
+
+    func testWeekPlanErrorsAreMappedLikeThePlanErrors() async {
+        for (status, body, expected) in [
+            (401, "{}", PlanAPIError.unauthorized),
+            (400, #"{"error":"invalid_request","details":[{"path":"week_start","message":"muss ein Montag sein"}]}"#, PlanAPIError.invalidRequest(details: ["week_start: muss ein Montag sein"])),
+            (503, #"{"error":"plan_unavailable","reason":"budget_exceeded"}"#, PlanAPIError.planUnavailable(reason: "budget_exceeded")),
+            (500, "{}", PlanAPIError.server(status: 500))
+        ] {
+            let client = PlanAPIClient(configuration: configuration, transport: StubTransport(status: status, body: body))
+            do {
+                _ = try await client.fetchWeekPlan(WeekPlanRequest(snapshot: TestFixtures.snapshot, weekStart: "2026-09-28", fromDate: "2026-09-28", today: "2026-09-28"))
+                XCTFail("Fehler erwartet für Status \(status)")
+            } catch let error as PlanAPIError {
+                XCTAssertEqual(error, expected)
+            } catch {
+                XCTFail("falscher Fehlertyp: \(error)")
+            }
+        }
+    }
+
+    func testWeekPlanGarbageAndNetworkFailure() async {
+        let garbage = PlanAPIClient(configuration: configuration, transport: StubTransport(status: 200, body: "<html>"))
+        do {
+            _ = try await garbage.fetchWeekPlan(WeekPlanRequest(snapshot: TestFixtures.snapshot, weekStart: "2026-09-28", fromDate: "2026-09-28", today: "2026-09-28"))
+            XCTFail("Fehler erwartet")
+        } catch let error as PlanAPIError {
+            guard case .invalidResponse = error else { return XCTFail("falscher Fehler: \(error)") }
+        } catch {
+            XCTFail("falscher Fehlertyp: \(error)")
+        }
+
+        let offline = PlanAPIClient(configuration: configuration, transport: StubTransport(error: URLError(.notConnectedToInternet)))
+        do {
+            _ = try await offline.fetchWeekPlan(WeekPlanRequest(snapshot: TestFixtures.snapshot, weekStart: "2026-09-28", fromDate: "2026-09-28", today: "2026-09-28"))
+            XCTFail("Fehler erwartet")
+        } catch let error as PlanAPIError {
+            guard case .network = error else { return XCTFail("falscher Fehler: \(error)") }
+        } catch {
+            XCTFail("falscher Fehlertyp: \(error)")
+        }
+    }
+
+    func testPlanUnavailableTextNamesTheReason() {
+        XCTAssertTrue(PlanAPIError.planUnavailable(reason: "budget_exceeded").errorDescription?.contains("Tageslimit") == true)
+        XCTAssertTrue(PlanAPIError.planUnavailable(reason: "not_configured").errorDescription?.contains("nicht eingerichtet") == true)
+        XCTAssertTrue(PlanAPIError.planUnavailable(reason: "timeout").errorDescription?.contains("nicht erreichbar") == true)
+        XCTAssertTrue(PlanAPIError.planUnavailable(reason: nil).errorDescription?.hasPrefix("Kein neuer Plan") == true)
+    }
 }
+

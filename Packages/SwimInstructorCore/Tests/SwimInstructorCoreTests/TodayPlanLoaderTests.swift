@@ -53,6 +53,7 @@ final class TodayPlanLoaderTests: XCTestCase {
         cache: MemoryCache = MemoryCache(),
         history: PlanHistoryStoring? = nil,
         wishes: DailyWishStoring? = nil,
+        dayTarget: @escaping @MainActor () -> DayPlanTarget? = { nil },
         provider: CountingProvider?,
         workouts: FakeWorkoutRepository = FakeWorkoutRepository(workouts: [TestFixtures.workout(daysAgo: 1, meters: 1500)]),
         authorizer: Authorizer = Authorizer()
@@ -68,6 +69,7 @@ final class TodayPlanLoaderTests: XCTestCase {
             cache: cache,
             history: history,
             wishStore: wishes,
+            dayTarget: dayTarget,
             now: { TestFixtures.now },
             calendar: TestFixtures.utc
         )
@@ -286,4 +288,30 @@ final class TodayPlanLoaderTests: XCTestCase {
         XCTAssertEqual(provider.calls, 0)
         XCTAssertEqual(loader.wish, "mehr Ausdauer")
     }
+
+    // MARK: - Vorgabe aus dem Wochenplan
+
+    func testWeekTargetGoesToTheServerWithEveryRequest() async {
+        let target = DayPlanTarget(sessionType: .technique, intensity: .easy, targetDistanceMeters: 1000, focus: "Technik")
+        let provider = CountingProvider(.success(TestFixtures.response()))
+        let loader = makeLoader(dayTarget: { target }, provider: provider)
+
+        await loader.refreshIfNeeded()
+        await loader.refresh()
+
+        XCTAssertEqual(provider.receivedOptions.map(\.dayPlan), [target, target])
+    }
+
+    func testTheTargetIsReadAtRequestTimeSoChangesToTheWeekCount() async {
+        var target: DayPlanTarget? = DayPlanTarget(sessionType: .endurance, intensity: .moderate, targetDistanceMeters: 1500, focus: "Ausdauer")
+        let provider = CountingProvider(.success(TestFixtures.response()))
+        let loader = makeLoader(dayTarget: { target }, provider: provider)
+        await loader.refresh()
+
+        target = nil
+        await loader.refresh()
+
+        XCTAssertEqual(provider.receivedOptions.map(\.dayPlan?.targetDistanceMeters), [1500, nil])
+    }
 }
+

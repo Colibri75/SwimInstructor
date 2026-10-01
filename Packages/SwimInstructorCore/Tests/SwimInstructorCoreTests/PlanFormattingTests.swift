@@ -100,5 +100,22 @@ final class PlanFormattingTests: XCTestCase {
         XCTAssertEqual(PlanFormatting.equipment(["pull_buoy", "paddles"]), "Pull Buoy, Paddles")
         XCTAssertEqual(PlanFormatting.equipment([]), "")
     }
+
+    func testStateTextCoversEveryState() {
+        let states: [WeekDayState] = [.unplanned, .upcoming, .today, .followed, .shorter, .longer, .missed, .restKept, .restBroken, .skipped]
+
+        XCTAssertEqual(Set(states.map { PlanFormatting.stateText($0) }).count, states.count)
+        XCTAssertEqual(PlanFormatting.stateText(.missed), "nicht geschwommen")
+        XCTAssertEqual(PlanFormatting.stateText(.skipped), "keine Zeit")
+    }
+
+    func testDaySummary() {
+        let session = WeekDayPlan(date: "2026-10-02", content: WeekDayContent(sessionType: .technique, intensity: .easy, targetDistanceMeters: 1000, estimatedDurationMinutes: 35, focus: "Technik"))
+
+        XCTAssertEqual(PlanFormatting.daySummary(session), "Technik, 1.000 m")
+        XCTAssertEqual(PlanFormatting.daySummary(WeekDayPlan(date: "2026-10-01", content: .rest())), "Ruhetag")
+        XCTAssertEqual(PlanFormatting.daySummary(WeekPlanEditor.markUnavailable(WeekPlan(weekStart: "2026-09-28", generatedAt: Date(), rationale: "", days: [session]), date: "2026-10-02").day(on: "2026-10-02")), "keine Zeit")
+        XCTAssertEqual(PlanFormatting.daySummary(nil), "nicht geplant")
+    }
 }
 

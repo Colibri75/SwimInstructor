@@ -483,6 +483,58 @@ das lohnt sich erst, wenn die Oberfläche sich beruhigt hat (M11).
       Ruhetag mit Schwimmen erscheint als "trotz Ruhetag geschwommen"
 - [ ] **Auf dem iPhone:** Flugmodus: Dashboard und Verlauf zeigen weiter ihre Daten (Health ist lokal)
 
+## Wochenplan (Tab "Woche")
+
+Die iPhone-App hat jetzt vier Tabs: **Heute**, **Woche**, **Dashboard**, **Verlauf**. Der Plan gilt nicht mehr nur
+für einen Tag: Im Tab Woche plant Claude die ganze Woche, du siehst, was an welchem Tag ansteht, und kannst den
+Plan anpassen. "Heute" zeigt nur den Teil für den jeweiligen Tag.
+
+- **Wochenplan = Gerüst.** Claude plant je Tag **Typ, Intensität, Umfang, Dauer und Schwerpunkt**
+  (`POST /v1/plan/week`, siehe [plan-generation.md](docs/plan-generation.md)). Die **Abschnitte** der Einheit samt
+  Equipment entstehen am Tag selbst im Tab Heute, passend zur Vorgabe der Woche (`day_plan`) und zum Zustand des
+  Tages. So bleibt der Wochenplan ein schneller Aufruf, und die Details kennen deine Erholung von heute Morgen.
+- **Woche planen:** Knopf im Tab Woche, optional mit Wunsch für die Woche. In der laufenden Woche plant Claude **ab
+  heute** und berücksichtigt, was du schon geschwommen hast und an welchen Tagen du keine Zeit hast ("Rest der Woche
+  neu planen"). Die Tage davor bleiben, wie sie waren. Für die kommende Woche lässt sich über die Pfeile oben die
+  nächste Woche öffnen und ab Montag planen.
+- **Sicherheitsschicht auch für die Woche:** Wochenumfang, Einheitenlänge, höchstens zwei harte Tage und nie an
+  zwei Tagen hintereinander, höchstens fünf Einheiten, mindestens ein Ruhetag, die Grenzen für heute. Korrekturen
+  stehen unter "Zur Sicherheit angepasst".
+- **Anpassen** (Tippen auf einen Tag, ab heute): Umfang ändern (0 m macht den Tag zum Ruhetag), **"Keine Zeit an
+  diesem Tag"** (wird Ruhetag, bleibt bei "Rest der Woche neu planen" ein Ruhetag, mit "Doch wieder Zeit" geht
+  das Training zurück), "Als Ruhetag setzen" und **mit einem anderen Tag tauschen**. Eine **verpasste** oder zu kurze
+  Einheit lässt sich auf einen freien Ruhetag der Woche verschieben. Änderungen verschieben nur Einheiten; wer die
+  Woche danach wieder ausgleichen will, lässt den Rest neu planen.
+- **Status je Tag** aus Health: umgesetzt (75 bis 125 % des Umfangs), kürzer, länger, nicht geschwommen,
+  Ruhetag eingehalten, trotz Ruhetag geschwommen, keine Zeit. Oben stehen geplante und geschwommene Meter.
+- **Heute:** zuoberst "Heute im Wochenplan" (Typ, Umfang, Schwerpunkt, Stand), darunter die Einheit für heute mit
+  Abschnitten und Equipment, der Wunsch für heute, **Statistik** (Woche gegen Plan, letzte 7 Tage, Pace, Erholung,
+  Tage bis zum Ziel) und die letzten fünf Einheiten. Ändert sich die Vorgabe für heute, erstellt "Plan neu
+  erstellen" die Einheit passend neu.
+- **Speicherung:** Der Server speichert Wochenpläne nicht. Die App hält die letzten 8 Wochen samt deinen
+  Änderungen auf dem Gerät (`Application Support/SwimInstructor/week-plans.json`). Scheitert Claude, bleibt der
+  bisherige Wochenplan, die Meldung nennt den Grund.
+- **Kosten:** Ein Wochenplan kostet etwa so viel wie ein Tagesplan oder weniger (kurze Ausgabe) und zählt gegen
+  dasselbe Budget (5 pro Stunde, 20 pro Tag).
+
+Logik im Package, per Unit-Test abgesichert: `WeekPlan`, `WeekCalendar`, `WeekPlanEditor` (Änderungen,
+Zusammenführen), `WeekProgressCalculator` (Status je Tag), `WeekPlanLoader` (Ablauf), `PlanAPIClient.fetchWeekPlan`.
+Die Bildschirme (`WeekView`, `TodayView`) werden in der CI mitkompiliert.
+
+### Wochenplan – Prüfpunkte (manuell)
+
+- [ ] **Server aktualisiert** (`deploy.sh`), sonst gibt es den Endpunkt `/v1/plan/week` nicht
+- [ ] **Tab Woche:** "Woche planen" erzeugt in etwa 10 bis 30 Sekunden einen Plan ab heute, mit Überblick und
+      sieben Tagen. Die Summe liegt in der Nähe deines üblichen Wochenumfangs
+- [ ] **Anpassen:** Umfang ändern, "Keine Zeit" an einem Tag, zwei Tage tauschen: Die Liste ändert sich sofort und
+      bleibt nach dem Schließen der App erhalten
+- [ ] **Rest der Woche neu planen** mit einem Tag ohne Zeit: Dieser Tag bleibt Ruhetag, schon Geschwommenes ist
+      berücksichtigt
+- [ ] **Heute:** Oben steht der Eintrag des Wochenplans. "Plan neu erstellen" liefert eine Einheit, die zu Typ
+      und Umfang der Vorgabe passt (der Server-Log zeigt `day_plan` nicht, aber Umfang und Typ sollten stimmen)
+- [ ] **Verpasste Einheit:** Ein vergangener Tag ohne Schwimmen steht als "nicht geschwommen" da und lässt sich auf
+      einen Ruhetag verschieben
+
 ## Projektstruktur
 
 ```
@@ -490,7 +542,8 @@ App/                                # iOS-App
   SwimInstructorApp.swift            # App-Einstiegspunkt, verdrahtet Health, Einstellungen, Plan-Loader
   PhonePlanSync.swift                # Schickt den Tagesplan an die Watch (M7)
   RootView.swift                     # Tabs: Heute, Dashboard, Verlauf (M8)
-  TodayView.swift                    # Heute-Bildschirm: Plan, Stand, bisherige Einheiten
+  TodayView.swift                    # Heute: Wochenplan-Eintrag, Einheit für heute, Statistik
+  WeekView.swift                     # Wochenplan: Tage, Status, Anpassen, Planen
   DashboardView.swift                # Ziel, Wochenumfang, Pace-Verlauf (Swift Charts, M8)
   HistoryView.swift                  # Verlauf geplant gegen tatsächlich (M8)
   PlanCardView.swift                 # Darstellung des Tagesplans
@@ -530,6 +583,12 @@ Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
     TrainingStatistics.swift         # Wochenumfang und Pace je Einheit für das Dashboard (M8)
     PlanHistory.swift                # Gespeicherte Tagespläne der letzten Wochen (M8)
     PlanAdherence.swift              # Geplant gegen geschwommen, Zusammenfassung (M8)
+    WeekPlan.swift                   # Wochenplan: Tage, Vorgabe für den Tagesplan
+    WeekCalendar.swift               # Wochen von Montag bis Sonntag, Kalendertage
+    WeekPlanEditor.swift             # Änderungen des Athleten, Zusammenführen nach dem Neuplanen
+    WeekProgress.swift               # Status je Tag aus Health gegen den Plan
+    WeekPlanStore.swift              # Wochenpläne auf dem Gerät
+    WeekPlanLoader.swift             # Ablauf des Wochen-Tabs
   Tests/SwimInstructorCoreTests/
     HealthKitManagerTests.swift
     SwimWorkoutRepositoryTests.swift
@@ -572,6 +631,7 @@ Meilensteins). Offen:
   Claude, auch bei unverändertem Zustand (rund 4 Cent, der Server begrenzt auf 5 Pläne pro Stunde und
   20 pro Tag).
   Der verworfene Entwurf steht in PR #25.
+- **Wochenplan:** umgesetzt (Abschnitt "Wochenplan"), Prüfpunkte stehen dort.
 - **M10 – Realer Betatest:** Mehrere Wochen im echten Training, Planqualität und Zahlen gegenprüfen.
 - **M11 – Feinschliff:** Fehlermeldungen, Barrierefreiheit, UI-Tests, Übungslexikon statt wiederholter
   Erklärungen im Plan.
