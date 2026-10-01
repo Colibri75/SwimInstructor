@@ -30,7 +30,7 @@ werden verworfen und erreichen Claude nie.
 Optional `"wishes": "…"`: Freitext des Athleten für heute (höchstens 500 Zeichen, die App sendet bis 300,
 leer oder nur Leerraum zählt als kein Wunsch). Er steht in der Nutzernachricht als JSON-String und als Daten
 gekennzeichnet, kann die Grenzen für heute nie ändern und gehört zum Cache-Schlüssel: Ein anderer Wunsch bei
-gleichem Zustand ergibt einen neuen Plan. Zu lang oder kein String: `400`.
+gleichem Zustand ergibt einen neuen Plan. Zu lang oder kein String: `400`. Die Antwort enthält den Wunsch als `wishes`, wenn der Plan mit einem erzeugt wurde, und das Log die Länge als `wishChars`.
 
 Optional `"regenerate": true`: Der Server überspringt dann seinen Cache und fragt Claude auch bei
 unverändertem Zustand neu (die App schickt das beim Ziehen zum Aktualisieren). Das zählt gegen das

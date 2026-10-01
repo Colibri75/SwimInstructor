@@ -315,7 +315,11 @@ echten **Heute-Bildschirm** ersetzt.
   des Server-Cache-Schlüssels. Claude berücksichtigt ihn, **soweit er in die Sicherheitsgrenzen passt**:
   Mehr Umfang als erlaubt oder eine harte Einheit an einem Ruhetag bekommst du nicht, die Begründung
   sagt dann in einem Satz, warum. Der Wunsch steht im Prompt als JSON-String und ist als Daten
-  gekennzeichnet, die Sicherheitsschicht prüft den Plan unabhängig davon.
+  gekennzeichnet, die Sicherheitsschicht prüft den Plan unabhängig davon. Der Wunsch wird beim Tippen
+  gespeichert (Ziehen nutzt ihn auch ohne Knopf). **Der Server meldet ihn mit dem Plan zurück, die Karte
+  zeigt ihn als "Dein Wunsch: …" über der Begründung.** Fehlt die Zeile trotz eingegebenem Wunsch, ist er
+  nicht angekommen (alter Server ohne `deploy.sh`). Im Server-Log steht bei `plan generated` die Länge
+  als `wishChars`.
 - **Offline:** Der letzte Plan liegt in `Application Support/SwimInstructor/last-plan.json` und
   bleibt sichtbar, wenn der Server nicht erreichbar ist.
 - **Zugang:** Server-Adresse (Standard `https://swiminstructor.kellner.v6.rocks`) und Token werden

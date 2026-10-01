@@ -51,6 +51,7 @@ function toResponse(result: PlanResult) {
     stale: result.stale,
     plan: result.plan,
     adjustments: result.adjustments,
-    ...(result.fallbackReason !== undefined ? { fallback_reason: result.fallbackReason } : {})
+    ...(result.fallbackReason !== undefined ? { fallback_reason: result.fallbackReason } : {}),
+    ...(result.wishes !== undefined ? { wishes: result.wishes } : {})
   };
 }

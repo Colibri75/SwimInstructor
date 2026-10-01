@@ -119,6 +119,9 @@ public struct PlanResponse: Codable, Equatable, Sendable {
     public let adjustments: [String]
     /// Nur bei `fallback`: warum Claude nicht geantwortet hat.
     public let fallbackReason: String?
+    /// Der Wunsch, mit dem der Server den Plan erzeugt hat. Fehlt bei einem Server ohne Wunsch-Unterstützung
+    /// und bei Plänen ohne Wunsch: Wer einen Wunsch eingegeben hat und hier nichts sieht, weiß, dass er nicht ankam.
+    public let wishes: String?
 
     public init(
         source: PlanSource,
@@ -127,7 +130,8 @@ public struct PlanResponse: Codable, Equatable, Sendable {
         stale: Bool,
         plan: TrainingPlan,
         adjustments: [String],
-        fallbackReason: String? = nil
+        fallbackReason: String? = nil,
+        wishes: String? = nil
     ) {
         self.source = source
         self.date = date
@@ -136,6 +140,7 @@ public struct PlanResponse: Codable, Equatable, Sendable {
         self.plan = plan
         self.adjustments = adjustments
         self.fallbackReason = fallbackReason
+        self.wishes = wishes
     }
 }
 

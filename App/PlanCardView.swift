@@ -13,12 +13,21 @@ struct PlanCardView: View {
                 Label(notice, systemImage: "clock.arrow.circlepath")
                     .font(.footnote)
                     .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             header
 
+            if let wish = response.wishes, !wish.isEmpty {
+                Label("Dein Wunsch: \(wish)", systemImage: "text.bubble")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
             Text(plan.rationale)
                 .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
 
             if !plan.sets.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
@@ -34,6 +43,7 @@ struct PlanCardView: View {
                     ForEach(plan.coachNotes, id: \.self) { note in
                         Label(note, systemImage: "lightbulb")
                             .font(.footnote)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }
@@ -43,6 +53,7 @@ struct PlanCardView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         ForEach(response.adjustments, id: \.self) { adjustment in
                             Text(adjustment)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
                     .padding(.top, 4)
@@ -90,11 +101,15 @@ private struct PlanSetRow: View {
                 Text(details)
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if !set.instructions.isEmpty {
+                // Seit M5 erklärt der Plan Übungen in ein bis zwei Sätzen: Der Text muss in voller
+                // Länge umbrechen, statt in der Listenzeile abgeschnitten zu werden.
                 Text(set.instructions)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
@@ -136,7 +151,7 @@ private struct IntensityBadge: View {
                 totalDistanceMeters: 1600,
                 estimatedDurationMinutes: 45,
                 sets: [
-                    PlanSet(name: "Einschwimmen", repetitions: 1, distanceMeters: 300, targetPaceSecondsPerHundredMeters: nil, restSeconds: 0, instructions: "locker, Kraul und Rücken"),
+                    PlanSet(name: "Einschwimmen", repetitions: 1, distanceMeters: 300, targetPaceSecondsPerHundredMeters: nil, restSeconds: 0, instructions: "Locker, Kraul und Rücken im Wechsel. Zipper: Der Daumen streift beim Armzug an Bauch und Brust entlang, der Ellbogen bleibt hoch."),
                     PlanSet(name: "Hauptsatz", repetitions: 6, distanceMeters: 200, targetPaceSecondsPerHundredMeters: 140, restSeconds: 30, instructions: "gleichmäßig"),
                     PlanSet(name: "Ausschwimmen", repetitions: 1, distanceMeters: 100, targetPaceSecondsPerHundredMeters: nil, restSeconds: 0, instructions: "")
                 ],

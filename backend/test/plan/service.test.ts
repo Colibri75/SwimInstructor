@@ -106,6 +106,18 @@ describe("PlanService: Cache", () => {
     expect(generate).toHaveBeenCalledWith({ snapshot: snapshot(), date: "2026-09-30", wishes: "Heute nur Technik" });
   });
 
+  it("gibt den Wunsch im Ergebnis zurueck, bei frischem Plan und aus dem Cache, sonst nicht", async () => {
+    const { service } = setup();
+
+    const fresh = await service.planForToday(snapshot(), { wishes: " mehr Technik " });
+    const cached = await service.planForToday(snapshot(), { wishes: "mehr Technik" });
+    const without = await service.planForToday(snapshot());
+
+    expect(fresh.wishes).toBe("mehr Technik");
+    expect(cached).toMatchObject({ source: "cache", wishes: "mehr Technik" });
+    expect(without).not.toHaveProperty("wishes");
+  });
+
   it("uebergibt ohne Wunsch kein wishes-Feld, auch nicht bei leerem Text", async () => {
     const { service, generate } = setup();
 

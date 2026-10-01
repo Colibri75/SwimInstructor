@@ -67,6 +67,16 @@ describe("POST /v1/plan/today", () => {
     expect(generate).toHaveBeenCalledWith(expect.objectContaining({ wishes: "Schulter schonen" }));
   });
 
+  it("meldet den Wunsch in der Antwort zurueck, damit die App zeigen kann, dass er angekommen ist", async () => {
+    const app = appWith(ok());
+
+    const withWish = await request(app).post("/v1/plan/today").set(auth).send({ snapshot: snapshot(), wishes: "mehr Technik" });
+    const without = await request(app).post("/v1/plan/today").set(auth).send({ snapshot: snapshot() });
+
+    expect(withWish.body.wishes).toBe("mehr Technik");
+    expect(without.body.wishes).toBeUndefined();
+  });
+
   it("lehnt einen zu langen oder falsch getypten Wunsch ab", async () => {
     const app = appWith(ok());
 
