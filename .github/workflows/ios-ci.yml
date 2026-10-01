@@ -38,6 +38,11 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: macos-latest
+    # Immer nur ein Upload gleichzeitig: Zwei Läufe kurz hintereinander berechneten sonst dieselbe
+    # TestFlight-Build-Nummer, und der zweite scheiterte mit "Redundant Binary Upload".
+    concurrency:
+      group: testflight-beta
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v5
 
