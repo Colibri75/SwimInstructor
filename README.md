@@ -363,6 +363,15 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
 - **Anzeige beim Schwimmen** (seitlich wischen): Steuerung · Zeit, Strecke, Bahnen, Pace (Schnitt
   inkl. Pausen), Züge pro Bahn, Puls · Stand im Plan ("Hauptsatz, 3 von 6 × 200 m, noch 150 m").
   Die Zuordnung zum Plan läuft nur über die Meter (`PlanProgress`), nicht über Pausen.
+- **Wassersperre und Crown-Steuerung:** Solange die Einheit läuft, ist die Wassersperre an. Sie geht
+  nach "Weiter", nach einem Abschnittswechsel und nach 20 Sekunden ohne Eingabe von selbst wieder an.
+  Entsperren übernimmt das System (Crown drehen). **Danach schaltet eine weitere Drehung der Crown nach
+  oben den nächsten Abschnitt des Plans weiter** (zwei Rastungen, mit Haptik). Der laufende Abschnitt
+  gilt dann an der aktuellen Strecke als beendet, der nächste beginnt dort (`PlanProgress` mit
+  `advancedAt`), danach sperrt die Uhr wieder. Die Drehung, die entsperrt hat, zählt nicht (1 Sekunde
+  Beruhigungszeit, `WaterLockControl`). Nach unten drehen macht nichts.
+  Ob "oben" die richtige Richtung ist, lässt sich nur an der Uhr prüfen: Die Konstante steht in
+  `WaterLockControl.isAdvance` (ein Vorzeichen).
 - **Health-Rechte:** Die Watch fragt jetzt auch Schreibrechte an (Workout, Strecke, Züge, Puls,
   Energie), einmal beim Öffnen, damit der Dialog nicht erst am Beckenrand kommt.
 
@@ -377,7 +386,12 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
       verständliche Meldung
 - [ ] **Im Becken:** Beckenlänge wählen, starten, Wassersperre ist an; Bahnen, Strecke und Züge
       zählen mit; der Plan-Bildschirm springt nach dem Einschwimmen in den Hauptsatz
-- [ ] **Im Becken:** Pause und Fortsetzen funktionieren, Beenden zeigt die Zusammenfassung
+- [ ] **Im Becken:** Pause und Fortsetzen funktionieren, nach "Weiter" ist die Wassersperre wieder an,
+      Beenden zeigt die Zusammenfassung
+- [ ] **Im Becken:** Wassersperre ist beim Schwimmen an. Crown drehen entsperrt, eine weitere Drehung
+      **nach oben** springt zum nächsten Abschnitt (Haptik, der Plan-Bildschirm zeigt ihn), danach ist
+      die Wassersperre wieder an. Falls die Richtung verkehrt ist, melde dich (Vorzeichen in
+      `WaterLockControl.isAdvance`)
 - [ ] **Danach:** Das Workout steht in der Fitness-App als Beckenschwimmen mit Bahnen; die
       iPhone-App zeigt es unter "Bisherige Einheiten"
 
