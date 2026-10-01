@@ -17,11 +17,14 @@ public final class TodayPlanLoader: ObservableObject {
     @Published public private(set) var planError: String?
     /// Kein Token hinterlegt: Die App kann keinen Plan holen, bis es in den Einstellungen steht.
     @Published public private(set) var needsConfiguration = false
+    /// Gespeicherte Pläne der letzten Wochen für den Verlauf, ältester zuerst.
+    @Published public private(set) var planHistory: [PlanResponse] = []
 
     private let authorizer: HealthDataAuthorizing?
     private let snapshotBuilder: SnapshotBuilding
     private let planProvider: @MainActor () -> PlanProviding?
     private let cache: PlanCaching
+    private let history: PlanHistoryStoring?
     private let now: () -> Date
     private let calendar: Calendar
 
@@ -31,6 +34,7 @@ public final class TodayPlanLoader: ObservableObject {
         snapshotBuilder: SnapshotBuilding,
         planProvider: @escaping @MainActor () -> PlanProviding?,
         cache: PlanCaching,
+        history: PlanHistoryStoring? = nil,
         now: @escaping () -> Date = { Date() },
         calendar: Calendar = .current
     ) {
@@ -38,9 +42,15 @@ public final class TodayPlanLoader: ObservableObject {
         self.snapshotBuilder = snapshotBuilder
         self.planProvider = planProvider
         self.cache = cache
+        self.history = history
         self.now = now
         self.calendar = calendar
         self.response = cache.load()
+        // Ein Plan aus dem Cache gehört auch in den Verlauf, falls er vor dem Verlauf entstand.
+        if let cached = response {
+            try? history?.record(cached)
+        }
+        self.planHistory = history?.load() ?? []
     }
 
     public var isLoading: Bool { isLoadingHealth || isLoadingPlan }
@@ -92,6 +102,10 @@ public final class TodayPlanLoader: ObservableObject {
             planError = nil
             // Speichern ist Komfort; scheitert es, ist der Plan trotzdem da.
             try? cache.save(fresh)
+            if let history {
+                try? history.record(fresh)
+                planHistory = history.load()
+            }
         } catch {
             planError = error.localizedDescription
         }

@@ -22,7 +22,8 @@ struct SwimInstructorApp: App {
             planProvider: { [weak settings] in
                 settings?.configuration.map { PlanAPIClient(configuration: $0) }
             },
-            cache: FilePlanCache.standard()
+            cache: FilePlanCache.standard(),
+            history: FilePlanHistory.standard()
         )
         _healthKitManager = StateObject(wrappedValue: healthKitManager)
         _settings = StateObject(wrappedValue: settings)
@@ -35,7 +36,7 @@ struct SwimInstructorApp: App {
 
     var body: some Scene {
         WindowGroup {
-            TodayView()
+            RootView()
                 .environmentObject(healthKitManager)
                 .environmentObject(settings)
                 .environmentObject(loader)
