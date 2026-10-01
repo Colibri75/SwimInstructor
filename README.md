@@ -506,7 +506,12 @@ Gemfile                               # Ruby-Abhängigkeit: fastlane
 M1 bis M8 sind umgesetzt (die manuellen Prüfungen stehen jeweils in der Definition of Done des
 Meilensteins). Offen:
 
-- **M9 – Automatisierung:** Hintergrundaktualisierung (Plan am Morgen vorbereiten) und Benachrichtigungen.
+- **M9 – Automatisierung: bewusst gestrichen.** Eine Erinnerung zur Uhrzeit und ein Plan im Hintergrund
+  brächten wenig: Bei gesperrtem iPhone kann die App Health nicht lesen (Apple schützt die Daten), und
+  wann iOS Hintergrundläufe erlaubt, lässt sich nicht erzwingen. Stattdessen entsteht der Plan, **wenn du
+  die App morgens öffnest** (dauert rund 15 Sekunden, danach liegt er auch auf der Watch). Ein Aufruf
+  pro Tag reicht: Weitere Öffnungen am selben Tag holen keinen neuen Plan, solange sich nichts ändert.
+  Der verworfene Entwurf steht in PR #25.
 - **M10 – Realer Betatest:** Mehrere Wochen im echten Training, Planqualität und Zahlen gegenprüfen.
 - **M11 – Feinschliff:** Fehlermeldungen, Barrierefreiheit, UI-Tests, Übungslexikon statt wiederholter
   Erklärungen im Plan.
