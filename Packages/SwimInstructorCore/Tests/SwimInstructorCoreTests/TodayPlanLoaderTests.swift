@@ -194,4 +194,79 @@ final class TodayPlanLoaderTests: XCTestCase {
         XCTAssertTrue(loader.planHistory.isEmpty)
         XCTAssertNotNil(loader.response)
     }
+
+    // MARK: - Vorbereitung im Hintergrund
+
+    func testBackgroundPrepareFetchesAPlanForToday() async {
+        let fresh = TestFixtures.response()
+        let provider = CountingProvider(.success(fresh))
+        let loader = makeLoader(provider: provider)
+
+        let result = await loader.prepareInBackground()
+
+        XCTAssertEqual(result, .ready(fresh))
+        XCTAssertEqual(provider.calls, 1)
+    }
+
+    func testBackgroundPrepareDoesNotAskTheServerWhenTodaysPlanExists() async {
+        let existing = TestFixtures.response()
+        let provider = CountingProvider(.success(existing))
+        let loader = makeLoader(cache: MemoryCache(existing), provider: provider)
+
+        let result = await loader.prepareInBackground()
+
+        XCTAssertEqual(result, .ready(existing))
+        XCTAssertEqual(provider.calls, 0)
+    }
+
+    func testBackgroundPrepareKeepsTodaysPlanEvenIfHealthIsLocked() async {
+        let existing = TestFixtures.response()
+        let loader = makeLoader(
+            cache: MemoryCache(existing),
+            provider: CountingProvider(.success(existing)),
+            workouts: FakeWorkoutRepository(error: TestError(message: "gesperrt"))
+        )
+
+        let result = await loader.prepareInBackground()
+
+        XCTAssertEqual(result, .ready(existing))
+    }
+
+    func testBackgroundPrepareReportsLockedHealth() async {
+        let provider = CountingProvider(.success(TestFixtures.response()))
+        let loader = makeLoader(
+            provider: provider,
+            workouts: FakeWorkoutRepository(error: TestError(message: "Health ist gesperrt"))
+        )
+
+        let result = await loader.prepareInBackground()
+
+        XCTAssertEqual(result, .healthUnavailable("Health ist gesperrt"))
+        XCTAssertEqual(provider.calls, 0)
+    }
+
+    func testBackgroundPrepareReportsServerProblems() async {
+        let loader = makeLoader(provider: CountingProvider(.failure(TestError(message: "offline"))))
+
+        let result = await loader.prepareInBackground()
+
+        XCTAssertEqual(result, .planUnavailable("offline"))
+    }
+
+    func testBackgroundPrepareReportsMissingToken() async {
+        let loader = makeLoader(provider: nil)
+
+        let result = await loader.prepareInBackground()
+
+        XCTAssertEqual(result, .needsConfiguration)
+    }
+
+    func testBackgroundPrepareDoesNotTreatYesterdaysPlanAsReady() async {
+        let yesterday = TestFixtures.response(date: "2026-09-29", source: .fallback, stale: true)
+        let loader = makeLoader(provider: CountingProvider(.success(yesterday)))
+
+        let result = await loader.prepareInBackground()
+
+        XCTAssertEqual(result, .planUnavailable("Kein Plan für heute erhalten."))
+    }
 }

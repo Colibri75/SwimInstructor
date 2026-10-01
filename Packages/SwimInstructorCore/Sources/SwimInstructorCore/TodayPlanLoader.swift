@@ -1,5 +1,17 @@
 import Foundation
 
+/// Ergebnis der Vorbereitung im Hintergrund (Erinnerung am Morgen).
+public enum BackgroundPrepareResult: Equatable, Sendable {
+    /// Ein Plan für heute liegt vor (frisch geholt oder schon vorhanden).
+    case ready(PlanResponse)
+    /// Health ließ sich nicht lesen, meist weil das iPhone gesperrt ist.
+    case healthUnavailable(String)
+    /// Der Server oder das Netz hat keinen Plan geliefert.
+    case planUnavailable(String)
+    /// Es ist noch kein Token hinterlegt.
+    case needsConfiguration
+}
+
 /// Steuert den Heute-Bildschirm: Health lesen, Snapshot bauen, Plan vom Backend holen, zwischenspeichern.
 ///
 /// Absichtlich ohne SwiftUI, damit der Ablauf per Unit-Test prüfbar ist. Health-Fehler und
@@ -66,6 +78,19 @@ public final class TodayPlanLoader: ObservableObject {
     /// Claude-Aufruf auslösen, darum nicht bei jedem Öffnen.
     public func refreshIfNeeded() async {
         await load(fetchPlan: !hasFreshPlanForToday)
+    }
+
+    /// Wie `refreshIfNeeded`, aber mit Ergebnis, damit der Aufrufer im Hintergrund (ohne Bildschirm)
+    /// entscheiden kann, was in die Benachrichtigung kommt.
+    public func prepareInBackground() async -> BackgroundPrepareResult {
+        await refreshIfNeeded()
+
+        let today = PlanFormatting.isoDay(now(), calendar: calendar)
+        if let response, response.date == today { return .ready(response) }
+        if needsConfiguration { return .needsConfiguration }
+        if let healthError { return .healthUnavailable(healthError) }
+        if let planError { return .planUnavailable(planError) }
+        return .planUnavailable("Kein Plan für heute erhalten.")
     }
 
     /// Ziehen zum Aktualisieren: Health lesen und den Plan in jedem Fall anfragen. Hat sich der

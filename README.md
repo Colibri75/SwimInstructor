@@ -425,6 +425,55 @@ das lohnt sich erst, wenn die Oberfläche sich beruhigt hat (M11).
       Ruhetag mit Schwimmen erscheint als "trotz Ruhetag geschwommen"
 - [ ] **Auf dem iPhone:** Flugmodus: Dashboard und Verlauf zeigen weiter ihre Daten (Health ist lokal)
 
+## M9 – Tägliche Erinnerung & Plan im Hintergrund
+
+In den Einstellungen (Zahnrad) gibt es den Abschnitt **Tägliche Erinnerung**: Schalter und Uhrzeit
+(Standard aus, 07:00 Uhr). Zu dieser Uhrzeit kommt eine Benachrichtigung mit dem Plan für heute.
+
+**Was verlässlich ist und was nicht.** Das waren die beiden Fragen vor dem Bauen:
+
+- **Die Benachrichtigung selbst ist verlässlich.** Die App legt die Erinnerungen der nächsten 7 Tage als
+  lokale Benachrichtigungen an. Sie kommen zur eingestellten Minute, auch bei gesperrtem iPhone und
+  beendeter App. Öffnest du die App mehr als eine Woche nicht, enden sie.
+- **Der Plan im Hintergrund ist es nicht.** iOS weckt die App ab etwa 30 Minuten vor der Uhrzeit
+  (`BGAppRefreshTask`), aber **wann, ob überhaupt, entscheidet das System** (Akku, Nutzungsmuster,
+  Hintergrundaktualisierung an/aus). Eine exakte Uhrzeit lässt sich nicht erzwingen.
+- **Bei gesperrtem iPhone kann die App Health nicht lesen.** Apple schützt die Health-Daten, solange das
+  Gerät gesperrt ist. Meistens ist das iPhone morgens gesperrt. Dann scheitert das Lesen, die
+  Benachrichtigung sagt nur "Öffne die App, dann erstellt Claude deinen Plan", und der Plan entsteht
+  beim Öffnen (rund 15 Sekunden). Das Token liegt im Schlüsselbund mit "nach dem ersten Entsperren"
+  und ist im Hintergrund lesbar. Der Server und das Netz sind also nicht das Hindernis, Health ist es.
+- Klappt die Vorbereitung (iPhone zufällig entsperrt, z. B. am Ladegerät mit Face ID gerade benutzt),
+  steht der Plan in der Benachrichtigung ("Technik, 800 m, locker, rund 25 Minuten") und ist beim Öffnen
+  sofort da. Der Plan geht dabei auch an die Watch und in den Verlauf.
+
+Fazit: Garantiert ist die Erinnerung, der fertige Plan ist ein Bonus. Wer ihn sicher morgens fertig
+haben will, braucht eine Lösung, die ohne Health auskommt (z. B. die Daten vom Vortag auf dem Server
+vorhalten). Das ist bewusst nicht gebaut: Der Zustand von heute Morgen (Schlaf, Ruhepuls) fehlt dann.
+
+- Die Uhrzeit ist pro Gerät gespeichert (UserDefaults). Beim ersten Einschalten fragt iOS nach der
+  Erlaubnis für Benachrichtigungen. Ist sie verweigert, weist die Einstellung darauf hin.
+- Ein neuer Plan (beim Öffnen oder im Hintergrund) aktualisiert die Texte der angelegten Erinnerungen.
+- Die Logik (Auslösezeitpunkte, Vorbereitungszeit, Text, Ergebnis der Vorbereitung) liegt im Package und
+  ist per Unit-Test abgesichert (`DailyReminderTests`, `TodayPlanLoaderTests`). `DailyReminderCoordinator`
+  in der App verbindet sie mit iOS (`UserNotifications`, `BackgroundTasks`).
+- Info.plist: `UIBackgroundModes` = `fetch` und die Kennung `com.kellner.SwimInstructor.plan-refresh`.
+
+### M9 – Definition of Done
+
+- [x] Auslösezeitpunkte, Vorbereitungszeit, Benachrichtigungstext und Vorbereitungsergebnis per Unit-Test
+      abgesichert
+- [x] iPhone-Code kompiliert in der CI (`test`-Lane)
+- [ ] **Auf dem iPhone:** Erinnerung einschalten, iOS fragt nach der Benachrichtigungserlaubnis. Eine
+      Uhrzeit in 2 bis 3 Minuten wählen, App beenden, iPhone sperren: Die Benachrichtigung kommt zur Minute
+- [ ] **Auf dem iPhone:** Auf die Benachrichtigung tippen: Die App öffnet sich und zeigt den Plan für heute
+      (er wird beim Öffnen erstellt, wenn noch keiner da ist)
+- [ ] **Auf dem iPhone:** Erlaubnis in den iOS-Einstellungen entziehen: Die Einstellung zeigt den Hinweis
+      mit Knopf zu den iOS-Einstellungen
+- [ ] **Über Nacht, 3 Tage lang:** Uhrzeit auf den Morgen stellen, abends Hintergrundaktualisierung an lassen.
+      Notieren, ob am Morgen schon ein Plan in der Benachrichtigung steht oder nur der Hinweis. Das zeigt, wie
+      oft die Vorbereitung im Hintergrund in der Praxis klappt
+
 ## Projektstruktur
 
 ```
@@ -435,6 +484,7 @@ App/                                # iOS-App
   TodayView.swift                    # Heute-Bildschirm: Plan, Stand, bisherige Einheiten
   DashboardView.swift                # Ziel, Wochenumfang, Pace-Verlauf (Swift Charts, M8)
   HistoryView.swift                  # Verlauf geplant gegen tatsächlich (M8)
+  DailyReminderCoordinator.swift     # Erinnerung und Hintergrundlauf: Benachrichtigungen, BGTask (M9)
   PlanCardView.swift                 # Darstellung des Tagesplans
   SettingsView.swift                 # Server-Adresse, Token, Verbindung testen
   Info.plist
@@ -472,6 +522,7 @@ Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
     TrainingStatistics.swift         # Wochenumfang und Pace je Einheit für das Dashboard (M8)
     PlanHistory.swift                # Gespeicherte Tagespläne der letzten Wochen (M8)
     PlanAdherence.swift              # Geplant gegen geschwommen, Zusammenfassung (M8)
+    DailyReminder.swift              # Uhrzeit der Erinnerung, Auslösezeitpunkte, Text (M9)
   Tests/SwimInstructorCoreTests/
     HealthKitManagerTests.swift
     SwimWorkoutRepositoryTests.swift
@@ -503,10 +554,9 @@ Gemfile                               # Ruby-Abhängigkeit: fastlane
 
 ## Roadmap
 
-M1 bis M8 sind umgesetzt (die manuellen Prüfungen stehen jeweils in der Definition of Done des
+M1 bis M9 sind umgesetzt (die manuellen Prüfungen stehen jeweils in der Definition of Done des
 Meilensteins). Offen:
 
-- **M9 – Automatisierung:** Hintergrundaktualisierung (Plan am Morgen vorbereiten) und Benachrichtigungen.
 - **M10 – Realer Betatest:** Mehrere Wochen im echten Training, Planqualität und Zahlen gegenprüfen.
 - **M11 – Feinschliff:** Fehlermeldungen, Barrierefreiheit, UI-Tests, Übungslexikon statt wiederholter
   Erklärungen im Plan.

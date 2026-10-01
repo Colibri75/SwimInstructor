@@ -8,6 +8,8 @@ struct SwimInstructorApp: App {
     @StateObject private var settings: BackendSettings
     @StateObject private var loader: TodayPlanLoader
     @StateObject private var planSync: PhonePlanSync
+    @StateObject private var reminderSettings: ReminderSettings
+    @StateObject private var reminder: DailyReminderCoordinator
 
     init() {
         let healthKitManager = HealthKitManager()
@@ -32,6 +34,13 @@ struct SwimInstructorApp: App {
         planSync.start()
         _loader = StateObject(wrappedValue: loader)
         _planSync = StateObject(wrappedValue: planSync)
+
+        let reminderSettings = ReminderSettings()
+        let reminder = DailyReminderCoordinator(settings: reminderSettings, loader: loader)
+        // Die Hintergrundaufgabe muss registriert sein, bevor die App fertig gestartet ist.
+        reminder.start()
+        _reminderSettings = StateObject(wrappedValue: reminderSettings)
+        _reminder = StateObject(wrappedValue: reminder)
     }
 
     var body: some Scene {
@@ -40,6 +49,8 @@ struct SwimInstructorApp: App {
                 .environmentObject(healthKitManager)
                 .environmentObject(settings)
                 .environmentObject(loader)
+                .environmentObject(reminderSettings)
+                .environmentObject(reminder)
         }
     }
 }

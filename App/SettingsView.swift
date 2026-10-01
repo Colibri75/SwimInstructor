@@ -6,6 +6,8 @@ import SwimInstructorCore
 struct SettingsView: View {
     @EnvironmentObject private var settings: BackendSettings
     @EnvironmentObject private var healthKitManager: HealthKitManager
+    @EnvironmentObject private var reminderSettings: ReminderSettings
+    @EnvironmentObject private var reminder: DailyReminderCoordinator
     @Environment(\.dismiss) private var dismiss
 
     /// Wird nach dem Speichern aufgerufen, damit der Heute-Bildschirm gleich einen Plan holt.
@@ -50,6 +52,8 @@ struct SettingsView: View {
                     }
                 }
 
+                reminderSection
+
                 Section("Apple Health") {
                     Button("Health-Zugriff erneut anfragen") {
                         Task { try? await healthKitManager.requestAuthorization() }
@@ -79,6 +83,61 @@ struct SettingsView: View {
             }
             .onAppear { urlText = settings.baseURL.absoluteString }
         }
+    }
+
+    // MARK: - Erinnerung
+
+    @ViewBuilder
+    private var reminderSection: some View {
+        Section {
+            Toggle("Plan morgens vorbereiten", isOn: reminderEnabledBinding)
+            if reminderSettings.schedule.isEnabled {
+                DatePicker("Uhrzeit", selection: reminderTimeBinding, displayedComponents: .hourAndMinute)
+            }
+            if reminderSettings.schedule.isEnabled && reminder.authorization == .denied {
+                Text("Benachrichtigungen sind für die App ausgeschaltet. Erlaube sie in den iOS-Einstellungen, sonst kommt keine Erinnerung.")
+                    .font(.footnote)
+                    .foregroundStyle(.orange)
+                Button("iOS-Einstellungen öffnen") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+            }
+        } header: {
+            Text("Tägliche Erinnerung")
+        } footer: {
+            Text("Zur eingestellten Uhrzeit kommt eine Benachrichtigung, auch bei gesperrtem iPhone. Das iPhone bereitet den Plan ab etwa 30 Minuten vorher im Hintergrund vor. Ob und wann iOS das erlaubt, entscheidet das System. Bei gesperrtem iPhone kann die App Health nicht lesen: Dann nennt die Benachrichtigung den Plan noch nicht, und er entsteht beim Öffnen der App.")
+        }
+    }
+
+    private var reminderEnabledBinding: Binding<Bool> {
+        Binding(
+            get: { reminderSettings.schedule.isEnabled },
+            set: { isOn in
+                reminderSettings.schedule.isEnabled = isOn
+                Task { await reminder.apply() }
+            }
+        )
+    }
+
+    private var reminderTimeBinding: Binding<Date> {
+        Binding(
+            get: {
+                Calendar.current.date(
+                    bySettingHour: reminderSettings.schedule.hour,
+                    minute: reminderSettings.schedule.minute,
+                    second: 0,
+                    of: Date()
+                ) ?? Date()
+            },
+            set: { date in
+                let parts = Calendar.current.dateComponents([.hour, .minute], from: date)
+                reminderSettings.schedule.hour = parts.hour ?? reminderSettings.schedule.hour
+                reminderSettings.schedule.minute = parts.minute ?? reminderSettings.schedule.minute
+                Task { await reminder.apply() }
+            }
+        )
     }
 
     private func save() {
