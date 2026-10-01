@@ -367,13 +367,19 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
 - **Anzeige beim Schwimmen** (seitlich wischen): Steuerung · Zeit, Strecke, Bahnen, Pace (Schnitt
   inkl. Pausen), Züge pro Bahn, Puls · Stand im Plan ("Hauptsatz, 3 von 6 × 200 m, noch 150 m").
   Die Zuordnung zum Plan läuft nur über die Meter (`PlanProgress`), nicht über Pausen.
+  Unter dem Namen des Abschnitts steht die Anweisung aus dem Plan ("Locker kraulen", Technikübung mit
+  Erklärung), bis zu sechs Zeilen, verkleinert bei langen Texten. In der Plan-Liste vor dem Start steht sie
+  in voller Länge.
 - **Wassersperre und Crown-Steuerung:** Solange die Einheit läuft, ist die Wassersperre an. Sie geht
   nach "Weiter", nach einem Abschnittswechsel und nach 20 Sekunden ohne Eingabe von selbst wieder an.
   Entsperren übernimmt das System (Crown drehen). **Danach schaltet eine weitere Drehung der Crown nach
   oben den nächsten Abschnitt des Plans weiter** (zwei Rastungen, mit Haptik). Der laufende Abschnitt
   gilt dann an der aktuellen Strecke als beendet, der nächste beginnt dort (`PlanProgress` mit
   `advancedAt`), danach sperrt die Uhr wieder. Die Drehung, die entsperrt hat, zählt nicht (1 Sekunde
-  Beruhigungszeit, `WaterLockControl`). Nach unten drehen macht nichts.
+  Beruhigungszeit, `WaterLockControl`). Die Richtung der Drehung zählt nicht (beim ersten Versuch blieb
+  "nach oben" wirkungslos, vermutlich wegen des Vorzeichens). Die Plan-Seite zeigt Schloss, einen
+  Fortschrittsbalken der Crown-Drehung, die letzte erkannte Tastenkombination und, solange entsperrt
+  ist, eine Taste "Nächster Abschnitt" zum Tippen.
   Ob "oben" die richtige Richtung ist, lässt sich nur an der Uhr prüfen: Die Konstante steht in
   `WaterLockControl.isAdvance` (ein Vorzeichen).
   **Auch bei Wassersperre, ohne zu entsperren:** *Crown und Seitentaste gleichzeitig zweimal kurz

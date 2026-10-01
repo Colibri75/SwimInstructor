@@ -130,6 +130,13 @@ struct WatchPlanSetRow: View {
                     .font(.footnote.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
+            if !set.instructions.isEmpty {
+                // Was genau zu tun ist (locker, Technikübung, ...), in voller Länge: Die Liste scrollt.
+                Text(set.instructions)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
     }
 }
