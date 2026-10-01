@@ -23,7 +23,7 @@ struct WatchWorkoutView: View {
     }
 }
 
-/// Crown-Steuerung für den Abschnittswechsel. Sitzt an jeder Seite, die sie braucht, und nicht am
+/// Crown-Steuerung für den Wechsel von Satz zu Satz. Sitzt an jeder Seite, die sie braucht, und nicht am
 /// Seiten-Container: Die Crown geht an die Ansicht mit dem Fokus, und den bekommt nur die Seite, die
 /// gerade sichtbar ist (`isActive`).
 private struct CrownSectionControl: ViewModifier {
@@ -179,7 +179,7 @@ private struct WorkoutPlanView: View {
         VStack(alignment: .leading, spacing: 4) {
             SectionBlock(compact: false)
             Spacer(minLength: 0)
-            Button("Nächster Abschnitt") {
+            Button("Nächster Satz") {
                 workoutManager.advanceSection()
             }
             .font(.footnote)
@@ -227,7 +227,7 @@ private struct WorkoutControlsView: View {
                 Button {
                     workoutManager.advanceSection()
                 } label: {
-                    Label("Nächster Abschnitt", systemImage: "forward.end.fill")
+                    Label("Nächster Satz", systemImage: "forward.end.fill")
                         .font(.footnote)
                 }
                 ControlStatusLine()

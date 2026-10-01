@@ -129,4 +129,57 @@ final class CrownRotationTrackerTests: XCTestCase {
         XCTAssertEqual(CrownStep.next.direction, .next)
         XCTAssertEqual(CrownStep.previous.direction, .previous)
     }
+
+    // MARK: - Nach einem Wechsel
+
+    func testKeepingTurningAfterAChangeDoesNotTriggerAgain() {
+        var tracker = CrownRotationTracker()
+        let sign = CrownRotationTracker.upIsPositive ? 1.0 : -1.0
+        var steps = 0
+
+        // Dreht ohne Pause weiter, mehr als dreimal die Schwelle, alle 0,1 s ein Schritt.
+        for step in 1...Int(unlocked * 3) {
+            if tracker.moved(to: sign * Double(step), isLocked: false, at: at(Double(step) * 0.1)) != nil { steps += 1 }
+        }
+
+        XCTAssertEqual(steps, 1)
+        XCTAssertTrue(tracker.isSettling)
+        XCTAssertEqual(tracker.progress(isLocked: false), 0)
+    }
+
+    func testAfterTheCrownRestedTheNextTurnCountsAgain() {
+        var tracker = CrownRotationTracker()
+        let sign = CrownRotationTracker.upIsPositive ? 1.0 : -1.0
+        for step in 1...Int(unlocked) {
+            _ = tracker.moved(to: sign * Double(step), isLocked: false, at: at(Double(step) * 0.1))
+        }
+        XCTAssertTrue(tracker.isSettling)
+        tracker.rebase()
+
+        // Pause länger als die Wartezeit: wieder bereit.
+        let resume = Double(Int(unlocked)) * 0.1 + CrownRotationTracker.settleTime + 0.5
+        tracker.resetIfIdle(at: at(resume))
+        XCTAssertFalse(tracker.isSettling)
+
+        var second: CrownStep?
+        for step in 1...Int(unlocked) {
+            second = tracker.moved(to: sign * Double(step), isLocked: false, at: at(resume + Double(step) * 0.1)) ?? second
+        }
+        XCTAssertEqual(second, .next)
+    }
+
+    func testTurningDuringTheWaitExtendsIt() {
+        var tracker = CrownRotationTracker()
+        let sign = CrownRotationTracker.upIsPositive ? 1.0 : -1.0
+        for step in 1...Int(unlocked) {
+            _ = tracker.moved(to: sign * Double(step), isLocked: false, at: at(Double(step) * 0.1))
+        }
+        let triggered = Double(Int(unlocked)) * 0.1
+
+        // Kurz vor Ablauf noch ein Schritt: Die Wartezeit beginnt von vorn.
+        _ = tracker.moved(to: sign * Double(unlocked + 1), isLocked: false, at: at(triggered + CrownRotationTracker.settleTime - 0.1))
+        tracker.resetIfIdle(at: at(triggered + CrownRotationTracker.settleTime + 0.3))
+
+        XCTAssertTrue(tracker.isSettling)
+    }
 }

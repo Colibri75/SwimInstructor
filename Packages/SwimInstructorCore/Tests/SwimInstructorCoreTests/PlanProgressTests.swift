@@ -107,18 +107,38 @@ final class PlanProgressTests: XCTestCase {
         XCTAssertEqual(state(750, advancedAt: []), PlanProgress.state(sets: sets, swumMeters: 750))
     }
 
-    func testAnAdvanceDuringALaterSetBelongsToThatSet() {
-        // Einschwimmen regulär beendet (300 m), im Hauptsatz bei 700 m "weiter": ab da Ausschwimmen.
+    func testAnAdvanceDuringALaterSetSkipsOnlyTheRunningRepetition() {
+        // Einschwimmen regulär beendet (300 m), Sätze 1 und 2 regulär (bis 700 m): "weiter" im dritten
+        // Satz (bei 700 m) beginnt den vierten dort. Der Hauptsatz bleibt der Abschnitt.
         let position = position(state(750, advancedAt: [700]))
+
+        XCTAssertEqual(position?.set.name, "Hauptsatz")
+        XCTAssertEqual(position?.repetition, 4)
+        XCTAssertEqual(position?.metersIntoRepetition, 50)
+    }
+
+    func testAdvancingInTheMiddleOfARepetitionStartsTheNextRepetitionThere() {
+        // 150 m im ersten Satz des Hauptsatzes (bei 450 m insgesamt): "weiter" beginnt Satz 2 dort.
+        let position = position(state(500, advancedAt: [450]))
+
+        XCTAssertEqual(position?.set.name, "Hauptsatz")
+        XCTAssertEqual(position?.repetition, 2)
+        XCTAssertEqual(position?.metersIntoRepetition, 50)
+    }
+
+    func testTheLastRepetitionOfASectionLeadsToTheNextSection() {
+        // Hauptsatz bis 1500 m; "weiter" im sechsten Satz bei 1400 m: Ausschwimmen beginnt dort.
+        let position = position(state(1450, advancedAt: [1400]))
 
         XCTAssertEqual(position?.set.name, "Ausschwimmen")
         XCTAssertEqual(position?.metersIntoRepetition, 50)
     }
 
-    func testTwoAdvancesSkipTwoSets() {
+    func testTwoAdvancesSkipTwoRepetitions() {
         let position = position(state(100, advancedAt: [100, 100]))
 
-        XCTAssertEqual(position?.set.name, "Ausschwimmen")
+        XCTAssertEqual(position?.set.name, "Hauptsatz")
+        XCTAssertEqual(position?.repetition, 2)
         XCTAssertEqual(position?.metersIntoRepetition, 0)
     }
 
@@ -131,8 +151,11 @@ final class PlanProgressTests: XCTestCase {
     func testAdvancesAreSortedAndNegativeValuesCountAsZero() {
         let position = position(state(250, advancedAt: [200, -5]))
 
-        // -5 zählt als 0: Der erste Druck beendet das Einschwimmen sofort, der zweite bei 200 m den Hauptsatz.
-        XCTAssertEqual(position?.set.name, "Ausschwimmen")
+        // -5 zählt als 0: Der erste Druck beendet das Einschwimmen sofort, der zweite bei 200 m den
+        // ersten Satz des Hauptsatzes. Der dritte Satz beginnt bei 200 m.
+        XCTAssertEqual(position?.set.name, "Hauptsatz")
+        XCTAssertEqual(position?.repetition, 3)
+        XCTAssertEqual(position?.metersIntoRepetition, 50)
     }
 
     func testAdvanceDoesNotAffectPlansWithoutSets() {
@@ -166,15 +189,24 @@ final class PlanProgressTests: XCTestCase {
         SectionMove(meters: meters, direction: direction)
     }
 
-    func testGoingBackRestartsThePreviousSetAtThatPoint() {
-        // Hauptsatz läuft bei 500 m (zweite Wiederholung), zurück: Einschwimmen beginnt dort von vorn.
+    func testGoingBackRestartsThePreviousRepetitionAtThatPoint() {
+        // Zweiter Satz des Hauptsatzes läuft bei 500 m, zurück: Satz 1 beginnt dort von vorn.
         let atPress = position(state(500, moves: [move(500, .previous)]))
-        XCTAssertEqual(atPress?.set.name, "Einschwimmen")
+        XCTAssertEqual(atPress?.set.name, "Hauptsatz")
+        XCTAssertEqual(atPress?.repetition, 1)
         XCTAssertEqual(atPress?.metersIntoRepetition, 0)
 
         let later = position(state(560, moves: [move(500, .previous)]))
-        XCTAssertEqual(later?.set.name, "Einschwimmen")
+        XCTAssertEqual(later?.repetition, 1)
         XCTAssertEqual(later?.metersIntoRepetition, 60)
+    }
+
+    func testGoingBackFromTheFirstRepetitionLeadsToThePreviousSection() {
+        // Erster Satz des Hauptsatzes läuft bei 320 m, zurück: Einschwimmen beginnt dort von vorn.
+        let position = position(state(350, moves: [move(320, .previous)]))
+
+        XCTAssertEqual(position?.set.name, "Einschwimmen")
+        XCTAssertEqual(position?.metersIntoRepetition, 30)
     }
 
     func testForwardAndBackCancelOut() {
@@ -217,5 +249,14 @@ final class PlanProgressTests: XCTestCase {
         let state = PlanProgress.state(sets: sets, swumMeters: 0, moves: [move(0, .next), move(0, .previous)])
 
         XCTAssertEqual(state.sectionIndex(setCount: sets.count), 0)
+    }
+
+    func testStepKeyChangesWithEveryRepetitionAndSection() {
+        let keys = [0.0, 300, 500, 1500, 1600].map { PlanProgress.state(sets: sets, swumMeters: $0).stepKey }
+
+        XCTAssertEqual(keys, keys.sorted())
+        XCTAssertEqual(Set(keys).count, keys.count)
+        XCTAssertEqual(keys.last, Int.max)
+        XCTAssertEqual(PlanProgress.state(sets: [], swumMeters: 10).stepKey, 0)
     }
 }

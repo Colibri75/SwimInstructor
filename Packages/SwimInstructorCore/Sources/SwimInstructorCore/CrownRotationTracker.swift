@@ -16,10 +16,12 @@ public enum CrownStep: Equatable, Sendable {
 }
 
 /// Zählt, wie weit die Digital Crown am Stück in eine Richtung gedreht wurde, und meldet, wann der
-/// Abschnitt des Plans wechseln soll: nach oben weiter, nach unten zurück.
+/// Satz des Plans wechseln soll: nach oben weiter, nach unten zurück.
 ///
 /// Eine Pause in der Drehung oder ein Richtungswechsel setzt den Zähler zurück: Ein kurzes Anstoßen
-/// beim Tragen löst nichts aus, "weiterdrehen, bis der Balken voll ist" schon.
+/// beim Tragen löst nichts aus, "weiterdrehen, bis der Balken voll ist" schon. Nach einem Wechsel
+/// zählt die Crown erst wieder, wenn sie kurz stillstand (`settleTime`): Wer weiterdreht, löst nicht
+/// gleich den nächsten Wechsel aus.
 ///
 /// Bei Wassersperre ist die Schwelle höher. Das System entsperrt mit einer Drehung der Crown, und
 /// diese Drehung soll noch nicht den Abschnitt wechseln.
@@ -30,6 +32,9 @@ public struct CrownRotationTracker: Equatable, Sendable {
     public static let lockedThreshold = 14.0
     /// So lange darf die Drehung ruhen, bevor von vorn gezählt wird.
     public static let idleReset: TimeInterval = 1.5
+    /// Nach einem Wechsel muss die Crown so lange ruhen, bevor die nächste Drehung zählt. Dreht der
+    /// Athlet weiter, verlängert sich die Wartezeit.
+    public static let settleTime: TimeInterval = 0.8
     /// Sprünge über diesen Wert sind das Zurücksetzen der Crown durch die Ansicht, keine Drehung.
     public static let resetJump = 25.0
     /// Wenn "nach oben drehen" bei dieser Uhr negative Werte liefert: hier auf `false` stellen.
@@ -39,6 +44,11 @@ public struct CrownRotationTracker: Equatable, Sendable {
     public private(set) var travel = 0.0
     private var lastValue = 0.0
     private var lastMove: Date?
+    /// Gerade ein Wechsel ausgelöst: Drehungen zählen nicht, bis die Crown ruht.
+    private var settling = false
+
+    /// Läuft nach einem Wechsel noch die Wartezeit?
+    public var isSettling: Bool { settling }
 
     public init() {}
 
@@ -65,6 +75,11 @@ public struct CrownRotationTracker: Equatable, Sendable {
         guard abs(delta) <= Self.resetJump else { return nil }
         resetIfIdle(at: now)
         guard delta != 0 else { return nil }
+        if settling {
+            // Die Crown dreht noch: Wartezeit verlängern.
+            lastMove = now
+            return nil
+        }
 
         // Andere Richtung als bisher: von vorn zählen.
         if travel != 0, (travel > 0) != (delta > 0) { travel = 0 }
@@ -73,13 +88,23 @@ public struct CrownRotationTracker: Equatable, Sendable {
         guard abs(travel) >= Self.threshold(isLocked: isLocked) else { return nil }
         let reached = step
         travel = 0
-        lastMove = nil
+        lastMove = now
+        settling = true
         return reached
     }
 
     /// Regelmäßig aufrufen: Lässt die Drehung nach, springt die Anzeige zurück auf 0.
     public mutating func resetIfIdle(at now: Date) {
-        guard let lastMove, now.timeIntervalSince(lastMove) > Self.idleReset else { return }
+        guard let lastMove else { return }
+        let idle = now.timeIntervalSince(lastMove)
+        if settling {
+            if idle > Self.settleTime {
+                settling = false
+                self.lastMove = nil
+            }
+            return
+        }
+        guard idle > Self.idleReset else { return }
         travel = 0
         self.lastMove = nil
     }

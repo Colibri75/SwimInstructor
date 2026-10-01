@@ -37,7 +37,7 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
     @Published private(set) var planSets: [PlanSet] = []
     /// Stand im Plan: läuft mit der Strecke mit und springt bei einem Wechsel von Hand. `nil` ohne Plan.
     @Published private(set) var progress: PlanProgressState?
-    /// Abschnittswechsel von Hand (Strecke und Richtung), in der Reihenfolge, in der sie passierten.
+    /// Wechsel von Hand (Strecke und Richtung, je einen Satz), in der Reihenfolge, in der sie passierten.
     @Published private(set) var sectionMoves: [SectionMove] = []
     /// Wassersperre an? Wird zweimal pro Sekunde aktualisiert.
     @Published private(set) var isWaterLocked = true
@@ -152,13 +152,14 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
 
     // MARK: - Abschnitte
 
-    /// Nächster Abschnitt von Hand: Der laufende gilt an der aktuellen Strecke als beendet.
+    /// Nächster Satz von Hand: Der laufende gilt an der aktuellen Strecke als beendet. Hat der Abschnitt
+    /// keinen weiteren Satz, beginnt der nächste Abschnitt.
     func advanceSection(source: String = "Taste") {
         moveSection(.next, source: source)
     }
 
-    /// Wechsel von Hand in eine Richtung. Funktioniert auch ohne Streckenangabe aus Health (dann bei
-    /// 0 m) und bei pausierter Einheit.
+    /// Wechsel von Hand in eine Richtung, immer um einen Satz (eine Wiederholung). Funktioniert auch
+    /// ohne Streckenangabe aus Health (dann bei 0 m) und bei pausierter Einheit.
     func moveSection(_ direction: SectionDirection, source: String) {
         guard phase == .running || phase == .paused else {
             lastGestureNote = "\(source): Einheit läuft nicht"
@@ -169,13 +170,13 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
             return
         }
         guard canMove(direction) else {
-            lastGestureNote = direction == .next ? "\(source): kein weiterer Abschnitt" : "\(source): schon im ersten Abschnitt"
+            lastGestureNote = direction == .next ? "\(source): kein weiterer Satz" : "\(source): schon im ersten Satz"
             return
         }
         let meters = metrics.progressMeters(poolLengthMeters: poolLengthMeters)
         sectionMoves.append(SectionMove(meters: meters, direction: direction))
         recomputeProgress()
-        let name = direction == .next ? "weiter" : "zurück"
+        let name = direction == .next ? "nächster Satz" : "Satz zurück"
         lastGestureNote = "\(source): \(name) bei \(Int(meters)) m"
         if phase == .running { lockWater() }
     }
@@ -184,7 +185,8 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         guard let progress else { return false }
         switch (direction, progress) {
         case (.next, .inProgress): return true
-        case (.previous, .inProgress(let position)): return position.setIndex > firstCountableIndex
+        case (.previous, .inProgress(let position)):
+            return position.setIndex > firstCountableIndex || position.repetition > 1
         case (.previous, .completed): return true
         default: return false
         }
@@ -195,7 +197,7 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         planSets.firstIndex { $0.repetitions > 0 && $0.distanceMeters > 0 } ?? 0
     }
 
-    /// Rechnet den Stand im Plan aus Strecke und Wechseln von Hand neu. Springt der Abschnitt weiter,
+    /// Rechnet den Stand im Plan aus Strecke und Wechseln von Hand neu. Springt der Satz weiter,
     /// egal ob durch die Strecke oder von Hand, gibt es einen Haptik-Impuls.
     private func recomputeProgress() {
         guard !planSets.isEmpty else {
@@ -208,13 +210,11 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
             moves: sectionMoves
         )
         guard new != progress else { return }
-        let oldIndex = progress?.sectionIndex(setCount: planSets.count)
+        let oldKey = progress?.stepKey
         progress = new
-        if let oldIndex {
-            let newIndex = new.sectionIndex(setCount: planSets.count)
-            if newIndex != oldIndex {
-                WKInterfaceDevice.current().play(newIndex > oldIndex ? .directionUp : .directionDown)
-            }
+        // Jeder neue Satz (und Abschnitt) gibt einen Impuls, vorwärts und rückwärts verschieden.
+        if let oldKey, oldKey != new.stepKey {
+            WKInterfaceDevice.current().play(new.stepKey > oldKey ? .directionUp : .directionDown)
         }
     }
 
@@ -263,7 +263,7 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
     }
 
     /// Die Crown wurde bewegt (neuer Wert seit dem letzten Zurücksetzen). Weit genug am Stück gedreht:
-    /// nach oben der nächste, nach unten der vorherige Abschnitt, bei Wassersperre und entsperrt.
+    /// nach oben der nächste, nach unten der vorherige Satz, bei Wassersperre und entsperrt.
     /// `true`: Der Aufrufer setzt die Crown auf 0 zurück.
     func crownMoved(_ value: Double, now: Date = Date()) -> Bool {
         let locked = WKInterfaceDevice.current().isWaterLockEnabled
