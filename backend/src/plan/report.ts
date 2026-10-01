@@ -1,5 +1,7 @@
 import { TrainingPlan } from "./plan";
 import { DailyLimits } from "./sanity";
+import { WeekPlan, weekdayName } from "./week";
+import { WeekLimits } from "./weekSanity";
 
 /** Preise in US-Dollar pro Million Token (Stand 25.09.2026, Anthropic-Preisliste). */
 export const PRICES_PER_MILLION_TOKENS: Record<string, { input: number; output: number }> = {
@@ -51,5 +53,20 @@ export function formatLimits(limits: DailyLimits): string {
   if (limits.maxIntensity !== "hard") parts.push(`Intensität höchstens ${INTENSITY_LABEL[limits.maxIntensity]}`);
   parts.push(`Pace nicht schneller als ${limits.fastestPace} s/100 m`);
   return parts.join(", ");
+}
+
+/** Einen Wochenplan als Markdown, fuer die manuelle Bewertung. */
+export function formatWeekPlan(week: WeekPlan): string {
+  const total = week.days.reduce((sum, day) => sum + day.target_distance_meters, 0);
+  const lines = [`**${total} m in ${week.days.filter((d) => d.intensity !== "rest").length} Einheiten**`, "", week.rationale, "", "| Tag | Typ | Intensität | Umfang | Dauer | Schwerpunkt |", "|---|---|---|---|---|---|"];
+  for (const day of week.days) {
+    lines.push(`| ${weekdayName(day.date)} ${day.date} | ${day.session_type} | ${INTENSITY_LABEL[day.intensity]} | ${day.target_distance_meters} m | ${day.estimated_duration_minutes} min | ${day.focus} |`);
+  }
+  return lines.join("\n");
+}
+
+/** Die Wochengrenzen als eine Zeile, fuer die manuelle Bewertung. */
+export function formatWeekLimits(limits: WeekLimits): string {
+  return `höchstens ${limits.weeklyRemainingMeters} m, keine Einheit über ${limits.sessionCapMeters} m, höchstens ${limits.maxSessions} Trainingstage, höchstens ${limits.maxHardDays} harte Einheiten`;
 }
 

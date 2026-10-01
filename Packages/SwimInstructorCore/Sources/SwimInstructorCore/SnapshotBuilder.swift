@@ -33,7 +33,8 @@ public struct SnapshotBuilder: SnapshotBuilding {
     private let workoutRepository: SwimWorkoutRepository
     private let vitalsRepository: DailyVitalsRepository
     private let calculator: AthleteStateCalculator
-    private let goal: AthleteGoal
+    /// Wird bei jedem Durchlauf gelesen: Ein in den Einstellungen geändertes Ziel gilt sofort.
+    private let goalProvider: () -> AthleteGoal
     private let calendar: Calendar
 
     public init(
@@ -45,7 +46,21 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.workoutRepository = workoutRepository
         self.vitalsRepository = vitalsRepository
         self.calculator = AthleteStateCalculator(calendar: calendar)
-        self.goal = goal
+        self.goalProvider = { goal }
+        self.calendar = calendar
+    }
+
+    /// Wie oben, mit einem Ziel, das bei jedem Durchlauf neu gelesen wird (etwa aus den Einstellungen).
+    public init(
+        workoutRepository: SwimWorkoutRepository,
+        vitalsRepository: DailyVitalsRepository,
+        goalProvider: @escaping () -> AthleteGoal,
+        calendar: Calendar = .current
+    ) {
+        self.workoutRepository = workoutRepository
+        self.vitalsRepository = vitalsRepository
+        self.calculator = AthleteStateCalculator(calendar: calendar)
+        self.goalProvider = goalProvider
         self.calendar = calendar
     }
 
@@ -66,7 +81,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
             vitalsAvailable = false
         }
 
-        let snapshot = calculator.snapshot(workouts: workouts, vitals: vitals, goal: goal, now: now)
+        let snapshot = calculator.snapshot(workouts: workouts, vitals: vitals, goal: goalProvider(), now: now)
         let cleaned = SwimWorkoutDeduplicator.deduplicate(workouts)
             .filter { $0.startDate <= now }
             .sorted { $0.startDate > $1.startDate }

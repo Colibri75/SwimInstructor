@@ -6,7 +6,7 @@
 
 iOS- und watchOS-App, die Schwimm-Trainingsdaten aus Apple Health liest und
 darauf basierend einen tagesaktuellen, von Claude generierten Trainingsplan
-erstellt. Ziel: 3.800 m unter 60 Minuten bis zum 04.07.2027.
+erstellt. Ziel (Standard, in den Einstellungen änderbar): 3.800 m unter 60 Minuten bis zum 04.07.2027.
 
 Der Code wird auf einem beliebigen Rechner (z.B. Windows) bearbeitet. Bauen,
 Signieren und Verteilen läuft vollautomatisch über GitHub Actions + Fastlane +
@@ -408,6 +408,13 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
   `kickboard`, `ankle_band`, höchstens drei, siehe [plan-generation.md](docs/plan-generation.md)).
   Die Karte auf dem iPhone und die Watch zeigen "Mitnehmen: …" über dem Plan und das Equipment je
   Abschnitt. Pläne aus der Zeit davor haben keines (leere Liste).
+- **Mein Ziel (Einstellungen):** Im Zahnrad stellst du Distanz (100 m bis 10 km), Zielzeit (Minuten) und Zieltag
+  ein, Standard 3,8 km in 60 Minuten bis 04.07.2027. Das Ziel wird sofort gespeichert und bleibt, bis du es änderst
+  (`UserDefaultsGoalStore`); "zurücksetzen" stellt den Standard wieder her. Eine Kombination mit unsinniger Zielpace
+  (unter 0:40 oder über 10:00 pro 100 m) wird abgelehnt und nicht gespeichert. Das Ziel geht im Snapshot mit jeder
+  Plananfrage mit und steht im Prompt (Abschnitt "Gesamtziel" mit Phase, Wochen bis zum Ziel und Realismus-Hinweis,
+  siehe [plan-generation.md](docs/plan-generation.md)); Dashboard und Heute-Bildschirm zeigen das eingestellte Ziel.
+  Nach einer Änderung auf Heute nach unten ziehen und im Tab Woche neu planen.
 - **Mein Equipment (Einstellungen):** Im Zahnrad (iPhone) legst du fest, welche Hilfsmittel du hast (Pull Buoy,
   Paddles, Flossen, Schnorchel, Kickboard, Beinband). Ohne Auswahl gelten alle, mit der Auswahl plant Claude
   nur damit; was nicht an ist, entfernt die Sicherheitsschicht aus dem Plan und vermerkt es unter den
@@ -445,6 +452,10 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
       **nach oben** springt zum nächsten, **nach unten** zum vorherigen Satz (Haptik, der
       Plan-Bildschirm zeigt ihn), danach ist die Wassersperre wieder an. Falls die Richtung verkehrt
       ist, melde dich (`CrownRotationTracker.upIsPositive`)
+- [ ] **Ziel (iPhone):** Einstellungen, "Mein Ziel": Distanz auf 1.500 m, Zeit auf 28 min stellen, App neu starten:
+      Die Werte sind noch da, im Dashboard und auf Heute steht das neue Ziel, der neue Plan nennt 1.500 m. Ein
+      unmögliches Ziel (z. B. 10 km in 10 min) zeigt eine rote Meldung
+- [ ] **Watch, Startseite:** Zeit und Puls sind groß, darunter der Plan und die Strecke
 - [ ] **Equipment (iPhone):** Einstellungen, "Mein Equipment": Nur Pull Buoy und Kickboard an, auf Heute nach
       unten ziehen: Der neue Plan nennt nur diese beiden (oder gar keins). Alles aus: Plan ohne Hilfsmittel
       (Server aktualisiert, `deploy.sh`)
@@ -586,7 +597,8 @@ Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
     SwimWorkout.swift                # Domain-Modell (Pace, SWOLF-Näherung)
     SwimWorkoutRepository.swift      # Liest Workouts aus HealthKit + Mapping
     SwimWorkoutDeduplicator.swift    # Entfernt doppelte Einheiten aus mehreren Quellen
-    AthleteGoal.swift                # Ziel (3,8 km < 60 min bis 04.07.2027)
+    AthleteGoal.swift                # Ziel (Standard 3,8 km < 60 min bis 04.07.2027), Prüfung der Eingabe
+    GoalStore.swift                  # eingestelltes Ziel dauerhaft speichern (Einstellungen)
     DailyVitals.swift                # Tageswerte Ruhepuls/HRV/Schlaf
     AthleteStateSnapshot.swift       # Snapshot-Modell + JSON-Encoder (Schema v1)
     AthleteStateCalculator.swift     # Berechnung Workouts/Vitals -> Snapshot

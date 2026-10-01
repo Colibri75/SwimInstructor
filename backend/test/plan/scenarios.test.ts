@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { assessGoal } from "../../src/plan/goal";
 import { sanitizePlan } from "../../src/plan/sanity";
 import { Snapshot, SnapshotSchema } from "../../src/plan/snapshot";
 import { planOfMeters, sum } from "./fixtures";
@@ -11,7 +12,7 @@ const load = (name: string): Snapshot => SnapshotSchema.parse(JSON.parse(readFil
 const overambitious = () => planOfMeters(4400, { session_type: "intervals", intensity: "hard" });
 
 describe("Szenarien aus M3 (Fixtures fuer npm run eval:scenarios)", () => {
-  it("enthaelt genau die fuenf Szenarien, und alle sind gueltige Snapshots", () => {
+  it("enthaelt genau die neun Szenarien, und alle sind gueltige Snapshots", () => {
     const files = readdirSync(dir).filter((file) => file.endsWith(".json")).sort();
 
     expect(files).toEqual([
@@ -19,7 +20,11 @@ describe("Szenarien aus M3 (Fixtures fuer npm run eval:scenarios)", () => {
       "02-fortschritt.json",
       "03-trainingspause.json",
       "04-zieldatum-nah.json",
-      "05-uebertraining.json"
+      "05-uebertraining.json",
+      "06-ziel-unrealistisch.json",
+      "07-ziel-vorbei.json",
+      "08-ziel-eigen.json",
+      "09-zielwoche.json"
     ]);
     for (const file of files) expect(() => load(file)).not.toThrow();
   });
@@ -62,5 +67,21 @@ describe("Szenarien aus M3 (Fixtures fuer npm run eval:scenarios)", () => {
     expect(result.plan.session_type).toBe("rest");
     expect(result.plan.sets).toEqual([]);
     expect(result.plan.total_distance_meters).toBe(0);
+  });
+
+  it("Ziel-Szenarien 6 bis 9 decken die Phasen und den Realismus-Hinweis ab", () => {
+    expect(assessGoal(load("06-ziel-unrealistisch.json"))).toMatchObject({ phase: "specific", distanceReachableSafely: false });
+    expect(assessGoal(load("07-ziel-vorbei.json")).phase).toBe("past");
+    expect(assessGoal(load("08-ziel-eigen.json"))).toMatchObject({ phase: "specific", distanceReachableSafely: true });
+    expect(assessGoal(load("09-zielwoche.json")).phase).toBe("peak_week");
+    // Szenario 8 hat ein eigenes Ziel, nicht das Standardziel.
+    expect(load("08-ziel-eigen.json").goal.distance_meters).toBe(1500);
+  });
+
+  it("6 Ziel unrealistisch: auch ein ehrgeiziger Plan bleibt in den Tagesgrenzen", () => {
+    const result = sanitizePlan(overambitious(), load("06-ziel-unrealistisch.json"));
+
+    // Wochengrenze 3000 * 1,3 = 3900, schon 3000 gelaufen: Das ferne Ziel hebt die Grenzen nicht auf.
+    expect(sum(result.plan.sets)).toBeLessThanOrEqual(900);
   });
 });

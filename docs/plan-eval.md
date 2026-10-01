@@ -102,3 +102,35 @@ die Erklärung nicht abgeschnitten wird.
 *Nicht nachbewertet:* Diese Prompt-Änderung kam nach Lauf 2 und wurde noch nicht gegen die echte API
 gelaufen. Ein weiterer Lauf (rund $0,20) zeigt, ob die Erklärungen tatsächlich kommen. Langfristig
 (M7) wäre ein Übungslexikon in der App sinnvoll, statt die Erklärung in jedem Plan zu wiederholen.
+
+## Lauf 3 (ausstehend): Tages- und Wochenplan gegen das Gesamtziel
+
+**Noch nicht ausgeführt.** Die Prompts, die Zielprüfung und die neun Szenarien sind fertig, der Lauf gegen die echte
+API fehlt: Der API-Key liegt nur auf dem Server, nicht in der Entwicklungsumgebung. Was geändert wurde und geprüft
+werden soll:
+
+- Das Gesamtziel steht als eigener Abschnitt in beiden Prompts (Phase, Wochen bis zum Ziel, Realismus-Hinweis, Lücke
+  zur Zielpace) und folgt dem, was in den Einstellungen steht.
+- Neue Szenarien: **06** Ziel unrealistisch (10 km in 3 h, noch 5 Wochen, längste Einheit 1,2 km), **07** Zieltag
+  vorbei, **08** eigenes Ziel (1.500 m in 28 min, 12 Wochen), **09** Zielwoche (noch 5 Tage).
+- Neu: Wochenpläne werden mitbewertet (Gerüst: Tage, Typ, Intensität, Umfang, Schwerpunkt).
+
+Auf dem Server (kostet rund $1):
+
+```bash
+cd /opt/stack/swiminstructor && git pull --ff-only origin main
+backend/scripts/eval-in-docker.sh
+```
+
+Danach die Ausgabe (`docs/eval-runs/plan-eval-<Datum-Uhrzeit>.md`) lesen oder sie Claude im Chat geben. Worauf zu achten ist:
+
+| Szenario | Tagesplan | Wochenplan |
+|---|---|---|
+| 06 Ziel unrealistisch | bleibt in den Tagesgrenzen, sagt ehrlich, dass das Ziel so wohl nicht ganz erreichbar ist | wie der Tagesplan, Aufbau statt Sprung |
+| 07 Zieltag vorbei | locker und erhaltend, Hinweis auf ein neues Ziel in den Einstellungen | keine harten Einheiten, Hinweis auf neues Ziel |
+| 08 Eigenes Ziel (1.500 m) | Begründung nennt 1.500 m und 28 min, nicht 3.800 m; zielspezifisch | wie der Tagesplan, mindestens ein Tag mit Zielbezug |
+| 09 Zielwoche | kurz, locker, höchstens kurze Zielpace-Stücke | Umfang unter dem Wochenschnitt, keine harte Einheit |
+| 01 bis 05 | wie in Lauf 2; zusätzlich nennt die Begründung das Ziel | sinnvolle Verteilung, Ruhetage, höchstens zwei harte Tage |
+
+Das Ergebnis (und deine Bewertung) wird hier nachgetragen.
+

@@ -139,16 +139,20 @@ private struct WorkoutMetricsView: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             VStack(alignment: .leading, spacing: 2) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(PlanFormatting.elapsed(workoutManager.elapsedTime(at: context.date)))
-                        .font(.system(.title3, design: .rounded).monospacedDigit().weight(.semibold))
-                        .foregroundStyle(workoutManager.phase == .paused ? Color.orange : Color.yellow)
-                    Spacer(minLength: 4)
-                    if let heartRate = metrics.heartRate {
-                        Label("\(Int(heartRate.rounded()))", systemImage: "heart.fill")
-                            .font(.footnote.monospacedDigit())
-                            .foregroundStyle(.red)
-                    }
+                // Zeit und Puls sind das, was man im Becken liest: groß, der Plan darunter kleiner.
+                Text(PlanFormatting.elapsed(workoutManager.elapsedTime(at: context.date)))
+                    .font(.system(size: 40, weight: .semibold, design: .rounded).monospacedDigit())
+                    .foregroundStyle(workoutManager.phase == .paused ? Color.orange : Color.yellow)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                HStack(spacing: 4) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.red)
+                    Text(metrics.heartRate.map { "\(Int($0.rounded()))" } ?? "--")
+                        .font(.system(size: 32, weight: .semibold, design: .rounded).monospacedDigit())
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
                 }
                 SectionBlock(compact: true)
                 Spacer(minLength: 0)

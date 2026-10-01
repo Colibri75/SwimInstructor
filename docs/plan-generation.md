@@ -141,6 +141,17 @@ Server liest sie mit leerer Liste (`StoredTrainingPlanSchema`), die App ebenso. 
 einem gespeicherten Plan macht ihn ungültig (kein Fallback darauf). Claude soll Hilfsmittel sparsam einsetzen,
 Wünsche des Athleten dazu berücksichtigen und bei Abschnitten mit Hilfsmitteln keine Zielpace vorgeben.
 
+**Gesamtziel:** Das Ziel (Distanz, Zielzeit, Zieltag) stellt der Athlet in der App ein ("Mein Ziel" in den
+Einstellungen, Standard 3,8 km in 60 Minuten bis 04.07.2027, dauerhaft gespeichert, jederzeit änderbar). Es reist
+im Snapshot (`goal`) mit jeder Anfrage. Die Nutzernachricht des Tages- und des Wochenplans enthält daraus den
+Abschnitt "Gesamtziel" (`src/plan/goal.ts`), berechnet aus den Zahlen und nie Freitext: Distanz, Zielzeit, Zielpace,
+Zieltag, Wochen bis dahin, längste Einheit in Prozent der Zieldistanz, Lücke zur Zielpace und die **Phase**
+(`base` über 12 Wochen, `specific` bis 12 Wochen, `taper` die letzten zwei Wochen, `peak_week` die letzte Woche,
+`past` nach dem Zieltag). Ist die Zieldistanz mit etwa 10 % Steigerung pro Woche in der Restzeit nicht sicher
+erreichbar (Realismus-Hinweis), soll Claude das ehrlich in einem Satz sagen. Das Ziel hebt nie die Grenzen auf:
+Umfang, Intensität und Ruhetage prüft weiter die Sicherheitsschicht, ein ferneres oder ehrgeizigeres Ziel macht die
+Einheit von heute also nicht länger.
+
 **Vorhandenes Equipment:** `POST /v1/plan/today` und `POST /v1/plan/week` nehmen optional `equipment`, die Liste
 der Hilfsmittel, die der Athlet hat (Einstellungen der App). Fehlt das Feld, ist jedes erlaubt; eine leere Liste
 heißt "keins". Die Nutzernachricht nennt die vorhandenen Hilfsmittel, die Sicherheitsschicht entfernt alle
@@ -263,10 +274,12 @@ Der Server wiederholt Claude-Aufrufe nicht selbst: Eine Wiederholung nach einem 
 doppelt kosten und über das Zeitlimit des Reverse-Proxys laufen. Bei einem Ausfall liefert er sofort
 den letzten Plan, die App kann es später noch einmal versuchen.
 
-## Die fünf Szenarien bewerten (Definition of Done M5)
+## Die Szenarien bewerten (Definition of Done M5)
 
-Die Szenarien aus M3 liegen als Snapshots in `backend/scenarios/`. Sie gegen die echte API laufen
-zu lassen kostet etwa fünf Anfragen (geschätzt unter $1). Es gibt zwei Wege, je nachdem, wo du bist.
+Die Szenarien liegen als Snapshots in `backend/scenarios/`: die fünf aus M3 und vier zum Gesamtziel (06 Ziel
+unrealistisch, 07 Zieltag vorbei, 08 eigenes Ziel, 09 Zielwoche). Je Szenario läuft ein **Tagesplan** und ein
+**Wochenplan** gegen die echte API, das sind 18 Anfragen (geschätzt rund $1; nur eine Art: `EVAL_SCOPE=day` oder
+`EVAL_SCOPE=week`). Es gibt zwei Wege, je nachdem, wo du bist.
 
 **Auf dem Server (kein Node nötig).** Der Produktionsserver hat nur Docker. Das Hilfsskript startet
 einen Wegwerf-Container, liest den Key aus `/etc/swiminstructor/backend.env` (er wird nie
@@ -288,8 +301,12 @@ mkdir -p ../docs/eval-runs
 ANTHROPIC_API_KEY=sk-ant-... npm run eval:scenarios > ../docs/eval-runs/plan-eval-$(date +%F).md
 ```
 
-Das Skript druckt je Szenario den Snapshot, Claudes Rohplan, die Korrekturen der
-Sicherheitsschicht, den korrigierten Plan sowie Token, Dauer und Kosten. Du bewertest jeden Plan
+Das Skript druckt oben eine Übersichtstabelle und je Szenario den Snapshot, Claudes Rohplan, die Korrekturen der
+Sicherheitsschicht, den korrigierten Plan, die **automatische Zielprüfung** (`src/plan/evaluation.ts`) sowie Token,
+Dauer und Kosten. Die Zielprüfung ist eine Heuristik und ersetzt dein Urteil nicht: Sie zeigt, ob die Begründung das
+Ziel nennt, ob bei unrealistischem Ziel ehrlich darauf hingewiesen wird, ob nach dem Zieltag erhaltend geplant und auf
+ein neues Ziel verwiesen wird, ob die Zielwoche kurz und ohne harte Einheit bleibt, ob der Umfang beim Zuspitzen sinkt
+und ob die zielspezifische Phase Abschnitte nahe der Zielpace enthält. Du bewertest jeden Plan
 von Hand. Deine Bewertung kommt in die Tabelle am Ende von `docs/plan-eval.md` (am einfachsten sagst du sie Claude im Chat, der trägt sie ein). Orientierung:
 
 | Szenario | Ein sinnvoller Plan ... |
