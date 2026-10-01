@@ -376,6 +376,13 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
   Beruhigungszeit, `WaterLockControl`). Nach unten drehen macht nichts.
   Ob "oben" die richtige Richtung ist, lässt sich nur an der Uhr prüfen: Die Konstante steht in
   `WaterLockControl.isAdvance` (ein Vorzeichen).
+  **Auch bei Wassersperre, ohne zu entsperren:** *Crown und Seitentaste gleichzeitig zweimal kurz
+  hintereinander drücken* (Pause und gleich wieder Weiter, höchstens 3 Sekunden) schaltet den nächsten
+  Abschnitt weiter (`SectionGesture`). Das ist die einzige Tastenkombination, die das System einer App
+  bei Wassersperre meldet: Apps sehen die Seitentaste einer Series oder SE **nie allein** (Apple sperrt
+  sie), nur den Zustand "pausiert" und "läuft". Wer am Beckenrand länger pausiert, pausiert normal. Ein
+  Tippen auf "Pause" auf dem Bildschirm zählt nie als Geste. Die kurzen Pausen stehen als Pause/Fortsetzen
+  im Workout in Health. Die Plan-Seite zeigt, ob die Uhr gesperrt ist (Schloss).
 - **Health-Rechte:** Die Watch fragt jetzt auch Schreibrechte an (Workout, Strecke, Züge, Puls,
   Energie), einmal beim Öffnen, damit der Dialog nicht erst am Beckenrand kommt.
 
@@ -392,6 +399,9 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
       zählen mit; der Plan-Bildschirm springt nach dem Einschwimmen in den Hauptsatz
 - [ ] **Im Becken:** Pause und Fortsetzen funktionieren, nach "Weiter" ist die Wassersperre wieder an,
       Beenden zeigt die Zusammenfassung
+- [ ] **Im Becken, gesperrt:** Crown + Seitentaste gleichzeitig drücken (Pause), gleich noch einmal
+      (Weiter): Haptik, der Plan-Bildschirm springt zum nächsten Abschnitt, die Wassersperre ist an.
+      Länger als 3 Sekunden pausieren bleibt eine normale Pause
 - [ ] **Im Becken:** Wassersperre ist beim Schwimmen an. Crown drehen entsperrt, eine weitere Drehung
       **nach oben** springt zum nächsten Abschnitt (Haptik, der Plan-Bildschirm zeigt ihn), danach ist
       die Wassersperre wieder an. Falls die Richtung verkehrt ist, melde dich (Vorzeichen in
