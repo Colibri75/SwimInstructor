@@ -31,12 +31,16 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
     @Published private(set) var errorMessage: String?
     /// Strecke (Meter), bei der der Athlet "nächster Abschnitt" ausgelöst hat (Crown nach oben).
     @Published private(set) var sectionAdvances: [Double] = []
+    /// Wassersperre an? Wird beim Takt der Anzeige aktualisiert und zeigt auf der Uhr, ob die Erkennung des Entsperrens greift.
+    @Published private(set) var isWaterLocked = true
 
     private let healthStore = HKHealthStore()
     private var session: HKWorkoutSession?
     private var builder: HKLiveWorkoutBuilder?
     private var lapEvents = 0
     private var waterLock = WaterLockControl()
+    private var sectionGesture = SectionGesture()
+    private var pausedByButtonOnScreen = false
 
     func start(poolLengthMeters: Int) async {
         guard !phase.isActive else { return }
@@ -46,6 +50,8 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         lapEvents = 0
         sectionAdvances = []
         waterLock = WaterLockControl()
+        sectionGesture.reset()
+        pausedByButtonOnScreen = false
         errorMessage = nil
         phase = .starting
 
@@ -87,6 +93,8 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
     }
 
     func pause() {
+        // Pause per Tippen auf dem Bildschirm ist nie die Tastengeste (Crown + Seitentaste).
+        pausedByButtonOnScreen = true
         session?.pause()
     }
 
@@ -103,6 +111,7 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
     /// Entsperren und sperrt nach einer Weile ohne Eingabe wieder.
     func tickWaterLock(now: Date = Date()) {
         let isLocked = WKInterfaceDevice.current().isWaterLockEnabled
+        isWaterLocked = isLocked
         if waterLock.update(isRunning: phase == .running, isLocked: isLocked, now: now) == .lock {
             lockWater()
         }
@@ -145,6 +154,7 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         phase = .idle
         metrics = .zero
         sectionAdvances = []
+        sectionGesture.reset()
         errorMessage = nil
     }
 
@@ -159,9 +169,16 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
             phase = .running
             // Auch nach "Weiter": Wer schwimmt, hat die Wassersperre an.
             lockWater()
+            // Zweimal kurz Crown + Seitentaste (Pause und gleich Weiter): nächster Abschnitt.
+            if sectionGesture.didResume(at: date) {
+                advanceSection()
+            }
         case .paused:
             phase = .paused
+            sectionGesture.didPause(at: date, byButtonOnScreen: pausedByButtonOnScreen)
+            pausedByButtonOnScreen = false
         case .ended:
+            sectionGesture.reset()
             Task { await finish(at: date) }
         default:
             break

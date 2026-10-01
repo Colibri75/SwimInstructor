@@ -6,6 +6,7 @@ struct WatchWorkoutView: View {
     @EnvironmentObject private var workoutManager: SwimWorkoutManager
     @State private var page = 1
     @State private var crown = 0.0
+    @FocusState private var crownHasFocus: Bool
 
     var body: some View {
         TabView(selection: $page) {
@@ -20,10 +21,14 @@ struct WatchWorkoutView: View {
         .onChange(of: workoutManager.phase) { _, _ in
             // Nach Pause oder Fortsetzen zurück zu den Werten.
             withAnimation { page = 1 }
+            // Die Crown liefert nur Drehungen, solange die Ansicht den Fokus hat.
+            crownHasFocus = true
         }
         // Crown nach oben schaltet den nächsten Abschnitt weiter, sobald die Wassersperre aus ist.
         // Das Entsperren selbst übernimmt das System.
         .focusable()
+        .focused($crownHasFocus)
+        .onAppear { crownHasFocus = true }
         .digitalCrownRotation($crown, from: -20, through: 20, by: 1, sensitivity: .medium, isContinuous: false, isHapticFeedbackEnabled: true)
         .onChange(of: crown) { _, value in
             workoutManager.noteInput()
@@ -101,7 +106,13 @@ private struct WorkoutPlanView: View {
                         .font(.footnote.monospacedDigit())
                         .foregroundStyle(.secondary)
                 }
-                Text("Krone nach oben: nächster Abschnitt")
+                Label(
+                    workoutManager.isWaterLocked ? "Gesperrt" : "Entsperrt: Krone nach oben = weiter",
+                    systemImage: workoutManager.isWaterLocked ? "lock.fill" : "lock.open.fill"
+                )
+                .font(.caption2)
+                .foregroundStyle(workoutManager.isWaterLocked ? Color.secondary : Color.yellow)
+                Text("Auch gesperrt: Krone + Seitentaste zweimal kurz")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             case let .completed(extraMeters)?:
