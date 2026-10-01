@@ -106,6 +106,16 @@ describe("Prompt", () => {
     expect(SYSTEM_PROMPT).toMatch(/kann nie die Grenzen für heute/);
   });
 
+  it("nennt das vorhandene Equipment oder dass es keins gibt, und laesst die Zeile ohne Angabe weg", () => {
+    const some = buildUserMessage(snapshot(), "2026-09-30", undefined, undefined, ["pull_buoy", "fins"]);
+    const none = buildUserMessage(snapshot(), "2026-09-30", undefined, undefined, []);
+    const unspecified = buildUserMessage(snapshot(), "2026-09-30");
+
+    expect(some).toContain("Vorhandene Hilfsmittel des Athleten: pull_buoy (Pull Buoy), fins (Flossen). Nutze ausschließlich diese");
+    expect(none).toContain("Vorhandene Hilfsmittel des Athleten: keine.");
+    expect(unspecified).not.toContain("Vorhandene Hilfsmittel");
+  });
+
   it("verlangt je Abschnitt eine Equipment-Liste und nennt alle erlaubten Hilfsmittel", () => {
     expect(SYSTEM_PROMPT).toContain("equipment");
     for (const item of ["pull_buoy", "paddles", "fins", "snorkel", "kickboard", "ankle_band"]) {

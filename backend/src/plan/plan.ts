@@ -13,6 +13,19 @@ export const INTENSITIES = ["rest", "easy", "moderate", "hard"] as const;
 /** Hilfsmittel, die ein Abschnitt verlangen kann. Die App uebersetzt die Werte in deutsche Namen. */
 export const EQUIPMENT = ["pull_buoy", "paddles", "fins", "snorkel", "kickboard", "ankle_band"] as const;
 
+export type Equipment = (typeof EQUIPMENT)[number];
+/** Deutsche Namen, fuer Hinweise der Sicherheitsschicht und die Nutzernachricht. */
+export const EQUIPMENT_LABELS: Record<Equipment, string> = {
+  pull_buoy: "Pull Buoy",
+  paddles: "Paddles",
+  fins: "Flossen",
+  snorkel: "Schnorchel",
+  kickboard: "Kickboard",
+  ankle_band: "Beinband"
+};
+/** Das Equipment, das der Athlet hat (Anfrage der App). Leere Liste: gar keins. */
+export const EquipmentListSchema = z.array(z.enum(EQUIPMENT)).max(EQUIPMENT.length);
+
 export const PlanSetSchema = z.object({
   name: z.string().describe("Name des Abschnitts, z. B. Einschwimmen, Technik, Hauptsatz, Ausschwimmen"),
   repetitions: z.number().int().describe("Anzahl der Wiederholungen"),

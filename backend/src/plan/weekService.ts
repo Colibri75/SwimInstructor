@@ -2,6 +2,7 @@ import { Logger } from "pino";
 import { GenerationBudget } from "./budget";
 import { FallbackReason, PlanGenerationError, PlanUnavailableError } from "./errors";
 import { WeekGenerator } from "./generator";
+import { Equipment } from "./plan";
 import { Snapshot } from "./snapshot";
 import { WeekDay, WeekPlanSchema, weekDates } from "./week";
 import { sanitizeWeek, WeekContext } from "./weekSanity";
@@ -16,6 +17,7 @@ export interface WeekRequest {
   unavailableDates: string[];
   swumThisWeek: { date: string; meters: number }[];
   wishes?: string;
+  equipment?: readonly Equipment[];
 }
 
 export interface WeekResult {
@@ -63,7 +65,7 @@ export class WeekPlanService {
 
     const started = Date.now();
     try {
-      const generated = await generator.generateWeek({ snapshot: request.snapshot, context, ...(wishes ? { wishes } : {}) });
+      const generated = await generator.generateWeek({ snapshot: request.snapshot, context, ...(wishes ? { wishes } : {}), ...(request.equipment ? { equipment: request.equipment } : {}) });
       const parsed = WeekPlanSchema.safeParse(generated.raw);
       if (!parsed.success) {
         logger.warn({ issues: parsed.error.issues.slice(0, 5) }, "claude week plan does not match schema");

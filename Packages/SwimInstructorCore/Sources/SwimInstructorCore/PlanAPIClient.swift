@@ -70,11 +70,15 @@ public struct PlanRequestOptions: Equatable, Sendable {
     public var wishes: String?
     /// Vorgabe des Wochenplans für heute (Typ, Intensität, Umfang, Schwerpunkt).
     public var dayPlan: DayPlanTarget?
+    /// Das Equipment, das der Athlet hat (Rohwerte des Servers). `nil`: keine Angabe, jedes ist erlaubt;
+    /// leer: keins.
+    public var equipment: [String]?
 
-    public init(regenerate: Bool = false, wishes: String? = nil, dayPlan: DayPlanTarget? = nil) {
+    public init(regenerate: Bool = false, wishes: String? = nil, dayPlan: DayPlanTarget? = nil, equipment: [String]? = nil) {
         self.regenerate = regenerate
         self.wishes = wishes
         self.dayPlan = dayPlan
+        self.equipment = equipment
     }
 }
 
@@ -117,7 +121,8 @@ public struct PlanAPIClient: PlanProviding {
             snapshot: snapshot,
             regenerate: options.regenerate ? true : nil,
             wishes: Self.cleaned(options.wishes),
-            dayPlan: options.dayPlan
+            dayPlan: options.dayPlan,
+            equipment: options.equipment
         ))
 
         let (data, response) = try await perform(request)
@@ -163,6 +168,8 @@ public struct PlanAPIClient: PlanProviding {
         let wishes: String?
         /// Fehlt im JSON ohne Wochenplan.
         let dayPlan: DayPlanTarget?
+        /// Fehlt im JSON ohne Angabe; eine leere Liste geht als `[]` mit.
+        let equipment: [String]?
     }
 
     private struct ErrorBody: Decodable {
@@ -243,6 +250,8 @@ public struct WeekPlanRequest: Equatable, Sendable {
     /// Was vor `fromDate` in dieser Woche schon geschwommen wurde.
     public var swumThisWeek: [SwumDay]
     public var wishes: String?
+    /// Das Equipment, das der Athlet hat; `nil`: keine Angabe.
+    public var equipment: [String]?
 
     public init(
         snapshot: AthleteStateSnapshot,
@@ -251,7 +260,8 @@ public struct WeekPlanRequest: Equatable, Sendable {
         today: String,
         unavailableDates: [String] = [],
         swumThisWeek: [SwumDay] = [],
-        wishes: String? = nil
+        wishes: String? = nil,
+        equipment: [String]? = nil
     ) {
         self.snapshot = snapshot
         self.weekStart = weekStart
@@ -260,6 +270,7 @@ public struct WeekPlanRequest: Equatable, Sendable {
         self.unavailableDates = unavailableDates
         self.swumThisWeek = swumThisWeek
         self.wishes = wishes
+        self.equipment = equipment
     }
 }
 
@@ -279,7 +290,8 @@ extension PlanAPIClient: WeekPlanProviding {
             today: weekRequest.today,
             unavailableDates: weekRequest.unavailableDates,
             swumThisWeek: weekRequest.swumThisWeek,
-            wishes: Self.cleaned(weekRequest.wishes)
+            wishes: Self.cleaned(weekRequest.wishes),
+            equipment: weekRequest.equipment
         ))
 
         let (data, response) = try await perform(request)
@@ -309,6 +321,7 @@ extension PlanAPIClient: WeekPlanProviding {
         let unavailableDates: [String]
         let swumThisWeek: [SwumDay]
         let wishes: String?
+        let equipment: [String]?
     }
 }
 

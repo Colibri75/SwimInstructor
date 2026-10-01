@@ -404,6 +404,11 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
   `kickboard`, `ankle_band`, höchstens drei, siehe [plan-generation.md](docs/plan-generation.md)).
   Die Karte auf dem iPhone und die Watch zeigen "Mitnehmen: …" über dem Plan und das Equipment je
   Abschnitt. Pläne aus der Zeit davor haben keines (leere Liste).
+- **Mein Equipment (Einstellungen):** Im Zahnrad (iPhone) legst du fest, welche Hilfsmittel du hast (Pull Buoy,
+  Paddles, Flossen, Schnorchel, Kickboard, Beinband). Ohne Auswahl gelten alle, mit der Auswahl plant Claude
+  nur damit; was nicht an ist, entfernt die Sicherheitsschicht aus dem Plan und vermerkt es unter den
+  Korrekturen. Die Auswahl geht bei Tages- und Wochenplan mit (`equipment`) und gehört zum Cache-Schlüssel:
+  Ändert sie sich, gibt es beim nächsten Holen einen neuen Plan. Gespeichert wird sofort beim Umschalten.
 - **Health-Rechte:** Die Watch fragt jetzt auch Schreibrechte an (Workout, Strecke, Züge, Puls,
   Energie), einmal beim Öffnen, damit der Dialog nicht erst am Beckenrand kommt.
 
@@ -434,6 +439,9 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
       **nach oben** springt zum nächsten, **nach unten** zum vorherigen Abschnitt (Haptik, der
       Plan-Bildschirm zeigt ihn), danach ist die Wassersperre wieder an. Falls die Richtung verkehrt
       ist, melde dich (`CrownRotationTracker.upIsPositive`)
+- [ ] **Equipment (iPhone):** Einstellungen, "Mein Equipment": Nur Pull Buoy und Kickboard an, auf Heute nach
+      unten ziehen: Der neue Plan nennt nur diese beiden (oder gar keins). Alles aus: Plan ohne Hilfsmittel
+      (Server aktualisiert, `deploy.sh`)
 - [ ] **Danach:** Das Workout steht in der Fitness-App als Beckenschwimmen mit Bahnen; die
       iPhone-App zeigt es unter "Bisherige Einheiten"
 

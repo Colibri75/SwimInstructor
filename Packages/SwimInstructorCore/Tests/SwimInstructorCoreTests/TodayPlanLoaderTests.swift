@@ -54,6 +54,7 @@ final class TodayPlanLoaderTests: XCTestCase {
         history: PlanHistoryStoring? = nil,
         wishes: DailyWishStoring? = nil,
         dayTarget: @escaping @MainActor () -> DayPlanTarget? = { nil },
+        equipment: @escaping @MainActor () -> [String]? = { nil },
         provider: CountingProvider?,
         workouts: FakeWorkoutRepository = FakeWorkoutRepository(workouts: [TestFixtures.workout(daysAgo: 1, meters: 1500)]),
         authorizer: Authorizer = Authorizer()
@@ -70,9 +71,31 @@ final class TodayPlanLoaderTests: XCTestCase {
             history: history,
             wishStore: wishes,
             dayTarget: dayTarget,
+            equipment: equipment,
             now: { TestFixtures.now },
             calendar: TestFixtures.utc
         )
+    }
+
+    func testTheOwnedEquipmentGoesWithEveryPlanRequest() async {
+        let provider = CountingProvider(.success(TestFixtures.response()))
+        var owned = ["paddles"]
+        let loader = makeLoader(equipment: { owned }, provider: provider)
+
+        await loader.refresh()
+        owned = []
+        await loader.refresh()
+
+        XCTAssertEqual(provider.receivedOptions.map(\.equipment), [["paddles"], []])
+    }
+
+    func testWithoutEquipmentSettingNothingIsSent() async {
+        let provider = CountingProvider(.success(TestFixtures.response()))
+        let loader = makeLoader(provider: provider)
+
+        await loader.refresh()
+
+        XCTAssertNil(provider.receivedOptions.first?.equipment)
     }
 
     func testFetchesAndCachesPlanWhenNoneForToday() async {

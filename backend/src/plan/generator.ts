@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { PlanGenerationError } from "./errors";
-import { TrainingPlanSchema } from "./plan";
+import { Equipment, TrainingPlanSchema } from "./plan";
 import { buildUserMessage, SYSTEM_PROMPT } from "./prompt";
 import { Snapshot } from "./snapshot";
 import { DayTarget, WeekPlanSchema } from "./week";
@@ -19,12 +19,12 @@ export interface GeneratedPlan {
 
 /** Naht fuer Tests: Der Service kennt nur dieses Interface, nie das Anthropic-SDK. */
 export interface PlanGenerator {
-  generate(input: { snapshot: Snapshot; date: string; wishes?: string; dayTarget?: DayTarget }): Promise<GeneratedPlan>;
+  generate(input: { snapshot: Snapshot; date: string; wishes?: string; dayTarget?: DayTarget; equipment?: readonly Equipment[] }): Promise<GeneratedPlan>;
 }
 
 /** Wie PlanGenerator, fuer den Wochenplan. */
 export interface WeekGenerator {
-  generateWeek(input: { snapshot: Snapshot; context: WeekContext; wishes?: string }): Promise<GeneratedPlan>;
+  generateWeek(input: { snapshot: Snapshot; context: WeekContext; wishes?: string; equipment?: readonly Equipment[] }): Promise<GeneratedPlan>;
 }
 
 export interface ClaudeOptions {
@@ -43,12 +43,12 @@ export class ClaudePlanGenerator implements PlanGenerator, WeekGenerator {
     private readonly options: ClaudeOptions
   ) {}
 
-  async generate({ snapshot, date, wishes, dayTarget }: { snapshot: Snapshot; date: string; wishes?: string; dayTarget?: DayTarget }): Promise<GeneratedPlan> {
-    return this.call(SYSTEM_PROMPT, buildUserMessage(snapshot, date, wishes, dayTarget), TrainingPlanSchema);
+  async generate({ snapshot, date, wishes, dayTarget, equipment }: Parameters<PlanGenerator["generate"]>[0]): Promise<GeneratedPlan> {
+    return this.call(SYSTEM_PROMPT, buildUserMessage(snapshot, date, wishes, dayTarget, equipment), TrainingPlanSchema);
   }
 
-  async generateWeek({ snapshot, context, wishes }: { snapshot: Snapshot; context: WeekContext; wishes?: string }): Promise<GeneratedPlan> {
-    return this.call(WEEK_SYSTEM_PROMPT, buildWeekUserMessage(snapshot, context, wishes), WeekPlanSchema);
+  async generateWeek({ snapshot, context, wishes, equipment }: Parameters<WeekGenerator["generateWeek"]>[0]): Promise<GeneratedPlan> {
+    return this.call(WEEK_SYSTEM_PROMPT, buildWeekUserMessage(snapshot, context, wishes, undefined, equipment), WeekPlanSchema);
   }
 
   /** Ein Aufruf mit strukturierter Ausgabe nach `schema`; Fehler werden als PlanGenerationError klassifiziert. */

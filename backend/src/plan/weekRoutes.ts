@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { PlanUnavailableError } from "./errors";
+import { EquipmentListSchema } from "./plan";
 import { SnapshotSchema } from "./snapshot";
 import { addDays, DATE_PATTERN, isRealDate, weekdayIndex } from "./week";
 import { MAX_WISH_LENGTH } from "./routes";
@@ -18,7 +19,8 @@ const WeekRequestSchema = z.object({
   today: DateString,
   unavailable_dates: z.array(DateString).max(7).optional(),
   swum_this_week: z.array(z.object({ date: DateString, meters: z.number().min(0).max(100_000) })).max(7).optional(),
-  wishes: z.string().max(MAX_WISH_LENGTH).optional()
+  wishes: z.string().max(MAX_WISH_LENGTH).optional(),
+  equipment: EquipmentListSchema.optional()
 });
 
 interface Detail {
@@ -75,7 +77,8 @@ export function weekRoutes(service: WeekPlanService): (router: Router) => void {
           today: data.today,
           unavailableDates: data.unavailable_dates ?? [],
           swumThisWeek: data.swum_this_week ?? [],
-          wishes: data.wishes
+          wishes: data.wishes,
+          equipment: data.equipment
         });
         res.json(toResponse(result));
       } catch (error) {

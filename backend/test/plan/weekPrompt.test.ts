@@ -32,6 +32,14 @@ describe("Wochen-Prompt", () => {
     expect(message).toContain("Heute (2026-09-30): höchstens 2400 m");
   });
 
+  it("nennt das vorhandene Equipment, ohne ein Abschnitts-Feld zu verlangen", () => {
+    const message = buildWeekUserMessage(snapshot(), context(), undefined, undefined, ["kickboard"]);
+
+    expect(message).toContain("Vorhandene Hilfsmittel des Athleten: kickboard (Kickboard)");
+    expect(buildWeekUserMessage(snapshot(), context(), undefined, undefined, [])).toContain("Wähle keinen Schwerpunkt, der Hilfsmittel verlangt.");
+    expect(buildWeekUserMessage(snapshot(), context())).not.toContain("Vorhandene Hilfsmittel");
+  });
+
   it("schreibt einen Pflicht-Ruhetag heute vor", () => {
     const message = buildWeekUserMessage(snapshot({ flags: ["overreaching_risk"] }), context());
 

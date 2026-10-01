@@ -64,6 +64,7 @@ describe("POST /v1/plan/week", () => {
     ["unmoegliches Geschwommen-Datum", { swum_this_week: [{ date: "2026-02-30", meters: 100 }] }, "swum_this_week.0.date"],
     ["negative Meter", { swum_this_week: [{ date: "2026-09-28", meters: -1 }] }, "swum_this_week.0.meters"],
     ["zu langer Wunsch", { wishes: "x".repeat(501) }, "wishes"],
+    ["unbekanntes Equipment", { equipment: ["jetpack"] }, "equipment.0"],
     ["zu viele Tage ohne Zeit", { unavailable_dates: Array(8).fill("2026-10-01") }, "unavailable_dates"]
   ])("lehnt ab: %s", async (_name, extra, path) => {
     const response = await request(appWith(ok())).post("/v1/plan/week").set(auth).send(body(extra));

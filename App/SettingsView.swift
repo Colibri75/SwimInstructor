@@ -16,6 +16,8 @@ struct SettingsView: View {
     @State private var message: String?
     @State private var messageIsError = false
     @State private var isChecking = false
+    @State private var ownedEquipment: Set<EquipmentItem> = []
+    private let equipmentStore = UserDefaultsOwnedEquipmentStore()
 
     init(onSave: @escaping () -> Void = {}) {
         self.onSave = onSave
@@ -50,6 +52,16 @@ struct SettingsView: View {
                     }
                 }
 
+                Section {
+                    ForEach(EquipmentItem.allCases) { item in
+                        Toggle(item.title, isOn: equipmentBinding(for: item))
+                    }
+                } header: {
+                    Text("Mein Equipment")
+                } footer: {
+                    Text("Der Plan nutzt nur, was hier an ist. Die Auswahl gilt ab dem nächsten Plan (zum Aktualisieren auf Heute nach unten ziehen). Ohne Auswahl plant Claude ganz ohne Hilfsmittel.")
+                }
+
                 Section("Apple Health") {
                     Button("Health-Zugriff erneut anfragen") {
                         Task { try? await healthKitManager.requestAuthorization() }
@@ -77,8 +89,26 @@ struct SettingsView: View {
                     Button("Sichern") { save() }
                 }
             }
-            .onAppear { urlText = settings.baseURL.absoluteString }
+            .onAppear {
+                urlText = settings.baseURL.absoluteString
+                ownedEquipment = Set(equipmentStore.ownedEquipment().compactMap(EquipmentItem.init(rawValue:)))
+            }
         }
+    }
+
+    /// Schaltet ein Hilfsmittel an oder aus und merkt es sofort (unabhängig von "Sichern").
+    private func equipmentBinding(for item: EquipmentItem) -> Binding<Bool> {
+        Binding(
+            get: { ownedEquipment.contains(item) },
+            set: { isOn in
+                if isOn {
+                    ownedEquipment.insert(item)
+                } else {
+                    ownedEquipment.remove(item)
+                }
+                equipmentStore.setOwnedEquipment(ownedEquipment)
+            }
+        )
     }
 
     private func save() {

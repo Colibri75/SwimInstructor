@@ -29,6 +29,9 @@ public final class WeekPlanLoader: ObservableObject {
     /// Liefert Zustand und Einheiten; wird nach dem Anlegen gesetzt, weil es vom Heute-Bildschirm abhängt.
     public var contextProvider: @MainActor () -> PlanningContext? = { nil }
 
+    /// Das Equipment des Athleten für die Anfrage (Rohwerte); `nil`: keine Angabe.
+    public var equipmentProvider: @MainActor () -> [String]? = { nil }
+
     private let store: WeekPlanStoring
     private let planProvider: @MainActor () -> WeekPlanProviding?
     private let now: () -> Date
@@ -113,7 +116,8 @@ public final class WeekPlanLoader: ObservableObject {
             today: todayKey,
             unavailableDates: (existing?.days ?? []).filter { $0.isUnavailable && $0.date >= fromDate }.map(\.date),
             swumThisWeek: swumDays(weekStarting: weekStart, before: fromDate, workouts: context.workouts),
-            wishes: wishes
+            wishes: wishes,
+            equipment: equipmentProvider()
         )
 
         isLoading = true

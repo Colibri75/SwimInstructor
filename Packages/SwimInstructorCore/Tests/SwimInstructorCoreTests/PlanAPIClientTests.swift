@@ -59,6 +59,22 @@ final class PlanAPIClientTests: XCTestCase {
         XCTAssertNil(bodies[0]["regenerate"])
     }
 
+    func testEquipmentIsSentWhenGivenIncludingAnEmptyList() async throws {
+        let transport = StubTransport(status: 200, body: TestFixtures.responseJSON)
+        let client = PlanAPIClient(configuration: configuration, transport: transport)
+
+        _ = try await client.fetchPlan(for: TestFixtures.snapshot, options: PlanRequestOptions(equipment: ["pull_buoy", "fins"]))
+        _ = try await client.fetchPlan(for: TestFixtures.snapshot, options: PlanRequestOptions(equipment: []))
+        _ = try await client.fetchTodayPlan(for: TestFixtures.snapshot)
+
+        let bodies = try transport.requests.map { request -> [String: Any] in
+            try XCTUnwrap(JSONSerialization.jsonObject(with: try XCTUnwrap(request.httpBody)) as? [String: Any])
+        }
+        XCTAssertEqual(bodies[0]["equipment"] as? [String], ["pull_buoy", "fins"])
+        XCTAssertEqual(bodies[1]["equipment"] as? [String], [])
+        XCTAssertNil(bodies[2]["equipment"])
+    }
+
     func testOverlongWishIsCutToTheLimit() {
         let long = String(repeating: "x", count: DailyWish.maxLength + 50)
 
@@ -221,6 +237,20 @@ final class PlanAPIClientTests: XCTestCase {
         XCTAssertEqual(swum.first?["date"] as? String, "2026-09-28")
         XCTAssertEqual(swum.first?["meters"] as? Double, 900)
         XCTAssertNotNil(body["snapshot"] as? [String: Any])
+    }
+
+    func testWeekPlanRequestCarriesTheEquipment() async throws {
+        let transport = StubTransport(status: 200, body: WeekFixtures.responseJSON)
+        let client = PlanAPIClient(configuration: configuration, transport: transport)
+
+        _ = try await client.fetchWeekPlan(WeekPlanRequest(snapshot: TestFixtures.snapshot, weekStart: "2026-09-28", fromDate: "2026-09-28", today: "2026-09-28", equipment: ["kickboard"]))
+        _ = try await client.fetchWeekPlan(WeekPlanRequest(snapshot: TestFixtures.snapshot, weekStart: "2026-09-28", fromDate: "2026-09-28", today: "2026-09-28"))
+
+        let bodies = try transport.requests.map { request -> [String: Any] in
+            try XCTUnwrap(JSONSerialization.jsonObject(with: try XCTUnwrap(request.httpBody)) as? [String: Any])
+        }
+        XCTAssertEqual(bodies[0]["equipment"] as? [String], ["kickboard"])
+        XCTAssertNil(bodies[1]["equipment"])
     }
 
     func testWeekPlanRequestWithoutWishSendsNone() async throws {

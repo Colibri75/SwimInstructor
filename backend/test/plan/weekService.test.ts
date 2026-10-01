@@ -59,6 +59,16 @@ describe("WeekPlanService", () => {
     expect(result.wishes).toBe("mehr Technik");
   });
 
+  it("gibt das Equipment an Claude weiter und laesst es ohne Angabe weg", async () => {
+    const { service, generateWeek } = setup();
+
+    await service.planWeek(request({ equipment: ["pull_buoy"] }));
+    await service.planWeek(request());
+
+    expect(generateWeek.mock.calls[0][0].equipment).toEqual(["pull_buoy"]);
+    expect(generateWeek.mock.calls[1][0]).not.toHaveProperty("equipment");
+  });
+
   it("uebergibt ohne Wunsch kein wishes-Feld", async () => {
     const { service, generateWeek } = setup();
 

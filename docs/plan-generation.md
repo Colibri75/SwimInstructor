@@ -141,6 +141,13 @@ Server liest sie mit leerer Liste (`StoredTrainingPlanSchema`), die App ebenso. 
 einem gespeicherten Plan macht ihn ungültig (kein Fallback darauf). Claude soll Hilfsmittel sparsam einsetzen,
 Wünsche des Athleten dazu berücksichtigen und bei Abschnitten mit Hilfsmitteln keine Zielpace vorgeben.
 
+**Vorhandenes Equipment:** `POST /v1/plan/today` und `POST /v1/plan/week` nehmen optional `equipment`, die Liste
+der Hilfsmittel, die der Athlet hat (Einstellungen der App). Fehlt das Feld, ist jedes erlaubt; eine leere Liste
+heißt "keins". Die Nutzernachricht nennt die vorhandenen Hilfsmittel, die Sicherheitsschicht entfernt alle
+anderen aus den Abschnitten und schreibt das in `adjustments` ("Hilfsmittel entfernt, die du nicht hast: …").
+Die Auswahl gehört (sortiert) zum Cache-Schlüssel des Tagesplans: Ändert sie sich, entsteht ein neuer Plan. Beim
+Wochenplan (nur Gerüst) wählt Claude keinen Schwerpunkt, der Hilfsmittel verlangt, die fehlen.
+
 Fehlerantworten: `400 invalid_request` (mit `details` je fehlerhaftem Feld), `401 unauthorized`,
 `503 plan_unavailable` (mit `reason`, wenn Claude ausfällt und noch kein Plan existiert).
 

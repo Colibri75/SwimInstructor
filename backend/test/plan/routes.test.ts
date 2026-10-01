@@ -67,6 +67,22 @@ describe("POST /v1/plan/today", () => {
     expect(generate).toHaveBeenCalledWith(expect.objectContaining({ wishes: "Schulter schonen" }));
   });
 
+  it("reicht das Equipment an Claude weiter und lehnt unbekanntes ab", async () => {
+    const generate = ok();
+    const app = appWith(generate);
+
+    const good = await request(app).post("/v1/plan/today").set(auth).send({ snapshot: snapshot(), equipment: ["paddles", "fins"] });
+    const empty = await request(app).post("/v1/plan/today").set(auth).send({ snapshot: snapshot(), equipment: [] });
+    const unknown = await request(app).post("/v1/plan/today").set(auth).send({ snapshot: snapshot(), equipment: ["jetpack"] });
+
+    expect(good.status).toBe(200);
+    expect(generate).toHaveBeenCalledWith(expect.objectContaining({ equipment: ["paddles", "fins"] }));
+    expect(empty.status).toBe(200);
+    expect(generate).toHaveBeenCalledWith(expect.objectContaining({ equipment: [] }));
+    expect(unknown.status).toBe(400);
+    expect(unknown.body.details[0].path).toBe("equipment.0");
+  });
+
   it("meldet den Wunsch in der Antwort zurueck, damit die App zeigen kann, dass er angekommen ist", async () => {
     const app = appWith(ok());
 

@@ -300,6 +300,26 @@ describe("sanitizePlan: Rechenfehler und Formalien", () => {
     expect(result.plan.total_distance_meters).toBeLessThan(4000);
   });
 
+  it("entfernt Hilfsmittel, die der Athlet nicht hat, und sagt es", () => {
+    const geared = plan({
+      sets: [set({ repetitions: 4, equipment: ["pull_buoy", "paddles"] }), set({ name: "Beine", repetitions: 4, equipment: ["fins", "kickboard"] })],
+      total_distance_meters: 1600
+    });
+
+    const result = sanitizePlan(geared, snapshot(), undefined, { availableEquipment: ["pull_buoy", "kickboard"] });
+
+    expect(result.plan.sets.map((s) => s.equipment)).toEqual([["pull_buoy"], ["kickboard"]]);
+    expect(result.adjustments).toEqual(["Hilfsmittel entfernt, die du nicht hast: Paddles, Flossen"]);
+  });
+
+  it("entfernt jedes Hilfsmittel bei leerer Liste und laesst ohne Angabe alles stehen", () => {
+    const geared = plan({ sets: [set({ repetitions: 4, equipment: ["pull_buoy", "paddles"] })], total_distance_meters: 800 });
+
+    expect(sanitizePlan(geared, snapshot(), undefined, { availableEquipment: [] }).plan.sets[0].equipment).toEqual([]);
+    expect(sanitizePlan(geared, snapshot()).plan.sets[0].equipment).toEqual(["pull_buoy", "paddles"]);
+    expect(sanitizePlan(geared, snapshot(), undefined, { availableEquipment: ["pull_buoy", "paddles"] }).adjustments).toEqual([]);
+  });
+
   it("kuerzt zu lange Texte und begrenzt die Zahl der Hinweise", () => {
     const wordy = plan({ rationale: "x".repeat(5000), coach_notes: Array.from({ length: 12 }, () => "y".repeat(1000)) });
 

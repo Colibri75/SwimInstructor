@@ -44,6 +44,16 @@ final class WeekPlanLoaderTests: XCTestCase {
         return loader
     }
 
+    func testTheWeekRequestCarriesTheOwnedEquipment() async {
+        let provider = FakeProvider()
+        let loader = makeLoader(provider: provider)
+        loader.equipmentProvider = { ["fins", "snorkel"] }
+
+        await loader.plan(weekStarting: "2026-09-28")
+
+        XCTAssertEqual(provider.requests.first?.equipment, ["fins", "snorkel"])
+    }
+
     // MARK: - Lesen
 
     func testStartsOnTheCurrentWeekAndKnowsToday() {

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { PlanUnavailableError } from "./errors";
+import { EquipmentListSchema } from "./plan";
 import { PlanResult, PlanService } from "./service";
 import { SnapshotSchema } from "./snapshot";
 import { DayTargetSchema } from "./week";
@@ -17,7 +18,9 @@ const PlanRequestSchema = z.object({
   regenerate: z.boolean().optional(),
   wishes: z.string().max(MAX_WISH_LENGTH).optional(),
   /** Vorgabe des Wochenplans fuer heute (Typ, Intensitaet, Umfang, Schwerpunkt). */
-  day_plan: DayTargetSchema.optional()
+  day_plan: DayTargetSchema.optional(),
+  /** Das Equipment, das der Athlet hat. Fehlt das Feld, ist jedes erlaubt; leer heisst: keins. */
+  equipment: EquipmentListSchema.optional()
 });
 
 /** Haengt `POST /v1/plan/today` ein (die Token-Pruefung sitzt schon davor, siehe app.ts). */
@@ -34,7 +37,7 @@ export function planRoutes(service: PlanService): (router: Router) => void {
       }
 
       try {
-        res.json(toResponse(await service.planForToday(parsed.data.snapshot, { regenerate: parsed.data.regenerate === true, wishes: parsed.data.wishes, dayTarget: parsed.data.day_plan })));
+        res.json(toResponse(await service.planForToday(parsed.data.snapshot, { regenerate: parsed.data.regenerate === true, wishes: parsed.data.wishes, dayTarget: parsed.data.day_plan, equipment: parsed.data.equipment })));
       } catch (error) {
         if (error instanceof PlanUnavailableError) {
           res.status(503).json({ error: "plan_unavailable", reason: error.reason });

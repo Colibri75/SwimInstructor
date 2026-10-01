@@ -1,3 +1,5 @@
+import { Equipment } from "./plan";
+import { equipmentSection } from "./prompt";
 import { Snapshot } from "./snapshot";
 import { weekdayName } from "./week";
 import { WeekContext, weekLimits, WeekLimits } from "./weekSanity";
@@ -34,7 +36,7 @@ Die Nutzernachricht nennt verbindliche Grenzen. Ein Sicherheitsprogramm prüft d
 ## Ausgabe
 Antworte ausschließlich im vorgegebenen JSON-Format und auf Deutsch. days enthält genau die genannten Tage, jeden einmal, mit dem Datum aus der Nutzernachricht. Der Schwerpunkt (focus) hat höchstens 60 Zeichen. Die rationale hat höchstens vier Sätze und nennt zwei bis drei konkrete Zahlen aus dem Snapshot.`;
 
-export function buildWeekUserMessage(snapshot: Snapshot, context: WeekContext, wishes?: string, week: WeekLimits = weekLimits(snapshot, context)): string {
+export function buildWeekUserMessage(snapshot: Snapshot, context: WeekContext, wishes?: string, week: WeekLimits = weekLimits(snapshot, context), equipment?: readonly Equipment[]): string {
   const lines: string[] = [`Plane die Trainingswoche. Heute ist ${weekdayName(context.today)}, ${context.today}.`, "", "Zu planende Tage:"];
   for (const date of context.dates) lines.push(`- ${weekdayName(date)} ${date}`);
 
@@ -58,6 +60,10 @@ export function buildWeekUserMessage(snapshot: Snapshot, context: WeekContext, w
 
   const swum = context.swumBefore.filter((day) => day.meters > 0);
   lines.push(`Schon geschwommen in dieser Woche: ${swum.length > 0 ? swum.map((day) => `${day.date} ${Math.round(day.meters)} m`).join(", ") : "noch nichts"}.`);
+
+  if (equipment) {
+    lines.push("", equipmentSection(equipment).replace("Plane ohne Hilfsmittel (equipment ist in jedem Abschnitt eine leere Liste) und nenne in den Anweisungen keine.", "Wähle keinen Schwerpunkt, der Hilfsmittel verlangt."));
+  }
 
   const wish = wishes?.trim();
   if (wish) {

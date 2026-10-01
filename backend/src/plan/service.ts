@@ -3,7 +3,7 @@ import { Logger } from "pino";
 import { FallbackReason, PlanGenerationError, PlanUnavailableError } from "./errors";
 import { GenerationBudget } from "./budget";
 import { PlanGenerator } from "./generator";
-import { TrainingPlan, TrainingPlanSchema } from "./plan";
+import { Equipment, TrainingPlan, TrainingPlanSchema } from "./plan";
 import { sanitizePlan } from "./sanity";
 import { Snapshot } from "./snapshot";
 import { PlanStore, StoredPlan } from "./store";
@@ -48,13 +48,19 @@ export class PlanService {
    * @param options.wishes Freitext-Wunsch des Athleten fuer heute. Er gehoert zum Cache-Schluessel:
    *   Ein anderer Wunsch bei gleichem Zustand ergibt einen neuen Plan.
    * @param options.dayTarget Vorgabe des Wochenplans fuer heute, ebenfalls Teil des Cache-Schluessels.
+   * @param options.equipment Das Equipment, das der Athlet hat (auch Teil des Cache-Schluessels). Fehlt
+   *   die Angabe, ist jedes erlaubt; eine leere Liste heisst: gar keins.
    */
-  async planForToday(snapshot: Snapshot, options: { regenerate?: boolean; wishes?: string; dayTarget?: DayTarget } = {}): Promise<PlanResult> {
+  async planForToday(
+    snapshot: Snapshot,
+    options: { regenerate?: boolean; wishes?: string; dayTarget?: DayTarget; equipment?: readonly Equipment[] } = {}
+  ): Promise<PlanResult> {
     const { generator, store, budget, logger } = this.deps;
     const today = localDate(this.now(), this.deps.timezone);
     const wishes = options.wishes?.trim() || undefined;
     const dayTarget = options.dayTarget;
-    const hash = snapshotHash(snapshot, wishes, dayTarget);
+    const equipment = options.equipment;
+    const hash = snapshotHash(snapshot, wishes, dayTarget, equipment);
 
     // Derselbe Zustand am selben Tag: den schon erzeugten Plan wiederverwenden, das spart Claude-Kosten.
     const stored = await this.latestOrNull();
@@ -71,22 +77,22 @@ export class PlanService {
       };
     }
 
-    if (generator === null) return this.fallback("not_configured", snapshot, today, stored);
-    if (!budget.tryConsume()) return this.fallback("budget_exceeded", snapshot, today, stored);
+    if (generator === null) return this.fallback("not_configured", snapshot, today, stored, equipment);
+    if (!budget.tryConsume()) return this.fallback("budget_exceeded", snapshot, today, stored, equipment);
 
     const started = Date.now();
     try {
-      const generated = await generator.generate({ snapshot, date: today, ...(wishes ? { wishes } : {}), ...(dayTarget ? { dayTarget } : {}) });
+      const generated = await generator.generate({ snapshot, date: today, ...(wishes ? { wishes } : {}), ...(dayTarget ? { dayTarget } : {}), ...(equipment ? { equipment } : {}) });
       const parsed = TrainingPlanSchema.safeParse(generated.raw);
       if (!parsed.success) {
         logger.warn({ issues: parsed.error.issues.slice(0, 5) }, "claude plan does not match schema");
-        return this.fallback("schema_invalid", snapshot, today, stored);
+        return this.fallback("schema_invalid", snapshot, today, stored, equipment);
       }
 
-      const sanitized = sanitizePlan(parsed.data, snapshot);
+      const sanitized = sanitizePlan(parsed.data, snapshot, undefined, { availableEquipment: equipment });
       if (sanitized.blocked !== null) {
         logger.warn({ reason: sanitized.blocked }, "claude plan blocked by sanity layer");
-        return this.fallback("sanity_blocked", snapshot, today, stored);
+        return this.fallback("sanity_blocked", snapshot, today, stored, equipment);
       }
 
       const record: StoredPlan = {
@@ -124,7 +130,7 @@ export class PlanService {
       // auth und bad_request sind Konfigurations- oder Programmierfehler und gehoeren laut ins Log.
       const level = reason === "auth" || reason === "bad_request" || reason === "unknown" ? "error" : "warn";
       logger[level]({ err: error, reason, latencyMs: Date.now() - started }, "plan generation failed");
-      return this.fallback(reason, snapshot, today, stored);
+      return this.fallback(reason, snapshot, today, stored, equipment);
     }
   }
 
@@ -133,12 +139,12 @@ export class PlanService {
    * Sicherheitsschicht, und zwar gegen den heutigen Zustand: Ein Plan von gestern darf heute nicht
    * deshalb ausgeliefert werden, weil er damals harmlos war (z. B. harte Einheit bei schlechter Erholung).
    */
-  private fallback(reason: FallbackReason, snapshot: Snapshot, today: string, stored: StoredPlan | null): PlanResult {
+  private fallback(reason: FallbackReason, snapshot: Snapshot, today: string, stored: StoredPlan | null, equipment?: readonly Equipment[]): PlanResult {
     if (stored === null) {
       this.deps.logger.warn({ reason }, "no plan available and no earlier plan to fall back to");
       throw new PlanUnavailableError(reason);
     }
-    const checked = sanitizePlan(stored.plan, snapshot);
+    const checked = sanitizePlan(stored.plan, snapshot, undefined, { availableEquipment: equipment });
     if (checked.blocked !== null) {
       this.deps.logger.warn({ reason, blocked: checked.blocked }, "stored plan no longer usable");
       throw new PlanUnavailableError(reason);
@@ -183,8 +189,14 @@ export function localDate(date: Date, timeZone: string): string {
  * Fingerabdruck des Zustands ohne den Erzeugungszeitpunkt, der sich bei jedem Aufruf aendert. Ein
  * Wunsch fliesst mit ein; ohne Wunsch bleibt der Wert wie vor der Einfuehrung der Wuensche.
  */
-export function snapshotHash(snapshot: Snapshot, wishes?: string, dayTarget?: DayTarget): string {
+export function snapshotHash(snapshot: Snapshot, wishes?: string, dayTarget?: DayTarget, equipment?: readonly Equipment[]): string {
   const { generated_at: _ignored, ...rest } = snapshot;
-  const material = { ...rest, ...(wishes ? { wishes } : {}), ...(dayTarget ? { day_target: dayTarget } : {}) };
+  // Das Equipment sortiert: Die Reihenfolge der Auswahl in der App aendert den Plan nicht.
+  const material = {
+    ...rest,
+    ...(wishes ? { wishes } : {}),
+    ...(dayTarget ? { day_target: dayTarget } : {}),
+    ...(equipment ? { equipment: [...new Set(equipment)].sort() } : {})
+  };
   return createHash("sha256").update(JSON.stringify(material)).digest("hex");
 }

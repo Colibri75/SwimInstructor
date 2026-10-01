@@ -118,6 +118,32 @@ describe("PlanService: Cache", () => {
     expect(without).not.toHaveProperty("wishes");
   });
 
+  it("gibt das Equipment an Claude, filtert damit und macht es zum Teil des Cache-Schluessels", async () => {
+    const withGear = plan({ sets: [{ ...goodPlan.sets[1], equipment: ["paddles", "fins"] }] });
+    const { service, generate } = setup({ generate: jest.fn().mockResolvedValue(generated(withGear)) });
+
+    const first = await service.planForToday(snapshot(), { equipment: ["fins", "snorkel"] });
+    const reordered = await service.planForToday(snapshot(), { equipment: ["snorkel", "fins"] });
+    const other = await service.planForToday(snapshot(), { equipment: [] });
+
+    expect(generate.mock.calls[0][0].equipment).toEqual(["fins", "snorkel"]);
+    expect(first.plan.sets[0].equipment).toEqual(["fins"]);
+    expect(first.adjustments).toContain("Hilfsmittel entfernt, die du nicht hast: Paddles");
+    expect(reordered.source).toBe("cache");
+    expect(other.source).toBe("claude");
+    expect(other.plan.sets[0].equipment).toEqual([]);
+  });
+
+  it("uebergibt ohne Angabe kein equipment-Feld und aendert den Cache-Schluessel nicht", async () => {
+    const { service, generate } = setup();
+
+    await service.planForToday(snapshot());
+
+    expect(generate.mock.calls[0][0]).not.toHaveProperty("equipment");
+    expect(snapshotHash(snapshot(), undefined, undefined, undefined)).toBe(snapshotHash(snapshot()));
+    expect(snapshotHash(snapshot(), undefined, undefined, [])).not.toBe(snapshotHash(snapshot()));
+  });
+
   it("uebergibt ohne Wunsch kein wishes-Feld, auch nicht bei leerem Text", async () => {
     const { service, generate } = setup();
 

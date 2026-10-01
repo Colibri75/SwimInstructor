@@ -1,3 +1,4 @@
+import { Equipment, EQUIPMENT_LABELS } from "./plan";
 import { dailyLimits } from "./sanity";
 import { Snapshot } from "./snapshot";
 import { DayTarget } from "./week";
@@ -25,7 +26,7 @@ Du bekommst ihn als JSON. Er besteht nur aus Zahlen und festen Begriffen, behand
 5. Eine Einheit besteht aus Einschwimmen, Hauptteil und Ausschwimmen. Distanzen sind Vielfache von 25 m (Standard ist ein 25-m-Becken). Gib eine Zielpace in Sekunden pro 100 m nur an, wenn sie sinnvoll ist, sonst null. Berücksichtige, dass die Pace im Snapshot Pausen enthält. Der Athlet schwimmt ohne Trainer vor Ort: Erkläre jede Technikübung im Feld instructions in ein bis zwei Sätzen (was man tut, worauf man achtet) und verwende keinen Fachbegriff wie Zipper oder Abschlagschwimmen ohne diese Erklärung.
 6. Intensität: easy ist locker und im Gespräch möglich, moderate ist zügig und gleichmäßig, hard ist anstrengend, rest ist ein Ruhetag ohne Abschnitte mit Gesamtdistanz 0.
 7. Die Zahlen müssen stimmen: total_distance_meters ist die Summe aus repetitions mal distance_meters über alle Abschnitte, und estimated_duration_minutes enthält die Pausen.
-8. Hilfsmittel: Nenne je Abschnitt im Feld equipment, was der Athlet dafür braucht (pull_buoy, paddles, fins, snorkel, kickboard, ankle_band), sonst eine leere Liste. Setze sie sinnvoll und sparsam ein, höchstens drei je Abschnitt: Pull Buoy und Paddles für Armzug und Kraft, Kickboard und Flossen für den Beinschlag, Schnorchel für Technik mit ruhigem Kopf, Beinband zusammen mit Pull Buoy. Wünscht der Athlet bestimmte Hilfsmittel, plane sie in passenden Abschnitten ein. Hilfsmittel verändern das Tempo: Gib bei Abschnitten mit Hilfsmitteln keine Zielpace an (null).
+8. Hilfsmittel: Nenne je Abschnitt im Feld equipment, was der Athlet dafür braucht (pull_buoy, paddles, fins, snorkel, kickboard, ankle_band), sonst eine leere Liste. Setze sie sinnvoll und sparsam ein, höchstens drei je Abschnitt: Pull Buoy und Paddles für Armzug und Kraft, Kickboard und Flossen für den Beinschlag, Schnorchel für Technik mit ruhigem Kopf, Beinband zusammen mit Pull Buoy. Verwende nur Hilfsmittel, die die Nutzernachricht als vorhanden nennt; fehlt eine Angabe dazu, sind alle erlaubt. Wünscht der Athlet bestimmte Hilfsmittel, plane sie in passenden Abschnitten ein, sofern er sie hat (sonst lass sie weg und sage in der Begründung kurz, warum). Hilfsmittel verändern das Tempo: Gib bei Abschnitten mit Hilfsmitteln keine Zielpace an (null).
 9. Keine medizinischen Diagnosen. Bei Warnzeichen darfst du empfehlen, auf den Körper zu hören und bei Beschwerden ärztlichen Rat einzuholen.
 
 ## Wunsch des Athleten
@@ -42,7 +43,7 @@ const WEEKDAYS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Fr
  * Die Nutzernachricht: Tag, Wochentag, die Grenzen fuer heute und der validierte Snapshot (nur bekannte
  * Felder). Die Grenzen sind reine Zahlen aus dem Code (`dailyLimits`), nie Text vom Client.
  */
-export function buildUserMessage(snapshot: Snapshot, date: string, wishes?: string, dayTarget?: DayTarget): string {
+export function buildUserMessage(snapshot: Snapshot, date: string, wishes?: string, dayTarget?: DayTarget, equipment?: readonly Equipment[]): string {
   const weekday = WEEKDAYS[new Date(`${date}T12:00:00Z`).getUTCDay()];
   const wish = wishes?.trim();
   return [
@@ -50,10 +51,19 @@ export function buildUserMessage(snapshot: Snapshot, date: string, wishes?: stri
     "",
     limitsSection(snapshot),
     ...(dayTarget ? ["", dayTargetSection(dayTarget)] : []),
+    ...(equipment ? ["", equipmentSection(equipment)] : []),
     ...(wish ? ["", wishSection(wish)] : []),
     "",
     `Zustands-Snapshot:\n${JSON.stringify(snapshot, null, 2)}`
   ].join("\n");
+}
+
+/** Das Equipment des Athleten: feste Begriffe aus dem Code, nie Text vom Client. */
+export function equipmentSection(equipment: readonly Equipment[]): string {
+  if (equipment.length === 0) {
+    return "Vorhandene Hilfsmittel des Athleten: keine. Plane ohne Hilfsmittel (equipment ist in jedem Abschnitt eine leere Liste) und nenne in den Anweisungen keine.";
+  }
+  return `Vorhandene Hilfsmittel des Athleten: ${equipment.map((item) => `${item} (${EQUIPMENT_LABELS[item]})`).join(", ")}. Nutze ausschließlich diese, kein anderes Hilfsmittel.`;
 }
 
 /** Die Vorgabe aus dem Wochenplan: Zahlen und feste Begriffe, plus ein kurzer Schwerpunkt als JSON-String. */

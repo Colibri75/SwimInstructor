@@ -1,4 +1,4 @@
-import { Intensity, PlanSet, TrainingPlan } from "./plan";
+import { Equipment, EQUIPMENT_LABELS, Intensity, PlanSet, TrainingPlan } from "./plan";
 import { Snapshot } from "./snapshot";
 
 /**
@@ -120,7 +120,12 @@ export function dailyLimits(snapshot: Snapshot, limits: SanityLimits = DEFAULT_L
   };
 }
 
-export function sanitizePlan(input: TrainingPlan, snapshot: Snapshot, limits: SanityLimits = DEFAULT_LIMITS): SanityResult {
+export interface SanityOptions {
+  /** Das Equipment, das der Athlet hat. Fehlt die Angabe, ist jedes erlaubt. */
+  availableEquipment?: readonly Equipment[];
+}
+
+export function sanitizePlan(input: TrainingPlan, snapshot: Snapshot, limits: SanityLimits = DEFAULT_LIMITS, options: SanityOptions = {}): SanityResult {
   const problem = findStructuralProblem(input, limits);
   if (problem) return { plan: input, adjustments: [], blocked: problem };
 
@@ -128,6 +133,26 @@ export function sanitizePlan(input: TrainingPlan, snapshot: Snapshot, limits: Sa
   let plan = normalize(input, limits);
 
   if (isRestDay(plan)) return done(asRestDay(plan, null), adjustments);
+
+  // Hilfsmittel, die der Athlet nicht hat, fliegen raus (Claude soll sie gar nicht erst planen).
+  if (options.availableEquipment) {
+    const available = new Set<string>(options.availableEquipment);
+    const removed = new Set<Equipment>();
+    plan = {
+      ...plan,
+      sets: plan.sets.map((set) => ({
+        ...set,
+        equipment: set.equipment.filter((item) => {
+          if (available.has(item)) return true;
+          removed.add(item);
+          return false;
+        })
+      }))
+    };
+    if (removed.size > 0) {
+      adjustments.push(`Hilfsmittel entfernt, die du nicht hast: ${[...removed].map((item) => EQUIPMENT_LABELS[item]).join(", ")}`);
+    }
+  }
 
   const computedTotal = totalDistance(plan.sets);
   if (computedTotal !== input.total_distance_meters) {

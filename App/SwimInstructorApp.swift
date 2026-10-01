@@ -17,6 +17,7 @@ struct SwimInstructorApp: App {
             workoutRepository: HealthKitSwimWorkoutRepository(),
             vitalsRepository: HealthKitDailyVitalsRepository()
         )
+        let ownedEquipment = UserDefaultsOwnedEquipmentStore()
         let weekLoader = WeekPlanLoader(
             store: FileWeekPlanStore.standard(),
             planProvider: { [weak settings] in
@@ -33,8 +34,11 @@ struct SwimInstructorApp: App {
             history: FilePlanHistory.standard(),
             wishStore: UserDefaultsDailyWishStore(),
             // Der Tagesplan richtet sich nach der Vorgabe des Wochenplans für heute.
-            dayTarget: { [weak weekLoader] in weekLoader?.todayTarget }
+            dayTarget: { [weak weekLoader] in weekLoader?.todayTarget },
+            // Nur das Equipment, das der Athlet in den Einstellungen angegeben hat.
+            equipment: { ownedEquipment.ownedEquipment() }
         )
+        weekLoader.equipmentProvider = { ownedEquipment.ownedEquipment() }
         // Der Wochenplan plant mit dem Zustand und den Einheiten, die der Heute-Bildschirm gelesen hat.
         weekLoader.contextProvider = { [weak loader] in
             loader?.reading.map { WeekPlanLoader.PlanningContext(snapshot: $0.snapshot, workouts: $0.workouts) }
