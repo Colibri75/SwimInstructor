@@ -381,13 +381,60 @@ cd Packages/SwimInstructorCore && swift test
 Distanz (kein Pace/SWOLF), Bahnenzählung aus `HKWorkoutEvent`s (nur `.lap`,
 nicht `.pause`), `nil` bei fehlenden Lap-Events, SWOLF-Näherung.
 
+## M8 – Dashboard & Verlauf (nur iPhone)
+
+Die iPhone-App hat jetzt drei Tabs: **Heute** (Plan, wie bisher), **Dashboard** und **Verlauf**. Die Watch
+bleibt bewusst bei Tagesplan und Live-Aufzeichnung, ein verkleinertes Dashboard dort bringt im Becken nichts.
+
+- **Dashboard** (Swift Charts): Weg zum Ziel (Tage, längste Einheit gegen 3.800 m, Pace gegen Zielpace und
+  Trend), **Wochenumfang** der letzten 8 Kalenderwochen (Montag bis Sonntag, die laufende Woche blasser) und
+  **Pace pro Einheit** mit der Zielpace als gestrichelter Linie. Einheiten unter 200 m und ohne Strecke
+  fehlen im Pace-Diagramm, weil sie nichts über das Tempo sagen. Die Pace enthält wie überall die Pausen
+  (Health meldet die gesamte Dauer).
+- **Verlauf: geplant gegen tatsächlich.** Die App speichert ab jetzt jeden Tagesplan auf dem Gerät
+  (`Application Support/SwimInstructor/plan-history.json`, höchstens 120 Tage) und legt ihn neben die
+  Einheiten aus Health. Pro Tag zählt der **erste** Plan des Tages: Ein späterer Plan entsteht oft erst nach
+  dem Training und wäre ein schiefer Maßstab. Fallback-Pläne werden nicht gespeichert.
+  Rückwirkend gibt es keinen Verlauf: Der Server kennt nur den jeweils letzten Plan, ältere Tage haben
+  keinen Plan zum Vergleichen.
+- **Bewertung eines Tages:** *umgesetzt* (75 bis 125 % des geplanten Umfangs), *kürzer* (unter 75 %),
+  *länger* (über 125 %), *nicht geschwommen* (Training geplant, nichts geschwommen), *Ruhetag eingehalten*,
+  *trotz Ruhetag geschwommen* und *offen* (heute, der Tag ist noch nicht vorbei). Eine Einheit ohne
+  Streckenangabe zählt als geschwommen, ihr Umfang lässt sich aber nicht vergleichen.
+- Oben im Verlauf steht die Zusammenfassung der letzten 4 Wochen ("5 von 6 geplanten Einheiten
+  geschwommen", "2 von 3 Ruhetagen eingehalten"). Dazu ein Balkendiagramm geplant gegen geschwommen für die
+  letzten 14 Tage.
+- Die Tabs Dashboard und Verlauf lesen beim Öffnen nur Health neu. Einen neuen Plan holt nur der Tab
+  "Heute" (das kann einen Claude-Aufruf kosten).
+
+**Keine UI-Tests.** Die Rechenlogik (Wochenumfang, Pace, Plan-Vergleich, Verlauf speichern) liegt komplett im
+Package und ist per Unit-Test abgesichert (`TrainingStatisticsTests`, `PlanAdherenceTests`,
+`PlanHistoryTests`, `TodayPlanLoaderTests`). Die Bildschirme selbst sind dünn und werden in der CI
+mitkompiliert. Ein XCUITest-Target bräuchte einen Simulator-Lauf in der CI und stabile Testdaten aus Health,
+das lohnt sich erst, wenn die Oberfläche sich beruhigt hat (M11).
+
+### M8 – Definition of Done
+
+- [x] Wochenumfang, Pace je Einheit, Plan-Vergleich und Verlaufsspeicher per Unit-Test abgesichert
+- [x] iPhone-Code kompiliert in der CI (`test`-Lane)
+- [ ] **Auf dem iPhone:** Tab "Dashboard" zeigt Ziel, Wochenumfang (8 Wochen) und Pace-Verlauf. Die Zahlen
+      stimmen mit der Fitness-App überein (Wochensumme einer Woche nachrechnen)
+- [ ] **Auf dem iPhone:** Tab "Verlauf" ist am ersten Tag leer mit Erklärung, nach dem ersten Plan steht
+      der heutige Tag als "offen", nach dem Schwimmen als "umgesetzt" (oder "kürzer"/"länger")
+- [ ] **Auf dem iPhone:** Nach ein paar Tagen sind Zusammenfassung und Balkendiagramm sinnvoll, ein
+      Ruhetag mit Schwimmen erscheint als "trotz Ruhetag geschwommen"
+- [ ] **Auf dem iPhone:** Flugmodus: Dashboard und Verlauf zeigen weiter ihre Daten (Health ist lokal)
+
 ## Projektstruktur
 
 ```
 App/                                # iOS-App
   SwimInstructorApp.swift            # App-Einstiegspunkt, verdrahtet Health, Einstellungen, Plan-Loader
   PhonePlanSync.swift                # Schickt den Tagesplan an die Watch (M7)
+  RootView.swift                     # Tabs: Heute, Dashboard, Verlauf (M8)
   TodayView.swift                    # Heute-Bildschirm: Plan, Stand, bisherige Einheiten
+  DashboardView.swift                # Ziel, Wochenumfang, Pace-Verlauf (Swift Charts, M8)
+  HistoryView.swift                  # Verlauf geplant gegen tatsächlich (M8)
   PlanCardView.swift                 # Darstellung des Tagesplans
   SettingsView.swift                 # Server-Adresse, Token, Verbindung testen
   Info.plist
@@ -422,6 +469,9 @@ Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
     PlanSync.swift                   # Format der Plan-Übertragung iPhone -> Watch (M7)
     PlanProgress.swift               # Stand im Plan nach geschwommenen Metern (M7)
     LiveSwimMetrics.swift            # Live-Werte und Beckenlänge der Watch (M7)
+    TrainingStatistics.swift         # Wochenumfang und Pace je Einheit für das Dashboard (M8)
+    PlanHistory.swift                # Gespeicherte Tagespläne der letzten Wochen (M8)
+    PlanAdherence.swift              # Geplant gegen geschwommen, Zusammenfassung (M8)
   Tests/SwimInstructorCoreTests/
     HealthKitManagerTests.swift
     SwimWorkoutRepositoryTests.swift
@@ -453,5 +503,10 @@ Gemfile                               # Ruby-Abhängigkeit: fastlane
 
 ## Roadmap
 
-Siehe Task-Liste der Session (M1–M11 + CI/CD) für den vollständigen
-Meilensteinplan inkl. Definition of Done pro Meilenstein.
+M1 bis M8 sind umgesetzt (die manuellen Prüfungen stehen jeweils in der Definition of Done des
+Meilensteins). Offen:
+
+- **M9 – Automatisierung:** Hintergrundaktualisierung (Plan am Morgen vorbereiten) und Benachrichtigungen.
+- **M10 – Realer Betatest:** Mehrere Wochen im echten Training, Planqualität und Zahlen gegenprüfen.
+- **M11 – Feinschliff:** Fehlermeldungen, Barrierefreiheit, UI-Tests, Übungslexikon statt wiederholter
+  Erklärungen im Plan.
