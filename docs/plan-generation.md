@@ -296,9 +296,9 @@ den letzten Plan, die App kann es später noch einmal versuchen.
 ## Die Szenarien bewerten (Definition of Done M5)
 
 Die Szenarien liegen als Snapshots in `backend/scenarios/`: die fünf aus M3 und vier zum Gesamtziel (06 Ziel
-unrealistisch, 07 Zieltag vorbei, 08 eigenes Ziel, 09 Zielwoche). Je Szenario läuft ein **Tagesplan** und ein
-**Wochenplan** gegen die echte API, das sind 18 Anfragen (geschätzt rund $1; nur eine Art: `EVAL_SCOPE=day` oder
-`EVAL_SCOPE=week`). Es gibt zwei Wege, je nachdem, wo du bist.
+unrealistisch, 07 Zieltag vorbei, 08 eigenes Ziel, 09 Zielwoche). Je Szenario läuft ein **Tagesplan**, ein **Plan der
+nächsten 7 Tage** und ein **Gesamtplan bis zum Zieltag** gegen die echte API, das sind 27 Anfragen (geschätzt rund
+$1,50; nur eine Art: `EVAL_SCOPE=day`, `EVAL_SCOPE=week` oder `EVAL_SCOPE=macro`). Es gibt zwei Wege, je nachdem, wo du bist.
 
 **Auf dem Server (kein Node nötig).** Der Produktionsserver hat nur Docker. Das Hilfsskript startet
 einen Wegwerf-Container, liest den Key aus `/etc/swiminstructor/backend.env` (er wird nie
@@ -325,7 +325,9 @@ Sicherheitsschicht, den korrigierten Plan, die **automatische Zielprüfung** (`s
 Dauer und Kosten. Die Zielprüfung ist eine Heuristik und ersetzt dein Urteil nicht: Sie zeigt, ob die Begründung das
 Ziel nennt, ob bei unrealistischem Ziel ehrlich darauf hingewiesen wird, ob nach dem Zieltag erhaltend geplant und auf
 ein neues Ziel verwiesen wird, ob die Zielwoche kurz und ohne harte Einheit bleibt, ob der Umfang beim Zuspitzen sinkt
-und ob die zielspezifische Phase Abschnitte nahe der Zielpace enthält. Du bewertest jeden Plan
+und ob die zielspezifische Phase Abschnitte nahe der Zielpace enthält. Beim Gesamtplan zusätzlich: reicht er bis zur
+Zielwoche, sinkt der Umfang beim Zuspitzen, gibt es Entlastungswochen, und trägt der Höhepunkt die Zieldistanz
+mehrfach pro Woche. Du bewertest jeden Plan
 von Hand. Deine Bewertung kommt in die Tabelle am Ende von `docs/plan-eval.md` (am einfachsten sagst du sie Claude im Chat, der trägt sie ein). Orientierung:
 
 | Szenario | Ein sinnvoller Plan ... |

@@ -17,7 +17,7 @@ if ! grep -q '^ANTHROPIC_API_KEY=.' "$ENV_FILE" 2>/dev/null; then
   exit 1
 fi
 
-echo "Das sendet je Szenario einen Tages- und einen Wochenplan an die Claude-API (9 Szenarien, 18 Anfragen) und kostet echtes Geld (geschaetzt rund 1 US-Dollar)." >&2
+echo "Das sendet je Szenario einen Tagesplan, einen Plan der naechsten 7 Tage und einen Gesamtplan an die Claude-API (9 Szenarien, 27 Anfragen) und kostet echtes Geld (geschaetzt rund 1,50 US-Dollar)." >&2
 read -r -p "Weiter mit Enter, Abbruch mit Strg+C. " _ >&2
 
 # Der Quellordner wird nur lesend eingehaengt und im Container kopiert, damit im Repo nichts

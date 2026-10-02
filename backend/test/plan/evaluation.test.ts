@@ -1,4 +1,5 @@
-import { checkDayPlanAgainstGoal, checkWeekPlanAgainstGoal, formatChecks } from "../../src/plan/evaluation";
+import { checkDayPlanAgainstGoal, checkMacroPlanAgainstGoal, checkWeekPlanAgainstGoal, formatChecks } from "../../src/plan/evaluation";
+import { MacroWeek } from "../../src/plan/macro";
 import { plan, set, snapshot } from "./fixtures";
 import { day, goodWeek, rest } from "./weekFixtures";
 
@@ -93,6 +94,74 @@ describe("Wochenplan gegen das Gesamtziel", () => {
 
     expect(byName(checkWeekPlanAgainstGoal(specific, onlyEasy), "Mindestens ein zielspezifischer Tag in der zielspezifischen Phase")?.ok).toBe(false);
     expect(byName(checkWeekPlanAgainstGoal(specific, goodWeek()), "Mindestens ein zielspezifischer Tag in der zielspezifischen Phase")?.ok).toBe(true);
+  });
+});
+
+const macroWeek = (weekStart: string, phase: MacroWeek["phase"], meters: number, deload = false): MacroWeek => ({
+  week_start: weekStart,
+  target_meters: meters,
+  sessions: 3,
+  deload,
+  focus: "Ausdauer",
+  phase
+});
+
+describe("Gesamtplan gegen das Gesamtziel", () => {
+  const good = {
+    rationale: "Zehn Wochen bis zum Ziel, der Umfang steigt auf 8000 m.",
+    weeks: [
+      macroWeek("2026-09-28", "base", 4000),
+      macroWeek("2026-10-05", "base", 4400),
+      macroWeek("2026-10-12", "base", 4800),
+      macroWeek("2026-10-19", "base", 3800, true),
+      macroWeek("2026-10-26", "specific", 5200),
+      macroWeek("2026-11-02", "specific", 5700),
+      macroWeek("2026-11-09", "specific", 6200),
+      macroWeek("2026-11-16", "specific", 4800, true),
+      macroWeek("2026-11-23", "specific", 7800),
+      macroWeek("2026-11-30", "taper", 6000),
+      macroWeek("2026-12-07", "taper", 5000),
+      macroWeek("2026-12-14", "goal_week", 3000)
+    ]
+  };
+  const goalSnapshot = snapshot({ goal: { days_until_goal: 80 } });
+
+  it("besteht bei einem sinnvollen Plan alle Pruefungen", () => {
+    const checks = checkMacroPlanAgainstGoal(goalSnapshot, good);
+
+    expect(checks.filter((c) => !c.ok)).toEqual([]);
+    expect(names(checks)).toEqual(
+      expect.arrayContaining(["Reicht bis zur Zielwoche", "Umfang sinkt beim Zuspitzen und in der Zielwoche", "Entlastungswochen eingeplant", "Höhepunkt trägt die Zieldistanz mehrfach pro Woche"])
+    );
+  });
+
+  it("verlangt die Zielwoche, sinkenden Umfang beim Zuspitzen und Entlastungswochen", () => {
+    const noGoalWeek = { ...good, weeks: good.weeks.slice(0, -1) };
+    const noTaper = { ...good, weeks: good.weeks.map((w) => (w.phase === "taper" || w.phase === "goal_week" ? { ...w, target_meters: 9000 } : w)) };
+    const noDeload = { ...good, weeks: good.weeks.map((w) => ({ ...w, deload: false })) };
+
+    expect(byName(checkMacroPlanAgainstGoal(goalSnapshot, noGoalWeek), "Reicht bis zur Zielwoche")?.ok).toBe(false);
+    expect(byName(checkMacroPlanAgainstGoal(goalSnapshot, noTaper), "Umfang sinkt beim Zuspitzen und in der Zielwoche")?.ok).toBe(false);
+    expect(byName(checkMacroPlanAgainstGoal(goalSnapshot, noDeload), "Entlastungswochen eingeplant")?.ok).toBe(false);
+  });
+
+  it("verlangt einen Hoehepunkt, der die Zieldistanz mehrfach traegt", () => {
+    const low = { ...good, weeks: good.weeks.map((w) => ({ ...w, target_meters: Math.min(w.target_meters, 5000) })) };
+
+    expect(byName(checkMacroPlanAgainstGoal(goalSnapshot, low), "Höhepunkt trägt die Zieldistanz mehrfach pro Woche")?.ok).toBe(false);
+  });
+
+  it("verlangt Ehrlichkeit bei einem unrealistischen Ziel und den Hinweis auf ein neues Ziel nach dem Zieltag", () => {
+    const unrealistic = snapshot({ goal: { distance_meters: 10_000, days_until_goal: 28 }, volume: { longest_session_meters: 1000 } });
+    const over = snapshot({ goal: { days_until_goal: 0 } });
+
+    expect(byName(checkMacroPlanAgainstGoal(unrealistic, good), "Sagt ehrlich, dass das Ziel nicht sicher erreichbar ist")?.ok).toBe(false);
+    expect(byName(checkMacroPlanAgainstGoal(over, { rationale: "Ziel erreicht.", weeks: [macroWeek("2026-09-28", "maintain", 2000)] }), "Weist auf ein neues Ziel hin (Zieltag vorbei)")?.ok).toBe(false);
+    expect(names(checkMacroPlanAgainstGoal(over, { rationale: "x", weeks: [macroWeek("2026-09-28", "maintain", 2000)] }))).not.toContain("Reicht bis zur Zielwoche");
+  });
+
+  it("meldet einen Plan ohne Wochen", () => {
+    expect(byName(checkMacroPlanAgainstGoal(goalSnapshot, { rationale: "x", weeks: [] }), "Gesamtplan hat Wochen")?.ok).toBe(false);
   });
 });
 

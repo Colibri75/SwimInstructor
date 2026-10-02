@@ -1,4 +1,5 @@
 import { assessGoal } from "./goal";
+import { MacroWeek } from "./macro";
 import { TrainingPlan } from "./plan";
 import { Snapshot } from "./snapshot";
 import { WeekPlan } from "./week";
@@ -112,6 +113,51 @@ export function checkWeekPlanAgainstGoal(snapshot: Snapshot, week: WeekPlan): Ev
       name: "Mindestens ein zielspezifischer Tag in der zielspezifischen Phase",
       ok: specific,
       detail: specific ? "ja" : "weder Schwelle/Intervalle/Test noch ein Schwerpunkt mit Zielbezug"
+    });
+  }
+  return checks;
+}
+
+/** Gesamtplan gegen das Gesamtziel. */
+export function checkMacroPlanAgainstGoal(snapshot: Snapshot, macro: { rationale: string; weeks: MacroWeek[] }): EvalCheck[] {
+  const a = assessGoal(snapshot);
+  const checks = shared(snapshot, macro.rationale);
+  const weeks = macro.weeks;
+  if (weeks.length === 0) return [...checks, { name: "Gesamtplan hat Wochen", ok: false, detail: "keine Wochen" }];
+
+  const goalWeek = weeks.find((week) => week.phase === "goal_week");
+  const peak = Math.max(...weeks.filter((w) => w.phase === "base" || w.phase === "specific").map((w) => w.target_meters), 0);
+
+  if (a.phase !== "past") {
+    checks.push({
+      name: "Reicht bis zur Zielwoche",
+      ok: goalWeek !== undefined,
+      detail: goalWeek ? `Zielwoche ab ${goalWeek.week_start}` : "keine Woche mit Phase goal_week"
+    });
+  }
+  if (goalWeek !== undefined && peak > 0) {
+    const taper = weeks.filter((w) => w.phase === "taper");
+    checks.push({
+      name: "Umfang sinkt beim Zuspitzen und in der Zielwoche",
+      ok: goalWeek.target_meters <= peak && taper.every((w) => w.target_meters <= peak),
+      detail: `Höhepunkt ${peak} m, Zuspitzen ${taper.map((w) => w.target_meters).join("/") || "–"} m, Zielwoche ${goalWeek.target_meters} m`
+    });
+  }
+  const buildUp = weeks.filter((w) => w.phase === "base" || w.phase === "specific");
+  if (buildUp.length >= 8) {
+    const deloads = buildUp.filter((w) => w.deload).length;
+    checks.push({
+      name: "Entlastungswochen eingeplant",
+      ok: deloads >= Math.floor(buildUp.length / 6),
+      detail: `${deloads} Entlastungswochen in ${buildUp.length} Aufbau-Wochen`
+    });
+  }
+  if (a.distanceReachableSafely && a.phase !== "past" && buildUp.length >= 4) {
+    const needed = snapshot.goal.distance_meters * 2;
+    checks.push({
+      name: "Höhepunkt trägt die Zieldistanz mehrfach pro Woche",
+      ok: peak >= needed,
+      detail: `Höhepunkt ${peak} m pro Woche, Orientierung mindestens ${needed} m (zweimal die Zieldistanz)`
     });
   }
   return checks;

@@ -113,9 +113,11 @@ werden soll:
   zur Zielpace) und folgt dem, was in den Einstellungen steht.
 - Neue Szenarien: **06** Ziel unrealistisch (10 km in 3 h, noch 5 Wochen, längste Einheit 1,2 km), **07** Zieltag
   vorbei, **08** eigenes Ziel (1.500 m in 28 min, 12 Wochen), **09** Zielwoche (noch 5 Tage).
-- Neu: Wochenpläne werden mitbewertet (Gerüst: Tage, Typ, Intensität, Umfang, Schwerpunkt).
+- Neu: Die nächsten sieben Tage werden mitbewertet (Gerüst: Tage, Typ, Intensität, Umfang, Schwerpunkt) und der
+  **Gesamtplan bis zum Zieltag** (Wochenumfang, Entlastung, Zuspitzen, Zielwoche).
+- Neu im Tagesplan: **Kurzbeschreibung** (`cue`, zwei bis vier Wörter für die Uhr). Prüfe, ob sie kurz und treffend ist.
 
-Auf dem Server (kostet rund $1):
+Auf dem Server (27 Anfragen, kostet rund $1,50):
 
 ```bash
 cd /opt/stack/swiminstructor && git pull --ff-only origin main
@@ -124,13 +126,13 @@ backend/scripts/eval-in-docker.sh
 
 Danach die Ausgabe (`docs/eval-runs/plan-eval-<Datum-Uhrzeit>.md`) lesen oder sie Claude im Chat geben. Worauf zu achten ist:
 
-| Szenario | Tagesplan | Wochenplan |
-|---|---|---|
-| 06 Ziel unrealistisch | bleibt in den Tagesgrenzen, sagt ehrlich, dass das Ziel so wohl nicht ganz erreichbar ist | wie der Tagesplan, Aufbau statt Sprung |
-| 07 Zieltag vorbei | locker und erhaltend, Hinweis auf ein neues Ziel in den Einstellungen | keine harten Einheiten, Hinweis auf neues Ziel |
-| 08 Eigenes Ziel (1.500 m) | Begründung nennt 1.500 m und 28 min, nicht 3.800 m; zielspezifisch | wie der Tagesplan, mindestens ein Tag mit Zielbezug |
-| 09 Zielwoche | kurz, locker, höchstens kurze Zielpace-Stücke | Umfang unter dem Wochenschnitt, keine harte Einheit |
-| 01 bis 05 | wie in Lauf 2; zusätzlich nennt die Begründung das Ziel | sinnvolle Verteilung, Ruhetage, höchstens zwei harte Tage |
+| Szenario | Tagesplan | Nächste 7 Tage | Gesamtplan |
+|---|---|---|---|
+| 06 Ziel unrealistisch | bleibt in den Tagesgrenzen, sagt ehrlich, dass das Ziel so wohl nicht ganz erreichbar ist | wie der Tagesplan, Aufbau statt Sprung | steigt so steil wie sicher möglich, sagt ehrlich, dass es nicht reicht |
+| 07 Zieltag vorbei | locker und erhaltend, Hinweis auf ein neues Ziel in den Einstellungen | keine harten Einheiten, Hinweis auf neues Ziel | nur eine Woche, Erhalten, Hinweis auf neues Ziel |
+| 08 Eigenes Ziel (1.500 m) | Begründung nennt 1.500 m und 28 min, nicht 3.800 m; zielspezifisch | wie der Tagesplan, mindestens ein Tag mit Zielbezug | 12 Wochen bis 23.12., Höhepunkt trägt 1.500 m mehrfach |
+| 09 Zielwoche | kurz, locker, höchstens kurze Zielpace-Stücke | Umfang unter dem Wochenschnitt, keine harte Einheit | eine Woche (Zielwoche), kurz |
+| 01 bis 05 | wie in Lauf 2; zusätzlich nennt die Begründung das Ziel | sinnvolle Verteilung, Ruhetage, höchstens zwei harte Tage | 40 Wochen bis 04.07.2027, etwa 10 % Steigerung, Entlastung, Zuspitzen |
 
 Das Ergebnis (und deine Bewertung) wird hier nachgetragen.
 

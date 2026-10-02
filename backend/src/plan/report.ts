@@ -1,5 +1,7 @@
 import { TrainingPlan } from "./plan";
 import { DailyLimits } from "./sanity";
+import { MacroWeek } from "./macro";
+import { MacroLimits } from "./macroSanity";
 import { WeekPlan, weekdayName } from "./week";
 import { WeekLimits } from "./weekSanity";
 
@@ -68,5 +70,22 @@ export function formatWeekPlan(week: WeekPlan): string {
 /** Die Wochengrenzen als eine Zeile, fuer die manuelle Bewertung. */
 export function formatWeekLimits(limits: WeekLimits): string {
   return `höchstens ${limits.weeklyRemainingMeters} m, keine Einheit über ${limits.sessionCapMeters} m, höchstens ${limits.maxSessions} Trainingstage, höchstens ${limits.maxHardDays} harte Einheiten`;
+}
+
+const PHASE_LABEL = { base: "Aufbau", specific: "zielspezifisch", taper: "Zuspitzen", goal_week: "Zielwoche", maintain: "Erhalten" } as const;
+
+/** Einen Gesamtplan als Markdown, fuer die manuelle Bewertung. */
+export function formatMacroPlan(macro: { rationale: string; weeks: MacroWeek[] }): string {
+  const peak = Math.max(...macro.weeks.map((week) => week.target_meters), 0);
+  const lines = [`**${macro.weeks.length} Wochen, Höhepunkt ${peak} m pro Woche**`, "", macro.rationale, "", "| Woche ab | Phase | Umfang | Einheiten | Entlastung | Schwerpunkt |", "|---|---|---|---|---|---|"];
+  for (const week of macro.weeks) {
+    lines.push(`| ${week.week_start} | ${PHASE_LABEL[week.phase]} | ${week.target_meters} m | ${week.sessions} | ${week.deload ? "ja" : "–"} | ${week.focus} |`);
+  }
+  return lines.join("\n");
+}
+
+/** Die Grenzen des Gesamtplans als eine Zeile, fuer die manuelle Bewertung. */
+export function formatMacroLimits(limits: MacroLimits): string {
+  return `erste Woche höchstens ${limits.firstWeekCapMeters} m, danach höchstens ${Math.round((limits.growthFactor - 1) * 100)} % mehr als die Woche davor, Entlastung höchstens ${Math.round(limits.deloadFactor * 100)} %, nie über ${limits.absoluteMaxWeeklyMeters} m`;
 }
 

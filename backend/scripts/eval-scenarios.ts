@@ -1,26 +1,28 @@
 /**
- * Schickt die Szenarien aus backend/scenarios/ an die echte Claude-API, je Szenario einen Tagesplan und
- * einen Wochenplan, und gibt Plaene, Korrekturen der Sicherheitsschicht, automatische Zielpruefungen und
- * Kosten als Markdown aus.
+ * Schickt die Szenarien aus backend/scenarios/ an die echte Claude-API, je Szenario einen Tagesplan, einen
+ * Plan der naechsten sieben Tage und einen Gesamtplan bis zum Zieltag, und gibt Plaene, Korrekturen der
+ * Sicherheitsschicht, automatische Zielpruefungen und Kosten als Markdown aus.
  *
  * Das ist die manuelle Pruefung fuer die Definition of Done von M5: Du bewertest jeden Plan von
  * Hand als sinnvoll oder nicht und haeltst das Ergebnis fest (docs/plan-eval.md, das gepflegte Dokument).
  * Die Zielpruefungen (src/plan/evaluation.ts) zeigen, wo man hinschauen sollte: Haelt der Plan das
  * Gesamtziel ein (Phase, Zielpace, ehrliche Aussage bei unrealistischem Ziel)?
  *
- * Aufruf (kostet echtes Geld, ca. zwei Anfragen je Szenario):
+ * Aufruf (kostet echtes Geld, ca. drei Anfragen je Szenario):
  *   mkdir -p ../docs/eval-runs
  *   ANTHROPIC_API_KEY=sk-ant-... npm run eval:scenarios > ../docs/eval-runs/plan-eval-$(date +%F).md
- * Nur Tages- oder nur Wochenplaene: EVAL_SCOPE=day bzw. EVAL_SCOPE=week.
+ * Nur eine Art: EVAL_SCOPE=day, EVAL_SCOPE=week (die sieben Tage) oder EVAL_SCOPE=macro (Gesamtplan).
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { checkDayPlanAgainstGoal, checkWeekPlanAgainstGoal, EvalCheck, formatChecks } from "../src/plan/evaluation";
+import { checkDayPlanAgainstGoal, checkMacroPlanAgainstGoal, checkWeekPlanAgainstGoal, EvalCheck, formatChecks } from "../src/plan/evaluation";
 import { ClaudePlanGenerator } from "../src/plan/generator";
 import { assessGoal } from "../src/plan/goal";
+import { macroWeekStarts, MacroPlanSchema } from "../src/plan/macro";
+import { macroLimits, MacroContext, sanitizeMacro } from "../src/plan/macroSanity";
 import { TrainingPlanSchema } from "../src/plan/plan";
-import { estimateCostUsd, formatLimits, formatPlan, formatWeekLimits, formatWeekPlan } from "../src/plan/report";
+import { estimateCostUsd, formatLimits, formatMacroLimits, formatMacroPlan, formatPlan, formatWeekLimits, formatWeekPlan } from "../src/plan/report";
 import { dailyLimits, sanitizePlan } from "../src/plan/sanity";
 import { SnapshotSchema } from "../src/plan/snapshot";
 import { WeekPlanSchema } from "../src/plan/week";
@@ -31,7 +33,7 @@ type Effort = (typeof EFFORTS)[number];
 
 interface Row {
   scenario: string;
-  kind: "Tag" | "Woche";
+  kind: "Tag" | "7 Tage" | "Gesamt";
   status: string;
   corrections: number;
   checks: EvalCheck[];
@@ -50,8 +52,8 @@ async function main(): Promise<void> {
     process.exit(1);
   }
   const scope = process.env.EVAL_SCOPE ?? "both";
-  if (!["day", "week", "both"].includes(scope)) {
-    console.error(`EVAL_SCOPE ungültig: ${scope} (erlaubt: day, week, both)`);
+  if (!["day", "week", "macro", "both"].includes(scope)) {
+    console.error(`EVAL_SCOPE ungültig: ${scope} (erlaubt: day, week, macro, both)`);
     process.exit(1);
   }
 
@@ -64,7 +66,7 @@ async function main(): Promise<void> {
 
   const dir = path.join(__dirname, "..", "scenarios");
   const files = readdirSync(dir).filter((file) => file.endsWith(".json")).sort();
-  const calls = files.length * (scope === "both" ? 2 : 1);
+  const calls = files.length * (scope === "both" ? 3 : 1);
   console.error(`Sende ${calls} Anfragen an ${model} (Effort ${effort}) ...`);
 
   const today = "2026-09-30";
@@ -90,7 +92,7 @@ async function main(): Promise<void> {
       ""
     );
 
-    if (scope !== "week") {
+    if (scope === "day" || scope === "both") {
       body.push("### Tagesplan", "", `**Grenzen für heute (gehen auch an Claude):** ${formatLimits(dailyLimits(snapshot))}`, "");
       const started = Date.now();
       try {
@@ -134,8 +136,8 @@ async function main(): Promise<void> {
       }
     }
 
-    if (scope !== "day") {
-      body.push("### Wochenplan", "", `**Grenzen der Woche (gehen auch an Claude):** ${formatWeekLimits(weekLimits(snapshot, weekContext))}`, "");
+    if (scope === "week" || scope === "both") {
+      body.push("### Die nächsten 7 Tage", "", `**Grenzen der 7 Tage (gehen auch an Claude):** ${formatWeekLimits(weekLimits(snapshot, weekContext))}`, "");
       const started = Date.now();
       try {
         const generated = await generator.generateWeek({ snapshot, context: weekContext });
@@ -146,41 +148,88 @@ async function main(): Promise<void> {
         const parsed = WeekPlanSchema.safeParse(generated.raw);
         if (!parsed.success) {
           body.push(`**Schema-Fehler:** ${JSON.stringify(parsed.error.issues.slice(0, 3))}`, "");
-          rows.push({ scenario, kind: "Woche", status: "Schema-Fehler", corrections: 0, checks: [] });
+          rows.push({ scenario, kind: "7 Tage", status: "Schema-Fehler", corrections: 0, checks: [] });
         } else {
           const sanitized = sanitizeWeek(parsed.data, snapshot, weekContext);
-          body.push("#### Claudes Wochenplan (roh)", "", formatWeekPlan(parsed.data), "");
+          body.push("#### Claudes Plan der 7 Tage (roh)", "", formatWeekPlan(parsed.data), "");
           let finalPlan = parsed.data;
           if (sanitized.blocked !== null) {
             body.push(`**Von der Sicherheitsschicht GEBLOCKT:** ${sanitized.blocked}`, "");
           } else if (sanitized.adjustments.length > 0) {
-            body.push("#### Korrekturen der Sicherheitsschicht", "", ...sanitized.adjustments.map((a) => `- ${a}`), "", "#### Wochenplan nach Korrektur", "", formatWeekPlan(sanitized.plan), "");
+            body.push("#### Korrekturen der Sicherheitsschicht", "", ...sanitized.adjustments.map((a) => `- ${a}`), "", "#### Plan der 7 Tage nach Korrektur", "", formatWeekPlan(sanitized.plan), "");
             finalPlan = sanitized.plan;
           } else {
             body.push("Die Sicherheitsschicht hat nichts geändert.", "");
           }
           const checks = checkWeekPlanAgainstGoal(snapshot, finalPlan);
           body.push("#### Zielprüfung (automatisch)", "", formatChecks(checks), "");
-          rows.push({ scenario, kind: "Woche", status: sanitized.blocked !== null ? "geblockt" : "ok", corrections: sanitized.adjustments.length, checks });
+          rows.push({ scenario, kind: "7 Tage", status: sanitized.blocked !== null ? "geblockt" : "ok", corrections: sanitized.adjustments.length, checks });
         }
         body.push(
           `Modell: \`${generated.model}\`, ${generated.usage.inputTokens} Token ein, ${generated.usage.outputTokens} Token aus, ${seconds} s, ca. ${cost === null ? "?" : "$" + cost.toFixed(3)}`,
           "",
-          "**Bewertung Wochenplan (von Hand):** [ ] sinnvoll  [ ] nicht sinnvoll Begründung:",
+          "**Bewertung 7 Tage (von Hand):** [ ] sinnvoll  [ ] nicht sinnvoll Begründung:",
           ""
         );
-        console.error(`${scenario} (Woche): ok (${seconds} s)`);
+        console.error(`${scenario} (7 Tage): ok (${seconds} s)`);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         body.push(`**Fehler:** ${message}`, "");
-        rows.push({ scenario, kind: "Woche", status: "Fehler", corrections: 0, checks: [] });
-        console.error(`${scenario} (Woche): FEHLER ${message}`);
+        rows.push({ scenario, kind: "7 Tage", status: "Fehler", corrections: 0, checks: [] });
+        console.error(`${scenario} (7 Tage): FEHLER ${message}`);
+      }
+    }
+
+    if (scope === "macro" || scope === "both") {
+      const goalDay = snapshot.goal.target_date.slice(0, 10);
+      const macroContext: MacroContext = { today, goalDay, weeks: macroWeekStarts(today, goalDay) };
+      body.push("### Gesamtplan bis zum Ziel", "", `**Wochen bis zum Zieltag ${goalDay}:** ${macroContext.weeks.length}. **Grenzen (gehen auch an Claude):** ${formatMacroLimits(macroLimits(snapshot, macroContext))}`, "");
+      const started = Date.now();
+      try {
+        const generated = await generator.generateMacro({ snapshot, context: macroContext });
+        const seconds = ((Date.now() - started) / 1000).toFixed(1);
+        const cost = estimateCostUsd(generated.model, generated.usage);
+        totalCost += cost ?? 0;
+
+        const parsed = MacroPlanSchema.safeParse(generated.raw);
+        if (!parsed.success) {
+          body.push(`**Schema-Fehler:** ${JSON.stringify(parsed.error.issues.slice(0, 3))}`, "");
+          rows.push({ scenario, kind: "Gesamt", status: "Schema-Fehler", corrections: 0, checks: [] });
+        } else {
+          const sanitized = sanitizeMacro(parsed.data, snapshot, macroContext);
+          let finalPlan = sanitized.plan;
+          if (sanitized.blocked !== null) {
+            body.push(`**Von der Sicherheitsschicht GEBLOCKT:** ${sanitized.blocked}`, "");
+          } else {
+            body.push("#### Gesamtplan (nach der Sicherheitsschicht)", "", formatMacroPlan(sanitized.plan), "");
+            if (sanitized.adjustments.length > 0) {
+              body.push("#### Korrekturen der Sicherheitsschicht", "", ...sanitized.adjustments.map((a) => `- ${a}`), "");
+            } else {
+              body.push("Die Sicherheitsschicht hat nichts geändert.", "");
+            }
+          }
+          const checks = checkMacroPlanAgainstGoal(snapshot, finalPlan);
+          body.push("#### Zielprüfung (automatisch)", "", formatChecks(checks), "");
+          rows.push({ scenario, kind: "Gesamt", status: sanitized.blocked !== null ? "geblockt" : "ok", corrections: sanitized.adjustments.length, checks });
+        }
+        body.push(
+          `Modell: \`${generated.model}\`, ${generated.usage.inputTokens} Token ein, ${generated.usage.outputTokens} Token aus, ${seconds} s, ca. ${cost === null ? "?" : "$" + cost.toFixed(3)}`,
+          "",
+          "**Bewertung Gesamtplan (von Hand):** [ ] sinnvoll  [ ] nicht sinnvoll Begründung:",
+          ""
+        );
+        console.error(`${scenario} (Gesamt): ok (${seconds} s)`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        body.push(`**Fehler:** ${message}`, "");
+        rows.push({ scenario, kind: "Gesamt", status: "Fehler", corrections: 0, checks: [] });
+        console.error(`${scenario} (Gesamt): FEHLER ${message}`);
       }
     }
   }
 
   const out: string[] = [
-    "# Plan-Bewertung der Szenarien (Tag und Woche, mit Zielprüfung)",
+    "# Plan-Bewertung der Szenarien (Tag, 7 Tage und Gesamtplan, mit Zielprüfung)",
     "",
     `Modell: \`${model}\`, Effort: \`${effort}\`, Stichtag: ${today}, Umfang: ${scope}`,
     "",
