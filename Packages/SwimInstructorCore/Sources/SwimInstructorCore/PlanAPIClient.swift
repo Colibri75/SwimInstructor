@@ -240,8 +240,8 @@ public struct SwumDay: Codable, Equatable, Sendable {
 /// Anfrage für `POST /v1/plan/week`.
 public struct WeekPlanRequest: Equatable, Sendable {
     public var snapshot: AthleteStateSnapshot
-    /// Montag der Woche, `yyyy-MM-dd`.
-    public var weekStart: String
+    /// Montag der Kalenderwoche, `yyyy-MM-dd`. `nil`: der rollende Plan, die sieben Tage ab `fromDate`.
+    public var weekStart: String?
     /// Erster zu planender Tag: heute oder der Montag einer kommenden Woche.
     public var fromDate: String
     public var today: String
@@ -252,16 +252,22 @@ public struct WeekPlanRequest: Equatable, Sendable {
     public var wishes: String?
     /// Das Equipment, das der Athlet hat; `nil`: keine Angabe.
     public var equipment: [String]?
+    /// Was in den sieben Tagen vor `fromDate` geschwommen wurde (die Vorwoche); `nil`: keine Angabe.
+    public var recentSwim: [SwumDay]?
+    /// Was der Gesamtplan für die Wochen der geplanten Tage vorgibt.
+    public var macroWeeks: [MacroWeek]
 
     public init(
         snapshot: AthleteStateSnapshot,
-        weekStart: String,
+        weekStart: String?,
         fromDate: String,
         today: String,
         unavailableDates: [String] = [],
         swumThisWeek: [SwumDay] = [],
         wishes: String? = nil,
-        equipment: [String]? = nil
+        equipment: [String]? = nil,
+        recentSwim: [SwumDay]? = nil,
+        macroWeeks: [MacroWeek] = []
     ) {
         self.snapshot = snapshot
         self.weekStart = weekStart
@@ -271,6 +277,8 @@ public struct WeekPlanRequest: Equatable, Sendable {
         self.swumThisWeek = swumThisWeek
         self.wishes = wishes
         self.equipment = equipment
+        self.recentSwim = recentSwim
+        self.macroWeeks = macroWeeks
     }
 }
 
@@ -291,7 +299,9 @@ extension PlanAPIClient: WeekPlanProviding {
             unavailableDates: weekRequest.unavailableDates,
             swumThisWeek: weekRequest.swumThisWeek,
             wishes: Self.cleaned(weekRequest.wishes),
-            equipment: weekRequest.equipment
+            equipment: weekRequest.equipment,
+            recentSwim: weekRequest.recentSwim,
+            macroWeeks: weekRequest.macroWeeks.isEmpty ? nil : weekRequest.macroWeeks
         ))
 
         let (data, response) = try await perform(request)
@@ -315,13 +325,65 @@ extension PlanAPIClient: WeekPlanProviding {
 
     private struct WeekRequestBody: Encodable {
         let snapshot: AthleteStateSnapshot
-        let weekStart: String
+        /// Fehlt im JSON beim rollenden Plan.
+        let weekStart: String?
         let fromDate: String
         let today: String
         let unavailableDates: [String]
         let swumThisWeek: [SwumDay]
         let wishes: String?
         let equipment: [String]?
+        let recentSwim: [SwumDay]?
+        let macroWeeks: [MacroWeek]?
+    }
+}
+
+// MARK: - Gesamtplan
+
+/// Anfrage für `POST /v1/plan/macro`: Zustand und Ziel stecken im Snapshot, dazu "heute".
+public struct MacroPlanRequest: Equatable, Sendable {
+    public var snapshot: AthleteStateSnapshot
+    public var today: String
+
+    public init(snapshot: AthleteStateSnapshot, today: String) {
+        self.snapshot = snapshot
+        self.today = today
+    }
+}
+
+public protocol MacroPlanProviding: Sendable {
+    func fetchMacroPlan(_ request: MacroPlanRequest) async throws -> MacroPlanResponse
+}
+
+extension PlanAPIClient: MacroPlanProviding {
+    public func fetchMacroPlan(_ macroRequest: MacroPlanRequest) async throws -> MacroPlanResponse {
+        var request = makeRequest(path: "v1/plan/macro", timeout: Self.planTimeout)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try AthleteStateSnapshot.jsonEncoder().encode(MacroRequestBody(snapshot: macroRequest.snapshot, today: macroRequest.today))
+
+        let (data, response) = try await perform(request)
+        switch response.statusCode {
+        case 200:
+            do {
+                return try PlanResponse.jsonDecoder().decode(MacroPlanResponse.self, from: data)
+            } catch {
+                throw PlanAPIError.invalidResponse(String(describing: error))
+            }
+        case 400:
+            let body = try? JSONDecoder().decode(ErrorBody.self, from: data)
+            throw PlanAPIError.invalidRequest(details: body?.details?.map { "\($0.path): \($0.message)" } ?? [])
+        case 503:
+            let body = try? JSONDecoder().decode(ErrorBody.self, from: data)
+            throw PlanAPIError.planUnavailable(reason: body?.reason)
+        default:
+            throw statusError(response.statusCode)
+        }
+    }
+
+    private struct MacroRequestBody: Encodable {
+        let snapshot: AthleteStateSnapshot
+        let today: String
     }
 }
 

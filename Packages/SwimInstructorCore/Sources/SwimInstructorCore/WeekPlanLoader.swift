@@ -33,6 +33,7 @@ public final class WeekPlanLoader: ObservableObject {
     public var equipmentProvider: @MainActor () -> [String]? = { nil }
 
     private let store: WeekPlanStoring
+    private let dailyMarker: DailyRefreshMarking
     private let planProvider: @MainActor () -> WeekPlanProviding?
     private let now: () -> Date
     private let weekCalendar: WeekCalendar
@@ -42,10 +43,12 @@ public final class WeekPlanLoader: ObservableObject {
     public init(
         store: WeekPlanStoring,
         planProvider: @escaping @MainActor () -> WeekPlanProviding?,
+        dailyMarker: DailyRefreshMarking = UserDefaultsDailyRefreshMarker(key: "plan.lastWeekRefresh"),
         now: @escaping () -> Date = { Date() },
         calendar: Calendar = .current
     ) {
         self.store = store
+        self.dailyMarker = dailyMarker
         self.planProvider = planProvider
         self.now = now
         self.calendar = calendar
@@ -74,70 +77,101 @@ public final class WeekPlanLoader: ObservableObject {
     /// Die Vorgabe für den Tagesplan (geht an den Server), `nil` ohne Wochenplan.
     public var todayTarget: DayPlanTarget? { todayEntry?.target }
 
-    /// Eine Woche lässt sich planen, solange sie nicht ganz vorbei ist.
-    public func canPlan(weekStarting weekStart: String) -> Bool {
-        weekStart >= currentWeekStart
-    }
-
-    /// Ab wann in dieser Woche geplant wird: heute in der laufenden, der Montag in einer kommenden Woche.
-    public func firstPlannedDate(forWeekStarting weekStart: String) -> String {
-        max(todayKey, weekStart)
-    }
-
     /// Einen Tag der gezeigten Woche ändern lässt sich ab heute.
     public func isEditable(_ date: String) -> Bool { date >= todayKey }
 
     // MARK: - Planen
 
-    /// Plant die Woche (oder, in der laufenden Woche, den Rest ab heute) neu. Tage ohne Zeit bleiben
-    /// Ruhetage, schon Geschwommenes zählt zum Wochenumfang.
-    public func plan(weekStarting weekStart: String, wishes: String? = nil) async {
-        guard !isLoading else { return }
-        guard canPlan(weekStarting: weekStart) else {
-            error = "Eine vergangene Woche lässt sich nicht mehr planen."
-            return
-        }
+    /// So viele Tage plant der rollende Plan voraus.
+    public static let windowDays = 7
+
+    /// Was der Gesamtplan für die Wochen der Tage `dates` vorgibt; wird nach dem Anlegen gesetzt, weil der
+    /// Gesamtplan woanders liegt.
+    public var macroProvider: @MainActor ([String]) -> [MacroWeek] = { _ in [] }
+
+    /// Plant die nächsten sieben Tage ab heute neu, abgestimmt auf Zustand, Trainingsstand, die Vorwoche und
+    /// den Gesamtplan. Tage ohne Zeit bleiben Ruhetage. Liefert `true`, wenn der Plan erneuert wurde.
+    @discardableResult
+    public func planNextDays(wishes: String? = nil) async -> Bool {
+        guard !isLoading else { return false }
         guard let context = contextProvider() else {
             error = "Die Health-Daten sind noch nicht geladen. Öffne zuerst den Tab Heute."
-            return
+            return false
         }
         guard let provider = planProvider() else {
             needsConfiguration = true
-            return
+            return false
         }
         needsConfiguration = false
 
-        let fromDate = firstPlannedDate(forWeekStarting: weekStart)
-        let existing = week(starting: weekStart)
+        let fromDate = todayKey
+        let dates = weekCalendar.dates(from: fromDate, count: Self.windowDays)
+        let through = dates.last ?? fromDate
+        let unavailable = weeks.flatMap(\.days).filter { $0.isUnavailable && dates.contains($0.date) }.map(\.date)
         let request = WeekPlanRequest(
             snapshot: context.snapshot,
-            weekStart: weekStart,
+            weekStart: nil,
             fromDate: fromDate,
-            today: todayKey,
-            unavailableDates: (existing?.days ?? []).filter { $0.isUnavailable && $0.date >= fromDate }.map(\.date),
-            swumThisWeek: swumDays(weekStarting: weekStart, before: fromDate, workouts: context.workouts),
+            today: fromDate,
+            unavailableDates: Array(Set(unavailable)).sorted(),
+            swumThisWeek: [],
             wishes: wishes,
-            equipment: equipmentProvider()
+            equipment: equipmentProvider(),
+            recentSwim: swumDays(from: weekCalendar.addingDays(-Self.windowDays, to: fromDate) ?? fromDate, before: fromDate, workouts: context.workouts),
+            macroWeeks: macroProvider(dates)
         )
 
         isLoading = true
         defer { isLoading = false }
         do {
             let response = try await provider.fetchWeekPlan(request)
-            let merged = WeekPlanEditor.merge(existing: existing, generated: response.weekPlan, fromDate: fromDate)
-            replace(merged)
+            apply(response, fromDate: fromDate, through: through)
             error = nil
+            return true
         } catch {
             self.error = error.localizedDescription
+            return false
         }
     }
 
-    /// Schon geschwommene Meter je Tag, vom Montag bis vor `fromDate`.
-    func swumDays(weekStarting weekStart: String, before fromDate: String, workouts: [SwimWorkout]) -> [SwumDay] {
+    /// Einmal am Tag, beim ersten Öffnen: die nächsten sieben Tage neu auf Zustand, Stand und Vorwoche
+    /// abstimmen. Schlägt es fehl (kein Netz, Budget), gilt der Tag nicht als erledigt, und das nächste
+    /// Öffnen versucht es wieder. `stamp` gehört zum Tag-Vermerk: Ändert er sich (etwa mit dem Ziel), gilt
+    /// der Tag wieder als offen.
+    public func refreshDaily(wishes: String? = nil, stamp: String = "") async {
+        let marker = "\(todayKey)|\(stamp)"
+        guard dailyMarker.lastDay() != marker else { return }
+        if await planNextDays(wishes: wishes) {
+            dailyMarker.setLastDay(marker)
+        }
+    }
+
+    /// Verteilt die Tage der Antwort auf ihre Kalenderwochen und führt sie mit den gespeicherten zusammen.
+    private func apply(_ response: WeekPlanResponse, fromDate: String, through: String) {
+        var byWeek: [String: [WeekDayPlan]] = [:]
+        for day in response.plan.days {
+            guard let date = weekCalendar.date(from: day.date) else { continue }
+            byWeek[weekCalendar.weekStart(containing: date), default: []].append(day)
+        }
+        for (weekStart, days) in byWeek {
+            let generated = WeekPlan(
+                weekStart: weekStart,
+                generatedAt: response.generatedAt,
+                rationale: response.plan.rationale,
+                adjustments: response.adjustments,
+                wishes: response.wishes,
+                days: days
+            )
+            replace(WeekPlanEditor.merge(existing: week(starting: weekStart), generated: generated, fromDate: fromDate, through: through))
+        }
+    }
+
+    /// Schon geschwommene Meter je Tag, von `start` (einschließlich) bis vor `end`.
+    func swumDays(from start: String, before end: String, workouts: [SwimWorkout]) -> [SwumDay] {
         var meters: [String: Double] = [:]
         for workout in workouts where workout.startDate <= now() {
             let key = PlanFormatting.isoDay(workout.startDate, calendar: calendar)
-            guard key >= weekStart, key < fromDate else { continue }
+            guard key >= start, key < end else { continue }
             meters[key, default: 0] += workout.totalDistanceMeters ?? 0
         }
         return meters.keys.sorted().map { SwumDay(date: $0, meters: meters[$0] ?? 0) }
@@ -201,3 +235,29 @@ public final class WeekPlanLoader: ObservableObject {
         selectedWeekStart = target
     }
 }
+
+/// Merkt, wann der Wochenplan oder der Gesamtplan zuletzt automatisch angepasst wurde ("einmal am Tag").
+/// Der Wert besteht aus dem Tag und einem Zusatz.
+public protocol DailyRefreshMarking {
+    func lastDay() -> String?
+    func setLastDay(_ marker: String)
+}
+
+public struct UserDefaultsDailyRefreshMarker: DailyRefreshMarking {
+    private let defaults: UserDefaults
+    private let key: String
+
+    public init(defaults: UserDefaults = .standard, key: String) {
+        self.defaults = defaults
+        self.key = key
+    }
+
+    public func lastDay() -> String? {
+        defaults.string(forKey: key)
+    }
+
+    public func setLastDay(_ marker: String) {
+        defaults.set(marker, forKey: key)
+    }
+}
+

@@ -416,7 +416,7 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
   (unter 0:40 oder über 10:00 pro 100 m) wird abgelehnt und nicht gespeichert. Das Ziel geht im Snapshot mit jeder
   Plananfrage mit und steht im Prompt (Abschnitt "Gesamtziel" mit Phase, Wochen bis zum Ziel und Realismus-Hinweis,
   siehe [plan-generation.md](docs/plan-generation.md)); Dashboard und Heute-Bildschirm zeigen das eingestellte Ziel.
-  Nach einer Änderung auf Heute nach unten ziehen und im Tab Woche neu planen.
+  Nach einer Änderung entsteht beim nächsten Öffnen ein neuer Gesamtplan und die sieben Tage werden neu geplant; auf Heute nach unten ziehen holt einen neuen Tagesplan.
 - **Mein Equipment (Einstellungen):** Im Zahnrad (iPhone) legst du fest, welche Hilfsmittel du hast (Pull Buoy,
   Paddles, Flossen, Schnorchel, Kickboard, Beinband). Ohne Auswahl gelten alle, mit der Auswahl plant Claude
   nur damit; was nicht an ist, entfernt die Sicherheitsschicht aus dem Plan und vermerkt es unter den
@@ -518,57 +518,71 @@ das lohnt sich erst, wenn die Oberfläche sich beruhigt hat (M11).
       Ruhetag mit Schwimmen erscheint als "trotz Ruhetag geschwommen"
 - [ ] **Auf dem iPhone:** Flugmodus: Dashboard und Verlauf zeigen weiter ihre Daten (Health ist lokal)
 
-## Wochenplan (Tab "Woche")
+## Gesamtplan und Plan der nächsten sieben Tage (Tab "Plan")
 
-Die iPhone-App hat jetzt vier Tabs: **Heute**, **Woche**, **Dashboard**, **Verlauf**. Der Plan gilt nicht mehr nur
-für einen Tag: Im Tab Woche plant Claude die ganze Woche, du siehst, was an welchem Tag ansteht, und kannst den
-Plan anpassen. "Heute" zeigt nur den Teil für den jeweiligen Tag.
+Die iPhone-App hat vier Tabs: **Heute**, **Plan**, **Dashboard**, **Verlauf**. Geplant wird in drei Stufen:
 
-- **Wochenplan = Gerüst.** Claude plant je Tag **Typ, Intensität, Umfang, Dauer und Schwerpunkt**
-  (`POST /v1/plan/week`, siehe [plan-generation.md](docs/plan-generation.md)). Die **Abschnitte** der Einheit samt
-  Equipment entstehen am Tag selbst im Tab Heute, passend zur Vorgabe der Woche (`day_plan`) und zum Zustand des
-  Tages. So bleibt der Wochenplan ein schneller Aufruf, und die Details kennen deine Erholung von heute Morgen.
-- **Woche planen:** Knopf im Tab Woche, optional mit Wunsch für die Woche. In der laufenden Woche plant Claude **ab
-  heute** und berücksichtigt, was du schon geschwommen hast und an welchen Tagen du keine Zeit hast ("Rest der Woche
-  neu planen"). Die Tage davor bleiben, wie sie waren. Für die kommende Woche lässt sich über die Pfeile oben die
-  nächste Woche öffnen und ab Montag planen.
-- **Sicherheitsschicht auch für die Woche:** Wochenumfang, Einheitenlänge, höchstens zwei harte Tage und nie an
-  zwei Tagen hintereinander, höchstens fünf Einheiten, mindestens ein Ruhetag, die Grenzen für heute. Korrekturen
-  stehen unter "Zur Sicherheit angepasst".
+1. **Gesamtplan bis zum Ziel** (`POST /v1/plan/macro`): Claude plant **jede Woche von heute bis zum Zieltag** (bei
+   dir 04.07.2027, einstellbar unter "Mein Ziel") als Gerüst: Wochenumfang, Zahl der Einheiten, Entlastungswochen
+   und ein Schwerpunkt. Die **Phase** (Aufbau, zielspezifisch, Zuspitzen, Zielwoche, danach Erhalten) rechnet der
+   Code aus dem Abstand zum Zieltag. Die Sicherheitsschicht hält ihn ein: erste Woche in den Grenzen von heute,
+   danach höchstens etwa 10 % mehr als die Woche davor, Entlastungswochen deutlich darunter, beim Zuspitzen und in
+   der Zielwoche sinkt der Umfang. Er entsteht beim ersten Start, bei einer Zieländerung und wenn er abläuft
+   (höchstens ein Versuch pro Tag), und lässt sich im Tab Plan jederzeit neu berechnen.
+2. **Die nächsten 7 Tage** (`POST /v1/plan/week` ohne `week_start`): **Jeden Tag beim ersten Öffnen der App** plant
+   Claude die sieben Tage ab heute neu und stimmt sie ab auf deinen **Zustand** (Erholung), deinen
+   **Trainingsstand** (Snapshot, Pace, längste Einheit), das **Training der Vorwoche** (die letzten sieben Tage
+   davor) und die **Vorgabe des Gesamtplans** für diese Wochen. Er schreibt die Vorgabe nicht stur ab, sondern
+   justiert fein: War die Vorwoche leichter oder härter, geht er mit dem Umfang nach unten oder oben (in den
+   Grenzen). Schlägt das fehl (kein Netz, Budget), versucht es das nächste Öffnen wieder.
+3. **Heute** zeigt den **Tagesplan**: die Einheit für heute mit Abschnitten, Equipment und Kurzbeschreibung für die
+   Uhr (`POST /v1/plan/today`), passend zur Vorgabe der sieben Tage (`day_plan`) und zum Zustand des Tages.
+
+Ablauf beim ersten Öffnen am Tag: Health lesen, Gesamtplan sicherstellen, die sieben Tage anpassen (Heute zeigt
+"Claude passt deinen Plan für die nächsten Tage an …"), dann der Tagesplan. Das dauert zusammen etwa 30 bis 60
+Sekunden, danach ist alles gespeichert und das Öffnen geht sofort. Ziehen auf Heute holt nur einen **neuen
+Tagesplan**, "Nächste 7 Tage neu planen" im Tab Plan holt die Tage neu.
+
 - **Anpassen** (Tippen auf einen Tag, ab heute): Umfang ändern (0 m macht den Tag zum Ruhetag), **"Keine Zeit an
-  diesem Tag"** (wird Ruhetag, bleibt bei "Rest der Woche neu planen" ein Ruhetag, mit "Doch wieder Zeit" geht
-  das Training zurück), "Als Ruhetag setzen" und **mit einem anderen Tag tauschen**. Eine **verpasste** oder zu kurze
-  Einheit lässt sich auf einen freien Ruhetag der Woche verschieben. Änderungen verschieben nur Einheiten; wer die
-  Woche danach wieder ausgleichen will, lässt den Rest neu planen.
+  diesem Tag"** (wird Ruhetag und bleibt bei jeder neuen Planung einer; mit "Doch wieder Zeit" geht das Training
+  zurück), "Als Ruhetag setzen" und **mit einem anderen Tag tauschen**. Eine **verpasste** oder zu kurze Einheit
+  lässt sich auf einen freien Ruhetag verschieben. Andere Änderungen von Hand gelten bis zur nächsten Anpassung der
+  sieben Tage (die Planung kennt "Keine Zeit", die Vorwoche und den Gesamtplan, nicht jeden Handgriff).
+- **Sicherheitsschicht auch für die Tage:** Umfang der sieben Tage, Einheitenlänge, höchstens zwei harte Tage und
+  nie an zwei Tagen hintereinander, höchstens fünf Einheiten, mindestens ein Ruhetag, die Grenzen für heute. Die
+  Vorwoche schmälert das Budget der nächsten sieben Tage nicht, sie steht nur im Prompt. Korrekturen stehen unter
+  "Zur Sicherheit angepasst".
 - **Status je Tag** aus Health: umgesetzt (75 bis 125 % des Umfangs), kürzer, länger, nicht geschwommen,
-  Ruhetag eingehalten, trotz Ruhetag geschwommen, keine Zeit. Oben stehen geplante und geschwommene Meter.
-- **Heute:** zuoberst "Heute im Wochenplan" (Typ, Umfang, Schwerpunkt, Stand), darunter die Einheit für heute mit
-  Abschnitten und Equipment, der Wunsch für heute, **Statistik** (Woche gegen Plan, letzte 7 Tage, Pace, Erholung,
-  Tage bis zum Ziel) und die letzten fünf Einheiten. Ändert sich die Vorgabe für heute, erstellt "Plan neu
-  erstellen" die Einheit passend neu.
-- **Speicherung:** Der Server speichert Wochenpläne nicht. Die App hält die letzten 8 Wochen samt deinen
-  Änderungen auf dem Gerät (`Application Support/SwimInstructor/week-plans.json`). Scheitert Claude, bleibt der
-  bisherige Wochenplan, die Meldung nennt den Grund.
-- **Kosten:** Ein Wochenplan kostet etwa so viel wie ein Tagesplan oder weniger (kurze Ausgabe) und zählt gegen
-  dasselbe Budget (5 pro Stunde, 20 pro Tag).
+  Ruhetag eingehalten, trotz Ruhetag geschwommen, keine Zeit. Die Pfeile oben wechseln zwischen den Kalenderwochen
+  (die sieben Tage können über zwei Wochen laufen); geplant wird immer ab heute.
+- **Dashboard und Verlauf:** Die Statistik (Woche gegen Plan, letzte 7 Tage, Pace, Erholung, Tage bis zum Ziel) steht
+  im Dashboard, die Liste der letzten Einheiten im Verlauf. Heute zeigt nur den Tag.
+- **Speicherung:** Der Server speichert weder Gesamtplan noch Tage. Die App hält sie samt deinen Änderungen auf dem
+  Gerät (`Application Support/SwimInstructor/macro-plan.json` und `week-plans.json`, die letzten 8 Kalenderwochen).
+  Scheitert Claude, bleibt der bisherige Plan, die Meldung nennt den Grund.
+- **Kosten:** Ein normaler Tag mit erstem Öffnen kostet zwei Claude-Aufrufe (sieben Tage und Tagesplan, zusammen
+  rund 10 Cent), der Gesamtplan zusätzlich einen (größer, er gilt dafür für Wochen). Alles zählt gegen dasselbe
+  Budget (5 pro Stunde, 20 pro Tag).
 
-Logik im Package, per Unit-Test abgesichert: `WeekPlan`, `WeekCalendar`, `WeekPlanEditor` (Änderungen,
-Zusammenführen), `WeekProgressCalculator` (Status je Tag), `WeekPlanLoader` (Ablauf), `PlanAPIClient.fetchWeekPlan`.
+Logik im Package, per Unit-Test abgesichert: `MacroPlan`/`MacroPlanLoader` (Gesamtplan), `WeekPlan`,
+`WeekCalendar`, `WeekPlanEditor` (Änderungen, Zusammenführen), `WeekProgressCalculator` (Status je Tag),
+`WeekPlanLoader` (Ablauf, einmal am Tag), `TodayPlanLoader` (Vorbereitung vor dem Tagesplan), `PlanAPIClient`.
 Die Bildschirme (`WeekView`, `TodayView`) werden in der CI mitkompiliert.
 
-### Wochenplan – Prüfpunkte (manuell)
+### Plan – Prüfpunkte (manuell)
 
-- [ ] **Server aktualisiert** (`deploy.sh`), sonst gibt es den Endpunkt `/v1/plan/week` nicht
-- [ ] **Tab Woche:** "Woche planen" erzeugt in etwa 10 bis 30 Sekunden einen Plan ab heute, mit Überblick und
-      sieben Tagen. Die Summe liegt in der Nähe deines üblichen Wochenumfangs
-- [ ] **Anpassen:** Umfang ändern, "Keine Zeit" an einem Tag, zwei Tage tauschen: Die Liste ändert sich sofort und
-      bleibt nach dem Schließen der App erhalten
-- [ ] **Rest der Woche neu planen** mit einem Tag ohne Zeit: Dieser Tag bleibt Ruhetag, schon Geschwommenes ist
-      berücksichtigt
-- [ ] **Heute:** Oben steht der Eintrag des Wochenplans. "Plan neu erstellen" liefert eine Einheit, die zu Typ
-      und Umfang der Vorgabe passt (der Server-Log zeigt `day_plan` nicht, aber Umfang und Typ sollten stimmen)
-- [ ] **Verpasste Einheit:** Ein vergangener Tag ohne Schwimmen steht als "nicht geschwommen" da und lässt sich auf
-      einen Ruhetag verschieben
+- [ ] **Server aktualisiert** (`deploy.sh`), sonst gibt es `/v1/plan/macro` und den rollenden Plan nicht
+- [ ] **Erster Start danach:** Heute zeigt "Claude passt deinen Plan für die nächsten Tage an …", dann der
+      Tagesplan. Im Tab Plan steht oben der **Gesamtplan** (Ziel, Wochen bis dahin, diese Woche, "Alle Wochen" bis
+      zum 04.07.2027 mit Phasen) und darunter sieben Tage ab heute
+- [ ] **Gesamtplan plausibel:** Der Umfang steigt langsam (etwa 10 % pro Woche), etwa jede vierte Woche ist
+      Entlastung, die letzten zwei Wochen sinken, die Zielwoche ist kurz
+- [ ] **Zweites Öffnen am selben Tag:** kein Warten, kein neuer Wochenplan. **Am nächsten Tag:** Beim ersten Öffnen
+      werden die sieben Tage neu angepasst (die Begründung nennt Zustand, Vorwoche und Gesamtplan)
+- [ ] **Anpassen:** Umfang ändern, "Keine Zeit" an einem Tag, zwei Tage tauschen. "Nächste 7 Tage neu planen": Der
+      Tag ohne Zeit bleibt Ruhetag
+- [ ] **Ziel ändern** (Einstellungen, "Mein Ziel"): Beim nächsten Öffnen entsteht ein neuer Gesamtplan zum neuen Ziel
+- [ ] **Dashboard** zeigt die Statistik, **Verlauf** die letzten Einheiten, **Heute** nur den Tag
 
 ## Projektstruktur
 
@@ -577,8 +591,9 @@ App/                                # iOS-App
   SwimInstructorApp.swift            # App-Einstiegspunkt, verdrahtet Health, Einstellungen, Plan-Loader
   PhonePlanSync.swift                # Schickt den Tagesplan an die Watch (M7)
   RootView.swift                     # Tabs: Heute, Dashboard, Verlauf (M8)
-  TodayView.swift                    # Heute: Wochenplan-Eintrag, Einheit für heute, Statistik
-  WeekView.swift                     # Wochenplan: Tage, Status, Anpassen, Planen
+  TodayView.swift                    # Heute: Eintrag aus dem Plan, Einheit für heute, Wunsch
+  WeekView.swift                     # Plan: Gesamtplan, nächste 7 Tage, Status, Anpassen, Planen
+  StatsViews.swift                   # Statistik-Zeilen (Dashboard), Einheiten-Zeile (Verlauf)
   DashboardView.swift                # Ziel, Wochenumfang, Pace-Verlauf (Swift Charts, M8)
   HistoryView.swift                  # Verlauf geplant gegen tatsächlich (M8)
   PlanCardView.swift                 # Darstellung des Tagesplans
@@ -620,6 +635,8 @@ Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
     PlanHistory.swift                # Gespeicherte Tagespläne der letzten Wochen (M8)
     PlanAdherence.swift              # Geplant gegen geschwommen, Zusammenfassung (M8)
     WeekPlan.swift                   # Wochenplan: Tage, Vorgabe für den Tagesplan
+    MacroPlan.swift                  # Gesamtplan bis zum Zieltag (Wochen, Phasen), Speicher
+    MacroPlanLoader.swift            # Gesamtplan holen/erneuern (einmal am Tag je Ziel)
     WeekCalendar.swift               # Wochen von Montag bis Sonntag, Kalendertage
     WeekPlanEditor.swift             # Änderungen des Athleten, Zusammenführen nach dem Neuplanen
     WeekProgress.swift               # Status je Tag aus Health gegen den Plan
@@ -667,7 +684,7 @@ Meilensteins). Offen:
   Claude, auch bei unverändertem Zustand (rund 4 Cent, der Server begrenzt auf 5 Pläne pro Stunde und
   20 pro Tag).
   Der verworfene Entwurf steht in PR #25.
-- **Wochenplan:** umgesetzt (Abschnitt "Wochenplan"), Prüfpunkte stehen dort.
+- **Gesamtplan und Plan der nächsten sieben Tage:** umgesetzt (Abschnitt "Gesamtplan und Plan der nächsten sieben Tage"), Prüfpunkte stehen dort.
 - **M10 – Realer Betatest:** Mehrere Wochen im echten Training, Planqualität und Zahlen gegenprüfen.
 - **M11 – Feinschliff:** Fehlermeldungen, Barrierefreiheit, UI-Tests, Übungslexikon statt wiederholter
   Erklärungen im Plan.

@@ -115,10 +115,17 @@ public enum WeekPlanEditor {
 
     /// Übernimmt einen neu geplanten Wochenplan: Tage vor `fromDate` bleiben, wie sie waren (sie sind
     /// vorbei), ab `fromDate` gilt der neue Plan. Tage ohne Zeit behalten ihre Markierung.
-    public static func merge(existing: WeekPlan?, generated: WeekPlan, fromDate: String) -> WeekPlan {
-        guard let existing, existing.weekStart == generated.weekStart else { return generated }
+    ///
+    /// Mit `through` (rollender Plan, der nur sieben Tage umfasst) bleiben auch die Tage nach diesem Datum,
+    /// die der neue Plan nicht kennt, wie sie waren: Sie stammen aus dem Plan davor, bis ein späterer
+    /// Lauf sie neu plant. Ohne `through` gilt ab `fromDate` nur noch der neue Plan.
+    public static func merge(existing: WeekPlan?, generated: WeekPlan, fromDate: String, through: String? = nil) -> WeekPlan {
+        guard let existing else { return generated }
+        guard existing.weekStart == generated.weekStart else { return generated }
 
-        let kept = existing.days.filter { $0.date < fromDate }
+        let kept = existing.days.filter { day in
+            day.date < fromDate || (through.map { day.date > $0 && generated.day(on: day.date) == nil } ?? false)
+        }
         let incoming = generated.days.filter { $0.date >= fromDate }.map { day -> WeekDayPlan in
             if let old = existing.day(on: day.date), old.isUnavailable { return old }
             return day

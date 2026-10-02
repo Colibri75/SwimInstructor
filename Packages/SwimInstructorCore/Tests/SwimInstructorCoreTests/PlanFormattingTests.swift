@@ -128,5 +128,13 @@ final class PlanFormattingTests: XCTestCase {
         XCTAssertEqual(PlanFormatting.shortCue(set(cue: "", instructions: "Gleichmäßig.")), "Gleichmäßig")
         XCTAssertEqual(PlanFormatting.shortCue(set(cue: "", instructions: "")), "")
     }
+
+    func testMacroPhaseNamesAreGerman() {
+        XCTAssertEqual(PlanFormatting.macroPhase(.base), "Aufbau")
+        XCTAssertEqual(PlanFormatting.macroPhase(.specific), "Zielspezifisch")
+        XCTAssertEqual(PlanFormatting.macroPhase(.taper), "Zuspitzen")
+        XCTAssertEqual(PlanFormatting.macroPhase(.goalWeek), "Zielwoche")
+        XCTAssertEqual(PlanFormatting.macroPhase(.maintain), "Erhalten")
+    }
 }
 

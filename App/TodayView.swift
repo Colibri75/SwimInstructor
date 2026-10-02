@@ -14,7 +14,7 @@ struct TodayView: View {
     private let onShowWeek: () -> Void
     private let progress = WeekProgressCalculator()
 
-    /// - Parameter onShowWeek: wechselt in den Tab "Woche" (für den Hinweis ohne Wochenplan).
+    /// - Parameter onShowWeek: wechselt in den Tab "Plan" (für den Hinweis ohne Eintrag für heute).
     init(onShowWeek: @escaping () -> Void = {}) {
         self.onShowWeek = onShowWeek
     }
@@ -99,13 +99,13 @@ struct TodayView: View {
                 .padding(.vertical, 2)
             } else {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Für heute gibt es keinen Eintrag im Wochenplan.")
-                    Button("Zum Wochenplan") { onShowWeek() }
+                    Text("Für heute gibt es keinen Eintrag im Plan.")
+                    Button("Zum Plan") { onShowWeek() }
                 }
                 .padding(.vertical, 2)
             }
         } header: {
-            Text("Heute im Wochenplan")
+            Text("Heute im Plan")
         }
     }
 
@@ -114,6 +114,13 @@ struct TodayView: View {
     @ViewBuilder
     private var planSection: some View {
         Section {
+            if loader.isPreparing {
+                HStack(spacing: 12) {
+                    ProgressView()
+                    Text("Claude passt deinen Plan für die nächsten Tage an …")
+                        .foregroundStyle(.secondary)
+                }
+            }
             if loader.isLoadingPlan {
                 HStack(spacing: 12) {
                     ProgressView()

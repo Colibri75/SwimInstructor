@@ -152,6 +152,25 @@ erreichbar (Realismus-Hinweis), soll Claude das ehrlich in einem Satz sagen. Das
 Umfang, Intensität und Ruhetage prüft weiter die Sicherheitsschicht, ein ferneres oder ehrgeizigeres Ziel macht die
 Einheit von heute also nicht länger.
 
+**Gesamtplan (`POST /v1/plan/macro`):** Request `{ snapshot, today }`. Der Server rechnet die Wochen vom Montag der
+Woche von heute bis zum Montag der Zielwoche (`macroWeekStarts`, höchstens 80 Wochen; nach dem Zieltag nur die
+laufende Woche) und fragt Claude nach Wochenumfang, Zahl der Einheiten (2 bis 5), Entlastung (`deload`) und
+Schwerpunkt je Woche. Die **Phase** (`base` über 12 Wochen vor der Zielwoche, `specific`, `taper` die zwei Wochen davor,
+`goal_week`, `maintain` nach dem Zieltag) setzt der Code (`macroPhase`), nicht Claude. Antwort:
+`{ goal_day, generated_at, plan: { rationale, weeks[{ week_start, target_meters, sessions, deload, focus, phase }] }, adjustments }`.
+`macroSanity.ts`: genau die angefragten Wochen (fehlende werden mit dem Umfang der Vorwoche ergänzt), erste Woche
+höchstens die Wochengrenze von heute (Erholung, Pause, Wochenschnitt), jede weitere höchstens etwa 10 % mehr als die
+letzte Woche ohne Entlastung, Entlastung höchstens 85 % und nie in der ersten Woche, beim Zuspitzen höchstens
+85 % und 70 % des Höhepunkts, Zielwoche höchstens die Hälfte des Höhepunkts, aber mindestens das 1,2-Fache der
+Zieldistanz, 2 bis 5 Einheiten und je Einheit mindestens 200 m. Der Server speichert nichts, die App hält den Plan.
+
+**Rollender Plan der nächsten sieben Tage (`POST /v1/plan/week`):** Ohne `week_start` plant der Server die sieben
+Tage ab `from_date` (statt einer Kalenderwoche bis Sonntag). Die App ruft das jeden Tag beim ersten Öffnen auf.
+Zusätzliche Felder: `recent_swim` (Meter je Tag in den 7 Tagen davor, die Vorwoche, nur Information für den Prompt, sie
+schmälert das Budget nicht) und `macro_weeks` (was der Gesamtplan für die Wochen dieser Tage vorgibt, höchstens 3).
+Der Prompt nennt die Vorgabe als Richtung ("feinjustieren, nicht stur abschreiben", Regel 11). Mit `week_start` bleibt
+alles wie vorher (Kalenderwoche, schon Geschwommenes zählt zum Budget).
+
 **Vorhandenes Equipment:** `POST /v1/plan/today` und `POST /v1/plan/week` nehmen optional `equipment`, die Liste
 der Hilfsmittel, die der Athlet hat (Einstellungen der App). Fehlt das Feld, ist jedes erlaubt; eine leere Liste
 heißt "keins". Die Nutzernachricht nennt die vorhandenen Hilfsmittel, die Sicherheitsschicht entfernt alle

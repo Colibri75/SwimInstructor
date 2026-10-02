@@ -11,6 +11,8 @@ public final class TodayPlanLoader: ObservableObject {
     @Published public private(set) var reading: AthleteStateReading?
     @Published public private(set) var isLoadingHealth = false
     @Published public private(set) var isLoadingPlan = false
+    /// Läuft gerade die Vorbereitung nach dem Lesen von Health (Wochenplan anpassen)?
+    @Published public private(set) var isPreparing = false
     /// Fehler beim Lesen aus Health.
     @Published public private(set) var healthError: String?
     /// Fehler beim Holen des Plans (der zuletzt gespeicherte Plan bleibt sichtbar).
@@ -30,6 +32,7 @@ public final class TodayPlanLoader: ObservableObject {
     private let wishStore: DailyWishStoring?
     private let dayTarget: @MainActor () -> DayPlanTarget?
     private let equipment: @MainActor () -> [String]?
+    private let prepare: @MainActor (AthleteStateReading) async -> Void
     private let now: () -> Date
     private let calendar: Calendar
 
@@ -43,6 +46,7 @@ public final class TodayPlanLoader: ObservableObject {
         wishStore: DailyWishStoring? = nil,
         dayTarget: @escaping @MainActor () -> DayPlanTarget? = { nil },
         equipment: @escaping @MainActor () -> [String]? = { nil },
+        prepare: @escaping @MainActor (AthleteStateReading) async -> Void = { _ in },
         now: @escaping () -> Date = { Date() },
         calendar: Calendar = .current
     ) {
@@ -54,6 +58,7 @@ public final class TodayPlanLoader: ObservableObject {
         self.wishStore = wishStore
         self.dayTarget = dayTarget
         self.equipment = equipment
+        self.prepare = prepare
         self.now = now
         self.calendar = calendar
         self.response = cache.load()
@@ -65,7 +70,7 @@ public final class TodayPlanLoader: ObservableObject {
         self.wish = wishStore?.wish(for: PlanFormatting.isoDay(now(), calendar: calendar)) ?? ""
     }
 
-    public var isLoading: Bool { isLoadingHealth || isLoadingPlan }
+    public var isLoading: Bool { isLoadingHealth || isPreparing || isLoadingPlan }
 
     /// Ist der angezeigte Plan einer von heute, den Claude (oder der Server-Cache) erzeugt hat?
     public var hasFreshPlanForToday: Bool {
@@ -112,6 +117,14 @@ public final class TodayPlanLoader: ObservableObject {
             healthError = error.localizedDescription
         }
         isLoadingHealth = false
+
+        // Mit dem frischen Zustand vorbereiten, bevor der Tagesplan entsteht: Der Wochenplan wird
+        // einmal am Tag angepasst, und der Tagesplan richtet sich danach (Vorgabe für heute).
+        if let reading {
+            isPreparing = true
+            await prepare(reading)
+            isPreparing = false
+        }
 
         guard fetchPlan, let snapshot = reading?.snapshot else { return }
         guard let provider = planProvider() else {

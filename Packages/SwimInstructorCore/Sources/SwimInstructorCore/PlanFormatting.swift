@@ -170,6 +170,17 @@ public enum PlanFormatting {
         return "\(sessionType(day.sessionType)), \(meters(day.targetDistanceMeters))"
     }
 
+    /// Deutscher Name einer Phase des Gesamtplans.
+    public static func macroPhase(_ phase: MacroPhase) -> String {
+        switch phase {
+        case .base: return "Aufbau"
+        case .specific: return "Zielspezifisch"
+        case .taper: return "Zuspitzen"
+        case .goalWeek: return "Zielwoche"
+        case .maintain: return "Erhalten"
+        }
+    }
+
     /// "30.09." für `2026-09-30`.
     public static func shortGermanDate(_ isoDay: String) -> String {
         let parts = isoDay.split(separator: "-")

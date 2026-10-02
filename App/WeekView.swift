@@ -1,10 +1,12 @@
 import SwiftUI
 import SwimInstructorCore
 
-/// Wochenplan: Was an welchem Tag ansteht, was schon geschafft ist, und Änderungen des Athleten. Der Plan
-/// ist ein Gerüst (Typ, Umfang, Schwerpunkt je Tag), die Abschnitte entstehen am Tag selbst im Tab Heute.
+/// Plan: oben der Gesamtplan bis zum Ziel, darunter die nächsten sieben Tage (jeden Tag beim ersten Öffnen
+/// neu auf Zustand, Stand und Vorwoche abgestimmt) mit Änderungen des Athleten. Der Plan der Tage ist ein
+/// Gerüst (Typ, Umfang, Schwerpunkt je Tag), die Abschnitte entstehen am Tag selbst im Tab Heute.
 struct WeekView: View {
     @EnvironmentObject private var weekLoader: WeekPlanLoader
+    @EnvironmentObject private var macroLoader: MacroPlanLoader
     @EnvironmentObject private var todayLoader: TodayPlanLoader
     @EnvironmentObject private var settings: BackendSettings
 
@@ -24,6 +26,7 @@ struct WeekView: View {
     var body: some View {
         NavigationStack {
             List {
+                macroSection
                 summarySection
                 if let plan, !plan.rationale.isEmpty {
                     overviewSection(plan)
@@ -31,7 +34,7 @@ struct WeekView: View {
                 daysSection
                 planSection
             }
-            .navigationTitle("Woche")
+            .navigationTitle("Plan")
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Button {
@@ -56,6 +59,47 @@ struct WeekView: View {
         }
         .task {
             if todayLoader.reading == nil { await todayLoader.refreshIfNeeded() }
+        }
+    }
+
+    // MARK: - Gesamtplan
+
+    private var macroSection: some View {
+        Section {
+            if let macro = macroLoader.plan {
+                MacroSummary(plan: macro, currentWeek: macroLoader.currentWeek, weeksLeft: macroLoader.weeksUntilGoal, currentWeekStart: macroLoader.currentWeekStart)
+                if !macroLoader.isCurrent {
+                    Label("Das Ziel hat sich geändert oder der Plan ist abgelaufen. Berechne ihn neu.", systemImage: "exclamationmark.triangle")
+                        .font(.footnote)
+                        .foregroundStyle(.orange)
+                }
+            } else {
+                Text("Noch kein Gesamtplan. Er legt die Wochen bis zu deinem Ziel fest, die nächsten sieben Tage richten sich danach.")
+                    .foregroundStyle(.secondary)
+            }
+            Button {
+                guard let snapshot = todayLoader.reading?.snapshot else { return }
+                Task { await macroLoader.regenerate(snapshot: snapshot) }
+            } label: {
+                if macroLoader.isLoading {
+                    HStack(spacing: 12) {
+                        ProgressView()
+                        Text("Claude plant bis zum Ziel …")
+                    }
+                } else {
+                    Text(macroLoader.plan == nil ? "Gesamtplan erstellen" : "Gesamtplan neu berechnen")
+                }
+            }
+            .disabled(macroLoader.isLoading || todayLoader.reading == nil || !settings.hasToken)
+            if let error = macroLoader.error {
+                Label(error, systemImage: "exclamationmark.triangle")
+                    .font(.footnote)
+                    .foregroundStyle(.orange)
+            }
+        } header: {
+            Text("Gesamtplan bis zum Ziel")
+        } footer: {
+            Text("Der Gesamtplan wird beim Start und bei einer Zieländerung erstellt. Neu berechnen lohnt sich, wenn sich dein Stand stark geändert hat (Pause, Krankheit, Fortschritt).")
         }
     }
 
@@ -137,60 +181,42 @@ struct WeekView: View {
 
     @ViewBuilder
     private var planSection: some View {
-        if weekLoader.canPlan(weekStarting: weekStart) {
-            Section {
-                TextField("Wunsch für die Woche (optional)", text: $wish, axis: .vertical)
-                    .lineLimit(1...4)
-                    .onChange(of: wish) { _, text in
-                        if text.count > DailyWish.maxLength {
-                            wish = String(text.prefix(DailyWish.maxLength))
-                        }
-                    }
-                Button {
-                    Task { await weekLoader.plan(weekStarting: weekStart, wishes: wish) }
-                } label: {
-                    if weekLoader.isLoading {
-                        HStack(spacing: 12) {
-                            ProgressView()
-                            Text("Claude plant die Woche …")
-                        }
-                    } else {
-                        Text(planButtonTitle)
+        Section {
+            TextField("Wunsch für die nächsten Tage (optional)", text: $wish, axis: .vertical)
+                .lineLimit(1...4)
+                .onChange(of: wish) { _, text in
+                    if text.count > DailyWish.maxLength {
+                        wish = String(text.prefix(DailyWish.maxLength))
                     }
                 }
-                .disabled(weekLoader.isLoading || !settings.hasToken)
-                if !settings.hasToken || weekLoader.needsConfiguration {
-                    Text("Noch kein Server-Token hinterlegt. Trage es im Tab Heute unter dem Zahnrad ein.")
-                        .font(.footnote)
-                        .foregroundStyle(.orange)
+            Button {
+                Task { await weekLoader.planNextDays(wishes: wish) }
+            } label: {
+                if weekLoader.isLoading {
+                    HStack(spacing: 12) {
+                        ProgressView()
+                        Text("Claude plant die nächsten Tage …")
+                    }
+                } else {
+                    Text("Nächste 7 Tage neu planen")
                 }
-                if let error = weekLoader.error {
-                    Label(error, systemImage: "exclamationmark.triangle")
-                        .font(.footnote)
-                        .foregroundStyle(.orange)
-                }
-            } header: {
-                Text("Planen")
-            } footer: {
-                Text(planFooter)
             }
-        } else {
-            Section {
-                Text("Diese Woche ist vorbei.")
-                    .foregroundStyle(.secondary)
+            .disabled(weekLoader.isLoading || !settings.hasToken)
+            if !settings.hasToken || weekLoader.needsConfiguration {
+                Text("Noch kein Server-Token hinterlegt. Trage es im Tab Heute unter dem Zahnrad ein.")
+                    .font(.footnote)
+                    .foregroundStyle(.orange)
             }
+            if let error = weekLoader.error {
+                Label(error, systemImage: "exclamationmark.triangle")
+                    .font(.footnote)
+                    .foregroundStyle(.orange)
+            }
+        } header: {
+            Text("Planen")
+        } footer: {
+            Text("Die App plant die nächsten sieben Tage jeden Tag beim ersten Öffnen neu und stimmt sie auf deinen Zustand, deinen Trainingsstand, die Vorwoche und den Gesamtplan ab. \"Keine Zeit\" bleibt dabei erhalten, andere Änderungen von Hand gelten bis zur nächsten Anpassung. Die genauen Abschnitte mit Equipment entstehen am Tag selbst im Tab Heute.")
         }
-    }
-
-    private var planButtonTitle: String {
-        if plan == nil { return "Woche planen" }
-        return weekStart == weekLoader.currentWeekStart ? "Rest der Woche neu planen" : "Woche neu planen"
-    }
-
-    private var planFooter: String {
-        let from = weekLoader.firstPlannedDate(forWeekStarting: weekStart)
-        let start = from == weekStart ? "ab Montag" : "ab heute"
-        return "Claude plant \(start) und berücksichtigt, was du schon geschwommen hast und an welchen Tagen du keine Zeit hast. Die Tage davor bleiben, wie sie waren. Die genauen Abschnitte mit Equipment entstehen am Tag selbst im Tab Heute."
     }
 }
 
@@ -463,5 +489,84 @@ private struct DayEditSheet: View {
                 Text("Das Verpasste landet auf dem gewählten Ruhetag. Wer lieber neu planen will, nutzt im Wochen-Tab \"Rest der Woche neu planen\": Claude berücksichtigt, was du schon geschwommen hast.")
             }
         }
+    }
+}
+
+// MARK: - Gesamtplan
+
+/// Der Gesamtplan auf einen Blick: Ziel, Stand, aktuelle Woche und alle Wochen bis zum Zieltag.
+private struct MacroSummary: View {
+    let plan: MacroPlan
+    let currentWeek: MacroWeek?
+    let weeksLeft: Int
+    let currentWeekStart: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Ziel am \(PlanFormatting.germanDate(plan.goalDay)), noch \(weeksLeft) Wochen")
+                .font(.headline)
+            if let currentWeek {
+                Text("Diese Woche: \(PlanFormatting.macroPhase(currentWeek.phase)), etwa \(PlanFormatting.meters(currentWeek.targetMeters)) in \(currentWeek.sessions) Einheiten\(currentWeek.deload ? " (Entlastung)" : "")")
+                    .font(.subheadline)
+                if !currentWeek.focus.isEmpty {
+                    Text(currentWeek.focus)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Text("Höhepunkt: \(PlanFormatting.meters(plan.peakMeters)) pro Woche")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            Text(plan.rationale)
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 2)
+        DisclosureGroup("Alle Wochen (\(plan.weeks.count))") {
+            VStack(alignment: .leading, spacing: 6) {
+                ForEach(plan.weeks) { week in
+                    MacroWeekRow(week: week, isCurrent: week.weekStart == currentWeekStart)
+                }
+            }
+            .padding(.top, 4)
+        }
+        if !plan.adjustments.isEmpty {
+            DisclosureGroup("Zur Sicherheit angepasst (\(plan.adjustments.count))") {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(plan.adjustments, id: \.self) { adjustment in
+                        Text(adjustment)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .padding(.top, 4)
+            }
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+        }
+    }
+}
+
+private struct MacroWeekRow: View {
+    let week: MacroWeek
+    let isCurrent: Bool
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(PlanFormatting.shortGermanDate(week.weekStart))
+                .font(.caption.monospacedDigit().weight(isCurrent ? .bold : .regular))
+                .frame(width: 48, alignment: .leading)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("\(PlanFormatting.macroPhase(week.phase)) · \(PlanFormatting.meters(week.targetMeters))\(week.deload ? " · Entlastung" : "")")
+                    .font(.caption.weight(isCurrent ? .bold : .regular))
+                if !week.focus.isEmpty {
+                    Text(week.focus)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .foregroundStyle(isCurrent ? Color.accentColor : Color.primary)
     }
 }

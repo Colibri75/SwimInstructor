@@ -60,4 +60,14 @@ final class WeekCalendarTests: XCTestCase {
         XCTAssertEqual(PlanFormatting.shortGermanDate("2026-09-30"), "30.09.")
         XCTAssertEqual(PlanFormatting.shortGermanDate("kaputt"), "kaputt")
     }
+
+    func testDatesFromADayCrossWeeksAndMonths() {
+        let calendar = WeekCalendar(calendar: TestFixtures.utc)
+
+        XCTAssertEqual(calendar.dates(from: "2026-09-30", count: 7), ["2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05", "2026-10-06"])
+        XCTAssertEqual(calendar.dates(from: "2026-09-30", count: 1), ["2026-09-30"])
+        XCTAssertEqual(calendar.dates(from: "2026-09-30", count: 0), [])
+        XCTAssertEqual(calendar.dates(from: "kein Datum", count: 3), [])
+    }
 }
+

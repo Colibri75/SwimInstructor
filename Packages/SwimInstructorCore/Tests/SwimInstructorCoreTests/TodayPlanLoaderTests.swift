@@ -55,6 +55,7 @@ final class TodayPlanLoaderTests: XCTestCase {
         wishes: DailyWishStoring? = nil,
         dayTarget: @escaping @MainActor () -> DayPlanTarget? = { nil },
         equipment: @escaping @MainActor () -> [String]? = { nil },
+        prepare: @escaping @MainActor (AthleteStateReading) async -> Void = { _ in },
         provider: CountingProvider?,
         workouts: FakeWorkoutRepository = FakeWorkoutRepository(workouts: [TestFixtures.workout(daysAgo: 1, meters: 1500)]),
         authorizer: Authorizer = Authorizer()
@@ -72,9 +73,53 @@ final class TodayPlanLoaderTests: XCTestCase {
             wishStore: wishes,
             dayTarget: dayTarget,
             equipment: equipment,
+            prepare: prepare,
             now: { TestFixtures.now },
             calendar: TestFixtures.utc
         )
+    }
+
+    func testThePlanIsPreparedWithTheFreshReadingBeforeTheDayPlanIsFetched() async {
+        let provider = CountingProvider(.success(TestFixtures.response()))
+        var events: [String] = []
+        var preparedWith: AthleteStateReading?
+        let loader = makeLoader(
+            prepare: { reading in
+                events.append("prepare (Pläne bisher: \(provider.calls))")
+                preparedWith = reading
+            },
+            provider: provider
+        )
+
+        await loader.refreshIfNeeded()
+
+        XCTAssertEqual(events, ["prepare (Pläne bisher: 0)"])
+        XCTAssertEqual(preparedWith?.snapshot, loader.reading?.snapshot)
+        XCTAssertEqual(provider.calls, 1)
+        XCTAssertFalse(loader.isPreparing)
+        XCTAssertFalse(loader.isLoading)
+    }
+
+    func testThePlanIsPreparedEvenWhenTodaysPlanIsAlreadyCached() async {
+        let provider = CountingProvider(.success(TestFixtures.response()))
+        var prepared = 0
+        let loader = makeLoader(cache: MemoryCache(TestFixtures.response()), prepare: { _ in prepared += 1 }, provider: provider)
+
+        await loader.refreshIfNeeded()
+
+        XCTAssertEqual(prepared, 1)
+        XCTAssertEqual(provider.calls, 0)
+    }
+
+    func testNothingIsPreparedWhenHealthCannotBeRead() async {
+        let authorizer = Authorizer()
+        authorizer.error = NSError(domain: "test", code: 1)
+        var prepared = 0
+        let loader = makeLoader(prepare: { _ in prepared += 1 }, provider: CountingProvider(.success(TestFixtures.response())), authorizer: authorizer)
+
+        await loader.refreshIfNeeded()
+
+        XCTAssertEqual(prepared, 0)
     }
 
     func testTheOwnedEquipmentGoesWithEveryPlanRequest() async {

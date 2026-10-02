@@ -36,6 +36,11 @@ public struct WeekCalendar: Sendable {
         (0..<7).compactMap { addingDays($0, to: weekStart) }
     }
 
+    /// `count` Tage ab `key` (einschließlich), unabhängig vom Wochentag.
+    public func dates(from key: String, count: Int = 7) -> [String] {
+        (0..<max(count, 0)).compactMap { addingDays($0, to: key) }
+    }
+
     public func addingDays(_ days: Int, to key: String) -> String? {
         guard let start = date(from: key), let shifted = calendar.date(byAdding: .day, value: days, to: start) else { return nil }
         return self.key(for: shifted)

@@ -253,6 +253,78 @@ final class PlanAPIClientTests: XCTestCase {
         XCTAssertNil(bodies[1]["equipment"])
     }
 
+    func testRollingWeekPlanRequestHasNoWeekStartAndCarriesTheLastWeekAndTheMacroWeeks() async throws {
+        let transport = StubTransport(status: 200, body: WeekFixtures.responseJSON)
+        let client = PlanAPIClient(configuration: configuration, transport: transport)
+        let macro = MacroFixtures.week("2026-09-28", meters: 3500, sessions: 3, deload: false, focus: "Ausdauer", phase: .specific)
+
+        _ = try await client.fetchWeekPlan(WeekPlanRequest(
+            snapshot: TestFixtures.snapshot,
+            weekStart: nil,
+            fromDate: "2026-09-30",
+            today: "2026-09-30",
+            recentSwim: [SwumDay(date: "2026-09-27", meters: 1200)],
+            macroWeeks: [macro]
+        ))
+        _ = try await client.fetchWeekPlan(WeekPlanRequest(snapshot: TestFixtures.snapshot, weekStart: nil, fromDate: "2026-09-30", today: "2026-09-30"))
+
+        let bodies = try transport.requests.map { request -> [String: Any] in
+            try XCTUnwrap(JSONSerialization.jsonObject(with: try XCTUnwrap(request.httpBody)) as? [String: Any])
+        }
+        XCTAssertNil(bodies[0]["week_start"])
+        XCTAssertEqual(bodies[0]["from_date"] as? String, "2026-09-30")
+        let recent = try XCTUnwrap(bodies[0]["recent_swim"] as? [[String: Any]])
+        XCTAssertEqual(recent.first?["meters"] as? Double, 1200)
+        let weeks = try XCTUnwrap(bodies[0]["macro_weeks"] as? [[String: Any]])
+        XCTAssertEqual(weeks.first?["week_start"] as? String, "2026-09-28")
+        XCTAssertEqual(weeks.first?["target_meters"] as? Int, 3500)
+        XCTAssertEqual(weeks.first?["phase"] as? String, "specific")
+        XCTAssertEqual(weeks.first?["deload"] as? Bool, false)
+        XCTAssertEqual(weeks.first?["focus"] as? String, "Ausdauer")
+        // Ohne Gesamtplan und Vorwoche fehlen die Felder.
+        XCTAssertNil(bodies[1]["macro_weeks"])
+        XCTAssertNil(bodies[1]["recent_swim"])
+    }
+
+    func testMacroPlanRequestAndResponse() async throws {
+        let transport = StubTransport(status: 200, body: MacroFixtures.responseJSON)
+        let client = PlanAPIClient(configuration: configuration, transport: transport)
+
+        let response = try await client.fetchMacroPlan(MacroPlanRequest(snapshot: TestFixtures.snapshot, today: "2026-09-30"))
+
+        XCTAssertEqual(response.plan.weeks.count, 5)
+        let sent = try XCTUnwrap(transport.requests.first)
+        XCTAssertEqual(sent.url?.absoluteString, "https://example.test/v1/plan/macro")
+        XCTAssertEqual(sent.httpMethod, "POST")
+        XCTAssertEqual(sent.value(forHTTPHeaderField: "Authorization"), "Bearer geheim")
+        XCTAssertEqual(sent.timeoutInterval, PlanAPIClient.planTimeout)
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: try XCTUnwrap(sent.httpBody)) as? [String: Any])
+        XCTAssertEqual(body["today"] as? String, "2026-09-30")
+        XCTAssertNotNil(body["snapshot"] as? [String: Any])
+    }
+
+    func testMacroPlanErrorsAreMappedLikeThePlanErrors() async {
+        func failure(status: Int, body: String) async -> PlanAPIError? {
+            let client = PlanAPIClient(configuration: configuration, transport: StubTransport(status: status, body: body))
+            do {
+                _ = try await client.fetchMacroPlan(MacroPlanRequest(snapshot: TestFixtures.snapshot, today: "2026-09-30"))
+                return nil
+            } catch {
+                return error as? PlanAPIError
+            }
+        }
+
+        let unauthorized = await failure(status: 401, body: "{}")
+        let invalid = await failure(status: 400, body: #"{"error":"invalid_request","details":[{"path":"today","message":"kaputt"}]}"#)
+        let unavailable = await failure(status: 503, body: #"{"error":"plan_unavailable","reason":"timeout"}"#)
+        let garbage = await failure(status: 200, body: "kein json")
+
+        XCTAssertEqual(unauthorized, .unauthorized)
+        XCTAssertEqual(invalid, .invalidRequest(details: ["today: kaputt"]))
+        XCTAssertEqual(unavailable, .planUnavailable(reason: "timeout"))
+        if case .invalidResponse = garbage {} else { XCTFail("erwartet: unverständliche Antwort, bekam \(String(describing: garbage))") }
+    }
+
     func testWeekPlanRequestWithoutWishSendsNone() async throws {
         let transport = StubTransport(status: 200, body: WeekFixtures.responseJSON)
         let client = PlanAPIClient(configuration: configuration, transport: transport)

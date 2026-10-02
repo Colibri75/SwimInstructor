@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Hauptnavigation der iPhone-App: Heute, Woche, Dashboard, Verlauf.
+/// Hauptnavigation der iPhone-App: Heute, Plan (Gesamtplan und nächste sieben Tage), Dashboard, Verlauf.
 struct RootView: View {
     private enum Tab {
         case today, week, dashboard, history
@@ -14,7 +14,7 @@ struct RootView: View {
                 .tabItem { Label("Heute", systemImage: "figure.pool.swim") }
                 .tag(Tab.today)
             WeekView()
-                .tabItem { Label("Woche", systemImage: "calendar") }
+                .tabItem { Label("Plan", systemImage: "calendar") }
                 .tag(Tab.week)
             DashboardView()
                 .tabItem { Label("Dashboard", systemImage: "chart.xyaxis.line") }

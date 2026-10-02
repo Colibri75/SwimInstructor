@@ -220,4 +220,38 @@ final class WeekPlanEditorTests: XCTestCase {
         XCTAssertEqual(merged.adjustments, ["x"])
         XCTAssertEqual(merged.wishes, "w")
     }
+
+    // MARK: - Rollender Plan (Zusammenführen bis zum Ende des Fensters)
+
+    func testMergeWithAWindowKeepsOldDaysBeyondItThatTheNewPlanDoesNotKnow() {
+        let old = WeekFixtures.plan()
+        let new = WeekFixtures.plan(days: [WeekFixtures.day("2026-09-30", WeekFixtures.content(meters: 700)), WeekFixtures.day("2026-10-01", WeekFixtures.content(meters: 800))])
+
+        // Das Fenster endet am 01.10.: 02.-04.10. stammen aus dem Plan davor.
+        let merged = WeekPlanEditor.merge(existing: old, generated: new, fromDate: "2026-09-30", through: "2026-10-01")
+
+        XCTAssertEqual(merged.days.map(\.date), ["2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04"])
+        XCTAssertEqual(merged.days.map(\.targetDistanceMeters), [700, 800, 1000, 2000, 0])
+    }
+
+    func testMergeWithAWindowStillTakesTheNewPlanInsideTheWindowAndKeepsThePast() {
+        let past = WeekFixtures.day("2026-09-28", WeekFixtures.content(meters: 1234))
+        let old = WeekFixtures.plan(days: [past] + WeekFixtures.plan().days)
+        let new = WeekFixtures.plan(days: [WeekFixtures.day("2026-09-30", WeekFixtures.content(meters: 700))])
+
+        let merged = WeekPlanEditor.merge(existing: old, generated: new, fromDate: "2026-09-30", through: "2026-10-06")
+
+        XCTAssertEqual(merged.days.map(\.date), ["2026-09-28", "2026-09-30"])
+        XCTAssertEqual(merged.days.first?.targetDistanceMeters, 1234)
+    }
+
+    func testMergeWithAWindowKeepsADayWithoutTimeBeyondIt() {
+        let old = WeekPlanEditor.markUnavailable(base, date: "2026-10-04")
+        let new = WeekFixtures.plan(days: [WeekFixtures.day("2026-09-30")])
+
+        let merged = WeekPlanEditor.merge(existing: old, generated: new, fromDate: "2026-09-30", through: "2026-09-30")
+
+        XCTAssertEqual(merged.day(on: "2026-10-04")?.isUnavailable, true)
+    }
 }
+
