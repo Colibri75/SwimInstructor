@@ -75,8 +75,8 @@ describe("Wochenplan gegen das Gesamtziel", () => {
   it("verlangt beim Zuspitzen einen Umfang unter dem Wochenschnitt und in der Zielwoche keine harte Einheit", () => {
     const peak = snapshot({ goal: { days_until_goal: 5 }, volume: { average_weekly_meters: 3000 } });
 
-    // goodWeek: 3600 m und ein harter Tag.
-    const heavy = checkWeekPlanAgainstGoal(peak, goodWeek());
+    // goodWeek: 3600 m und ein harter Tag, dazu ein Tag mit 1500 m: 5100 m liegen auch mit dem Versuch (1,2 x 3800 m) darueber.
+    const heavy = checkWeekPlanAgainstGoal(peak, goodWeek({ days: [...goodWeek().days.slice(0, 4), day("2026-10-04", { target_distance_meters: 1500 })] }));
     const light = checkWeekPlanAgainstGoal(
       peak,
       goodWeek({ days: [day("2026-09-30", { intensity: "easy", target_distance_meters: 1000 }), rest("2026-10-01"), day("2026-10-02", { intensity: "easy", target_distance_meters: 800 }), rest("2026-10-03"), rest("2026-10-04")] })
@@ -99,6 +99,19 @@ describe("Wochenplan gegen das Gesamtziel", () => {
     // Ohne Grenze oder bei Warnhinweis wird nichts geprueft.
     expect(byName(checkWeekPlanAgainstGoal(snapshot({ goal: { days_until_goal: 200 } }), small), check)).toBeUndefined();
     expect(byName(checkWeekPlanAgainstGoal(snapshot({ goal: { days_until_goal: 200 }, flags: ["recovery_poor"] }), small, limits), check)).toBeUndefined();
+  });
+
+  it("zaehlt den Versuch am Zieltag weder als harte Einheit noch gegen den Umfang der Zielwoche", () => {
+    const peak = snapshot({ goal: { days_until_goal: 5, target_date: "2026-10-05T12:00:00Z" }, volume: { average_weekly_meters: 4500, longest_session_meters: 3800 } });
+    const week = goodWeek({
+      days: [rest("2026-09-30"), day("2026-10-03", { intensity: "moderate", target_distance_meters: 750 }), day("2026-10-05", { session_type: "test", intensity: "hard", target_distance_meters: 3800 })]
+    });
+    const withHardBefore = goodWeek({ days: [day("2026-10-02", { session_type: "intervals", intensity: "hard", target_distance_meters: 1000 }), day("2026-10-05", { session_type: "test", intensity: "hard", target_distance_meters: 3800 })] });
+
+    // 750 + 3800 = 4550 m: ueber dem Wochenschnitt 4500 m, aber unter 1,2 x Zieldistanz (4560 m).
+    expect(byName(checkWeekPlanAgainstGoal(peak, week), "Keine harte Einheit in der Zielwoche")?.ok).toBe(true);
+    expect(byName(checkWeekPlanAgainstGoal(peak, week), "Umfang sinkt beim Zuspitzen")?.ok).toBe(true);
+    expect(byName(checkWeekPlanAgainstGoal(peak, withHardBefore), "Keine harte Einheit in der Zielwoche")?.ok).toBe(false);
   });
 
   it("verlangt in der zielspezifischen Phase mindestens einen zielspezifischen Tag", () => {

@@ -40,6 +40,10 @@ const MIN_SESSIONS = 2;
 const MAX_SESSIONS = 5;
 const MAX_FOCUS_LENGTH = 80;
 const MAX_ADJUSTMENT_LINES = 10;
+/** Ab diesem Anteil der Zieldistanz in der laengsten Einheit darf die Zielwoche den Versuch tragen. */
+const ATTEMPT_MIN_LONGEST_SHARE = 0.7;
+/** Der Hinweis zum Hoehepunkt erscheint erst, wenn Claudes Zahl mehr als so viel darueber lag. */
+const PEAK_NOTE_TOLERANCE = 0.05;
 
 export function macroLimits(snapshot: Snapshot, context: MacroContext, limits: SanityLimits = DEFAULT_LIMITS): MacroLimits {
   const firstWeek = weekLimits(snapshot, { today: context.today, dates: windowDates(context.today, 7), unavailable: [], swumBefore: [] }, limits);
@@ -87,6 +91,8 @@ export function sanitizeMacro(input: MacroPlanRaw, snapshot: Snapshot, context: 
   // Letzte Woche ohne Entlastung (Bezug fuer das Wachstum) und bisheriger Hoehepunkt.
   let reference = Math.max(snapshot.volume.average_weekly_meters, 0);
   let peak = 0;
+  /** Hoehepunkt, wie Claude ihn geplant hat (vor den Korrekturen). */
+  let rawPeak = 0;
   let missing = 0;
 
   context.weeks.forEach((weekStart, index) => {
@@ -122,8 +128,12 @@ export function sanitizeMacro(input: MacroPlanRaw, snapshot: Snapshot, context: 
     if (phase === "taper") {
       const factor = weeksToGoal >= 2 ? limitsNow.taperFactors[0] : limitsNow.taperFactors[1];
       if (peak > 0) cap = Math.min(cap, floorStep(peak * factor));
-    } else if (phase === "goal_week" && peak > 0) {
-      cap = Math.min(cap, Math.max(floorStep(peak * limitsNow.goalWeekFactor), floorStep(goalDistance * 1.2)));
+    } else if (phase === "goal_week") {
+      // Der Versuch auf die Zieldistanz (mit Einschwimmen) passt immer in die Zielwoche, wenn der Athlet ihn fast
+      // schon schwimmt (laengste Einheit mindestens 70 % der Zieldistanz). Sonst gilt nur das Wachstum.
+      const attempt = snapshot.volume.longest_session_meters >= goalDistance * ATTEMPT_MIN_LONGEST_SHARE ? floorStep(goalDistance * 1.2) : 0;
+      cap = Math.min(limitsNow.absoluteMaxWeeklyMeters, Math.max(cap, attempt));
+      if (peak > 0) cap = Math.min(cap, Math.max(floorStep(peak * limitsNow.goalWeekFactor), floorStep(goalDistance * 1.2)));
     }
     if (target > cap) {
       reasons.push(index === 0 ? "Grenze für die erste Woche" : deload ? "Entlastungswoche" : phase === "taper" || phase === "goal_week" ? "Zuspitzen" : "höchstens etwa 10 % mehr als die Woche davor");
@@ -148,7 +158,10 @@ export function sanitizeMacro(input: MacroPlanRaw, snapshot: Snapshot, context: 
       phase
     });
     if (!deload) reference = target;
-    if (!deload && (phase === "base" || phase === "specific")) peak = Math.max(peak, target);
+    if (!deload && (phase === "base" || phase === "specific")) {
+      peak = Math.max(peak, target);
+      rawPeak = Math.max(rawPeak, floorStep(raw.target_meters));
+    }
   });
 
   const adjustments: string[] = [];
@@ -156,7 +169,15 @@ export function sanitizeMacro(input: MacroPlanRaw, snapshot: Snapshot, context: 
   adjustments.push(...notes.slice(0, MAX_ADJUSTMENT_LINES));
   if (notes.length > MAX_ADJUSTMENT_LINES) adjustments.push(`… und ${notes.length - MAX_ADJUSTMENT_LINES} weitere Korrekturen am Umfang`);
 
-  const rationale = input.rationale.trim().slice(0, limits.maxRationaleLength);
+  let rationale = input.rationale.trim().slice(0, limits.maxRationaleLength);
+  // Die Begruendung nennt oft den Hoehepunkt, den Claude geplant hat. Hat die Sicherheitsschicht ihn deutlich
+  // gekuerzt, haengt der Hinweis die tatsaechliche Zahl an, damit Plan und Begruendung zusammenpassen.
+  if (peak > 0 && rawPeak > peak * (1 + PEAK_NOTE_TOLERANCE)) {
+    const peakWeek = weeks.find((week) => week.target_meters === peak && !week.deload && (week.phase === "base" || week.phase === "specific"));
+    const note = `Hinweis: Zur Sicherheit angepasst, der Höhepunkt liegt bei ${peak} m pro Woche${peakWeek ? ` (${label(peakWeek.week_start)})` : ""}.`;
+    const room = Math.max(limits.maxRationaleLength - note.length - 1, 0);
+    rationale = `${rationale.slice(0, room).trimEnd()} ${note}`.trim();
+  }
   return { plan: { rationale, weeks }, adjustments, blocked: null };
 }
 

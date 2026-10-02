@@ -89,6 +89,30 @@ describe("Sicherheitsschicht fuer den Gesamtplan", () => {
     expect(result.plan.weeks[6].target_meters).toBe(3300);
   });
 
+  it("laesst die Zielwoche den Versuch tragen, wenn die laengste Einheit fast die Zieldistanz ist", () => {
+    const plan = goodMacro();
+    plan.weeks[5] = macroWeek(MACRO_WEEKS[5], { target_meters: 3000 });
+    plan.weeks[6] = macroWeek(MACRO_WEEKS[6], { target_meters: 4500 });
+
+    const near = sanitizeMacro(plan, snapshot({ volume: { longest_session_meters: 3000 } }), macroContext());
+    const far = sanitizeMacro(plan, snapshot({ volume: { longest_session_meters: 1200 } }), macroContext());
+
+    // 3000 m sind 79 % von 3800 m: Die Zielwoche darf 1,2 x 3800 = 4560 m (abgerundet 4550 m) haben, trotz Wachstumsgrenze 3300 m.
+    expect(near.plan.weeks[6].target_meters).toBe(4500);
+    // 1200 m sind 32 %: Es gilt nur das Wachstum.
+    expect(far.plan.weeks[6].target_meters).toBe(3300);
+  });
+
+  it("nennt in der Begruendung den tatsaechlichen Hoehepunkt, wenn die Sicherheitsschicht ihn deutlich gekuerzt hat", () => {
+    const plan = goodMacro();
+    plan.weeks[3] = macroWeek(MACRO_WEEKS[3], { target_meters: 9000 });
+
+    const result = sanitizeMacro(plan, snapshot(), macroContext());
+
+    expect(result.plan.rationale).toContain("Hinweis: Zur Sicherheit angepasst, der Höhepunkt liegt bei 4500 m pro Woche");
+    expect(sanitizeMacro(goodMacro(), snapshot(), macroContext()).plan.rationale).not.toContain("Hinweis");
+  });
+
   it("ergaenzt fehlende Wochen mit dem Umfang der Vorwoche und ignoriert unbekannte und doppelte", () => {
     const plan = goodMacro();
     plan.weeks.splice(2, 1);

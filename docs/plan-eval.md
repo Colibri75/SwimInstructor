@@ -127,11 +127,35 @@ reicht (06, 04, 01). Szenario 07 (Zieltag vorbei) verweist auf ein neues Ziel un
 ohne harte Einheit, und alle Gesamtpläne reichen bis zur Zielwoche, mit Entlastungswochen und sinkendem Umfang beim
 Zuspitzen. Die Kurzbeschreibungen für die Uhr (`cue`) sind drei bis vier Wörter lang.
 
-## Lauf 4 (ausstehend): nach den Korrekturen aus Lauf 3
+## Lauf 4 (02.10.2026): nach den Korrekturen aus Lauf 3
 
-**Noch nicht ausgeführt.** Prüfen, ob die 7-Tage-Pläne jetzt sinnvolle Umfänge haben (01 und 03 bei etwa 1.000 bis
-1.500 m in zwei bis drei Einheiten von je mindestens 400 m), ob nirgends mehr ein Satz unter 50 m steht und ob 04 beim
-Zuspitzen unter dem Wochenschnitt bleibt.
+Modell `claude-opus-5-5`, Effort `high`, 27 Anfragen, ca. $1,49, kein Fehler. Der Lauf folgt dem Ablauf der App: Gesamtplan,
+dann 7 Tage mit Gesamtplan und Vorwoche, dann Tag mit der Vorgabe des 7-Tage-Plans.
+
+**Was die Korrekturen gebracht haben:**
+
+- **7-Tage-Pläne haben jetzt sinnvolle Umfänge:** 01 Anfänger 1.500 m (drei Einheiten zu 500 m, vorher 200 m), 03 Trainingspause
+  1.500 m (drei Einheiten zu 500 m, vorher 825 m), 02 4.350 m, 05 1.850 m, 06 3.900 m. Die Sicherheitsschicht musste bei den
+  7-Tage- und Tagesplänen nichts ändern: Claude hielt Grenzen, Mindest-Einheit und Satzlängen von selbst ein.
+- **Alle Sätze sind Vielfache von 50 m** (50, 100, 150, 200 m), in allen neun Tagesplänen.
+- **04 Zuspitzen:** 4.250 m in den nächsten 7 Tagen bei 5.000 m Wochenschnitt (vorher 5.500 m).
+- Der Gesamtplan 01 erreicht jetzt 11.000 m Höhepunkt (vorher 6.200 m), alle Zielprüfungen des Gesamtplans sind grün.
+- Die Pläne sind in sich stimmig: Der Tagesplan folgt der Vorgabe des 7-Tage-Plans (Ruhetag bleibt Ruhetag, 500 m Technik
+  werden 550 m mit Abschnitten).
+
+| Befund | Ursache | Korrektur |
+|---|---|---|
+| **09 Zielwoche, 7 Tage: zwei Prüfungen offen** ("harte Einheit", "Umfang über Wochenschnitt") | Kein Planfehler: Der Plan setzt den Versuch über 3.800 m am Zieltag (Typ Test, hart) und eine kurze Einheit davor. Die Prüfung zählte den Versuch mit | Die Prüfung nimmt den Zieltag aus und erlaubt in der Zielwoche den Schnitt oder das 1,2-Fache der Zieldistanz, je nachdem, was größer ist |
+| **04 und 09, Gesamtplan: Zielwoche nur 3.850 m bzw. 3.300 m**, obwohl Claude 4.500 m mit dem Versuch plante | Die Wachstumsgrenze (höchstens 10 % mehr als die Woche davor) galt auch für die Zielwoche, nach einer Zuspitzwoche mit wenig Umfang | Wer in der längsten Einheit mindestens 70 % der Zieldistanz schwimmt, darf in der Zielwoche den Versuch tragen (1,2-Fache der Zieldistanz). Wer weit davon entfernt ist (06, 10 km bei 1,2 km längster Einheit), bleibt bei der Wachstumsgrenze |
+| **03, 08, 04, 09: Begründung des Gesamtplans nennt Zahlen, die die Sicherheitsschicht danach geändert hat** (03: "Höhepunkt 15.240 m", im Plan 12.950 m) | Die Begründung stammt von Claude, vor den Korrekturen | Hat die Sicherheitsschicht den Höhepunkt um mehr als 5 % gekürzt, hängt sie den tatsächlichen Höhepunkt mit Woche an die Begründung an |
+
+Offen und gewollt: Claude plant die erste Woche oft etwas über der Vorgabe des Gesamtplans (z. B. 1.500 m statt 1.200 m), weil
+die Grenze es erlaubt und die 7 Tage in zwei Kalenderwochen liegen. Das ist Feinjustieren und kein Fehler.
+
+## Lauf 5 (ausstehend)
+
+**Noch nicht ausgeführt.** Prüfen: Zielwoche bei 04 und 09 trägt den Versuch (Gesamtplan nicht mehr 3.850 m bzw. 3.300 m),
+die Begründungen der Gesamtpläne nennen den tatsächlichen Höhepunkt, und die Zielprüfung bei 09 ist grün.
 
 Auf dem Server (27 Anfragen, kostet rund $1,50):
 

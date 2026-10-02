@@ -165,7 +165,8 @@ Schwerpunkt je Woche. Die **Phase** (`base` über 12 Wochen vor der Zielwoche, `
 höchstens die Wochengrenze von heute (Erholung, Pause, Wochenschnitt), jede weitere höchstens etwa 10 % mehr als die
 letzte Woche ohne Entlastung, Entlastung höchstens 85 % und nie in der ersten Woche, beim Zuspitzen höchstens
 85 % und 70 % des Höhepunkts, Zielwoche höchstens die Hälfte des Höhepunkts, aber mindestens das 1,2-Fache der
-Zieldistanz, 2 bis 5 Einheiten und je Einheit mindestens 400 m (eine Woche mit Training hat daher mindestens 800 m,
+Zieldistanz (diese Versuchs-Woche ist von der Wachstumsgrenze ausgenommen, wenn die längste Einheit schon mindestens 70 %
+der Zieldistanz ist; hat die Sicherheitsschicht den Höhepunkt um mehr als 5 % gekürzt, nennt die Begründung den echten), 2 bis 5 Einheiten und je Einheit mindestens 400 m (eine Woche mit Training hat daher mindestens 800 m,
 sonst hebt der Code sie an, soweit die Grenze es erlaubt). Der Server speichert nichts, die App hält den Plan.
 
 **Rollender Plan der nächsten sieben Tage (`POST /v1/plan/week`):** Ohne `week_start` plant der Server die sieben

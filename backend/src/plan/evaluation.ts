@@ -94,20 +94,24 @@ export function checkWeekPlanAgainstGoal(snapshot: Snapshot, week: WeekPlan, lim
   const a = assessGoal(snapshot);
   const checks = shared(snapshot, week.rationale);
   const total = week.days.reduce((sum, day) => sum + day.target_distance_meters, 0);
-  const hard = week.days.filter((day) => day.intensity === "hard").length;
+  // Der Versuch am Zieltag (Typ test, hart) gehoert zur Zielwoche und zaehlt nicht als harte Einheit davor.
+  const goalDay = snapshot.goal.target_date.slice(0, 10);
+  const hard = week.days.filter((day) => day.intensity === "hard" && day.date !== goalDay).length;
 
   if (a.phase === "past" || a.phase === "peak_week") {
     checks.push({
       name: a.phase === "past" ? "Erhaltend statt hart (Zieltag vorbei)" : "Keine harte Einheit in der Zielwoche",
       ok: hard === 0,
-      detail: `${hard} harte Einheit(en)`
+      detail: `${hard} harte Einheit(en)${a.phase === "peak_week" ? " außer dem Versuch am Zieltag" : ""}`
     });
   }
   if ((a.phase === "taper" || a.phase === "peak_week") && snapshot.volume.average_weekly_meters > 0) {
+    // In der Zielwoche kommt der Versuch auf die Zieldistanz (mit Einschwimmen) dazu.
+    const allowed = a.phase === "peak_week" ? Math.max(snapshot.volume.average_weekly_meters, Math.round(snapshot.goal.distance_meters * 1.2)) : snapshot.volume.average_weekly_meters;
     checks.push({
       name: "Umfang sinkt beim Zuspitzen",
-      ok: total <= snapshot.volume.average_weekly_meters,
-      detail: `${total} m geplant, Wochenschnitt ${snapshot.volume.average_weekly_meters} m`
+      ok: total <= allowed,
+      detail: `${total} m geplant, Wochenschnitt ${snapshot.volume.average_weekly_meters} m${allowed > snapshot.volume.average_weekly_meters ? `, mit dem Versuch am Zieltag bis ${allowed} m` : ""}`
     });
   }
   // Ohne Warnhinweis soll der Plan die Wochengrenze nicht nur zu einem Bruchteil nutzen (zu kleine Woche).
