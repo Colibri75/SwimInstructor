@@ -59,7 +59,7 @@ describe("FilePlanStore", () => {
   it("liest einen Plan aus der Zeit vor dem Equipment (ohne equipment-Feld) mit leerer Liste", async () => {
     const old = {
       ...record,
-      plan: { ...goodPlan, sets: goodPlan.sets.map(({ equipment: _ignored, ...rest }) => rest) }
+      plan: { ...goodPlan, sets: goodPlan.sets.map(({ equipment: _equipment, cue: _cue, ...rest }) => rest) }
     };
     await writeFile(path.join(dir, "latest-plan.json"), JSON.stringify(old), "utf8");
 
@@ -67,6 +67,8 @@ describe("FilePlanStore", () => {
 
     expect(loaded).not.toBeNull();
     expect(loaded?.plan.sets.map((s) => s.equipment)).toEqual([[], [], []]);
+    // Auch die Kurzbeschreibung fuer die Uhr gab es damals noch nicht.
+    expect(loaded?.plan.sets.map((s) => s.cue)).toEqual(["", "", ""]);
     expect(loaded?.plan.sets[1].name).toBe("Hauptsatz");
   });
 

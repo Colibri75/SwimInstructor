@@ -37,6 +37,8 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
     @Published private(set) var planSets: [PlanSet] = []
     /// Stand im Plan: läuft mit der Strecke mit und springt bei einem Wechsel von Hand. `nil` ohne Plan.
     @Published private(set) var progress: PlanProgressState?
+    /// Aktuelle Pace (Sekunden pro 100 m) aus den letzten Bahnen; `nil` ohne Messung oder in der Pause am Beckenrand.
+    @Published private(set) var currentPace: Double?
     /// Wechsel von Hand (Strecke und Richtung, je einen Satz), in der Reihenfolge, in der sie passierten.
     @Published private(set) var sectionMoves: [SectionMove] = []
     /// Wassersperre an? Wird zweimal pro Sekunde aktualisiert.
@@ -57,6 +59,7 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
     private var sectionGesture = SectionGesture()
     private var pausedByButtonOnScreen = false
     private var tickTimer: Timer?
+    private var paceTracker = CurrentPaceTracker()
 
     func start(poolLengthMeters: Int, plan: TrainingPlan? = nil) async {
         guard !phase.isActive else { return }
@@ -70,6 +73,8 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         recomputeProgress()
         waterLock = WaterLockControl()
         crown = CrownRotationTracker()
+        paceTracker = CurrentPaceTracker()
+        currentPace = nil
         sectionGesture.reset()
         pausedByButtonOnScreen = false
         lastGestureNote = "noch nichts"
@@ -141,6 +146,7 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         planSets = []
         sectionMoves = []
         progress = nil
+        currentPace = nil
         sectionGesture.reset()
         errorMessage = nil
     }
@@ -249,9 +255,15 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         if locked != isWaterLocked { isWaterLocked = locked }
         crown.resetIfIdle(at: now)
         publishCrown(isLocked: locked)
+        publishPace(atElapsed: builder?.elapsedTime ?? metrics.elapsed)
         if waterLock.update(isRunning: phase == .running, isLocked: locked, now: now) == .lock {
             lockWater()
         }
+    }
+
+    private func publishPace(atElapsed elapsed: TimeInterval) {
+        let pace = paceTracker.pace(atElapsed: elapsed)
+        if pace != currentPace { currentPace = pace }
     }
 
     /// Setzt nur Werte, die sich ändern, damit die Ansicht nicht ohne Grund neu zeichnet.
@@ -331,6 +343,8 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
             metrics.heartRate = heartRate
         }
         metrics.elapsed = statistics.elapsed
+        paceTracker.record(elapsed: statistics.elapsed, distanceMeters: statistics.distanceMeters)
+        publishPace(atElapsed: statistics.elapsed)
         updateLaps()
     }
 

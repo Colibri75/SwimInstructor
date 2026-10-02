@@ -56,6 +56,18 @@ public enum PlanFormatting {
         }
     }
 
+    /// Die Kurzbeschreibung eines Abschnitts für die Uhr: das Feld `cue` des Plans, bei älteren Plänen die
+    /// ersten Wörter der Anweisung (höchstens vier, ohne Satzzeichen am Ende), sonst leer.
+    public static func shortCue(_ set: PlanSet, maxWords: Int = 4) -> String {
+        let cue = set.cue.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !cue.isEmpty { return cue }
+        let words = set.instructions
+            .split(whereSeparator: { $0.isWhitespace })
+            .prefix(maxWords)
+            .joined(separator: " ")
+        return words.trimmingCharacters(in: CharacterSet(charactersIn: ".,;:!?-– "))
+    }
+
     /// "Pull Buoy, Paddles"; leer ohne Hilfsmittel.
     public static func equipment(_ items: [String]) -> String {
         items.map(equipmentName).joined(separator: ", ")

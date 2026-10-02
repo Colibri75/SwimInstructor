@@ -117,5 +117,16 @@ final class PlanFormattingTests: XCTestCase {
         XCTAssertEqual(PlanFormatting.daySummary(WeekPlanEditor.markUnavailable(WeekPlan(weekStart: "2026-09-28", generatedAt: Date(), rationale: "", days: [session]), date: "2026-10-02").day(on: "2026-10-02")), "keine Zeit")
         XCTAssertEqual(PlanFormatting.daySummary(nil), "nicht geplant")
     }
+
+    func testShortCueUsesTheCueAndFallsBackToTheFirstWordsOfTheInstructions() {
+        func set(cue: String, instructions: String) -> PlanSet {
+            PlanSet(name: "Technik", repetitions: 1, distanceMeters: 100, targetPaceSecondsPerHundredMeters: nil, restSeconds: 0, instructions: instructions, cue: cue)
+        }
+
+        XCTAssertEqual(PlanFormatting.shortCue(set(cue: "  Beine kicken ", instructions: "Lang erklärter Text.")), "Beine kicken")
+        XCTAssertEqual(PlanFormatting.shortCue(set(cue: "", instructions: "Locker kraulen, Atmung alle drei Züge, ruhig.")), "Locker kraulen, Atmung alle")
+        XCTAssertEqual(PlanFormatting.shortCue(set(cue: "", instructions: "Gleichmäßig.")), "Gleichmäßig")
+        XCTAssertEqual(PlanFormatting.shortCue(set(cue: "", instructions: "")), "")
+    }
 }
 

@@ -96,11 +96,22 @@ private struct SectionBlock: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            if !position.set.instructions.isEmpty {
+            if compact {
+                // Im Wasser zählen wenige Worte: die Kurzbeschreibung, eine Zeile.
+                let cue = PlanFormatting.shortCue(position.set)
+                if !cue.isEmpty {
+                    Text(cue)
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+            } else if !position.set.instructions.isEmpty {
+                // Plan-Seite: die ganze Übung.
                 Text(position.set.instructions)
-                    .font(.caption2)
-                    .foregroundStyle(compact ? Color.secondary : Color.primary)
-                    .lineLimit(compact ? 2 : 6)
+                    .font(.footnote)
+                    .foregroundStyle(Color.primary)
+                    .lineLimit(10)
                     .minimumScaleFactor(0.8)
             }
         }
@@ -145,23 +156,29 @@ private struct WorkoutMetricsView: View {
                     .foregroundStyle(workoutManager.phase == .paused ? Color.orange : Color.yellow)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
-                HStack(spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Image(systemName: "heart.fill")
-                        .font(.system(size: 20))
+                        .font(.system(size: 18))
                         .foregroundStyle(.red)
                     Text(metrics.heartRate.map { "\(Int($0.rounded()))" } ?? "--")
-                        .font(.system(size: 32, weight: .semibold, design: .rounded).monospacedDigit())
+                        .font(.system(size: 30, weight: .semibold, design: .rounded).monospacedDigit())
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
+                    Spacer(minLength: 2)
+                    Text(workoutManager.currentPace.map { PlanFormatting.pace($0) } ?? "--")
+                        .font(.system(size: 30, weight: .semibold, design: .rounded).monospacedDigit())
+                        .foregroundStyle(.cyan)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                    Text("/100")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
                 }
                 SectionBlock(compact: true)
                 Spacer(minLength: 0)
                 HStack(spacing: 6) {
                     Text(PlanFormatting.meters(Int(metrics.distanceMeters)))
                     Text("\(metrics.laps) Bahnen")
-                    if let pace = metrics.averagePaceSecondsPer100m {
-                        Text(PlanFormatting.pace(pace))
-                    }
                 }
                 .font(.caption2.monospacedDigit())
                 .lineLimit(1)
@@ -183,10 +200,16 @@ private struct WorkoutPlanView: View {
         VStack(alignment: .leading, spacing: 4) {
             SectionBlock(compact: false)
             Spacer(minLength: 0)
-            Button("Nächster Satz") {
+            Button {
                 workoutManager.advanceSection()
+            } label: {
+                Text("Nächster Satz")
+                    .font(.caption2.weight(.semibold))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(Capsule().fill(Color.blue.opacity(0.4)))
             }
-            .font(.footnote)
+            .buttonStyle(.plain)
             ControlStatusLine()
         }
         .frame(maxWidth: .infinity, alignment: .leading)

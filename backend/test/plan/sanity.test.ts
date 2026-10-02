@@ -276,6 +276,15 @@ describe("sanitizePlan: Rechenfehler und Formalien", () => {
     expect(sanitizePlan(endless, snapshot()).plan.sets[0].instructions).toHaveLength(DEFAULT_LIMITS.maxInstructionLength);
   });
 
+  it("kuerzt die Kurzbeschreibung fuer die Uhr auf 40 Zeichen und entfernt Leerraum", () => {
+    const wordy = plan({ sets: [set({ repetitions: 4, cue: `  ${"Locker kraulen ".repeat(10)}` })], total_distance_meters: 800 });
+
+    const cue = sanitizePlan(wordy, snapshot()).plan.sets[0].cue;
+
+    expect(cue.length).toBeLessThanOrEqual(DEFAULT_LIMITS.maxCueLength);
+    expect(cue.startsWith("Locker kraulen")).toBe(true);
+  });
+
   it("entfernt doppeltes Equipment und begrenzt es auf drei Hilfsmittel je Abschnitt", () => {
     const crowded = plan({
       sets: [set({ repetitions: 4, equipment: ["pull_buoy", "pull_buoy", "paddles", "ankle_band", "snorkel", "fins"] })],

@@ -400,8 +400,10 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
   auf "Pause" zählt nie als Geste.
 - **Die Startseite zeigt, was zu tun ist:** Unter der Zeit (und dem Puls) stehen Nummer und Name des
   Abschnitts ("2/4 Hauptsatz"), das **Equipment** (z. B. "Pull Buoy, Paddles"), Wiederholung und Reste
-  ("3 von 6 × 200 m · noch 150 m") und die Anweisung (zwei Zeilen). Die Plan-Seite zeigt sie in voller
-  Länge. Ganz unten steht eine Kontrollzeile: Schloss (gesperrt/entsperrt), die letzte Eingabe ("Krone:
+  ("3 von 6 × 200 m · noch 150 m") und die **Kurzbeschreibung** (`cue`, zwei bis vier Wörter wie "Locker
+  kraulen", eine Zeile; bei älteren Plänen die ersten Wörter der Anweisung). Zeit (40 pt), Puls und die
+  **aktuelle Pace** (aus den letzten Bahnen, `CurrentPaceTracker`; "--" in der Pause am Beckenrand) stehen groß
+  oben. Die Plan-Seite (rechts) zeigt die ganze Übung ausführlich, mit kleinem Knopf "Nächster Satz". Ganz unten steht eine Kontrollzeile: Schloss (gesperrt/entsperrt), die letzte Eingabe ("Krone:
   weiter bei 300 m", "Pause von der Uhr (Tasten)") und beim Drehen ein Balken. Sie ist bewusst da, um
   zu sehen, ob eine Eingabe die App erreicht.
 - **Equipment:** Claude nennt je Abschnitt die Hilfsmittel (`pull_buoy`, `paddles`, `fins`, `snorkel`,

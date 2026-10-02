@@ -34,10 +34,10 @@ export function formatPlan(plan: TrainingPlan): string {
   ];
 
   if (plan.sets.length > 0) {
-    lines.push("", "| Abschnitt | Umfang | Pace | Pause | Equipment | Hinweis |", "|---|---|---|---|---|---|");
+    lines.push("", "| Abschnitt | Umfang | Pace | Pause | Equipment | Uhr | Hinweis |", "|---|---|---|---|---|---|---|");
     for (const set of plan.sets) {
       const volume = `${set.repetitions} × ${set.distance_meters} m`;
-      lines.push(`| ${set.name} | ${volume} | ${formatPace(set.target_pace_seconds_per_hundred_meters)} | ${set.rest_seconds} s | ${set.equipment.join(", ") || "–"} | ${set.instructions} |`);
+      lines.push(`| ${set.name} | ${volume} | ${formatPace(set.target_pace_seconds_per_hundred_meters)} | ${set.rest_seconds} s | ${set.equipment.join(", ") || "–"} | ${set.cue || "–"} | ${set.instructions} |`);
     }
   }
   if (plan.coach_notes.length > 0) {

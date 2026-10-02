@@ -5,14 +5,33 @@ import SwimInstructorCore
 /// Fortschritt auf einen Blick: Weg zum Ziel, Wochenumfang und Pace-Entwicklung der letzten 8 Wochen.
 struct DashboardView: View {
     @EnvironmentObject private var loader: TodayPlanLoader
+    @EnvironmentObject private var weekLoader: WeekPlanLoader
 
     private let statistics = TrainingStatistics()
+    private let weekProgress = WeekProgressCalculator()
+
+    /// Stand der laufenden Woche gegen den Plan, aus Health und dem gespeicherten Wochenplan.
+    private var weekStatuses: [WeekDayStatus] {
+        weekProgress.statuses(
+            plan: weekLoader.week(starting: weekLoader.currentWeekStart),
+            weekStart: weekLoader.currentWeekStart,
+            workouts: loader.reading?.workouts ?? [],
+            now: Date()
+        )
+    }
 
     var body: some View {
         NavigationStack {
             List {
                 if let reading = loader.reading {
                     GoalSection(snapshot: reading.snapshot)
+                    Section("Statistik") {
+                        WeekStatsRows(
+                            summary: weekProgress.summary(of: weekStatuses),
+                            hasPlan: weekLoader.week(starting: weekLoader.currentWeekStart) != nil
+                        )
+                        StateSummaryView(reading: reading)
+                    }
                     VolumeSection(weeks: statistics.weeklyVolumes(workouts: reading.workouts, now: Date()))
                     PaceSection(
                         samples: statistics.paceSamples(workouts: reading.workouts, now: Date()),

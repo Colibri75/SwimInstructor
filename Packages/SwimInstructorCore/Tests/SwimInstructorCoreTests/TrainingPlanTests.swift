@@ -70,6 +70,27 @@ final class TrainingPlanTests: XCTestCase {
         XCTAssertEqual(decoded.plan.sets[0].equipment, ["pull_buoy", "paddles"])
     }
 
+    func testCueIsDecodedAndMissingCueIsEmpty() throws {
+        let without = try PlanResponse.jsonDecoder().decode(PlanResponse.self, from: Data(TestFixtures.responseJSON.utf8))
+        let json = TestFixtures.responseJSON
+            .replacingOccurrences(of: "\"instructions\": \"locker\"", with: "\"instructions\": \"locker\", \"cue\": \"Locker kraulen\"")
+        let with = try PlanResponse.jsonDecoder().decode(PlanResponse.self, from: Data(json.utf8))
+
+        XCTAssertEqual(without.plan.sets.map(\.cue), ["", ""])
+        XCTAssertEqual(with.plan.sets[0].cue, "Locker kraulen")
+        XCTAssertEqual(with.plan.sets[1].cue, "")
+    }
+
+    func testCueSurvivesEncodingForTheWatchAndTheCache() throws {
+        let set = PlanSet(name: "Kraft", repetitions: 4, distanceMeters: 100, targetPaceSecondsPerHundredMeters: nil, restSeconds: 20, instructions: "mit Armzug", cue: "Kräftig ziehen")
+        let plan = TrainingPlan(sessionType: .endurance, intensity: .moderate, rationale: "", totalDistanceMeters: 400, estimatedDurationMinutes: 15, sets: [set], coachNotes: [])
+        let response = PlanResponse(source: .claude, date: "2026-09-30", generatedAt: TestFixtures.now, stale: false, plan: plan, adjustments: [])
+
+        let decoded = try PlanResponse.jsonDecoder().decode(PlanResponse.self, from: try PlanResponse.jsonEncoder().encode(response))
+
+        XCTAssertEqual(decoded.plan.sets[0].cue, "Kräftig ziehen")
+    }
+
     func testDecodesFallbackAndRestDay() throws {
         let json = """
         {"source":"fallback","date":"2026-09-29","generated_at":"2026-09-29T06:00:00Z","stale":true,

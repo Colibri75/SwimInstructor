@@ -55,6 +55,7 @@ export function set(overrides: Partial<PlanSet> = {}): PlanSet {
     rest_seconds: 20,
     instructions: "gleichmäßig",
     equipment: [],
+    cue: "Gleichmäßig",
     ...overrides
   };
 }

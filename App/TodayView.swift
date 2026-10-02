@@ -35,13 +35,6 @@ struct TodayView: View {
                 weekTodaySection
                 planSection
                 wishSection
-                if let reading = loader.reading {
-                    Section("Statistik") {
-                        WeekStatsRows(summary: progress.summary(of: weekStatuses), hasPlan: weekLoader.week(starting: weekLoader.currentWeekStart) != nil)
-                        StateSummaryView(reading: reading)
-                    }
-                }
-                workoutsSection
             }
             .navigationTitle("Heute")
             .toolbar {
@@ -197,101 +190,6 @@ struct TodayView: View {
         .onChange(of: loader.wish) { old, new in
             // Neuer Tag oder gespeicherter Wunsch geändert: Feld nachziehen, aber nichts Ungespeichertes überschreiben.
             if wishDraft == old { wishDraft = new }
-        }
-    }
-
-    // MARK: - Einheiten
-
-    @ViewBuilder
-    private var workoutsSection: some View {
-        Section("Letzte Einheiten") {
-            if loader.isLoadingHealth && loader.reading == nil {
-                ProgressView()
-            } else if let error = loader.healthError {
-                Text("Health: \(error)").foregroundStyle(.red)
-            } else if let workouts = loader.reading?.workouts, !workouts.isEmpty {
-                ForEach(workouts.prefix(5)) { workout in
-                    SwimWorkoutRow(workout: workout)
-                }
-            } else {
-                Text("Noch keine Schwimm-Workouts gefunden")
-                    .foregroundStyle(.secondary)
-            }
-        }
-    }
-}
-
-/// Die Woche in Zahlen: geschwommen gegen geplant, Einheiten.
-private struct WeekStatsRows: View {
-    let summary: WeekSummary
-    let hasPlan: Bool
-
-    var body: some View {
-        LabeledContent("Diese Woche") {
-            Text(hasPlan
-                 ? "\(PlanFormatting.meters(summary.swumMeters)) von \(PlanFormatting.meters(summary.plannedMeters))"
-                 : PlanFormatting.meters(summary.swumMeters))
-        }
-        if hasPlan {
-            LabeledContent("Einheiten der Woche") {
-                Text("\(summary.sessionsDone) von \(summary.sessionsDue) fälligen, \(summary.sessionsPlanned) geplant")
-            }
-        }
-    }
-}
-
-/// Kurzfassung des Snapshots: das, woraus der Plan entstanden ist.
-private struct StateSummaryView: View {
-    let reading: AthleteStateReading
-
-    private var snapshot: AthleteStateSnapshot { reading.snapshot }
-
-    var body: some View {
-        LabeledContent("Letzte 7 Tage") {
-            Text("\(PlanFormatting.meters(Int(snapshot.volume.lastSevenDaysMeters))) in \(snapshot.volume.sessionsLastSevenDays) Einheiten")
-        }
-        if let pace = snapshot.pace.recentPaceSecondsPerHundredMeters {
-            LabeledContent("Pace (4 Wochen)") {
-                Text("\(PlanFormatting.pace(pace)) /100 m, Ziel \(PlanFormatting.pace(snapshot.goal.targetPaceSecondsPerHundredMeters))")
-            }
-        }
-        LabeledContent("Erholung") {
-            Text(recoveryText)
-        }
-        LabeledContent("Bis zum Ziel") {
-            Text("\(snapshot.goal.daysUntilGoal) Tage")
-        }
-    }
-
-    private var recoveryText: String {
-        guard reading.vitalsAvailable else { return "keine Daten" }
-        switch snapshot.recovery.status {
-        case .good: return "gut"
-        case .moderate: return "mäßig"
-        case .poor: return "schlecht"
-        case .unknown: return "zu wenig Daten"
-        }
-    }
-}
-
-private struct SwimWorkoutRow: View {
-    let workout: SwimWorkout
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(workout.startDate, style: .date)
-                .font(.subheadline)
-            HStack(spacing: 12) {
-                if let distance = workout.totalDistanceMeters {
-                    Text(PlanFormatting.meters(Int(distance)))
-                }
-                Text(Duration.seconds(workout.duration).formatted(.units(allowed: [.minutes, .seconds])))
-                if let pace = workout.averagePaceSecondsPer100m {
-                    Text("\(PlanFormatting.pace(pace)) /100 m")
-                }
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
         }
     }
 }

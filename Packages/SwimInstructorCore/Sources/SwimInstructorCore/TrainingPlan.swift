@@ -58,6 +58,9 @@ public struct PlanSet: Codable, Equatable, Sendable {
     /// Hilfsmittel für diesen Abschnitt (`pull_buoy`, `paddles`, `fins`, `snorkel`, `kickboard`,
     /// `ankle_band`). Leer, wenn keine nötig sind und bei Plänen aus der Zeit vor dem Equipment.
     public let equipment: [String]
+    /// Kurzbeschreibung für die Uhr im Wasser (zwei bis vier Wörter, z. B. "Locker kraulen"); leer bei
+    /// älteren Plänen.
+    public let cue: String
 
     public init(
         name: String,
@@ -66,7 +69,8 @@ public struct PlanSet: Codable, Equatable, Sendable {
         targetPaceSecondsPerHundredMeters: Double?,
         restSeconds: Int,
         instructions: String,
-        equipment: [String] = []
+        equipment: [String] = [],
+        cue: String = ""
     ) {
         self.name = name
         self.repetitions = repetitions
@@ -75,14 +79,15 @@ public struct PlanSet: Codable, Equatable, Sendable {
         self.restSeconds = restSeconds
         self.instructions = instructions
         self.equipment = equipment
+        self.cue = cue
     }
 
     private enum CodingKeys: String, CodingKey {
-        case name, repetitions, distanceMeters, targetPaceSecondsPerHundredMeters, restSeconds, instructions, equipment
+        case name, repetitions, distanceMeters, targetPaceSecondsPerHundredMeters, restSeconds, instructions, equipment, cue
     }
 
-    /// Eigenes Dekodieren, damit ein gespeicherter Plan ohne `equipment` (älterer Server, Cache auf dem
-    /// Gerät) weiter lesbar bleibt, statt als kaputt zu gelten.
+    /// Eigenes Dekodieren, damit ein gespeicherter Plan ohne `equipment` oder `cue` (älterer Server, Cache
+    /// auf dem Gerät) weiter lesbar bleibt, statt als kaputt zu gelten.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         name = try container.decode(String.self, forKey: .name)
@@ -92,6 +97,7 @@ public struct PlanSet: Codable, Equatable, Sendable {
         restSeconds = try container.decode(Int.self, forKey: .restSeconds)
         instructions = try container.decode(String.self, forKey: .instructions)
         equipment = try container.decodeIfPresent([String].self, forKey: .equipment) ?? []
+        cue = try container.decodeIfPresent(String.self, forKey: .cue) ?? ""
     }
 
     public var totalMeters: Int { repetitions * distanceMeters }

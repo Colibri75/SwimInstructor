@@ -16,6 +16,7 @@ struct HistoryView: View {
                 now: Date()
             )
             List {
+                workoutsSection
                 if entries.isEmpty {
                     Section {
                         Text("Noch kein Verlauf. Ab jetzt merkt sich die App jeden Tagesplan und legt ihn neben deine Einheiten. Rückwirkend gibt es nichts zu vergleichen.")
@@ -35,6 +36,27 @@ struct HistoryView: View {
             .refreshable { await loader.refreshIfNeeded() }
         }
         .task { await loader.refreshIfNeeded() }
+    }
+}
+
+extension HistoryView {
+    /// Die Einheiten aus Health (neueste zuerst), früher auf dem Heute-Bildschirm.
+    @ViewBuilder
+    fileprivate var workoutsSection: some View {
+        Section("Letzte Einheiten") {
+            if loader.isLoadingHealth && loader.reading == nil {
+                ProgressView()
+            } else if let error = loader.healthError {
+                Text("Health: \(error)").foregroundStyle(.red)
+            } else if let workouts = loader.reading?.workouts, !workouts.isEmpty {
+                ForEach(workouts.prefix(20)) { workout in
+                    SwimWorkoutRow(workout: workout)
+                }
+            } else {
+                Text("Noch keine Schwimm-Workouts gefunden")
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 }
 

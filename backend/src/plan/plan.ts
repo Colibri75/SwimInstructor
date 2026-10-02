@@ -38,6 +38,9 @@ export const PlanSetSchema = z.object({
   instructions: z
     .string()
     .describe("Anweisung für den Abschnitt. Bei einer Technikübung: Name der Übung plus ein bis zwei Sätze, wie sie geschwommen wird und worauf man achtet"),
+  cue: z
+    .string()
+    .describe("Kurzbeschreibung für die Uhr im Wasser: zwei bis vier Wörter, höchstens 30 Zeichen, z. B. Locker kraulen, Beine kicken, Zügezählen. Kein ganzer Satz"),
   equipment: z
     .array(z.enum(EQUIPMENT))
     .describe("Hilfsmittel, die der Athlet für diesen Abschnitt braucht (pull_buoy, paddles, fins, snorkel, kickboard, ankle_band). Leere Liste, wenn keine")
@@ -54,15 +57,18 @@ export const TrainingPlanSchema = z.object({
 });
 
 /**
- * Schema fuer gespeicherte Plaene. Plaene, die vor der Einfuehrung des Equipments gespeichert wurden,
- * haben kein `equipment`: Sie bekommen eine leere Liste, statt als ungueltig verworfen zu werden.
+ * Schema fuer gespeicherte Plaene. Plaene, die vor der Einfuehrung des Equipments bzw. der Kurzbeschreibung
+ * gespeichert wurden, haben kein `equipment` und kein `cue`: Sie bekommen eine leere Liste bzw. einen
+ * leeren Text, statt als ungueltig verworfen zu werden.
  */
 export const StoredTrainingPlanSchema = z.preprocess((value) => {
   if (typeof value !== "object" || value === null || !("sets" in value) || !Array.isArray(value.sets)) return value;
   return {
     ...value,
     sets: value.sets.map((set: unknown) =>
-      typeof set === "object" && set !== null && !("equipment" in set) ? { ...set, equipment: [] } : set
+      typeof set === "object" && set !== null
+        ? { ...set, ...("equipment" in set ? {} : { equipment: [] }), ...("cue" in set ? {} : { cue: "" }) }
+        : set
     )
   };
 }, TrainingPlanSchema);

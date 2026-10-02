@@ -116,6 +116,12 @@ describe("Prompt", () => {
     expect(unspecified).not.toContain("Vorhandene Hilfsmittel");
   });
 
+  it("verlangt je Abschnitt eine Kurzbeschreibung von zwei bis vier Woertern fuer die Uhr", () => {
+    expect(SYSTEM_PROMPT).toContain("cue");
+    expect(SYSTEM_PROMPT).toMatch(/zwei bis vier Wörter/);
+    expect(SYSTEM_PROMPT).toMatch(/höchstens 30 Zeichen/);
+  });
+
   it("verlangt je Abschnitt eine Equipment-Liste und nennt alle erlaubten Hilfsmittel", () => {
     expect(SYSTEM_PROMPT).toContain("equipment");
     for (const item of ["pull_buoy", "paddles", "fins", "snorkel", "kickboard", "ankle_band"]) {
