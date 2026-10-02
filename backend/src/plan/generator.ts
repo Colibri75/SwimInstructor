@@ -8,6 +8,9 @@ import { Snapshot } from "./snapshot";
 import { DayTarget, WeekPlanSchema } from "./week";
 import { WeekContext } from "./weekSanity";
 import { buildWeekUserMessage, WEEK_SYSTEM_PROMPT } from "./weekPrompt";
+import { MacroPlanSchema, MacroWeekTarget } from "./macro";
+import { MacroContext } from "./macroSanity";
+import { buildMacroUserMessage, MACRO_SYSTEM_PROMPT } from "./macroPrompt";
 
 export interface GeneratedPlan {
   /** Das geparste, aber noch nicht gegen das Plan-Schema geprueftes JSON von Claude. */
@@ -24,7 +27,19 @@ export interface PlanGenerator {
 
 /** Wie PlanGenerator, fuer den Wochenplan. */
 export interface WeekGenerator {
-  generateWeek(input: { snapshot: Snapshot; context: WeekContext; wishes?: string; equipment?: readonly Equipment[] }): Promise<GeneratedPlan>;
+  generateWeek(input: {
+    snapshot: Snapshot;
+    context: WeekContext;
+    wishes?: string;
+    equipment?: readonly Equipment[];
+    /** Was der Gesamtplan fuer die Wochen der geplanten Tage vorgibt. */
+    macroWeeks?: readonly MacroWeekTarget[];
+  }): Promise<GeneratedPlan>;
+}
+
+/** Wie PlanGenerator, fuer den Gesamtplan bis zum Zieltag. */
+export interface MacroGenerator {
+  generateMacro(input: { snapshot: Snapshot; context: MacroContext }): Promise<GeneratedPlan>;
 }
 
 export interface ClaudeOptions {
@@ -37,7 +52,7 @@ export interface ClaudeOptions {
 
 const MAX_TOKENS = 16_000;
 
-export class ClaudePlanGenerator implements PlanGenerator, WeekGenerator {
+export class ClaudePlanGenerator implements PlanGenerator, WeekGenerator, MacroGenerator {
   constructor(
     private readonly client: Anthropic,
     private readonly options: ClaudeOptions
@@ -47,8 +62,12 @@ export class ClaudePlanGenerator implements PlanGenerator, WeekGenerator {
     return this.call(SYSTEM_PROMPT, buildUserMessage(snapshot, date, wishes, dayTarget, equipment), TrainingPlanSchema);
   }
 
-  async generateWeek({ snapshot, context, wishes, equipment }: Parameters<WeekGenerator["generateWeek"]>[0]): Promise<GeneratedPlan> {
-    return this.call(WEEK_SYSTEM_PROMPT, buildWeekUserMessage(snapshot, context, wishes, undefined, equipment), WeekPlanSchema);
+  async generateWeek({ snapshot, context, wishes, equipment, macroWeeks }: Parameters<WeekGenerator["generateWeek"]>[0]): Promise<GeneratedPlan> {
+    return this.call(WEEK_SYSTEM_PROMPT, buildWeekUserMessage(snapshot, context, wishes, undefined, equipment, macroWeeks), WeekPlanSchema);
+  }
+
+  async generateMacro({ snapshot, context }: Parameters<MacroGenerator["generateMacro"]>[0]): Promise<GeneratedPlan> {
+    return this.call(MACRO_SYSTEM_PROMPT, buildMacroUserMessage(snapshot, context), MacroPlanSchema);
   }
 
   /** Ein Aufruf mit strukturierter Ausgabe nach `schema`; Fehler werden als PlanGenerationError klassifiziert. */

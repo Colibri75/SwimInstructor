@@ -70,3 +70,9 @@ export function weekdayName(iso: string): string {
 export function weekDates(weekStart: string): string[] {
   return Array.from({ length: 7 }, (_, offset) => addDays(weekStart, offset));
 }
+
+/** Sieben (oder `count`) Tage ab `from`, unabhaengig vom Wochentag. */
+export function windowDates(from: string, count = 7): string[] {
+  return Array.from({ length: count }, (_, offset) => addDays(from, offset));
+}
+

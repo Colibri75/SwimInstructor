@@ -69,6 +69,61 @@ describe("WeekPlanService", () => {
     expect(generateWeek.mock.calls[1][0]).not.toHaveProperty("equipment");
   });
 
+  describe("rollender Plan (ohne week_start)", () => {
+    const rolling = (overrides: Partial<WeekRequest> = {}) => request({ weekStart: undefined, ...overrides });
+
+    it("plant die sieben Tage ab from_date, auch ueber das Wochenende hinaus", async () => {
+      const { service, generateWeek } = setup();
+
+      const result = await service.planWeek(rolling());
+
+      const input = generateWeek.mock.calls[0][0];
+      expect(input.context.dates).toEqual(["2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05", "2026-10-06"]);
+      expect(result.plan.days.map((d) => d.date)).toEqual(input.context.dates);
+      // Die zwei Tage, die Claude nicht geliefert hat, werden Ruhetage.
+      expect(result.plan.days.slice(5).map((d) => d.session_type)).toEqual(["rest", "rest"]);
+      expect(result.adjustments[0]).toContain("fehlende Tage als Ruhetag ergänzt");
+      expect(result.weekStart).toBe(TODAY);
+    });
+
+    it("zaehlt die Vorwoche nicht zum Budget, gibt sie aber an Claude", async () => {
+      const { service, generateWeek } = setup();
+
+      await service.planWeek(
+        rolling({
+          swumThisWeek: [{ date: "2026-09-28", meters: 3000 }],
+          recentSwim: [{ date: "2026-09-25", meters: 1500 }, { date: "2026-09-30", meters: 900 }]
+        })
+      );
+
+      const context = generateWeek.mock.calls[0][0].context;
+      expect(context.swumBefore).toEqual([]);
+      // Nur Tage vor from_date gelten als Vorwoche.
+      expect(context.recentSwim).toEqual([{ date: "2026-09-25", meters: 1500 }]);
+    });
+
+    it("gibt die Vorgabe des Gesamtplans an Claude, ohne sie zu erzwingen", async () => {
+      const { service, generateWeek } = setup();
+      const macroWeeks = [{ week_start: "2026-09-28", phase: "specific" as const, target_meters: 3500, sessions: 3, deload: false, focus: "Ausdauer" }];
+
+      await service.planWeek(rolling({ macroWeeks }));
+      await service.planWeek(rolling());
+
+      expect(generateWeek.mock.calls[0][0].macroWeeks).toEqual(macroWeeks);
+      expect(generateWeek.mock.calls[1][0]).not.toHaveProperty("macroWeeks");
+    });
+
+    it("laesst den Kalenderwochen-Weg unveraendert (week_start gesetzt)", async () => {
+      const { service, generateWeek } = setup();
+
+      await service.planWeek(request({ recentSwim: undefined }));
+
+      const context = generateWeek.mock.calls[0][0].context;
+      expect(context.dates).toEqual(["2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04"]);
+      expect(context).not.toHaveProperty("recentSwim");
+    });
+  });
+
   it("uebergibt ohne Wunsch kein wishes-Feld", async () => {
     const { service, generateWeek } = setup();
 

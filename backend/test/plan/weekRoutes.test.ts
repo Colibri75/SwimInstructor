@@ -39,6 +39,24 @@ describe("POST /v1/plan/week", () => {
     expect(response.body.wishes).toBeUndefined();
   });
 
+  it("plant ohne week_start die sieben Tage ab from_date und reicht Vorwoche und Gesamtplan weiter", async () => {
+    const generateWeek = ok();
+    const macroWeeks = [{ week_start: "2026-09-28", phase: "specific", target_meters: 3500, sessions: 3, deload: false, focus: "Ausdauer" }];
+
+    const response = await request(appWith(generateWeek))
+      .post("/v1/plan/week")
+      .set(auth)
+      .send({ snapshot: snapshot(), from_date: TODAY, today: TODAY, recent_swim: [{ date: "2026-09-27", meters: 1200 }], macro_weeks: macroWeeks });
+
+    expect(response.status).toBe(200);
+    expect(response.body.week_start).toBe(TODAY);
+    expect(response.body.plan.days).toHaveLength(7);
+    const input = generateWeek.mock.calls[0][0];
+    expect(input.context.dates).toHaveLength(7);
+    expect(input.context.recentSwim).toEqual([{ date: "2026-09-27", meters: 1200 }]);
+    expect(input.macroWeeks).toEqual(macroWeeks);
+  });
+
   it("reicht Wunsch, Tage ohne Zeit und Geschwommenes weiter und meldet den Wunsch zurueck", async () => {
     const generateWeek = ok();
 
@@ -65,6 +83,9 @@ describe("POST /v1/plan/week", () => {
     ["negative Meter", { swum_this_week: [{ date: "2026-09-28", meters: -1 }] }, "swum_this_week.0.meters"],
     ["zu langer Wunsch", { wishes: "x".repeat(501) }, "wishes"],
     ["unbekanntes Equipment", { equipment: ["jetpack"] }, "equipment.0"],
+    ["Gesamtplan-Woche kein Montag", { macro_weeks: [{ week_start: "2026-09-29", phase: "base", target_meters: 3000, sessions: 3, deload: false, focus: "x" }] }, "macro_weeks.0.week_start"],
+    ["Gesamtplan mit unbekannter Phase", { macro_weeks: [{ week_start: "2026-09-28", phase: "sprint", target_meters: 3000, sessions: 3, deload: false, focus: "x" }] }, "macro_weeks.0.phase"],
+    ["Vorwoche mit unmoeglichem Datum", { recent_swim: [{ date: "2026-02-30", meters: 100 }] }, "recent_swim.0.date"],
     ["zu viele Tage ohne Zeit", { unavailable_dates: Array(8).fill("2026-10-01") }, "unavailable_dates"]
   ])("lehnt ab: %s", async (_name, extra, path) => {
     const response = await request(appWith(ok())).post("/v1/plan/week").set(auth).send(body(extra));

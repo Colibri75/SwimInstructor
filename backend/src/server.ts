@@ -6,6 +6,8 @@ import { GenerationBudget } from "./plan/budget";
 import { ClaudePlanGenerator } from "./plan/generator";
 import { planRoutes } from "./plan/routes";
 import { PlanService } from "./plan/service";
+import { macroRoutes } from "./plan/macroRoutes";
+import { MacroPlanService } from "./plan/macroService";
 import { weekRoutes } from "./plan/weekRoutes";
 import { WeekPlanService } from "./plan/weekService";
 import { FilePlanStore } from "./plan/store";
@@ -45,13 +47,16 @@ const planService = new PlanService({
   timezone: config.planTimezone
 });
 const weekService = new WeekPlanService({ generator, budget, logger });
+const macroService = new MacroPlanService({ generator, budget, logger });
 
 const registerPlanRoutes = planRoutes(planService);
 const registerWeekRoutes = weekRoutes(weekService);
+const registerMacroRoutes = macroRoutes(macroService);
 const app = createApp(config, logger, {
   registerV1Routes: (router) => {
     registerPlanRoutes(router);
     registerWeekRoutes(router);
+    registerMacroRoutes(router);
   }
 });
 

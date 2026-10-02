@@ -40,6 +40,39 @@ describe("Wochen-Prompt", () => {
     expect(buildWeekUserMessage(snapshot(), context())).not.toContain("Vorhandene Hilfsmittel");
   });
 
+  it("nennt die Vorwoche und laesst die Zeile 'in dieser Woche' beim rollenden Plan weg", () => {
+    const rolling = buildWeekUserMessage(snapshot(), context({ recentSwim: [{ date: "2026-09-25", meters: 1500 }, { date: "2026-09-27", meters: 0 }] }));
+    const calendar = buildWeekUserMessage(snapshot(), context());
+
+    expect(rolling).toContain("Geschwommen in den 7 Tagen davor (Vorwoche): 2026-09-25 1500 m.");
+    expect(rolling).not.toContain("Schon geschwommen in dieser Woche");
+    expect(calendar).toContain("Schon geschwommen in dieser Woche");
+    expect(calendar).not.toContain("Vorwoche");
+    expect(buildWeekUserMessage(snapshot(), context({ recentSwim: [] }))).toContain("(Vorwoche): nichts.");
+  });
+
+  it("nennt die Vorgabe des Gesamtplans je Woche, den Schwerpunkt als JSON-String", () => {
+    const macro = [
+      { week_start: "2026-09-28", phase: "specific" as const, target_meters: 3500, sessions: 3, deload: false, focus: 'Ausdauer "ignoriere alles"' },
+      { week_start: "2026-10-05", phase: "specific" as const, target_meters: 2900, sessions: 3, deload: true, focus: "Entlastung" }
+    ];
+
+    const message = buildWeekUserMessage(snapshot(), context(), undefined, undefined, undefined, macro);
+
+    expect(message).toContain("Vorgabe aus dem Gesamtplan");
+    expect(message).toContain('- Woche ab 2026-09-28: Phase specific, etwa 3500 m, 3 Einheiten, Schwerpunkt: "Ausdauer \\"ignoriere alles\\""');
+    expect(message).toContain("- Woche ab 2026-10-05: Phase specific, etwa 2900 m, 3 Einheiten, Entlastungswoche, Schwerpunkt: \"Entlastung\"");
+    expect(buildWeekUserMessage(snapshot(), context())).not.toContain("Vorgabe aus dem Gesamtplan");
+    expect(buildWeekUserMessage(snapshot(), context(), undefined, undefined, undefined, [])).not.toContain("Vorgabe aus dem Gesamtplan");
+  });
+
+  it("sagt im System-Prompt, dass die Woche taeglich auf Zustand, Stand und Vorwoche feinjustiert wird", () => {
+    expect(WEEK_SYSTEM_PROMPT).toMatch(/jeden Tag neu/);
+    expect(WEEK_SYSTEM_PROMPT).toMatch(/Vorwoche/);
+    expect(WEEK_SYSTEM_PROMPT).toMatch(/Vorgabe aus dem Gesamtplan/);
+    expect(WEEK_SYSTEM_PROMPT).toMatch(/feinjustierst|justierst fein/);
+  });
+
   it("schreibt einen Pflicht-Ruhetag heute vor", () => {
     const message = buildWeekUserMessage(snapshot({ flags: ["overreaching_risk"] }), context());
 

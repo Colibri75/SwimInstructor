@@ -20,8 +20,10 @@ export interface WeekContext {
   dates: string[];
   /** Tage, an denen der Athlet keine Zeit hat. */
   unavailable: string[];
-  /** Was in dieser Woche vor dem ersten geplanten Tag schon geschwommen wurde. */
+  /** Was in dieser Woche vor dem ersten geplanten Tag schon geschwommen wurde (zaehlt zum Wochenumfang). */
   swumBefore: { date: string; meters: number }[];
+  /** Was in den sieben Tagen vor dem ersten geplanten Tag geschwommen wurde, nur als Information fuer Claude (die Vorwoche beim rollenden Plan). */
+  recentSwim?: { date: string; meters: number }[];
 }
 
 export interface WeekLimits {

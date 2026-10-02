@@ -4,18 +4,23 @@ import { FallbackReason, PlanGenerationError, PlanUnavailableError } from "./err
 import { WeekGenerator } from "./generator";
 import { Equipment } from "./plan";
 import { Snapshot } from "./snapshot";
-import { WeekDay, WeekPlanSchema, weekDates } from "./week";
+import { MacroWeekTarget } from "./macro";
+import { WeekDay, WeekPlanSchema, weekDates, windowDates } from "./week";
 import { sanitizeWeek, WeekContext } from "./weekSanity";
 
 export interface WeekRequest {
   snapshot: Snapshot;
-  /** Montag der Woche. */
-  weekStart: string;
+  /** Montag der Kalenderwoche. Fehlt er, gilt der rollende Plan: die sieben Tage ab `fromDate`. */
+  weekStart?: string;
   /** Erster zu planender Tag (heute oder der Montag einer kommenden Woche). */
   fromDate: string;
   today: string;
   unavailableDates: string[];
   swumThisWeek: { date: string; meters: number }[];
+  /** Die Vorwoche (7 Tage vor `fromDate`), nur Information fuer Claude. */
+  recentSwim?: { date: string; meters: number }[];
+  /** Was der Gesamtplan fuer die Wochen der geplanten Tage vorgibt. */
+  macroWeeks?: readonly MacroWeekTarget[];
   wishes?: string;
   equipment?: readonly Equipment[];
 }
@@ -51,13 +56,17 @@ export class WeekPlanService {
 
   async planWeek(request: WeekRequest): Promise<WeekResult> {
     const { generator, budget, logger } = this.deps;
-    const dates = weekDates(request.weekStart).filter((date) => date >= request.fromDate);
+    const rolling = request.weekStart === undefined;
+    const dates = rolling ? windowDates(request.fromDate, 7) : weekDates(request.weekStart as string).filter((date) => date >= request.fromDate);
     const wishes = request.wishes?.trim() || undefined;
     const context: WeekContext = {
       today: request.today,
       dates,
       unavailable: request.unavailableDates,
-      swumBefore: request.swumThisWeek.filter((day) => day.date < request.fromDate && day.date >= request.weekStart)
+      // Der rollende Plan hat keine Kalenderwoche: Die Vorwoche steht nur im Prompt, sie schmaelert
+      // das Budget der naechsten sieben Tage nicht.
+      swumBefore: rolling ? [] : request.swumThisWeek.filter((day) => day.date < request.fromDate && day.date >= (request.weekStart as string)),
+      ...(request.recentSwim === undefined ? {} : { recentSwim: request.recentSwim.filter((day) => day.date < request.fromDate) })
     };
 
     if (generator === null) throw this.unavailable("not_configured");
@@ -65,7 +74,13 @@ export class WeekPlanService {
 
     const started = Date.now();
     try {
-      const generated = await generator.generateWeek({ snapshot: request.snapshot, context, ...(wishes ? { wishes } : {}), ...(request.equipment ? { equipment: request.equipment } : {}) });
+      const generated = await generator.generateWeek({
+        snapshot: request.snapshot,
+        context,
+        ...(wishes ? { wishes } : {}),
+        ...(request.equipment ? { equipment: request.equipment } : {}),
+        ...(request.macroWeeks && request.macroWeeks.length > 0 ? { macroWeeks: request.macroWeeks } : {})
+      });
       const parsed = WeekPlanSchema.safeParse(generated.raw);
       if (!parsed.success) {
         logger.warn({ issues: parsed.error.issues.slice(0, 5) }, "claude week plan does not match schema");
@@ -91,7 +106,7 @@ export class WeekPlanService {
         "week plan generated"
       );
       return {
-        weekStart: request.weekStart,
+        weekStart: request.weekStart ?? request.fromDate,
         generatedAt: this.now().toISOString(),
         plan: {
           rationale: sanitized.plan.rationale,
