@@ -70,7 +70,10 @@ gelten für den heutigen Tag, keine Einheit über dem Einheiten-Limit (längste 
 höchstens zwei harte Tage und nie an aufeinanderfolgenden Tagen, höchstens fünf Einheiten pro Woche (schon
 geschwommene Tage zählen mit), Wochenumfang höchstens Wochenschnitt mal 1,3 abzüglich Geschwommenem (bei schlechter
 Erholung, Umfangsspitze und Trainingspause gekürzt, aber nur für die laufende Woche), in einer vollen Woche
-mindestens ein Ruhetag. Korrekturen stehen in `adjustments` und an der Begründung.
+mindestens ein Ruhetag. Eine Einheit hat mindestens 400 m: Eine halbe (200 bis 375 m) wird auf 400 m angehoben, alles
+darunter wird ein Ruhetag. **Zuspitzen:** 8 bis 14 Tage vor dem Ziel höchstens 85 % des Wochenschnitts, in den letzten
+7 Tagen höchstens 70 %, mindestens aber das 1,2-Fache der Zieldistanz, damit der Versuch am Zieltag hineinpasst.
+Korrekturen stehen in `adjustments` und an der Begründung.
 
 **Vorgabe für den Tagesplan:** `POST /v1/plan/today` nimmt optional `day_plan` (`session_type`, `intensity`,
 `target_distance_meters`, `focus`). Claude hält sich daran, soweit die Grenzen es erlauben, ein Wunsch geht der
@@ -162,7 +165,8 @@ Schwerpunkt je Woche. Die **Phase** (`base` über 12 Wochen vor der Zielwoche, `
 höchstens die Wochengrenze von heute (Erholung, Pause, Wochenschnitt), jede weitere höchstens etwa 10 % mehr als die
 letzte Woche ohne Entlastung, Entlastung höchstens 85 % und nie in der ersten Woche, beim Zuspitzen höchstens
 85 % und 70 % des Höhepunkts, Zielwoche höchstens die Hälfte des Höhepunkts, aber mindestens das 1,2-Fache der
-Zieldistanz, 2 bis 5 Einheiten und je Einheit mindestens 200 m. Der Server speichert nichts, die App hält den Plan.
+Zieldistanz, 2 bis 5 Einheiten und je Einheit mindestens 400 m (eine Woche mit Training hat daher mindestens 800 m,
+sonst hebt der Code sie an, soweit die Grenze es erlaubt). Der Server speichert nichts, die App hält den Plan.
 
 **Rollender Plan der nächsten sieben Tage (`POST /v1/plan/week`):** Ohne `week_start` plant der Server die sieben
 Tage ab `from_date` (statt einer Kalenderwoche bis Sonntag). Die App ruft das jeden Tag beim ersten Öffnen auf.
@@ -219,6 +223,7 @@ Einheit ihre Struktur (aus 4 × 200 m im Hauptsatz wurde ein einzelner 200er).
 | Einheit länger als die längste der letzten 4 Wochen mal 1,25 | Umfang gekürzt (mindestens 1000 m Spielraum, höchstens 4500 m) |
 | Zielpace unrealistisch schnell | auf das schnellste erlaubte Tempo begrenzt |
 | Falsche Summe der Abschnitte | Gesamtdistanz neu berechnet |
+| Satz (Wiederholung) unter 50 m, z. B. 4 × 25 m | zusammengelegt (4 × 25 m wird 2 × 50 m), Strecke bleibt etwa gleich |
 | Formalien (Distanz nicht auf 25 m, Pausen über 10 min, zu lange Texte) | stillschweigend normalisiert |
 
 Beim Kürzen schrumpft der größte Abschnitt zuerst, Ein- und Ausschwimmen bleiben meist erhalten.

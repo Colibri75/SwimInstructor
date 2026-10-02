@@ -114,13 +114,33 @@ describe("Sicherheitsschicht fuer den Gesamtplan", () => {
     expect(result.plan.weeks[1].sessions).toBe(2);
   });
 
-  it("plant nicht mehr Einheiten als 200 m je Einheit hergeben", () => {
+  it("plant nicht mehr Einheiten, als 400 m je Einheit hergeben", () => {
+    const plan = goodMacro();
+    plan.weeks[0] = macroWeek(MACRO_WEEKS[0], { target_meters: 1000, sessions: 5 });
+
+    const result = sanitizeMacro(plan, snapshot(), macroContext());
+
+    expect(result.plan.weeks[0]).toMatchObject({ target_meters: 1000, sessions: 2 });
+  });
+
+  it("hebt eine Woche unter zwei Mindest-Einheiten auf 800 m an und sagt es", () => {
     const plan = goodMacro();
     plan.weeks[0] = macroWeek(MACRO_WEEKS[0], { target_meters: 450, sessions: 5 });
 
     const result = sanitizeMacro(plan, snapshot(), macroContext());
 
-    expect(result.plan.weeks[0]).toMatchObject({ target_meters: 450, sessions: 2 });
+    expect(result.plan.weeks[0]).toMatchObject({ target_meters: 800, sessions: 2 });
+    expect(result.adjustments.join("\n")).toContain("Umfang von 450 m auf 800 m angehoben");
+  });
+
+  it("hebt nicht über die Grenze der Woche an: bei einer Grenze unter 800 m bleibt es bei einer Einheit", () => {
+    const plan = goodMacro();
+    plan.weeks[0] = macroWeek(MACRO_WEEKS[0], { target_meters: 700, sessions: 3 });
+
+    // Schlechte Erholung bei kleinem Wochenschnitt: Grenze 1500 m x 0,5 = 750 m.
+    const result = sanitizeMacro(plan, snapshot({ flags: ["recovery_poor"], volume: { average_weekly_meters: 350 } }), macroContext());
+
+    expect(result.plan.weeks[0]).toMatchObject({ target_meters: 700, sessions: 1 });
   });
 
   it("nennt nach dem Zieltag nur noch Erhalten", () => {

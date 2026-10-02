@@ -77,6 +77,11 @@ describe("Prompt", () => {
     expect(SYSTEM_PROMPT).toContain("verbindliche Grenzen für heute");
   });
 
+  it("verlangt, dass kein Satz kuerzer als 50 m ist", () => {
+    expect(SYSTEM_PROMPT).toContain("mindestens 50 m lang");
+    expect(SYSTEM_PROMPT).toContain("keine 25-m-Sätze");
+  });
+
   it("verlangt, dass Technikuebungen erklaert werden und kein Fachbegriff unerklaert bleibt", () => {
     expect(SYSTEM_PROMPT).toContain("Erkläre jede Technikübung");
     expect(SYSTEM_PROMPT).toContain("Zipper");

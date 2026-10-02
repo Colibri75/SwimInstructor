@@ -256,6 +256,54 @@ describe("sanitizePlan: Rechenfehler und Formalien", () => {
     expect(result.plan.sets[0].rest_seconds).toBe(DEFAULT_LIMITS.maxRestSeconds);
   });
 
+  it("legt Saetze unter 50 m zusammen: 4 x 25 m wird 2 x 50 m, die Strecke bleibt", () => {
+    const short = plan({
+      sets: [
+        set({ name: "Einschwimmen", repetitions: 1, distance_meters: 200, rest_seconds: 0 }),
+        set({ name: "Technik", repetitions: 4, distance_meters: 25, rest_seconds: 20 }),
+        set({ name: "Hauptsatz", repetitions: 6, distance_meters: 200, rest_seconds: 30 })
+      ],
+      total_distance_meters: 1500
+    });
+
+    const result = sanitizePlan(short, snapshot());
+
+    expect(result.plan.sets[1]).toMatchObject({ repetitions: 2, distance_meters: 50 });
+    expect(result.plan.sets.every((s) => s.distance_meters >= 50)).toBe(true);
+    expect(result.plan.total_distance_meters).toBe(1500);
+    expect(result.adjustments.join(" ")).toContain("Sätze unter der Mindestlänge zusammengelegt");
+  });
+
+  it("legt ungerade Saetze unter 50 m sinnvoll zusammen (3 x 25 m wird 2 x 50 m, 1 x 25 m wird 1 x 50 m)", () => {
+    const short = plan({
+      sets: [set({ name: "A", repetitions: 3, distance_meters: 25 }), set({ name: "B", repetitions: 1, distance_meters: 25 }), set({ name: "C", repetitions: 2, distance_meters: 0 + 25 })],
+      total_distance_meters: 150
+    });
+
+    const result = sanitizePlan(short, snapshot());
+
+    expect(result.plan.sets.map((s) => [s.repetitions, s.distance_meters])).toEqual([[2, 50], [1, 50], [1, 50]]);
+  });
+
+  it("laesst 50-m-Saetze unveraendert und erwaehnt die Zusammenlegung nicht in der Begruendung", () => {
+    const fine = sanitizePlan(plan({ sets: [set({ repetitions: 4, distance_meters: 50 })], total_distance_meters: 200 }), snapshot());
+    const merged = sanitizePlan(plan({ sets: [set({ repetitions: 4, distance_meters: 25 })], total_distance_meters: 100 }), snapshot());
+
+    expect(fine.adjustments).toEqual([]);
+    expect(merged.plan.rationale).toBe(goodPlan.rationale);
+  });
+
+  it("kuerzt beim Umfangslimit nie einen Satz unter 50 m", () => {
+    const long = plan({
+      sets: [set({ name: "Einschwimmen", repetitions: 1, distance_meters: 100, rest_seconds: 0 }), set({ name: "Hauptsatz", repetitions: 1, distance_meters: 1300 })],
+      total_distance_meters: 1400
+    });
+
+    const result = sanitizePlan(long, snapshot({ flags: ["training_pause"], volume: { last_seven_days_meters: 0 } }));
+
+    expect(result.plan.sets.every((s) => s.distance_meters >= 50)).toBe(true);
+  });
+
   it("raeumt bei einem Ruhetag stehengebliebene Abschnitte auf", () => {
     const rest = plan({ session_type: "rest", intensity: "rest", total_distance_meters: 1600 });
 

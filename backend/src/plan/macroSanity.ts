@@ -130,7 +130,13 @@ export function sanitizeMacro(input: MacroPlanRaw, snapshot: Snapshot, context: 
       notes.push(`${label(weekStart)}: Umfang von ${target} m auf ${cap} m begrenzt (${reasons[0]})`);
       target = cap;
     }
-    // Pro Einheit mindestens 200 m, sonst weniger Tage.
+    // Eine Woche mit Training hat mindestens zwei Einheiten zur Mindestlaenge.
+    const minWeek = limits.minMeaningfulSessionMeters * MIN_SESSIONS;
+    if (target > 0 && target < minWeek && cap >= minWeek) {
+      notes.push(`${label(weekStart)}: Umfang von ${target} m auf ${minWeek} m angehoben (mindestens zwei Einheiten zu je ${limits.minMeaningfulSessionMeters} m)`);
+      target = minWeek;
+    }
+    // Pro Einheit mindestens die Mindestlaenge, sonst weniger Tage.
     sessions = Math.max(Math.min(sessions, Math.floor(target / limits.minMeaningfulSessionMeters)), target > 0 ? 1 : 0);
 
     weeks.push({

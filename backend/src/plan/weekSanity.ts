@@ -1,3 +1,4 @@
+import { assessGoal } from "./goal";
 import { dailyLimits, DailyLimits, DEFAULT_LIMITS, SanityLimits } from "./sanity";
 import { Intensity } from "./plan";
 import { Snapshot } from "./snapshot";
@@ -68,6 +69,15 @@ export function weekLimits(snapshot: Snapshot, context: WeekContext, limits: San
       sessionCap = Math.min(sessionCap, limits.pauseCapMeters);
       weeklyCap = Math.min(weeklyCap, limits.pauseCapMeters * 3);
     }
+    // Zuspitzen: In den letzten zwei Wochen vor dem Ziel sinkt der Umfang unter den Wochenschnitt. Die
+    // Zielwoche muss den Versuch auf die Zieldistanz (mit Einschwimmen) tragen koennen.
+    const phase = assessGoal(snapshot).phase;
+    if (phase === "taper" && snapshot.volume.average_weekly_meters > 0) {
+      weeklyCap = Math.min(weeklyCap, Math.max(snapshot.volume.average_weekly_meters * limits.taperWeeklyFactor, limits.minMeaningfulSessionMeters * 2));
+    } else if (phase === "peak_week" && snapshot.volume.average_weekly_meters > 0) {
+      const floor = Math.max(snapshot.goal.distance_meters * 1.2, limits.minMeaningfulSessionMeters * 2);
+      weeklyCap = Math.min(weeklyCap, Math.max(snapshot.volume.average_weekly_meters * limits.peakWeekWeeklyFactor, floor));
+    }
   }
 
   const swumMeters = context.swumBefore.reduce((sum, day) => sum + day.meters, 0);
@@ -115,7 +125,7 @@ export function sanitizeWeek(
   // 3. Die Grenzen fuer heute.
   if (week.today !== null) {
     const today = week.today;
-    days = days.map((day) => (day.date === context.today ? applyToday(day, today, adjustments) : day));
+    days = days.map((day) => (day.date === context.today ? applyToday(day, today, adjustments, limits) : day));
   }
 
   // 4. Harte Tage: hoechstens zwei, nie an aufeinanderfolgenden Tagen.
@@ -202,10 +212,17 @@ function normalizeDay(day: WeekDay, limits: SanityLimits, adjustments: string[],
     return restDay(day.date, focus === "" ? "Ruhetag" : focus);
   }
 
-  const distance = roundToStep(day.target_distance_meters);
+  let distance = roundToStep(day.target_distance_meters);
   if (distance < limits.minMeaningfulSessionMeters) {
-    adjustments.push(`${label(day.date)}: Einheit unter ${limits.minMeaningfulSessionMeters} m als Ruhetag gesetzt`);
-    return restDay(day.date, "Ruhetag");
+    // Eine halbe Einheit ist meist eine zu vorsichtig geplante: auf das Minimum anheben, wenn die
+    // Einheitengrenze es zulaesst. Alles darunter ist keine Einheit und wird ein Ruhetag.
+    if (distance * 2 >= limits.minMeaningfulSessionMeters && limits.minMeaningfulSessionMeters <= sessionCap) {
+      adjustments.push(`${label(day.date)}: Einheit von ${distance} m auf ${limits.minMeaningfulSessionMeters} m angehoben (kleinste sinnvolle Einheit)`);
+      distance = limits.minMeaningfulSessionMeters;
+    } else {
+      adjustments.push(`${label(day.date)}: Einheit unter ${limits.minMeaningfulSessionMeters} m als Ruhetag gesetzt`);
+      return restDay(day.date, "Ruhetag");
+    }
   }
   const capped = Math.min(distance, Math.floor(sessionCap / STEP) * STEP);
   if (capped < distance) {
@@ -224,7 +241,7 @@ function downgrade(day: WeekDay, max: Intensity): WeekDay {
   return { ...day, intensity: max, session_type: harsh ? "endurance" : day.session_type };
 }
 
-function applyToday(day: WeekDay, today: DailyLimits, adjustments: string[]): WeekDay {
+function applyToday(day: WeekDay, today: DailyLimits, adjustments: string[], limits: SanityLimits): WeekDay {
   if (today.restReason !== null) {
     if (!isRest(day)) adjustments.push(`${label(day.date)}: Ruhetag erzwungen (${today.restReason})`);
     return restDay(day.date, isRest(day) ? day.focus : "Ruhetag");
@@ -238,7 +255,7 @@ function applyToday(day: WeekDay, today: DailyLimits, adjustments: string[]): We
   }
   if (result.target_distance_meters > today.maxDistanceMeters) {
     const capped = Math.floor(today.maxDistanceMeters / STEP) * STEP;
-    if (capped < 200) {
+    if (capped < limits.minMeaningfulSessionMeters) {
       adjustments.push(`${label(day.date)}: Ruhetag erzwungen (zu wenig sicherer Restumfang)`);
       return restDay(day.date, "Ruhetag");
     }

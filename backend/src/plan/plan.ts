@@ -76,3 +76,4 @@ export const StoredTrainingPlanSchema = z.preprocess((value) => {
 export type PlanSet = z.infer<typeof PlanSetSchema>;
 export type TrainingPlan = z.infer<typeof TrainingPlanSchema>;
 export type Intensity = (typeof INTENSITIES)[number];
+export type SessionType = (typeof SESSION_TYPES)[number];

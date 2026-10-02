@@ -1,4 +1,4 @@
-import { TrainingPlan } from "./plan";
+import { SessionType, TrainingPlan } from "./plan";
 import { DailyLimits } from "./sanity";
 import { MacroWeek } from "./macro";
 import { MacroLimits } from "./macroSanity";
@@ -23,6 +23,17 @@ export function estimateCostUsd(model: string, usage: { inputTokens: number; out
 
 const INTENSITY_LABEL = { rest: "Ruhetag", easy: "locker", moderate: "moderat", hard: "hart" } as const;
 
+/** Wie PlanFormatting.sessionType in der App: Der Bericht zeigt deutsche Namen, nie die Schluessel des Schemas. */
+export const SESSION_TYPE_LABEL: Record<SessionType, string> = {
+  technique: "Technik",
+  endurance: "Ausdauer",
+  threshold: "Schwelle",
+  intervals: "Intervalle",
+  recovery: "Regeneration",
+  test: "Test",
+  rest: "Ruhetag"
+};
+
 function formatPace(seconds: number | null): string {
   return seconds === null ? "–" : `${seconds} s/100 m`;
 }
@@ -30,7 +41,7 @@ function formatPace(seconds: number | null): string {
 /** Stellt einen Plan als Markdown dar, fuer den Szenario-Test und die manuelle Bewertung. */
 export function formatPlan(plan: TrainingPlan): string {
   const lines = [
-    `**${plan.session_type}**, ${INTENSITY_LABEL[plan.intensity]}, ${plan.total_distance_meters} m, ca. ${plan.estimated_duration_minutes} min`,
+    `**${SESSION_TYPE_LABEL[plan.session_type]}**, ${INTENSITY_LABEL[plan.intensity]}, ${plan.total_distance_meters} m, ca. ${plan.estimated_duration_minutes} min`,
     "",
     plan.rationale
   ];
@@ -62,7 +73,7 @@ export function formatWeekPlan(week: WeekPlan): string {
   const total = week.days.reduce((sum, day) => sum + day.target_distance_meters, 0);
   const lines = [`**${total} m in ${week.days.filter((d) => d.intensity !== "rest").length} Einheiten**`, "", week.rationale, "", "| Tag | Typ | Intensität | Umfang | Dauer | Schwerpunkt |", "|---|---|---|---|---|---|"];
   for (const day of week.days) {
-    lines.push(`| ${weekdayName(day.date)} ${day.date} | ${day.session_type} | ${INTENSITY_LABEL[day.intensity]} | ${day.target_distance_meters} m | ${day.estimated_duration_minutes} min | ${day.focus} |`);
+    lines.push(`| ${weekdayName(day.date)} ${day.date} | ${SESSION_TYPE_LABEL[day.session_type]} | ${INTENSITY_LABEL[day.intensity]} | ${day.target_distance_meters} m | ${day.estimated_duration_minutes} min | ${day.focus} |`);
   }
   return lines.join("\n");
 }

@@ -88,6 +88,19 @@ describe("Wochenplan gegen das Gesamtziel", () => {
     expect(byName(light, "Keine harte Einheit in der Zielwoche")?.ok).toBe(true);
   });
 
+  it("verlangt ohne Warnhinweis, dass der Wochenumfang die Grenze zu mindestens der Haelfte nutzt", () => {
+    const limits = { sessionCapMeters: 2500, weeklyRemainingMeters: 1500, maxSessions: 5, maxHardDays: 2, today: null };
+    const small = goodWeek({ days: [day("2026-09-30", { target_distance_meters: 400 }), rest("2026-10-01")] });
+    const ok = goodWeek({ days: [day("2026-09-30", { target_distance_meters: 500 }), rest("2026-10-01"), day("2026-10-02", { target_distance_meters: 500 })] });
+    const check = "Wochenumfang nutzt die Grenze sinnvoll";
+
+    expect(byName(checkWeekPlanAgainstGoal(snapshot({ goal: { days_until_goal: 200 } }), small, limits), check)?.ok).toBe(false);
+    expect(byName(checkWeekPlanAgainstGoal(snapshot({ goal: { days_until_goal: 200 } }), ok, limits), check)?.ok).toBe(true);
+    // Ohne Grenze oder bei Warnhinweis wird nichts geprueft.
+    expect(byName(checkWeekPlanAgainstGoal(snapshot({ goal: { days_until_goal: 200 } }), small), check)).toBeUndefined();
+    expect(byName(checkWeekPlanAgainstGoal(snapshot({ goal: { days_until_goal: 200 }, flags: ["recovery_poor"] }), small, limits), check)).toBeUndefined();
+  });
+
   it("verlangt in der zielspezifischen Phase mindestens einen zielspezifischen Tag", () => {
     const specific = snapshot({ goal: { days_until_goal: 60 } });
     const onlyEasy = goodWeek({ days: [day("2026-09-30", { session_type: "endurance", intensity: "easy", focus: "Ausdauer" }), rest("2026-10-01"), rest("2026-10-02"), rest("2026-10-03"), rest("2026-10-04")] });

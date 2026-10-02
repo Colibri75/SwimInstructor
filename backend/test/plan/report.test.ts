@@ -1,6 +1,7 @@
-import { estimateCostUsd, formatLimits, formatPlan } from "../../src/plan/report";
+import { estimateCostUsd, formatLimits, formatPlan, formatWeekPlan } from "../../src/plan/report";
 import { dailyLimits } from "../../src/plan/sanity";
 import { goodPlan, plan, snapshot } from "./fixtures";
+import { day, goodWeek } from "./weekFixtures";
 
 describe("estimateCostUsd", () => {
   it("rechnet Token mit den Preisen pro Million (Opus 5.5: 4 Dollar ein, 20 Dollar aus)", () => {
@@ -30,7 +31,8 @@ describe("formatPlan", () => {
   it("stellt Kopfzeile, Begruendung, Tabelle und Hinweise dar", () => {
     const text = formatPlan(goodPlan);
 
-    expect(text).toContain("**endurance**, moderat, 1600 m, ca. 45 min");
+    expect(text).toContain("**Ausdauer**, moderat, 1600 m, ca. 45 min");
+    expect(text).not.toContain("endurance");
     expect(text).toContain(goodPlan.rationale);
     expect(text).toContain("| Hauptsatz | 6 × 200 m | 140 s/100 m | 30 s | – |");
     expect(text).toContain("| Einschwimmen | 1 × 200 m | – | 0 s |");
@@ -58,3 +60,14 @@ describe("formatLimits", () => {
   });
 });
 
+
+describe("formatWeekPlan", () => {
+  it("nennt die Einheitentypen auf Deutsch, nicht als Schluessel des Schemas", () => {
+    const text = formatWeekPlan(goodWeek({ days: [day("2026-09-30", { session_type: "technique" }), day("2026-10-01", { session_type: "intervals" }), day("2026-10-02", { session_type: "recovery" })] }));
+
+    expect(text).toContain("| Technik |");
+    expect(text).toContain("| Intervalle |");
+    expect(text).toContain("| Regeneration |");
+    expect(text).not.toMatch(/technique|intervals|recovery|endurance|threshold/);
+  });
+});

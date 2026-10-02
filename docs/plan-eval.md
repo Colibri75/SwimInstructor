@@ -103,19 +103,35 @@ die Erklärung nicht abgeschnitten wird.
 gelaufen. Ein weiterer Lauf (rund $0,20) zeigt, ob die Erklärungen tatsächlich kommen. Langfristig
 (M7) wäre ein Übungslexikon in der App sinnvoll, statt die Erklärung in jedem Plan zu wiederholen.
 
-## Lauf 3 (ausstehend): Tages- und Wochenplan gegen das Gesamtziel
+## Lauf 3 (30.09.2026): Tages-, 7-Tage- und Gesamtplan gegen das Gesamtziel
 
-**Noch nicht ausgeführt.** Die Prompts, die Zielprüfung und die neun Szenarien sind fertig, der Lauf gegen die echte
-API fehlt: Der API-Key liegt nur auf dem Server, nicht in der Entwicklungsumgebung. Was geändert wurde und geprüft
-werden soll:
+Modell `claude-opus-5-5`, Effort `high`, 27 Anfragen (neun Szenarien, je Tag, 7 Tage, Gesamtplan), ca. $1,52.
+**Technisch lief alles:** kein Schema-Fehler, kein Fallback, nichts von der Sicherheitsschicht geblockt. Dauer 12 bis
+27 s je Tages- und 7-Tage-Plan, **höchstens 41 s je Gesamtplan über 40 Wochen** (Grenze 75 s, also genug Luft).
 
-- Das Gesamtziel steht als eigener Abschnitt in beiden Prompts (Phase, Wochen bis zum Ziel, Realismus-Hinweis, Lücke
-  zur Zielpace) und folgt dem, was in den Einstellungen steht.
-- Neue Szenarien: **06** Ziel unrealistisch (10 km in 3 h, noch 5 Wochen, längste Einheit 1,2 km), **07** Zieltag
-  vorbei, **08** eigenes Ziel (1.500 m in 28 min, 12 Wochen), **09** Zielwoche (noch 5 Tage).
-- Neu: Die nächsten sieben Tage werden mitbewertet (Gerüst: Tage, Typ, Intensität, Umfang, Schwerpunkt) und der
-  **Gesamtplan bis zum Zieltag** (Wochenumfang, Entlastung, Zuspitzen, Zielwoche).
-- Neu im Tagesplan: **Kurzbeschreibung** (`cue`, zwei bis vier Wörter für die Uhr). Prüfe, ob sie kurz und treffend ist.
+Deine Bewertung: Tagespläne alle sinnvoll, Gesamtpläne sinnvoll, 7-Tage-Pläne bei **01** und **03** nicht sinnvoll,
+dazu zwei Kommentare. Die automatische Zielprüfung war bis auf drei offene Punkte grün.
+
+| Befund | Ursache | Korrektur |
+|---|---|---|
+| **01 Anfänger, 7 Tage: am Ende nur 200 m** (Grenze 1.500 m). **03 Trainingspause: 825 m** in Einheiten von 250 bis 300 m | Der Prompt sagte "höchstens etwa 10 % über dem Wochenschnitt". Claude nahm das als Ziel (350 m Schnitt werden 375 m), und die Sicherheitsschicht machte aus 175 m einen Ruhetag. Außerdem lief der Test ohne Gesamtplan, der in der App die Richtung vorgibt | Prompt: Zielumfang ist die Vorgabe des Gesamtplans, die Wochengrenze wird sinnvoll genutzt. **Eine Einheit hat mindestens 400 m** (Code: eine halbe Einheit wird auf 400 m angehoben, darunter Ruhetag). Der gleiche Mindestwert gilt im Gesamtplan (mindestens zwei Einheiten, also 800 m pro Trainingswoche). Neue Zielprüfung: Wochenumfang mindestens die Hälfte der Grenze |
+| **Kein Satz unter 50 m** (Kommentar von dir; im Tagesplan 01 standen 4 × 25 m) | Prompt erlaubte 25-m-Schritte für alles | Prompt: jeder Satz mindestens 50 m. Code: kürzere Sätze werden zusammengelegt (4 × 25 m wird 2 × 50 m, die Strecke bleibt), auch beim Kürzen auf die Tagesgrenze unterschreitet nie ein Satz 50 m |
+| Typen im Bericht auf Englisch (`technique`, `intervals` …) | Der Bericht schrieb die Schema-Schlüssel. Die App zeigte schon Deutsch | Bericht nutzt dieselben Namen wie die App (Technik, Ausdauer, Schwelle, Intervalle, Regeneration, Test, Ruhetag) |
+| **04 Zieldatum nah, 7 Tage: 5.500 m bei 5.000 m Wochenschnitt** (Zuspitzen verlangt weniger; automatische Prüfung offen) | Zuspitzen war nur ein Prompt-Satz, keine Grenze | Code: 8 bis 14 Tage vor dem Ziel höchstens 85 % des Wochenschnitts, in den letzten 7 Tagen höchstens 70 %, mindestens das 1,2-Fache der Zieldistanz (damit der Versuch passt) |
+| Test plante nur 5 Tage ("für diese fünf Tage") | Das Skript war noch auf die alte Kalenderwoche bis Sonntag eingestellt | Das Skript plant wie die App 7 Tage ab heute, mit der Vorwoche, und reicht die Pläne wie in der App weiter: Gesamtplan, dann 7 Tage mit Gesamtplan, dann Tag mit der Vorgabe des 7-Tage-Plans |
+| **01 Anfänger, Gesamtplan: Höhepunkt 6.200 m** statt der erwarteten 7.600 m (die Zieldistanz zweimal pro Woche), elf Korrekturen der Sicherheitsschicht | Start bei nur 700 m, und Claude steigerte unter den erlaubten 10 % | Mit dem Mindestumfang startet die erste Woche höher (800 m), und die Nutzernachricht nennt jetzt die Orientierung für den Höhepunkt samt Hinweis, die vollen 10 % zu nutzen |
+
+Was gut war (unverändert lassen): Begründungen nennen das Ziel und sagen bei unrealistischem Ziel ehrlich, dass es nicht
+reicht (06, 04, 01). Szenario 07 (Zieltag vorbei) verweist auf ein neues Ziel und plant erhaltend. Szenario 05
+(Übertraining) beginnt mit Ruhetagen und hält den Gesamtplan trotzdem zielgerichtet. Die Zielwoche (09) ist kurz und
+ohne harte Einheit, und alle Gesamtpläne reichen bis zur Zielwoche, mit Entlastungswochen und sinkendem Umfang beim
+Zuspitzen. Die Kurzbeschreibungen für die Uhr (`cue`) sind drei bis vier Wörter lang.
+
+## Lauf 4 (ausstehend): nach den Korrekturen aus Lauf 3
+
+**Noch nicht ausgeführt.** Prüfen, ob die 7-Tage-Pläne jetzt sinnvolle Umfänge haben (01 und 03 bei etwa 1.000 bis
+1.500 m in zwei bis drei Einheiten von je mindestens 400 m), ob nirgends mehr ein Satz unter 50 m steht und ob 04 beim
+Zuspitzen unter dem Wochenschnitt bleibt.
 
 Auf dem Server (27 Anfragen, kostet rund $1,50):
 

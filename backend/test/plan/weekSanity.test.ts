@@ -7,6 +7,29 @@ const total = (days: WeekDay[]): number => days.reduce((sum, d) => sum + d.targe
 const byDate = (plan: WeekPlan, date: string): WeekDay => plan.days.find((d) => d.date === date)!;
 
 describe("weekLimits", () => {
+  it("deckelt den Umfang beim Zuspitzen unter den Wochenschnitt (85 Prozent bei 8 bis 14 Tagen)", () => {
+    const taper = weekLimits(snapshot({ goal: { days_until_goal: 12 }, volume: { average_weekly_meters: 5000 } }), context());
+
+    // 85 % von 5000 m = 4250 m statt 1,3 x 5000 m.
+    expect(taper.weeklyRemainingMeters).toBe(4250);
+  });
+
+  it("laesst in der Zielwoche den Versuch auf die Zieldistanz zu (mindestens 1,2 x Zieldistanz)", () => {
+    const peakWeek = weekLimits(snapshot({ goal: { days_until_goal: 5 }, volume: { average_weekly_meters: 4500 } }), context());
+    const lowAverage = weekLimits(snapshot({ goal: { days_until_goal: 5 }, volume: { average_weekly_meters: 2000 } }), context());
+
+    // 70 % von 4500 m = 3150 m, die Zieldistanz 3800 m x 1,2 = 4560 m geht vor.
+    expect(peakWeek.weeklyRemainingMeters).toBe(4560);
+    // 1,3 x 2000 m = 2600 m, unter 4560 m: Das Zuspitzen hebt die normale Grenze nie an.
+    expect(lowAverage.weeklyRemainingMeters).toBe(2600);
+  });
+
+  it("wendet das Zuspitzen nur auf die laufende Woche an, nicht auf eine kommende", () => {
+    const next = weekLimits(snapshot({ goal: { days_until_goal: 12 }, volume: { average_weekly_meters: 5000 } }), context({ today: "2026-09-25", dates: ALL_DATES }));
+
+    expect(next.weeklyRemainingMeters).toBe(6500);
+  });
+
   it("leitet Einheiten- und Wochengrenze aus dem Zustand ab", () => {
     const limits = weekLimits(snapshot(), context());
 
@@ -86,7 +109,7 @@ describe("sanitizeWeek: Tage", () => {
     expect(result.adjustments).toEqual([]);
   });
 
-  it("macht aus Einheiten ohne Strecke, mit Intensitaet rest oder unter 200 m einen Ruhetag", () => {
+  it("macht aus Einheiten ohne Strecke, mit Intensitaet rest oder unter einer halben Mindest-Einheit einen Ruhetag", () => {
     const week = goodWeek({
       days: [
         day("2026-09-30", { intensity: "rest", target_distance_meters: 1000 }),
@@ -101,7 +124,17 @@ describe("sanitizeWeek: Tage", () => {
 
     expect(result.plan.days.filter((d) => d.session_type === "rest")).toHaveLength(4);
     expect(result.plan.days.every((d) => (d.session_type === "rest") === (d.target_distance_meters === 0))).toBe(true);
-    expect(result.adjustments.join(" ")).toContain("unter 200 m");
+    expect(result.adjustments.join(" ")).toContain("unter 400 m");
+  });
+
+  it("hebt eine zu kleine Einheit auf 400 m an, statt sie zu streichen, und sagt es", () => {
+    const week = goodWeek({ days: [day("2026-09-30", { target_distance_meters: 250 }), rest("2026-10-01"), day("2026-10-02", { target_distance_meters: 175 })] });
+
+    const result = sanitizeWeek(week, snapshot(), context());
+
+    expect(byDate(result.plan, "2026-09-30").target_distance_meters).toBe(400);
+    expect(byDate(result.plan, "2026-10-02").session_type).toBe("rest");
+    expect(result.adjustments.join(" ")).toContain("von 250 m auf 400 m angehoben");
   });
 
   it("rundet Strecken auf 25 m und begrenzt Dauer und Schwerpunkt", () => {
@@ -140,7 +173,7 @@ describe("sanitizeWeek: Grenzen fuer heute", () => {
     expect(byDate(result.plan, TODAY)).toMatchObject({ intensity: "moderate", session_type: "endurance" });
   });
 
-  it("kuerzt heute auf die Tagesgrenze und verwandelt einen Rest unter 200 m in Ruhe", () => {
+  it("kuerzt heute auf die Tagesgrenze und verwandelt einen Rest unter der Mindest-Einheit in Ruhe", () => {
     const capped = sanitizeWeek(goodWeek({ days: [day(TODAY, { target_distance_meters: 2500, estimated_duration_minutes: 60 })] }), snapshot({ volume: { last_seven_days_meters: 2800 } }), context());
     const exhausted = sanitizeWeek(goodWeek({ days: [day(TODAY)] }), snapshot({ volume: { last_seven_days_meters: 3850 } }), context());
 

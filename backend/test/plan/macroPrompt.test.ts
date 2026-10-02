@@ -14,6 +14,19 @@ describe("Prompt des Gesamtplans", () => {
     }
   });
 
+  it("verlangt mindestens 400 m je Einheit, auch in der ersten Woche", () => {
+    expect(MACRO_SYSTEM_PROMPT).toContain("mindestens 400 m pro Einheit");
+    expect(MACRO_SYSTEM_PROMPT).toContain("mindestens 800 m bei zwei Einheiten");
+  });
+
+  it("nennt als Orientierung fuer den Hoehepunkt das Doppelte der Zieldistanz, wenn der Aufbau lang genug ist", () => {
+    const message = buildMacroUserMessage(snapshot(), macroContext());
+    const shortRun = buildMacroUserMessage(snapshot({ goal: { days_until_goal: 20 } }), macroContext({ weeks: MACRO_WEEKS.slice(-3) }));
+
+    expect(message).toContain("Orientierung für den Höhepunkt: mindestens 7600 m");
+    expect(shortRun).not.toContain("Orientierung für den Höhepunkt");
+  });
+
   it("sagt, dass der Plan fuer sieben Tage taeglich darauf feinjustiert wird", () => {
     expect(MACRO_SYSTEM_PROMPT).toMatch(/nächsten sieben Tage/);
     expect(MACRO_SYSTEM_PROMPT).toMatch(/jeden Tag neu/);

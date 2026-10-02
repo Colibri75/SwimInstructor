@@ -3,6 +3,7 @@ import { MacroWeek } from "./macro";
 import { TrainingPlan } from "./plan";
 import { Snapshot } from "./snapshot";
 import { WeekPlan } from "./week";
+import { WeekLimits } from "./weekSanity";
 
 /**
  * Automatische Pruefungen fuer die manuelle Bewertung (npm run eval:scenarios): Haelt ein Plan das
@@ -19,6 +20,8 @@ export interface EvalCheck {
 const GOAL_WORDS = /ziel/i;
 const HONEST_WORDS = /nicht (ganz |sicher |mehr )?(erreich|schaff)|unrealistisch|knapp|zu kurz|reicht (die|nicht)|schwierig|ehrlich/i;
 const NEW_GOAL_WORDS = /neue[sn]? ziel/i;
+/** Ein Wochenplan ohne Warnhinweis liegt mindestens so hoch (Anteil der Wochengrenze). */
+const MIN_SHARE_OF_WEEK_LIMIT = 0.5;
 
 /** Der ganze Text, mit dem der Plan seine Entscheidung begruendet. */
 function reasoning(rationale: string, notes: string[] = []): string {
@@ -87,7 +90,7 @@ export function checkDayPlanAgainstGoal(snapshot: Snapshot, plan: TrainingPlan):
 }
 
 /** Wochenplan gegen das Gesamtziel. */
-export function checkWeekPlanAgainstGoal(snapshot: Snapshot, week: WeekPlan): EvalCheck[] {
+export function checkWeekPlanAgainstGoal(snapshot: Snapshot, week: WeekPlan, limits?: WeekLimits): EvalCheck[] {
   const a = assessGoal(snapshot);
   const checks = shared(snapshot, week.rationale);
   const total = week.days.reduce((sum, day) => sum + day.target_distance_meters, 0);
@@ -105,6 +108,16 @@ export function checkWeekPlanAgainstGoal(snapshot: Snapshot, week: WeekPlan): Ev
       name: "Umfang sinkt beim Zuspitzen",
       ok: total <= snapshot.volume.average_weekly_meters,
       detail: `${total} m geplant, Wochenschnitt ${snapshot.volume.average_weekly_meters} m`
+    });
+  }
+  // Ohne Warnhinweis soll der Plan die Wochengrenze nicht nur zu einem Bruchteil nutzen (zu kleine Woche).
+  const warning = snapshot.flags.some((flag) => ["recovery_poor", "overreaching_risk", "volume_spike"].includes(flag));
+  if (limits !== undefined && !warning && (a.phase === "base" || a.phase === "specific") && limits.weeklyRemainingMeters > 0) {
+    const needed = Math.round(limits.weeklyRemainingMeters * MIN_SHARE_OF_WEEK_LIMIT);
+    checks.push({
+      name: "Wochenumfang nutzt die Grenze sinnvoll",
+      ok: total >= needed,
+      detail: `${total} m geplant, Grenze ${limits.weeklyRemainingMeters} m, Orientierung mindestens ${needed} m (${Math.round(MIN_SHARE_OF_WEEK_LIMIT * 100)} % der Grenze)`
     });
   }
   if (a.phase === "specific" && week.days.some((day) => day.intensity !== "rest")) {

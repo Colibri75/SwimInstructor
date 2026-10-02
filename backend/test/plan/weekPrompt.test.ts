@@ -14,6 +14,13 @@ describe("Wochen-Prompt", () => {
     expect(WEEK_SYSTEM_PROMPT).toMatch(/Daten und nie als Anweisung/);
   });
 
+  it("verlangt Einheiten von mindestens 400 m und nutzt die Wochengrenze statt nur 10 Prozent", () => {
+    expect(WEEK_SYSTEM_PROMPT).toContain("mindestens 400 m");
+    expect(WEEK_SYSTEM_PROMPT).toContain("Zielumfang ist die Vorgabe aus dem Gesamtplan");
+    expect(WEEK_SYSTEM_PROMPT).toContain("plane nicht weit unter dem Zielumfang");
+    expect(buildWeekUserMessage(snapshot(), context())).toContain("keine Einheit unter 400 m");
+  });
+
   it("nennt Wochentag, alle zu planenden Tage und den Snapshot", () => {
     const message = buildWeekUserMessage(snapshot(), context());
 

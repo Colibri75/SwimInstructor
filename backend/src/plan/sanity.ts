@@ -24,8 +24,12 @@ export interface SanityLimits {
   pauseCapMeters: number;
   recoveryPoorDistanceFactor: number;
   volumeSpikeDistanceFactor: number;
-  /** Bleibt weniger als das uebrig, wird daraus ein Ruhetag. */
+  /** Kleinste sinnvolle Einheit: Bleibt weniger als das uebrig, wird daraus ein Ruhetag. */
   minMeaningfulSessionMeters: number;
+  /** Beim Zuspitzen (8 bis 14 Tage vor dem Ziel) hoechstens dieser Anteil des Wochenschnitts pro 7 Tage. */
+  taperWeeklyFactor: number;
+  /** In der Zielwoche (hoechstens 7 Tage vor dem Ziel) hoechstens dieser Anteil, mindestens aber 1,2 mal die Zieldistanz. */
+  peakWeekWeeklyFactor: number;
   /**
    * Schnellste erlaubte Zielpace relativ zur aktuellen Pace. Die aktuelle Pace im Snapshot ist
    * Gesamtzeit durch Distanz inklusive Pausen, das echte Schwimmtempo ist also schneller. Der Faktor
@@ -62,12 +66,15 @@ export const DEFAULT_LIMITS: SanityLimits = {
   pauseCapMeters: 800,
   recoveryPoorDistanceFactor: 0.5,
   volumeSpikeDistanceFactor: 0.6,
-  minMeaningfulSessionMeters: 200,
+  minMeaningfulSessionMeters: 400,
+  taperWeeklyFactor: 0.85,
+  peakWeekWeeklyFactor: 0.7,
   fastestVsRecentFactor: 0.6,
   fastestVsGoalFactor: 0.9,
   unknownPaceVsGoalFactor: 1.3,
   slowestPace: 600,
-  minRepDistance: 25,
+  /** Kein Satz (keine Wiederholung) ist kuerzer als zwei Bahnen im 25-m-Becken. */
+  minRepDistance: 50,
   maxRepDistance: 3800,
   maxRepetitions: 100,
   maxRestSeconds: 600,
@@ -133,7 +140,7 @@ export function sanitizePlan(input: TrainingPlan, snapshot: Snapshot, limits: Sa
   if (problem) return { plan: input, adjustments: [], blocked: problem };
 
   const adjustments: string[] = [];
-  let plan = normalize(input, limits);
+  let plan = normalize(input, limits, adjustments);
 
   if (isRestDay(plan)) return done(asRestDay(plan, null), adjustments);
 
@@ -179,7 +186,7 @@ export function sanitizePlan(input: TrainingPlan, snapshot: Snapshot, limits: Sa
   // 3. Umfang begrenzen
   const before = totalDistance(plan.sets);
   if (before > today.maxDistanceMeters) {
-    const trimmed = trimToDistance(plan.sets, today.maxDistanceMeters);
+    const trimmed = trimToDistance(plan.sets, today.maxDistanceMeters, limits.minRepDistance);
     const after = totalDistance(trimmed);
     if (after < limits.minMeaningfulSessionMeters) {
       const reason = "zu wenig sicherer Restumfang";
@@ -220,9 +227,10 @@ export function sanitizePlan(input: TrainingPlan, snapshot: Snapshot, limits: Sa
  * Korrekturen (falsche Summe) gehoeren nicht in die Begruendung.
  */
 const FORMAL_ADJUSTMENT_PREFIX = "Gesamtdistanz korrigiert";
+const FORMAL_SHORT_SETS_PREFIX = "Sätze unter der Mindestlänge zusammengelegt";
 
 function withAdjustmentNote(plan: TrainingPlan, adjustments: string[], limits: SanityLimits): TrainingPlan {
-  const substantive = adjustments.filter((adjustment) => !adjustment.startsWith(FORMAL_ADJUSTMENT_PREFIX));
+  const substantive = adjustments.filter((adjustment) => !adjustment.startsWith(FORMAL_ADJUSTMENT_PREFIX) && !adjustment.startsWith(FORMAL_SHORT_SETS_PREFIX));
   if (substantive.length === 0) return plan;
 
   const note = `Hinweis: Zur Sicherheit angepasst (${substantive.join("; ")}).`;
@@ -262,10 +270,17 @@ function isRestDay(plan: TrainingPlan): boolean {
   return plan.session_type === "rest" || plan.intensity === "rest";
 }
 
-// --- Normalisieren (stille Korrekturen an Formalien, ohne Hinweis) ---
+// --- Normalisieren (Korrekturen an Formalien, ohne Hinweis in der Begruendung) ---
 
-function normalize(plan: TrainingPlan, limits: SanityLimits): TrainingPlan {
-  const sets = plan.sets.map((set) => ({
+function normalize(plan: TrainingPlan, limits: SanityLimits, adjustments: string[]): TrainingPlan {
+  let merged = 0;
+  const sets = plan.sets
+    .map((raw) => {
+      const set = mergeShortRepetitions(raw, limits);
+      if (set !== raw) merged += 1;
+      return set;
+    })
+    .map((set) => ({
     ...set,
     name: set.name.trim().slice(0, 100),
     instructions: set.instructions.trim().slice(0, limits.maxInstructionLength),
@@ -279,6 +294,7 @@ function normalize(plan: TrainingPlan, limits: SanityLimits): TrainingPlan {
         ? null
         : set.target_pace_seconds_per_hundred_meters
   }));
+  if (merged > 0) adjustments.push(`${FORMAL_SHORT_SETS_PREFIX} (${merged} ${merged === 1 ? "Abschnitt" : "Abschnitte"}, kein Satz unter ${limits.minRepDistance} m)`);
 
   return {
     ...plan,
@@ -290,6 +306,17 @@ function normalize(plan: TrainingPlan, limits: SanityLimits): TrainingPlan {
     estimated_duration_minutes: clampMinutes(plan.estimated_duration_minutes, limits),
     sets
   };
+}
+
+/**
+ * Ein Satz unter `minRepDistance` (z. B. 4 x 25 m) wird zu laengeren Saetzen zusammengelegt, die Gesamtstrecke
+ * des Abschnitts bleibt etwa gleich (4 x 25 m wird 2 x 50 m, 3 x 25 m wird 2 x 50 m).
+ */
+function mergeShortRepetitions(set: PlanSet, limits: SanityLimits): PlanSet {
+  const distance = roundToStep(set.distance_meters);
+  if (distance >= limits.minRepDistance) return set;
+  const total = Math.max(Math.round(set.repetitions), 1) * Math.max(distance, DISTANCE_STEP);
+  return { ...set, distance_meters: limits.minRepDistance, repetitions: Math.max(Math.round(total / limits.minRepDistance), 1) };
 }
 
 function asRestDay(plan: TrainingPlan, reason: string | null): TrainingPlan {
@@ -374,7 +401,7 @@ function fastestAllowedPace(snapshot: Snapshot, limits: SanityLimits): number {
  * Kuerzt den groessten Abschnitt so lange, bis der Plan in die Grenze passt. Einschwimmen und
  * Ausschwimmen bleiben dadurch meist erhalten, weil der Hauptsatz zuerst schrumpft.
  */
-function trimToDistance(sets: PlanSet[], maxMeters: number): PlanSet[] {
+function trimToDistance(sets: PlanSet[], maxMeters: number, minRepMeters: number): PlanSet[] {
   const result = sets.map((set) => ({ ...set }));
   for (let guard = 0; guard < 10_000 && totalDistance(result) > maxMeters && result.length > 0; guard++) {
     const excess = totalDistance(result) - maxMeters;
@@ -388,7 +415,7 @@ function trimToDistance(sets: PlanSet[], maxMeters: number): PlanSet[] {
       set.repetitions = Math.max(1, set.repetitions - Math.ceil(excess / set.distance_meters));
     } else {
       const shorter = set.distance_meters - Math.ceil(excess / DISTANCE_STEP) * DISTANCE_STEP;
-      if (shorter < DISTANCE_STEP) result.splice(largest, 1);
+      if (shorter < minRepMeters) result.splice(largest, 1);
       else set.distance_meters = shorter;
     }
   }
