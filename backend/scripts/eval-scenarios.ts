@@ -46,7 +46,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
   const model = process.env.PLAN_MODEL ?? "claude-opus-5-5";
-  const effort = (process.env.PLAN_EFFORT ?? "medium") as Effort;
+  const effort = (process.env.PLAN_EFFORT ?? "high") as Effort;
   if (!EFFORTS.includes(effort)) {
     console.error(`PLAN_EFFORT ungültig: ${effort} (erlaubt: ${EFFORTS.join(", ")})`);
     process.exit(1);

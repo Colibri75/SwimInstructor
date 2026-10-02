@@ -74,7 +74,7 @@ function parsePort(value: string | undefined): number {
 }
 
 function parseEffort(value: string | undefined): Effort {
-  if (value === undefined || value.trim() === "") return "medium";
+  if (value === undefined || value.trim() === "") return "high";
   const effort = value.trim();
   if (effort === "low" || effort === "medium" || effort === "high" || effort === "xhigh" || effort === "max") return effort;
   throw new Error(`PLAN_EFFORT ungueltig: "${value}" (erlaubt: low, medium, high, xhigh, max)`);

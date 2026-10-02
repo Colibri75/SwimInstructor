@@ -266,7 +266,8 @@ Bei ein bis zwei Plänen pro Tag sind das etwa $1 bis $3 im Monat. Die Kostenbre
 Case bei 20 Aufrufen pro Tag, das wären rund $1 pro Tag (rund $29 im Monat).
 
 Das Modell lässt sich per `PLAN_MODEL` wechseln (z. B. `claude-sonnet-5-5`, halber Preis), die Denktiefe
-per `PLAN_EFFORT` (`low` bis `max`, Standard `medium`). Jeder Aufruf schreibt Modell, Token und Dauer
+per `PLAN_EFFORT` (`low` bis `max`, Standard `high`; die Kosten und Zeiten in diesem Dokument stammen aus Läufen mit
+`medium`, mit `high` fallen sie höher aus). Jeder Aufruf schreibt Modell, Token und Dauer
 ins Server-Log (`docker logs swiminstructor-backend`, Eintrag "plan generated").
 
 ## Datenschutz
@@ -281,7 +282,7 @@ den letzten Plan, den Snapshot selbst nicht.
 |---|---|---|
 | `ANTHROPIC_API_KEY` | (leer) | Ohne Key startet der Server trotzdem, der Plan-Endpunkt liefert dann nur Cache und Fallback |
 | `PLAN_MODEL` | `claude-opus-5-5` | Modell für die Pläne |
-| `PLAN_EFFORT` | `medium` | Denktiefe: `low`, `medium`, `high`, `xhigh`, `max` |
+| `PLAN_EFFORT` | `high` | Denktiefe: `low`, `medium`, `high`, `xhigh`, `max` |
 | `PLAN_TIMEOUT_MS` | `75000` | Zeitlimit pro Aufruf (1.000 bis 85.000, bleibt unter dem 90-s-Limit von Caddy) |
 | `PLAN_SERVER_FALLBACK` | `true` | Bei Ablehnung durch Claudes Sicherheitsklassifikatoren automatisch ein anderes Modell versuchen |
 | `DATA_DIR` | `./data` (im Container `/data`) | Hier liegt der letzte Plan |

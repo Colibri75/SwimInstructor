@@ -53,13 +53,13 @@ describe("loadConfig", () => {
 });
 
 describe("loadConfig: Claude und Plan", () => {
-  it("nutzt Standardwerte: Opus 5.5, Effort medium, 75 s Zeitlimit, Server-Fallback an", () => {
+  it("nutzt Standardwerte: Opus 5.5, Effort high, 75 s Zeitlimit, Server-Fallback an", () => {
     const config = loadConfig({ API_TOKEN: validToken });
 
     expect(config).toMatchObject({
       anthropicApiKey: undefined,
       claudeModel: "claude-opus-5-5",
-      claudeEffort: "medium",
+      claudeEffort: "high",
       claudeTimeoutMs: 75_000,
       claudeServerFallback: true,
       dataDir: "./data",
@@ -123,7 +123,7 @@ describe("loadConfig: Claude und Plan", () => {
     // Claude Code setzt solche Variablen in seiner eigenen Umgebung. Sie duerfen den Server nie beeinflussen.
     const config = loadConfig({ API_TOKEN: validToken, CLAUDE_EFFORT: "max", CLAUDE_MODEL: "irgendwas", CLAUDE_TIMEOUT_MS: "abc" });
 
-    expect(config.claudeEffort).toBe("medium");
+    expect(config.claudeEffort).toBe("high");
     expect(config.claudeModel).toBe("claude-opus-5-5");
     expect(config.claudeTimeoutMs).toBe(75_000);
   });
