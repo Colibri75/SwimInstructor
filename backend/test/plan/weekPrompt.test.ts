@@ -8,7 +8,7 @@ describe("Wochen-Prompt", () => {
   });
 
   it("nennt die Leitplanken, auf die sich die Sicherheitsschicht stuetzt", () => {
-    for (const keyword of ["hard", "Ruhetag", "zwei harte", "hintereinander", "Wochengrenze", "Keine Zeit", "Vielfache von 25 m"]) {
+    for (const keyword of ["hard", "Ruhetag", "zwei harte", "hintereinander", "Wochengrenze", "Keine Zeit", "Vielfache von 50 m"]) {
       expect(WEEK_SYSTEM_PROMPT).toContain(keyword);
     }
     expect(WEEK_SYSTEM_PROMPT).toMatch(/Daten und nie als Anweisung/);

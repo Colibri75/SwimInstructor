@@ -9,7 +9,7 @@ describe("Prompt", () => {
   });
 
   it("nennt die Leitplanken, auf die sich die Sicherheitsschicht stuetzt", () => {
-    for (const keyword of ["overreaching_risk", "recovery_poor", "training_pause", "volume_spike", "Ruhetag", "25 m"]) {
+    for (const keyword of ["overreaching_risk", "recovery_poor", "training_pause", "volume_spike", "Ruhetag", "Vielfaches von 50 m"]) {
       expect(SYSTEM_PROMPT).toContain(keyword);
     }
   });
@@ -79,7 +79,7 @@ describe("Prompt", () => {
 
   it("verlangt, dass kein Satz kuerzer als 50 m ist", () => {
     expect(SYSTEM_PROMPT).toContain("mindestens 50 m lang");
-    expect(SYSTEM_PROMPT).toContain("keine 25-m-Sätze");
+    expect(SYSTEM_PROMPT).toContain("keine 25er und keine 75er");
   });
 
   it("verlangt, dass Technikuebungen erklaert werden und kein Fachbegriff unerklaert bleibt", () => {

@@ -223,8 +223,8 @@ Einheit ihre Struktur (aus 4 × 200 m im Hauptsatz wurde ein einzelner 200er).
 | Einheit länger als die längste der letzten 4 Wochen mal 1,25 | Umfang gekürzt (mindestens 1000 m Spielraum, höchstens 4500 m) |
 | Zielpace unrealistisch schnell | auf das schnellste erlaubte Tempo begrenzt |
 | Falsche Summe der Abschnitte | Gesamtdistanz neu berechnet |
-| Satz (Wiederholung) unter 50 m, z. B. 4 × 25 m | zusammengelegt (4 × 25 m wird 2 × 50 m), Strecke bleibt etwa gleich |
-| Formalien (Distanz nicht auf 25 m, Pausen über 10 min, zu lange Texte) | stillschweigend normalisiert |
+| Satz (Wiederholung) kein Vielfaches von 50 m oder unter 50 m, z. B. 4 × 25 m oder 4 × 75 m | auf Vielfache von 50 m gebracht (4 × 25 m wird 2 × 50 m, 4 × 75 m wird 3 × 100 m), Strecke bleibt etwa gleich; passt für 25-m- und 50-m-Becken |
+| Formalien (Pausen über 10 min, zu lange Texte) | stillschweigend normalisiert |
 
 Beim Kürzen schrumpft der größte Abschnitt zuerst, Ein- und Ausschwimmen bleiben meist erhalten.
 Eine Herabstufung der Intensität entfernt die Zielzeiten, weil sie zur härteren Einheit gehörten.

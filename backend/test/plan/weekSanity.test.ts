@@ -128,7 +128,7 @@ describe("sanitizeWeek: Tage", () => {
   });
 
   it("hebt eine zu kleine Einheit auf 400 m an, statt sie zu streichen, und sagt es", () => {
-    const week = goodWeek({ days: [day("2026-09-30", { target_distance_meters: 250 }), rest("2026-10-01"), day("2026-10-02", { target_distance_meters: 175 })] });
+    const week = goodWeek({ days: [day("2026-09-30", { target_distance_meters: 250 }), rest("2026-10-01"), day("2026-10-02", { target_distance_meters: 150 })] });
 
     const result = sanitizeWeek(week, snapshot(), context());
 
@@ -137,7 +137,7 @@ describe("sanitizeWeek: Tage", () => {
     expect(result.adjustments.join(" ")).toContain("von 250 m auf 400 m angehoben");
   });
 
-  it("rundet Strecken auf 25 m und begrenzt Dauer und Schwerpunkt", () => {
+  it("rundet Strecken auf 50 m und begrenzt Dauer und Schwerpunkt", () => {
     const week = goodWeek({
       days: [day("2026-09-30", { target_distance_meters: 1510, estimated_duration_minutes: 900, focus: "  " + "x".repeat(200) + "  " })]
     });

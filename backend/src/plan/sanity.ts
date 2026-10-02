@@ -73,7 +73,7 @@ export const DEFAULT_LIMITS: SanityLimits = {
   fastestVsGoalFactor: 0.9,
   unknownPaceVsGoalFactor: 1.3,
   slowestPace: 600,
-  /** Kein Satz (keine Wiederholung) ist kuerzer als zwei Bahnen im 25-m-Becken. */
+  /** Kein Satz (keine Wiederholung) ist kuerzer; Saetze sind Vielfache von 50 m (ein 25-m- und ein 50-m-Becken gehen auf). */
   minRepDistance: 50,
   maxRepDistance: 3800,
   maxRepetitions: 100,
@@ -99,7 +99,8 @@ export interface SanityResult {
 }
 
 const RANK: Record<Intensity, number> = { rest: 0, easy: 1, moderate: 2, hard: 3 };
-const DISTANCE_STEP = 25;
+/** Jede Distanz ist ein Vielfaches davon: passt fuer ein 25-m- und ein 50-m-Becken. */
+const DISTANCE_STEP = 50;
 
 /**
  * Die Grenzen fuer heute, abgeleitet aus dem Zustand. Dieselben Zahlen gehen an Claude (Prompt, damit
@@ -227,7 +228,7 @@ export function sanitizePlan(input: TrainingPlan, snapshot: Snapshot, limits: Sa
  * Korrekturen (falsche Summe) gehoeren nicht in die Begruendung.
  */
 const FORMAL_ADJUSTMENT_PREFIX = "Gesamtdistanz korrigiert";
-const FORMAL_SHORT_SETS_PREFIX = "Sätze unter der Mindestlänge zusammengelegt";
+const FORMAL_SHORT_SETS_PREFIX = "Sätze auf Vielfache von 50 m gebracht";
 
 function withAdjustmentNote(plan: TrainingPlan, adjustments: string[], limits: SanityLimits): TrainingPlan {
   const substantive = adjustments.filter((adjustment) => !adjustment.startsWith(FORMAL_ADJUSTMENT_PREFIX) && !adjustment.startsWith(FORMAL_SHORT_SETS_PREFIX));
@@ -276,7 +277,7 @@ function normalize(plan: TrainingPlan, limits: SanityLimits, adjustments: string
   let merged = 0;
   const sets = plan.sets
     .map((raw) => {
-      const set = mergeShortRepetitions(raw, limits);
+      const set = alignToPoolLengths(raw, limits);
       if (set !== raw) merged += 1;
       return set;
     })
@@ -294,7 +295,7 @@ function normalize(plan: TrainingPlan, limits: SanityLimits, adjustments: string
         ? null
         : set.target_pace_seconds_per_hundred_meters
   }));
-  if (merged > 0) adjustments.push(`${FORMAL_SHORT_SETS_PREFIX} (${merged} ${merged === 1 ? "Abschnitt" : "Abschnitte"}, kein Satz unter ${limits.minRepDistance} m)`);
+  if (merged > 0) adjustments.push(`${FORMAL_SHORT_SETS_PREFIX} (${merged} ${merged === 1 ? "Abschnitt" : "Abschnitte"}, passt für 25-m- und 50-m-Becken)`);
 
   return {
     ...plan,
@@ -309,14 +310,16 @@ function normalize(plan: TrainingPlan, limits: SanityLimits, adjustments: string
 }
 
 /**
- * Ein Satz unter `minRepDistance` (z. B. 4 x 25 m) wird zu laengeren Saetzen zusammengelegt, die Gesamtstrecke
- * des Abschnitts bleibt etwa gleich (4 x 25 m wird 2 x 50 m, 3 x 25 m wird 2 x 50 m).
+ * Saetze sind Vielfache von 50 m, damit der Plan fuer ein 25-m- und ein 50-m-Becken aufgeht. Eine andere
+ * Satzlaenge (25 m, 75 m, 130 m ...) wird auf das naechste Vielfache gebracht und die Zahl der Wiederholungen so
+ * angepasst, dass die Strecke des Abschnitts etwa gleich bleibt (4 x 25 m wird 2 x 50 m, 3 x 75 m wird 2 x 100 m).
  */
-function mergeShortRepetitions(set: PlanSet, limits: SanityLimits): PlanSet {
-  const distance = roundToStep(set.distance_meters);
-  if (distance >= limits.minRepDistance) return set;
-  const total = Math.max(Math.round(set.repetitions), 1) * Math.max(distance, DISTANCE_STEP);
-  return { ...set, distance_meters: limits.minRepDistance, repetitions: Math.max(Math.round(total / limits.minRepDistance), 1) };
+function alignToPoolLengths(set: PlanSet, limits: SanityLimits): PlanSet {
+  const step = DISTANCE_STEP;
+  if (Number.isInteger(set.distance_meters) && set.distance_meters >= limits.minRepDistance && set.distance_meters % step === 0) return set;
+  const distance = Math.max(roundToStep(set.distance_meters), limits.minRepDistance);
+  const total = Math.max(Math.round(set.repetitions), 1) * set.distance_meters;
+  return { ...set, distance_meters: distance, repetitions: Math.max(Math.round(total / distance), 1) };
 }
 
 function asRestDay(plan: TrainingPlan, reason: string | null): TrainingPlan {

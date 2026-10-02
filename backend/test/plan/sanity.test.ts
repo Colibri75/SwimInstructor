@@ -244,7 +244,7 @@ describe("sanitizePlan: Rechenfehler und Formalien", () => {
     expect(result.adjustments.join(" ")).toContain("Gesamtdistanz korrigiert");
   });
 
-  it("rundet Distanzen auf 25 m und begrenzt Pausen und Wiederholungen", () => {
+  it("bringt Satzlaengen auf Vielfache von 50 m und begrenzt Pausen und Wiederholungen", () => {
     const messy = plan({
       sets: [set({ repetitions: 4, distance_meters: 130, rest_seconds: 9999 })],
       total_distance_meters: 520
@@ -252,7 +252,8 @@ describe("sanitizePlan: Rechenfehler und Formalien", () => {
 
     const result = sanitizePlan(messy, snapshot());
 
-    expect(result.plan.sets[0].distance_meters).toBe(125);
+    // 4 x 130 m = 520 m wird 3 x 150 m (Strecke bleibt etwa gleich, Satz ein Vielfaches von 50 m).
+    expect(result.plan.sets[0]).toMatchObject({ distance_meters: 150, repetitions: 3 });
     expect(result.plan.sets[0].rest_seconds).toBe(DEFAULT_LIMITS.maxRestSeconds);
   });
 
@@ -271,7 +272,7 @@ describe("sanitizePlan: Rechenfehler und Formalien", () => {
     expect(result.plan.sets[1]).toMatchObject({ repetitions: 2, distance_meters: 50 });
     expect(result.plan.sets.every((s) => s.distance_meters >= 50)).toBe(true);
     expect(result.plan.total_distance_meters).toBe(1500);
-    expect(result.adjustments.join(" ")).toContain("Sätze unter der Mindestlänge zusammengelegt");
+    expect(result.adjustments.join(" ")).toContain("Sätze auf Vielfache von 50 m gebracht");
   });
 
   it("legt ungerade Saetze unter 50 m sinnvoll zusammen (3 x 25 m wird 2 x 50 m, 1 x 25 m wird 1 x 50 m)", () => {
@@ -283,6 +284,16 @@ describe("sanitizePlan: Rechenfehler und Formalien", () => {
     const result = sanitizePlan(short, snapshot());
 
     expect(result.plan.sets.map((s) => [s.repetitions, s.distance_meters])).toEqual([[2, 50], [1, 50], [1, 50]]);
+  });
+
+  it("rechnet 75-m-Saetze auf 100 m um und laesst Vielfache von 50 m unveraendert", () => {
+    const odd = plan({ sets: [set({ repetitions: 4, distance_meters: 75 }), set({ name: "Zug", repetitions: 3, distance_meters: 150 })], total_distance_meters: 750 });
+
+    const result = sanitizePlan(odd, snapshot());
+
+    // 4 x 75 m = 300 m wird 3 x 100 m, die 150er bleiben.
+    expect(result.plan.sets.map((s) => [s.repetitions, s.distance_meters])).toEqual([[3, 100], [3, 150]]);
+    expect(result.plan.sets.every((s) => s.distance_meters % 50 === 0 && s.distance_meters >= 50)).toBe(true);
   });
 
   it("laesst 50-m-Saetze unveraendert und erwaehnt die Zusammenlegung nicht in der Begruendung", () => {

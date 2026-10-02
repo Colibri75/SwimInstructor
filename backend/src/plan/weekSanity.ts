@@ -47,7 +47,7 @@ export interface WeekSanityResult {
 }
 
 const RANK: Record<Intensity, number> = { rest: 0, easy: 1, moderate: 2, hard: 3 };
-const STEP = 25;
+const STEP = 50;
 const MAX_FOCUS_LENGTH = 80;
 const MAX_HARD_DAYS = 2;
 

@@ -537,7 +537,7 @@ Die iPhone-App hat vier Tabs: **Heute**, **Plan**, **Dashboard**, **Verlauf**. G
    und ein Schwerpunkt. Die **Phase** (Aufbau, zielspezifisch, Zuspitzen, Zielwoche, danach Erhalten) rechnet der
    Code aus dem Abstand zum Zieltag. Die Sicherheitsschicht hält ihn ein: erste Woche in den Grenzen von heute,
    danach höchstens etwa 10 % mehr als die Woche davor, Entlastungswochen deutlich darunter, beim Zuspitzen und in
-   der Zielwoche sinkt der Umfang. Jede Einheit hat mindestens 400 m, jeder Satz mindestens 50 m. Er entsteht beim ersten Start, bei einer Zieländerung und wenn er abläuft
+   der Zielwoche sinkt der Umfang. Jede Einheit hat mindestens 400 m, jeder Satz ist ein Vielfaches von 50 m (passt für ein 25-m- und ein 50-m-Becken). Er entsteht beim ersten Start, bei einer Zieländerung und wenn er abläuft
    (höchstens ein Versuch pro Tag), und lässt sich im Tab Plan jederzeit neu berechnen.
 2. **Die nächsten 7 Tage** (`POST /v1/plan/week` ohne `week_start`): **Jeden Tag beim ersten Öffnen der App** plant
    Claude die sieben Tage ab heute neu und stimmt sie ab auf deinen **Zustand** (Erholung), deinen
