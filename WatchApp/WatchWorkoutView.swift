@@ -174,15 +174,25 @@ private struct WorkoutMetricsView: View {
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                 }
+                if let rest = workoutManager.restRemaining {
+                    // Pause nach dem Wechsel zum nächsten Satz.
+                    Label("Pause \(PlanFormatting.elapsed(TimeInterval(rest)))", systemImage: "timer")
+                        .font(.system(size: 20, weight: .semibold, design: .rounded).monospacedDigit())
+                        .foregroundStyle(.green)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                }
                 SectionBlock(compact: true)
                 Spacer(minLength: 0)
-                HStack(spacing: 6) {
-                    Text(PlanFormatting.meters(Int(metrics.distanceMeters)))
-                    Text("\(metrics.laps) Bahnen")
+                if workoutManager.restRemaining == nil {
+                    HStack(spacing: 6) {
+                        Text(PlanFormatting.meters(Int(metrics.distanceMeters)))
+                        Text("\(metrics.laps) Bahnen")
+                    }
+                    .font(.caption2.monospacedDigit())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
                 }
-                .font(.caption2.monospacedDigit())
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
                 ControlStatusLine()
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -301,3 +311,38 @@ struct WatchSummaryView: View {
         }
     }
 }
+
+/// Countdown vor dem Training: 30 Sekunden, um ins Wasser zu kommen. Die letzten drei Sekunden geben
+/// Impulse, am Ende startet die Aufzeichnung von selbst.
+struct WatchCountdownView: View {
+    @EnvironmentObject private var workoutManager: SwimWorkoutManager
+    @EnvironmentObject private var planStore: WatchPlanStore
+    @AppStorage("poolLengthMeters") private var poolLengthMeters = PoolLength.defaultMeters
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Text("Gleich geht's los")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            Text("\(workoutManager.countdownRemaining ?? 0)")
+                .font(.system(size: 72, weight: .bold, design: .rounded).monospacedDigit())
+                .foregroundStyle(.yellow)
+                .minimumScaleFactor(0.6)
+            HStack(spacing: 12) {
+                Button {
+                    workoutManager.cancelCountdown()
+                } label: {
+                    Image(systemName: "xmark")
+                }
+                .tint(.red)
+                Button {
+                    workoutManager.skipCountdown(poolLengthMeters: poolLengthMeters, plan: planStore.response?.plan)
+                } label: {
+                    Image(systemName: "play.fill")
+                }
+                .tint(.green)
+            }
+        }
+    }
+}
+

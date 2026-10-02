@@ -14,6 +14,8 @@ import WatchKit
 final class SwimWorkoutManager: NSObject, ObservableObject {
     enum Phase: Equatable {
         case idle
+        /// Countdown vor dem Training (30 Sekunden), bevor die Aufzeichnung startet.
+        case countdown
         case starting
         case running
         case paused
@@ -23,7 +25,7 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
 
         var isActive: Bool {
             switch self {
-            case .starting, .running, .paused, .saving: return true
+            case .countdown, .starting, .running, .paused, .saving: return true
             case .idle, .finished: return false
             }
         }
@@ -39,6 +41,10 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
     @Published private(set) var progress: PlanProgressState?
     /// Aktuelle Pace (Sekunden pro 100 m) aus den letzten Bahnen; `nil` ohne Messung oder in der Pause am Beckenrand.
     @Published private(set) var currentPace: Double?
+    /// Sekunden bis zum Start im Countdown vor dem Training; `nil` außerhalb.
+    @Published private(set) var countdownRemaining: Int?
+    /// Sekunden Pause nach dem Wechsel zum nächsten Satz; `nil`, wenn keine Pause läuft.
+    @Published private(set) var restRemaining: Int?
     /// Wechsel von Hand (Strecke und Richtung, je einen Satz), in der Reihenfolge, in der sie passierten.
     @Published private(set) var sectionMoves: [SectionMove] = []
     /// Wassersperre an? Wird zweimal pro Sekunde aktualisiert.
@@ -60,9 +66,65 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
     private var pausedByButtonOnScreen = false
     private var tickTimer: Timer?
     private var paceTracker = CurrentPaceTracker()
+    private var restTimer = CountdownTimer(duration: TrainingTimers.restBetweenSetsSeconds)
+    private var countdownTask: Task<Void, Never>?
+
+    /// Startet das Training mit 30 Sekunden Countdown davor: Zeit, ins Wasser zu kommen. Der Countdown
+    /// lässt sich überspringen (`skipCountdown`) oder abbrechen (`cancelCountdown`).
+    func beginCountdown(poolLengthMeters: Int, plan: TrainingPlan? = nil) {
+        guard !phase.isActive else { return }
+        errorMessage = nil
+        let timer: CountdownTimer = {
+            var timer = CountdownTimer(duration: TrainingTimers.startCountdownSeconds)
+            timer.start(at: Date())
+            return timer
+        }()
+        countdownRemaining = timer.remainingSeconds(at: Date())
+        phase = .countdown
+        countdownTask?.cancel()
+        countdownTask = Task { [weak self] in
+            var lastShown = -1
+            while !Task.isCancelled {
+                let remaining = timer.remainingSeconds(at: Date()) ?? 0
+                if remaining != lastShown {
+                    lastShown = remaining
+                    guard let self, self.phase == .countdown else { return }
+                    self.countdownRemaining = remaining
+                    // Die letzten Sekunden geben jede Sekunde einen Impuls, am Ende der Start.
+                    if remaining == 0 {
+                        WKInterfaceDevice.current().play(.start)
+                    } else if remaining <= TrainingTimers.warningSeconds {
+                        WKInterfaceDevice.current().play(.click)
+                    }
+                }
+                if remaining == 0 { break }
+                try? await Task.sleep(nanoseconds: 200_000_000)
+            }
+            guard !Task.isCancelled, let self, self.phase == .countdown else { return }
+            await self.start(poolLengthMeters: poolLengthMeters, plan: plan)
+        }
+    }
+
+    /// Den Countdown überspringen und sofort starten.
+    func skipCountdown(poolLengthMeters: Int, plan: TrainingPlan?) {
+        guard phase == .countdown else { return }
+        countdownTask?.cancel()
+        countdownTask = nil
+        countdownRemaining = nil
+        Task { await start(poolLengthMeters: poolLengthMeters, plan: plan) }
+    }
+
+    func cancelCountdown() {
+        guard phase == .countdown else { return }
+        countdownTask?.cancel()
+        countdownTask = nil
+        countdownRemaining = nil
+        phase = .idle
+    }
 
     func start(poolLengthMeters: Int, plan: TrainingPlan? = nil) async {
-        guard !phase.isActive else { return }
+        guard !phase.isActive || phase == .countdown else { return }
+        countdownRemaining = nil
         let poolLength = PoolLength.clamped(poolLengthMeters)
         self.poolLengthMeters = poolLength
         metrics = .zero
@@ -75,6 +137,7 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         crown = CrownRotationTracker()
         paceTracker = CurrentPaceTracker()
         currentPace = nil
+        cancelRest()
         sectionGesture.reset()
         pausedByButtonOnScreen = false
         lastGestureNote = "noch nichts"
@@ -147,6 +210,7 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         sectionMoves = []
         progress = nil
         currentPace = nil
+        cancelRest()
         sectionGesture.reset()
         errorMessage = nil
     }
@@ -220,7 +284,14 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         progress = new
         // Jeder neue Satz (und Abschnitt) gibt einen Impuls, vorwärts und rückwärts verschieden.
         if let oldKey, oldKey != new.stepKey {
-            WKInterfaceDevice.current().play(new.stepKey > oldKey ? .directionUp : .directionDown)
+            let forward = new.stepKey > oldKey
+            WKInterfaceDevice.current().play(forward ? .directionUp : .directionDown)
+            // Vorwärts in einen neuen Satz: 30 Sekunden Pause. Am Ende des Plans und beim Zurückgehen nicht.
+            if forward, case .inProgress = new {
+                startRest()
+            } else {
+                cancelRest()
+            }
         }
     }
 
@@ -256,8 +327,33 @@ final class SwimWorkoutManager: NSObject, ObservableObject {
         crown.resetIfIdle(at: now)
         publishCrown(isLocked: locked)
         publishPace(atElapsed: builder?.elapsedTime ?? metrics.elapsed)
+        publishRest(now: now)
         if waterLock.update(isRunning: phase == .running, isLocked: locked, now: now) == .lock {
             lockWater()
+        }
+    }
+
+    private func startRest(now: Date = Date()) {
+        restTimer.start(at: now)
+        restRemaining = restTimer.remainingSeconds(at: now)
+    }
+
+    private func cancelRest() {
+        restTimer.cancel()
+        if restRemaining != nil { restRemaining = nil }
+    }
+
+    /// Zählt die Pause herunter und meldet das Ende mit einem Impuls.
+    private func publishRest(now: Date) {
+        guard restTimer.isRunning else { return }
+        let remaining = restTimer.remainingSeconds(at: now)
+        if remaining == 0 {
+            restTimer.cancel()
+            restRemaining = nil
+            WKInterfaceDevice.current().play(.start)
+        } else if remaining != restRemaining {
+            restRemaining = remaining
+            if let remaining, remaining <= TrainingTimers.warningSeconds { WKInterfaceDevice.current().play(.click) }
         }
     }
 

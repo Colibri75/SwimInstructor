@@ -34,7 +34,7 @@ struct WatchTodayView: View {
     private var startSection: some View {
         Section {
             Button {
-                Task { await workoutManager.start(poolLengthMeters: poolLengthMeters, plan: planStore.response?.plan) }
+                workoutManager.beginCountdown(poolLengthMeters: poolLengthMeters, plan: planStore.response?.plan)
             } label: {
                 Label("Schwimmen", systemImage: "figure.pool.swim")
                     .font(.headline)

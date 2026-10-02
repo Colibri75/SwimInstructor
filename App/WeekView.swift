@@ -26,13 +26,14 @@ struct WeekView: View {
     var body: some View {
         NavigationStack {
             List {
-                macroSection
                 summarySection
                 if let plan, !plan.rationale.isEmpty {
                     overviewSection(plan)
                 }
                 daysSection
                 planSection
+                // Der Gesamtplan steht ganz unten: Zuerst zählt, was in den nächsten Tagen ansteht.
+                macroSection
             }
             .navigationTitle("Plan")
             .toolbar {

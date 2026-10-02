@@ -33,6 +33,8 @@ struct WatchRootView: View {
         switch workoutManager.phase {
         case .idle:
             WatchTodayView()
+        case .countdown:
+            WatchCountdownView()
         case .starting, .running, .paused, .saving:
             WatchWorkoutView()
         case let .finished(saved):

@@ -406,6 +406,12 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
   oben. Die Plan-Seite (rechts) zeigt die ganze Übung ausführlich, mit kleinem Knopf "Nächster Satz". Ganz unten steht eine Kontrollzeile: Schloss (gesperrt/entsperrt), die letzte Eingabe ("Krone:
   weiter bei 300 m", "Pause von der Uhr (Tasten)") und beim Drehen ein Balken. Sie ist bewusst da, um
   zu sehen, ob eine Eingabe die App erreicht.
+- **Countdown und Pause:** Nach "Schwimmen" läuft **30 Sekunden Countdown** (große Zahl, die letzten drei Sekunden
+  mit Impuls, am Ende startet die Aufzeichnung von selbst; "Abbrechen" und "Jetzt starten" gehen jederzeit).
+  Bei jedem Wechsel zum **nächsten Satz** (automatisch nach der Strecke, per Crown oder Taste) läuft eine
+  **Pause von 30 Sekunden**: Auf der Startseite steht grün "Pause 0:24", die letzten drei Sekunden und das Ende
+  geben Impulse. Zurückgehen und das Planende starten keine Pause. Die Dauer steht in `TrainingTimers`
+  (`CountdownTimer`).
 - **Equipment:** Claude nennt je Abschnitt die Hilfsmittel (`pull_buoy`, `paddles`, `fins`, `snorkel`,
   `kickboard`, `ankle_band`, höchstens drei, siehe [plan-generation.md](docs/plan-generation.md)).
   Die Karte auf dem iPhone und die Watch zeigen "Mitnehmen: …" über dem Plan und das Equipment je
@@ -458,6 +464,10 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
       Die Werte sind noch da, im Dashboard und auf Heute steht das neue Ziel, der neue Plan nennt 1.500 m. Ein
       unmögliches Ziel (z. B. 10 km in 10 min) zeigt eine rote Meldung
 - [ ] **Watch, Startseite:** Zeit und Puls sind groß, darunter der Plan und die Strecke
+- [ ] **Watch, Countdown:** "Schwimmen" tippen: 30 Sekunden Countdown, Impulse bei 3, 2, 1 und zum Start, dann läuft
+      die Aufzeichnung (Wassersperre an). "Abbrechen" bringt zurück zum Plan
+- [ ] **Watch, Pause:** Beim Wechsel zum nächsten Satz erscheint "Pause 0:30" und zählt herunter, am Ende ein Impuls
+- [ ] **iPhone, Tab Plan:** Reihenfolge: Woche, Tage, Planen, ganz unten der Gesamtplan
 - [ ] **Equipment (iPhone):** Einstellungen, "Mein Equipment": Nur Pull Buoy und Kickboard an, auf Heute nach
       unten ziehen: Der neue Plan nennt nur diese beiden (oder gar keins). Alles aus: Plan ohne Hilfsmittel
       (Server aktualisiert, `deploy.sh`)
