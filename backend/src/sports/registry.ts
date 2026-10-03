@@ -8,7 +8,7 @@ const SPORT_ID_PATTERN = /^[a-z][a-z0-9_]{1,31}$/;
 
 export class SportRegistryError extends Error {
   constructor(
-    readonly problem: "malformed_id" | "duplicate" | "missing_display_name" | "no_measures" | "unknown_measure" | "unknown_target",
+    readonly problem: "malformed_id" | "duplicate" | "missing_display_name" | "no_measures" | "unknown_measure" | "unknown_target" | "invalid_goal_speed",
     readonly sportId: string
   ) {
     super(`Sportart ${sportId}: ${problem}`);
@@ -33,6 +33,10 @@ export class SportRegistry {
       if (sport.targets.some((target) => !(STEP_TARGETS as readonly string[]).includes(target))) {
         throw new SportRegistryError("unknown_target", sport.id);
       }
+      const { minMetersPerSecond: min, maxMetersPerSecond: max } = sport.goalSpeed;
+      if (!(Number.isFinite(min) && Number.isFinite(max) && min > 0 && min < max)) {
+        throw new SportRegistryError("invalid_goal_speed", sport.id);
+      }
       byId.set(sport.id, sport);
     }
     this.byId = byId;
@@ -47,6 +51,14 @@ export class SportRegistry {
     return this.byId.get(id);
   }
 
+  /** Ob ein Ziel (Strecke in Zielzeit) fuer diese Sportart ein plausibles Durchschnittstempo hat. */
+  plausibleGoal(id: string, distanceMeters: number, durationSeconds: number): boolean {
+    const sport = this.byId.get(id);
+    if (sport === undefined || durationSeconds <= 0) return false;
+    const speed = distanceMeters / durationSeconds;
+    return speed >= sport.goalSpeed.minMetersPerSecond && speed <= sport.goalSpeed.maxMetersPerSecond;
+  }
+
   /** Ob ein Schritt mit diesem Mass und Ziel zur Sportart passt (ohne Ziel immer erlaubt). */
   supports(id: string, measure: StepMeasure, target?: StepTarget): boolean {
     const sport = this.byId.get(id);
@@ -54,6 +66,9 @@ export class SportRegistry {
     return sport.measures.includes(measure) && (target === undefined || sport.targets.includes(target));
   }
 }
+
+/** Die Sportart, um die es vor dem Triathlon-Umbau allein ging: Snapshot v1 und alte Plaene sind Schwimmen. */
+export const LEGACY_SPORT_ID = swim.id;
 
 /** Die Sportarten des Servers. Die Tests pruefen, dass sie zu contracts/sports.json passen. */
 export const SPORTS = new SportRegistry([swim, bike, run]);

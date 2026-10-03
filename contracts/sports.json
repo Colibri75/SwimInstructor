@@ -7,19 +7,22 @@
       "id": "swim",
       "display_name": "Schwimmen",
       "measures": ["distance", "duration"],
-      "targets": ["pace_per_100m", "heart_rate_zone", "perceived_effort"]
+      "targets": ["pace_per_100m", "heart_rate_zone", "perceived_effort"],
+      "goal_speed": {"min_meters_per_second": 0.15, "max_meters_per_second": 2.5}
     },
     {
       "id": "bike",
       "display_name": "Radfahren",
       "measures": ["duration", "distance"],
-      "targets": ["power", "heart_rate_zone", "speed", "cadence", "perceived_effort"]
+      "targets": ["power", "heart_rate_zone", "speed", "cadence", "perceived_effort"],
+      "goal_speed": {"min_meters_per_second": 2, "max_meters_per_second": 20}
     },
     {
       "id": "run",
       "display_name": "Laufen",
       "measures": ["distance", "duration"],
-      "targets": ["pace_per_km", "heart_rate_zone", "cadence", "perceived_effort"]
+      "targets": ["pace_per_km", "heart_rate_zone", "cadence", "perceived_effort"],
+      "goal_speed": {"min_meters_per_second": 1, "max_meters_per_second": 7}
     }
   ]
 }

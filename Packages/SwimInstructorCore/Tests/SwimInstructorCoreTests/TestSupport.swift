@@ -122,6 +122,30 @@ final class StubTransport: HTTPTransport, @unchecked Sendable {
     }
 }
 
+/// Antwortet der Reihe nach mit den angegebenen Antworten (die letzte wiederholt sich).
+final class SequenceTransport: HTTPTransport, @unchecked Sendable {
+    private let lock = NSLock()
+    private var _requests: [URLRequest] = []
+    private let responses: [(Int, Data)]
+
+    init(_ responses: [(Int, String)]) {
+        self.responses = responses.map { ($0.0, Data($0.1.utf8)) }
+    }
+
+    var requests: [URLRequest] {
+        lock.lock(); defer { lock.unlock() }
+        return _requests
+    }
+
+    func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        lock.lock()
+        _requests.append(request)
+        let (status, data) = responses[min(_requests.count, responses.count) - 1]
+        lock.unlock()
+        return (data, HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!)
+    }
+}
+
 final class FakeWorkoutRepository: SwimWorkoutRepository {
     var workouts: [SwimWorkout]
     var error: Error?

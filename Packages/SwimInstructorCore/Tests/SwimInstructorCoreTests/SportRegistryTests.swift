@@ -45,6 +45,25 @@ final class SportRegistryTests: XCTestCase {
         }
     }
 
+    func testGoalSpeedMustStartAboveZeroAndBeFinite() {
+        for range: ClosedRange<Double> in [0...1, -1...1, 1...Double.infinity] {
+            XCTAssertThrowsError(try SportRegistry(modules: [StubModule(id: "yoga", goalSpeedRange: range)])) { error in
+                XCTAssertEqual(error as? SportRegistry.Problem, .invalidGoalSpeed("yoga"), "\(range)")
+            }
+        }
+    }
+
+    func testPlausibleGoalUsesTheModulesSpeedWindow() {
+        let sports = SportRegistry.standard
+        XCTAssertTrue(sports.isPlausibleGoal(sport: .swim, distanceMeters: 3800, durationSeconds: 3600))
+        XCTAssertFalse(sports.isPlausibleGoal(sport: .swim, distanceMeters: 3800, durationSeconds: 600))
+        XCTAssertTrue(sports.isPlausibleGoal(sport: .run, distanceMeters: 10_000, durationSeconds: 3000))
+        XCTAssertFalse(sports.isPlausibleGoal(sport: .run, distanceMeters: 10_000, durationSeconds: 600))
+        XCTAssertTrue(sports.isPlausibleGoal(sport: .bike, distanceMeters: 40_000, durationSeconds: 4800))
+        XCTAssertFalse(sports.isPlausibleGoal(sport: .bike, distanceMeters: 40_000, durationSeconds: 0))
+        XCTAssertFalse(sports.isPlausibleGoal(sport: "kayak", distanceMeters: 1000, durationSeconds: 600))
+    }
+
     func testHealthLookupAndReadTypes() throws {
         let sports = SportRegistry.standard
         XCTAssertEqual(sports.module(forActivityType: .swimming)?.id, .swim)
@@ -103,4 +122,5 @@ private struct StubModule: SportModule {
     var targets: Set<StepTarget> = []
     var health = SportHealthMapping(activityTypes: [.yoga], distance: nil)
     var loadFactor = 1.0
+    var goalSpeedRange: ClosedRange<Double> = 0.1...1
 }

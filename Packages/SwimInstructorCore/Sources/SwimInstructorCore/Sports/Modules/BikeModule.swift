@@ -26,4 +26,6 @@ public struct BikeModule: SportModule {
     )
     /// Rad belastet bei gleicher Dauer weniger als Laufen (kein Aufprall, Gewicht getragen).
     public let loadFactor = 0.8
+    /// 7,2 bis 72 km/h.
+    public let goalSpeedRange: ClosedRange<Double> = 2...20
 }

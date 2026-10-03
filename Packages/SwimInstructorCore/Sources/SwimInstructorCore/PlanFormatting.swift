@@ -201,6 +201,14 @@ public enum PlanFormatting {
         return "\(parts[2]).\(parts[1]).\(parts[0])"
     }
 
+    /// Kurzform des Gesamtziels für die Einstellungen: "Triathlon Olympisch, 04.07.2027" oder bei einem eigenen
+    /// Ziel die Disziplinen ("Laufen 10,0 km, 04.07.2027").
+    public static func goalSummary(_ goal: TrainingGoal, registry: SportRegistry = .standard, calendar: Calendar = .current) -> String {
+        let what = GoalTemplate.template(id: goal.template)?.displayName
+            ?? goal.disciplines.map { "\(registry.displayName(for: $0.sport)) \(distance($0.distanceMeters))" }.joined(separator: ", ")
+        return "\(what), \(germanDate(isoDay(goal.targetDate, calendar: calendar)))"
+    }
+
     /// Kalendertag im Format des Servers (`YYYY-MM-DD`).
     public static func isoDay(_ date: Date, calendar: Calendar = .current) -> String {
         let components = calendar.dateComponents([.year, .month, .day], from: date)

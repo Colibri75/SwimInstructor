@@ -114,18 +114,15 @@ public struct PlanAPIClient: PlanProviding {
     }
 
     public func fetchPlan(for snapshot: AthleteStateSnapshot, options: PlanRequestOptions) async throws -> PlanResponse {
-        var request = makeRequest(path: "v1/plan/today", timeout: Self.planTimeout)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try AthleteStateSnapshot.jsonEncoder().encode(PlanRequestBody(
-            snapshot: snapshot,
-            regenerate: options.regenerate ? true : nil,
-            wishes: Self.cleaned(options.wishes),
-            dayPlan: options.dayPlan,
-            equipment: options.equipment
-        ))
-
-        let (data, response) = try await perform(request)
+        let (data, response) = try await postSnapshot(path: "v1/plan/today", snapshot: snapshot) { snapshot in
+            PlanRequestBody(
+                snapshot: snapshot,
+                regenerate: options.regenerate ? true : nil,
+                wishes: Self.cleaned(options.wishes),
+                dayPlan: options.dayPlan,
+                equipment: options.equipment
+            )
+        }
         switch response.statusCode {
         case 200:
             do {
@@ -153,6 +150,33 @@ public struct PlanAPIClient: PlanProviding {
     }
 
     // MARK: - Intern
+
+    /// Schickt eine Plananfrage mit Snapshot. Kennt der Server Snapshot v2 noch nicht (er lehnt mit 400 genau
+    /// `snapshot.schema_version` ab, weil er nach einem App-Update noch nicht neu gestartet wurde), geht dieselbe
+    /// Anfrage einmal mit dem v1-Teil: Der Plan kommt dann wie vor dem Update, nur ohne die anderen Sportarten.
+    func postSnapshot<Body: Encodable>(
+        path: String,
+        snapshot: AthleteStateSnapshot,
+        body: (AthleteStateSnapshot) -> Body
+    ) async throws -> (Data, HTTPURLResponse) {
+        let encoder = AthleteStateSnapshot.jsonEncoder()
+        let (data, response) = try await post(path: path, body: try encoder.encode(body(snapshot)))
+        guard response.statusCode == 400,
+              snapshot.schemaVersion > AthleteStateSnapshot.currentSchemaVersion,
+              let error = try? JSONDecoder().decode(ErrorBody.self, from: data),
+              error.details?.contains(where: { $0.path == "snapshot.schema_version" }) == true else {
+            return (data, response)
+        }
+        return try await post(path: path, body: try encoder.encode(body(snapshot.version1)))
+    }
+
+    private func post(path: String, body: Data) async throws -> (Data, HTTPURLResponse) {
+        var request = makeRequest(path: path, timeout: Self.planTimeout)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body
+        return try await perform(request)
+    }
 
     /// Leerer Wunsch oder nur Leerraum: nichts senden. Länger als erlaubt: kürzen statt vom Server ablehnen lassen.
     static func cleaned(_ wishes: String?) -> String? {
@@ -288,23 +312,20 @@ public protocol WeekPlanProviding: Sendable {
 
 extension PlanAPIClient: WeekPlanProviding {
     public func fetchWeekPlan(_ weekRequest: WeekPlanRequest) async throws -> WeekPlanResponse {
-        var request = makeRequest(path: "v1/plan/week", timeout: Self.planTimeout)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try AthleteStateSnapshot.jsonEncoder().encode(WeekRequestBody(
-            snapshot: weekRequest.snapshot,
-            weekStart: weekRequest.weekStart,
-            fromDate: weekRequest.fromDate,
-            today: weekRequest.today,
-            unavailableDates: weekRequest.unavailableDates,
-            swumThisWeek: weekRequest.swumThisWeek,
-            wishes: Self.cleaned(weekRequest.wishes),
-            equipment: weekRequest.equipment,
-            recentSwim: weekRequest.recentSwim,
-            macroWeeks: weekRequest.macroWeeks.isEmpty ? nil : weekRequest.macroWeeks
-        ))
-
-        let (data, response) = try await perform(request)
+        let (data, response) = try await postSnapshot(path: "v1/plan/week", snapshot: weekRequest.snapshot) { snapshot in
+            WeekRequestBody(
+                snapshot: snapshot,
+                weekStart: weekRequest.weekStart,
+                fromDate: weekRequest.fromDate,
+                today: weekRequest.today,
+                unavailableDates: weekRequest.unavailableDates,
+                swumThisWeek: weekRequest.swumThisWeek,
+                wishes: Self.cleaned(weekRequest.wishes),
+                equipment: weekRequest.equipment,
+                recentSwim: weekRequest.recentSwim,
+                macroWeeks: weekRequest.macroWeeks.isEmpty ? nil : weekRequest.macroWeeks
+            )
+        }
         switch response.statusCode {
         case 200:
             do {
@@ -357,12 +378,9 @@ public protocol MacroPlanProviding: Sendable {
 
 extension PlanAPIClient: MacroPlanProviding {
     public func fetchMacroPlan(_ macroRequest: MacroPlanRequest) async throws -> MacroPlanResponse {
-        var request = makeRequest(path: "v1/plan/macro", timeout: Self.planTimeout)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try AthleteStateSnapshot.jsonEncoder().encode(MacroRequestBody(snapshot: macroRequest.snapshot, today: macroRequest.today))
-
-        let (data, response) = try await perform(request)
+        let (data, response) = try await postSnapshot(path: "v1/plan/macro", snapshot: macroRequest.snapshot) { snapshot in
+            MacroRequestBody(snapshot: snapshot, today: macroRequest.today)
+        }
         switch response.statusCode {
         case 200:
             do {

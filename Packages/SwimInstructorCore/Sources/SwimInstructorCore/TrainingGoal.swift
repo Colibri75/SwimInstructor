@@ -1,0 +1,173 @@
+import Foundation
+
+/// Das Gesamtziel über alle Sportarten: welcher Wettkampf (Disziplinen mit Strecke und optional Zielzeit), wann,
+/// wie viel Zeit fürs Training bleibt und wie das Training auf die Sportarten verteilt sein soll.
+///
+/// Alles ist frei einstellbar; die Vorlagen (`GoalTemplate`) füllen nur vor. Das Ziel geht ohne Freitext zum Server
+/// (Snapshot v2, `training_goal`).
+public struct TrainingGoal: Codable, Equatable, Sendable {
+    /// Eine Disziplin des Wettkampfs, z. B. 1500 m Schwimmen in 30 Minuten.
+    public struct Discipline: Codable, Equatable, Sendable, Identifiable {
+        public var sport: SportID
+        public var distanceMeters: Double
+        /// `nil`: ankommen ohne Zielzeit.
+        public var targetDurationSeconds: TimeInterval?
+
+        public var id: SportID { sport }
+
+        public init(sport: SportID, distanceMeters: Double, targetDurationSeconds: TimeInterval? = nil) {
+            self.sport = sport
+            self.distanceMeters = distanceMeters
+            self.targetDurationSeconds = targetDurationSeconds
+        }
+    }
+
+    /// Anteil einer Sportart am Training in Prozent; alle zusammen ergeben 100.
+    public struct Emphasis: Codable, Equatable, Sendable {
+        public var sport: SportID
+        public var percent: Int
+
+        public init(sport: SportID, percent: Int) {
+            self.sport = sport
+            self.percent = percent
+        }
+    }
+
+    /// Kennung der Vorlage, aus der das Ziel stammt; `nil` bei einem eigenen Ziel.
+    public var template: String?
+    public var disciplines: [Discipline]
+    /// Mittag (Berlin) des Zieltags, siehe `AthleteGoal.targetDate(onDayOf:)`.
+    public var targetDate: Date
+    public var trainingDaysPerWeek: Int
+    public var weeklyHours: Double
+    public var emphasis: [Emphasis]
+
+    public init(
+        template: String? = nil,
+        disciplines: [Discipline],
+        targetDate: Date,
+        trainingDaysPerWeek: Int,
+        weeklyHours: Double,
+        emphasis: [Emphasis]
+    ) {
+        self.template = template
+        self.disciplines = disciplines
+        self.targetDate = targetDate
+        self.trainingDaysPerWeek = trainingDaysPerWeek
+        self.weeklyHours = weeklyHours
+        self.emphasis = emphasis
+    }
+
+    // MARK: - Grenzen
+
+    public static let distanceRange: ClosedRange<Double> = 100...500_000
+    public static let trainingDaysRange: ClosedRange<Int> = 1...7
+    public static let weeklyHoursRange: ClosedRange<Double> = 1...30
+    public static let maximumDisciplines = 8
+
+    /// Der Anteil einer Sportart am Training (0, wenn sie nicht vorkommt).
+    public func percent(for sport: SportID) -> Int {
+        emphasis.first { $0.sport == sport }?.percent ?? 0
+    }
+
+    public func discipline(for sport: SportID) -> Discipline? {
+        disciplines.first { $0.sport == sport }
+    }
+
+    /// Was am Ziel nicht passt, auf Deutsch; `nil`, wenn es gültig ist. Ohne den Zieltag: Ein gespeichertes Ziel
+    /// bleibt gültig, wenn sein Tag vorbei ist (der Plan sagt dann, dass ein neues fällig ist).
+    public func problem(registry: SportRegistry = .standard) -> String? {
+        guard !disciplines.isEmpty else { return "Das Ziel braucht mindestens eine Disziplin." }
+        guard disciplines.count <= Self.maximumDisciplines else { return "Höchstens \(Self.maximumDisciplines) Disziplinen." }
+        guard Set(disciplines.map(\.sport)).count == disciplines.count else { return "Jede Sportart darf nur einmal im Ziel stehen." }
+        for discipline in disciplines {
+            guard let module = registry.module(for: discipline.sport) else { return "Unbekannte Sportart \(discipline.sport)." }
+            guard Self.distanceRange.contains(discipline.distanceMeters) else {
+                return "\(module.displayName): Die Strecke muss zwischen 100 m und 500 km liegen."
+            }
+            if let duration = discipline.targetDurationSeconds,
+               !registry.isPlausibleGoal(sport: discipline.sport, distanceMeters: discipline.distanceMeters, durationSeconds: duration) {
+                return "\(module.displayName): Strecke und Zielzeit ergeben ein unrealistisches Tempo."
+            }
+        }
+        guard Self.trainingDaysRange.contains(trainingDaysPerWeek) else { return "Trainingstage: 1 bis 7 pro Woche." }
+        guard Self.weeklyHoursRange.contains(weeklyHours) else { return "Trainingszeit: 1 bis 30 Stunden pro Woche." }
+        guard !emphasis.isEmpty, Set(emphasis.map(\.sport)).count == emphasis.count else {
+            return "Jede Sportart braucht genau einen Schwerpunkt."
+        }
+        guard emphasis.allSatisfy({ registry.module(for: $0.sport) != nil && (0...100).contains($0.percent) }) else {
+            return "Schwerpunkte gehen von 0 bis 100 % und nur für bekannte Sportarten."
+        }
+        guard emphasis.reduce(0, { $0 + $1.percent }) == 100 else { return "Die Schwerpunkte müssen zusammen 100 % ergeben." }
+        for discipline in disciplines where percent(for: discipline.sport) == 0 {
+            return "\(registry.displayName(for: discipline.sport)) gehört zum Ziel und braucht einen Schwerpunkt über 0 %."
+        }
+        return nil
+    }
+
+    /// Wie `problem(registry:)`, dazu muss der Zieltag nach heute liegen (beim Einstellen eines neuen Ziels).
+    public func problem(now: Date, calendar: Calendar = .current, registry: SportRegistry = .standard) -> String? {
+        if let problem = problem(registry: registry) { return problem }
+        guard calendar.startOfDay(for: targetDate) > calendar.startOfDay(for: now) else {
+            return "Der Zieltag muss in der Zukunft liegen."
+        }
+        return nil
+    }
+
+    // MARK: - Bearbeiten
+
+    /// Setzt den Anteil einer Sportart und verteilt den Rest auf die anderen im Verhältnis ihrer bisherigen Anteile
+    /// (alle gleich, wenn sie bisher zusammen 0 hatten). Die Summe bleibt 100.
+    public func settingEmphasis(_ percent: Int, for sport: SportID) -> TrainingGoal {
+        let value = min(max(percent, 0), 100)
+        var others = emphasis.filter { $0.sport != sport }
+        let remaining = 100 - value
+        let previous = others.reduce(0) { $0 + $1.percent }
+        if !others.isEmpty {
+            var assigned = 0
+            for index in others.indices {
+                let share = previous > 0
+                    ? Double(others[index].percent) / Double(previous)
+                    : 1 / Double(others.count)
+                others[index].percent = Int((Double(remaining) * share).rounded(.down))
+                assigned += others[index].percent
+            }
+            // Rundungsrest an die bisher größte (bei Gleichstand die erste), damit es genau 100 sind.
+            if let largest = others.indices.max(by: { others[$0].percent < others[$1].percent }) {
+                others[largest].percent += remaining - assigned
+            }
+        }
+        var copy = self
+        let ownValue = others.isEmpty ? 100 : value
+        copy.emphasis = (others + [Emphasis(sport: sport, percent: ownValue)])
+            .sorted { lhs, rhs in order(of: lhs.sport) < order(of: rhs.sport) }
+        return copy
+    }
+
+    /// Nimmt eine Sportart als Disziplin auf (mit Strecke) oder heraus. Eine neue Disziplin bekommt einen
+    /// Schwerpunkt, falls sie noch keinen hat.
+    public func settingDiscipline(_ discipline: Discipline?, for sport: SportID) -> TrainingGoal {
+        var copy = self
+        copy.template = nil
+        if let discipline {
+            if let index = copy.disciplines.firstIndex(where: { $0.sport == sport }) {
+                copy.disciplines[index] = discipline
+            } else {
+                copy.disciplines.append(discipline)
+                copy.disciplines.sort { order(of: $0.sport) < order(of: $1.sport) }
+            }
+            if copy.percent(for: sport) == 0 {
+                let share = 100 / (copy.disciplines.count)
+                copy = copy.settingEmphasis(share, for: sport)
+            }
+        } else {
+            copy.disciplines.removeAll { $0.sport == sport }
+        }
+        return copy
+    }
+
+    /// Reihenfolge der Registry, unbekannte Sportarten zuletzt.
+    private func order(of sport: SportID) -> Int {
+        SportRegistry.standard.ids.firstIndex(of: sport) ?? Int.max
+    }
+}

@@ -18,10 +18,8 @@ struct SettingsView: View {
     @State private var isChecking = false
     @State private var ownedEquipment: Set<EquipmentItem> = []
     private let equipmentStore = UserDefaultsOwnedEquipmentStore()
-    @State private var goalMeters = Int(AthleteGoal.default.distanceMeters)
-    @State private var goalMinutes = Int(AthleteGoal.default.targetDurationSeconds / 60)
-    @State private var goalDay = AthleteGoal.default.targetDate
-    private let goalStore = UserDefaultsGoalStore()
+    @State private var trainingGoal = TrainingGoal.default
+    private let trainingGoalStore = UserDefaultsTrainingGoalStore()
 
     init(onSave: @escaping () -> Void = {}) {
         self.onSave = onSave
@@ -57,6 +55,8 @@ struct SettingsView: View {
                 }
 
                 goalSection
+                    // Auch beim Zurückkommen aus dem Ziel-Assistenten neu lesen.
+                    .onAppear { trainingGoal = trainingGoalStore.goal() }
 
                 Section {
                     ForEach(EquipmentItem.allCases) { item in
@@ -98,63 +98,24 @@ struct SettingsView: View {
             .onAppear {
                 urlText = settings.baseURL.absoluteString
                 ownedEquipment = Set(equipmentStore.ownedEquipment().compactMap(EquipmentItem.init(rawValue:)))
-                let goal = goalStore.goal()
-                goalMeters = Int(goal.distanceMeters)
-                goalMinutes = Int((goal.targetDurationSeconds / 60).rounded())
-                goalDay = goal.targetDate
             }
         }
     }
 
     // MARK: - Gesamtziel
 
-    /// Das Ziel, wie es gerade eingestellt ist (noch nicht unbedingt gültig).
-    private var editedGoal: AthleteGoal {
-        AthleteGoal(
-            distanceMeters: Double(goalMeters),
-            targetDurationSeconds: Double(goalMinutes * 60),
-            targetDate: AthleteGoal.targetDate(onDayOf: goalDay)
-        )
-    }
-
     private var goalSection: some View {
         Section {
-            Stepper(value: $goalMeters, in: 100...10_000, step: 100) {
-                LabeledContent("Distanz", value: PlanFormatting.meters(goalMeters))
+            NavigationLink {
+                GoalAssistantView(store: trainingGoalStore)
+            } label: {
+                LabeledContent("Ziel", value: PlanFormatting.goalSummary(trainingGoal))
             }
-            .onChange(of: goalMeters) { _, _ in saveGoal() }
-            Stepper(value: $goalMinutes, in: AthleteGoal.durationMinutesRange) {
-                LabeledContent("Zielzeit", value: "\(goalMinutes) min")
-            }
-            .onChange(of: goalMinutes) { _, _ in saveGoal() }
-            DatePicker("Zieltag", selection: $goalDay, in: Date()..., displayedComponents: .date)
-                .onChange(of: goalDay) { _, _ in saveGoal() }
-            if let problem = editedGoal.problem {
-                Text(problem)
-                    .font(.footnote)
-                    .foregroundStyle(.red)
-            } else {
-                LabeledContent("Zielpace", value: "\(PlanFormatting.pace(editedGoal.targetPaceSecondsPerHundredMeters)) /100 m")
-                    .font(.footnote)
-            }
-            Button("Auf 3,8 km in 60 min bis 04.07.2027 zurücksetzen") {
-                goalStore.resetGoal()
-                let goal = goalStore.goal()
-                goalMeters = Int(goal.distanceMeters)
-                goalMinutes = Int(goal.targetDurationSeconds / 60)
-                goalDay = goal.targetDate
-            }
-            .font(.footnote)
         } header: {
             Text("Mein Ziel")
         } footer: {
-            Text("Der Plan arbeitet auf dieses Ziel hin: Distanz, Zielzeit und Zieltag gehen in jede Plananfrage ein. Es bleibt gespeichert, bis du es änderst. Nach einer Änderung auf Heute nach unten ziehen und im Tab Woche neu planen.")
+            Text("Der Plan arbeitet auf dieses Ziel hin. Es bleibt gespeichert, bis du es änderst.")
         }
-    }
-
-    /// Merkt das Ziel sofort, wenn es gültig ist (unabhängig von "Sichern").
-    private func saveGoal() {
-        goalStore.setGoal(editedGoal)
     }
 
     /// Schaltet ein Hilfsmittel an oder aus und merkt es sofort (unabhängig von "Sichern").

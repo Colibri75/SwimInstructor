@@ -7,10 +7,11 @@ gleichzeitig auf einem Gerät laufen müssen.
 
 | Datei | Inhalt | Wer prüft |
 |---|---|---|
-| `sports.json` | Sportarten, Maße und Ziele der Schritte | Swift (`SportRegistry.standard`) und Backend (`SPORTS`) müssen genau das melden |
-| `wire/snapshot-v1.json` | Zustands-Snapshot, wie die App ihn schickt | App dekodiert und kodiert ihn ohne Verlust, Server nimmt ihn an |
+| `sports.json` | Sportarten, Maße und Ziele der Schritte, plausibles Zieltempo (`goal_speed`) | Swift (`SportRegistry.standard`) und Backend (`SPORTS`) müssen genau das melden |
+| `wire/snapshot-v1.json` | Zustands-Snapshot v1 (nur Schwimmen), wie ältere Apps ihn schicken | App dekodiert und kodiert ihn ohne Verlust, Server nimmt ihn an und baut daraus denselben Prompt wie vor v2 |
+| `wire/snapshot-v2.json` | Zustands-Snapshot v2: v1 plus Gesamtziel aller Sportarten, Werte je Sportart, Gesamtlast | App erzeugt genau diese Felder, Server nimmt ihn an |
 | `wire/plan-*-response.json` | Antworten von `/v1/plan/today`, `/week`, `/macro` | Server-Schemas lassen sie zu, App dekodiert sie |
-| `app-storage/*.json` | Dateien, die die App heute auf dem Gerät speichert (auch ältere Formen) | Jede neue App-Version muss sie weiter lesen |
+| `app-storage/*.json` | Dateien und Einstellungen, die die App auf dem Gerät speichert, auch ältere Formen (`goal-swim-v1.json`: das Schwimmziel vor T2, `training-goal.json`: das Gesamtziel) | Jede neue App-Version muss sie weiter lesen |
 
 Regeln:
 

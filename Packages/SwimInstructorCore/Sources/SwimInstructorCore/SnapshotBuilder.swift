@@ -45,6 +45,8 @@ public struct SnapshotBuilder: SnapshotBuilding {
     private let calculator: AthleteStateCalculator
     /// Wird bei jedem Durchlauf gelesen: Ein in den Einstellungen geändertes Ziel gilt sofort.
     private let goalProvider: () -> AthleteGoal
+    /// Gesetzt: Der Snapshot geht als v2 mit Gesamtziel und allen Sportarten zum Server.
+    private let trainingGoalProvider: (() -> TrainingGoal)?
     private let calendar: Calendar
 
     public init(
@@ -57,6 +59,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.vitalsRepository = vitalsRepository
         self.calculator = AthleteStateCalculator(calendar: calendar)
         self.goalProvider = { goal }
+        self.trainingGoalProvider = nil
         self.calendar = calendar
     }
 
@@ -71,6 +74,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.vitalsRepository = vitalsRepository
         self.calculator = AthleteStateCalculator(calendar: calendar)
         self.goalProvider = goalProvider
+        self.trainingGoalProvider = nil
         self.calendar = calendar
     }
 
@@ -85,6 +89,23 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.vitalsRepository = vitalsRepository
         self.calculator = AthleteStateCalculator(calendar: calendar)
         self.goalProvider = goalProvider
+        self.trainingGoalProvider = nil
+        self.calendar = calendar
+    }
+
+    /// Snapshot v2: liest die Einheiten aller Sportarten und das Gesamtziel (bei jedem Durchlauf neu). Die v1-Felder
+    /// rechnen mit dem Schwimmteil des Ziels (`legacySwimGoal`) genau wie bisher.
+    public init(
+        repository: WorkoutRepository,
+        vitalsRepository: DailyVitalsRepository,
+        trainingGoalProvider: @escaping () -> TrainingGoal,
+        calendar: Calendar = .current
+    ) {
+        self.fetchWorkouts = { try await repository.fetchWorkouts(from: $0) }
+        self.vitalsRepository = vitalsRepository
+        self.calculator = AthleteStateCalculator(calendar: calendar)
+        self.goalProvider = { trainingGoalProvider().legacySwimGoal }
+        self.trainingGoalProvider = trainingGoalProvider
         self.calendar = calendar
     }
 
@@ -106,7 +127,15 @@ public struct SnapshotBuilder: SnapshotBuilding {
             vitalsAvailable = false
         }
 
-        let snapshot = calculator.snapshot(workouts: workouts, vitals: vitals, goal: goalProvider(), now: now)
+        // Einmal lesen, damit v1-Felder und v2-Teil sicher zum selben Ziel gehören.
+        let trainingGoal = trainingGoalProvider?()
+        var snapshot = calculator.snapshot(
+            workouts: workouts, vitals: vitals, goal: trainingGoal?.legacySwimGoal ?? goalProvider(), now: now
+        )
+        if let trainingGoal {
+            snapshot = MultiSportStateCalculator(calendar: calendar)
+                .extend(snapshot, workouts: allWorkouts, goal: trainingGoal, now: now)
+        }
         let cleaned = SwimWorkoutDeduplicator.deduplicate(workouts)
             .filter { $0.startDate <= now }
             .sorted { $0.startDate > $1.startDate }

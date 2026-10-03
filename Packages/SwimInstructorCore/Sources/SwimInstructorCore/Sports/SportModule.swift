@@ -21,6 +21,9 @@ public protocol SportModule: Sendable {
     /// Wie stark eine Minute dieser Sportart belastet, verglichen mit einer Minute Laufen (1,0). Rad belastet
     /// bei gleichem Puls weniger, weil das Körpergewicht getragen wird. Muss größer als 0 sein.
     var loadFactor: Double { get }
+    /// Durchschnittstempo in m/s, das ein Wettkampfziel dieser Sportart haben darf (Strecke durch Zielzeit). Schützt
+    /// vor Tippfehlern wie "10 km in 10 Minuten". Steht auch in `contracts/sports.json`, der Server prüft dasselbe.
+    var goalSpeedRange: ClosedRange<Double> { get }
 }
 
 public extension SportModule {
@@ -42,6 +45,7 @@ public struct SportRegistry: Sendable {
         case invalidLoadFactor(SportID)
         /// Zwei Sportarten beanspruchen dieselbe Workout-Art aus Health; die zweite wird genannt.
         case sharedActivityType(SportID)
+        case invalidGoalSpeed(SportID)
     }
 
     /// In der Reihenfolge der Anmeldung (die App zeigt sie so an).
@@ -59,6 +63,9 @@ public struct SportRegistry: Sendable {
             guard !module.symbolName.isEmpty else { throw Problem.missingSymbol(module.id) }
             guard !module.measures.isEmpty else { throw Problem.noMeasures(module.id) }
             guard module.loadFactor > 0, module.loadFactor.isFinite else { throw Problem.invalidLoadFactor(module.id) }
+            guard module.goalSpeedRange.lowerBound > 0, module.goalSpeedRange.upperBound.isFinite else {
+                throw Problem.invalidGoalSpeed(module.id)
+            }
             for rawValue in module.health.activityTypeRawValues {
                 guard claimedActivityTypes.insert(rawValue).inserted else { throw Problem.sharedActivityType(module.id) }
             }
@@ -85,6 +92,12 @@ public struct SportRegistry: Sendable {
     /// SF-Symbol für die Anzeige, mit neutralem Symbol für unbekannte Kennungen.
     public func symbolName(for id: SportID) -> String {
         module(for: id)?.symbolName ?? "figure.mixed.cardio"
+    }
+
+    /// Ob eine Strecke in dieser Zielzeit für die Sportart ein plausibles Durchschnittstempo ergibt.
+    public func isPlausibleGoal(sport: SportID, distanceMeters: Double, durationSeconds: TimeInterval) -> Bool {
+        guard let module = module(for: sport), durationSeconds > 0 else { return false }
+        return module.goalSpeedRange.contains(distanceMeters / durationSeconds)
     }
 
     /// Die Sportart, zu der ein Health-Workout dieser Art gehört; `nil` für Arten, die keine Sportart kennt.
