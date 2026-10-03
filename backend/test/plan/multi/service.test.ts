@@ -19,7 +19,7 @@ import { dayHash, MultiPlanService, ReviseInput, WeekInputV2 } from "../../../sr
 import { DayPlanStoreV2, MemoryDayPlanStoreV2, StoredDayV2 } from "../../../src/plan/multi/store";
 import { createLogger } from "../../../src/logger";
 import { testConfig } from "../../helpers";
-import { dayPlan, macroPlan, multiSnapshot, session, step, swimStep, TODAY, weekPlan, weekSession } from "./fixtures";
+import { asBlocks, dayPlan, macroPlan, multiSnapshot, session, step, swimStep, TODAY, weekPlan, weekSession } from "./fixtures";
 
 const logger = createLogger(testConfig);
 const GOAL_DAY = "2027-07-04";
@@ -439,7 +439,7 @@ describe("MultiPlanService.planWeek", () => {
 // --- Gesamtplan ---
 
 const WEEKS = macroWeekStarts(TODAY, GOAL_DAY);
-const goodMacro = (): MultiMacroPlanRaw => macroPlan(WEEKS, () => ({ swim: 3000, bike: 90, run: 30 }), (index) => index % 4 === 3);
+const goodMacro = (): MultiMacroPlanRaw => asBlocks(macroPlan(WEEKS, () => ({ swim: 3000, bike: 90, run: 30 }), (index) => index % 4 === 3));
 
 describe("MultiPlanService.planMacro", () => {
   it("erzeugt den Gesamtplan bis zum Zieltag mit Phasen und Leistungstests", async () => {
@@ -462,6 +462,27 @@ describe("MultiPlanService.planMacro", () => {
     expect(user).toContain(`Erstelle den Gesamtplan bis zum Zieltag ${GOAL_DAY}. Heute ist ${TODAY}.`);
   });
 
+  it("rechnet Claudes Abschnitte in die Wochen bis zum Zieltag um", async () => {
+    const block = (weeks: number, swim: [number, number, number | null], deloadLast: boolean) => ({
+      weeks,
+      deload_last: deloadLast,
+      focus: "Grundlage",
+      sports: [{ sport: "swim", start_amount: swim[0], end_amount: swim[1], deload_amount: swim[2], sessions: 2 }]
+    });
+    const blocks = [block(4, [2000, 2400, 1500], true), ...Array.from({ length: 9 }, () => block(4, [2400, 2400, 1600], true))];
+    const { service } = setup({ complete: jest.fn().mockResolvedValue(generated({ rationale: "In Abschnitten.", blocks })) });
+
+    const result = await service.planMacro({ snapshot: multiSnapshot(), today: TODAY });
+
+    expect(result.plan.weeks).toHaveLength(40);
+    expect(result.plan.weeks.slice(0, 4).map((week) => [week.deload, week.sports.find((entry) => entry.sport === "swim")?.amount])).toEqual([
+      [false, 2000],
+      [false, 2200],
+      [false, 2400],
+      [true, 1500]
+    ]);
+  });
+
   it("wirft schema_invalid, wenn Claudes Antwort nicht zum Schema passt", async () => {
     const { service } = setup({ complete: jest.fn().mockResolvedValue(generated({ rationale: "nur Text" })) });
 
@@ -469,7 +490,7 @@ describe("MultiPlanService.planMacro", () => {
   });
 
   it("wirft sanity_blocked bei einem Gesamtplan ohne Wochen", async () => {
-    const { service } = setup({ complete: jest.fn().mockResolvedValue(generated({ ...goodMacro(), weeks: [] })) });
+    const { service } = setup({ complete: jest.fn().mockResolvedValue(generated({ ...goodMacro(), blocks: [] })) });
 
     await expect(service.planMacro({ snapshot: multiSnapshot(), today: TODAY })).rejects.toMatchObject({ name: "PlanUnavailableError", reason: "sanity_blocked" });
   });

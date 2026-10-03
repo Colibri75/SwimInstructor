@@ -103,9 +103,11 @@ export interface CallInfo {
   usage: { inputTokens: number; outputTokens: number };
   seconds: number;
   costUsd: number | null;
+  /** Nur bei einem fehlgeschlagenen Aufruf: die Meldung (etwa "Request timed out."). */
+  error?: string;
 }
 
-/** Misst jeden Aufruf: Modell, Token, Dauer, Kosten. */
+/** Misst jeden Aufruf: Modell, Token, Dauer, Kosten; bei einem Fehler Dauer und Meldung. */
 class MeteredGenerator implements StructuredGenerator {
   readonly calls: CallInfo[] = [];
 
@@ -113,7 +115,14 @@ class MeteredGenerator implements StructuredGenerator {
 
   async complete(system: string, user: string, schema: z.ZodType): Promise<GeneratedPlan> {
     const started = Date.now();
-    const result = await this.inner.complete(system, user, schema);
+    let result: GeneratedPlan;
+    try {
+      result = await this.inner.complete(system, user, schema);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.calls.push({ kind: kindOf(system), model: "-", usage: { inputTokens: 0, outputTokens: 0 }, seconds: (Date.now() - started) / 1000, costUsd: null, error: message });
+      throw error;
+    }
     this.calls.push({
       kind: kindOf(system),
       model: result.model,
@@ -346,7 +355,26 @@ export function formatDayPlanV2(plan: DayResultV2["plan"]): string[] {
 function callLine(calls: readonly CallInfo[], kind: CallKind): string[] {
   const call = calls.find((entry) => entry.kind === kind);
   if (call === undefined) return [];
+  if (call.error !== undefined) return [`Aufruf fehlgeschlagen nach ${call.seconds.toFixed(1)} s: ${call.error}`, ""];
   return [`Modell \`${call.model}\`, ${call.usage.inputTokens} Token ein, ${call.usage.outputTokens} Token aus, ${call.seconds.toFixed(1)} s, ca. ${call.costUsd === null ? "?" : `$${call.costUsd.toFixed(3)}`}`, ""];
+}
+
+/** Eine Zeile je Stufe fuer die Konsole: "ok" oder der Grund, bei einem Fehler von Claude mit Meldung und Dauer. */
+export function stepSummary(report: ScenarioReport): string {
+  const steps: [CallKind, StepReport<unknown> | undefined][] = [
+    ["macro", report.macro],
+    ["week", report.week],
+    ["day", report.day],
+    ["revise", report.revise]
+  ];
+  return steps
+    .filter((entry): entry is [CallKind, StepReport<unknown>] => entry[1] !== undefined)
+    .map(([kind, step]) => {
+      if (step.error === undefined) return "ok";
+      const call = report.calls.find((entry) => entry.kind === kind && entry.error !== undefined);
+      return call === undefined ? step.error : `${step.error} (${call.error}, nach ${call.seconds.toFixed(0)} s)`;
+    })
+    .join(", ");
 }
 
 export function formatScenarioReport(report: ScenarioReport): string {

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { MultiDayPlanRaw, MultiMacroPlanRaw, MultiWeekPlanRaw, StepRaw } from "../../../src/plan/multi/schemas";
+import { MacroWeeksRaw, MultiDayPlanRaw, MultiMacroPlanRaw, MultiWeekPlanRaw, StepRaw } from "../../../src/plan/multi/schemas";
 import { SnapshotSchema, SnapshotV2, SportState } from "../../../src/plan/snapshot";
 
 /**
@@ -139,7 +139,7 @@ export function weekSession(sport: string, amount: number, patch: Partial<MultiW
   return { sport, session_type: "endurance", intensity: "easy", amount, focus: "Grundlage", test_id: null, ...patch };
 }
 
-export function macroPlan(weeks: string[], amounts: (index: number) => Record<string, number>, deload: (index: number) => boolean = () => false): MultiMacroPlanRaw {
+export function macroPlan(weeks: string[], amounts: (index: number) => Record<string, number>, deload: (index: number) => boolean = () => false): MacroWeeksRaw {
   return {
     rationale: "Aufbau bis zum Ziel in 40 Wochen, Höhepunkt vor dem Zuspitzen.",
     weeks: weeks.map((week_start, index) => ({
@@ -147,6 +147,25 @@ export function macroPlan(weeks: string[], amounts: (index: number) => Record<st
       deload: deload(index),
       focus: "Grundlage",
       sports: Object.entries(amounts(index)).map(([sport, amount]) => ({ sport, amount, sessions: 3 }))
+    }))
+  };
+}
+
+/** Derselbe Plan, wie Claude ihn liefert: jede Woche ein eigener Abschnitt, mit genau ihren Umfaengen. */
+export function asBlocks(plan: MacroWeeksRaw): MultiMacroPlanRaw {
+  return {
+    rationale: plan.rationale,
+    blocks: plan.weeks.map((week) => ({
+      weeks: 1,
+      deload_last: week.deload,
+      focus: week.focus,
+      sports: week.sports.map((entry) => ({
+        sport: entry.sport,
+        start_amount: entry.amount,
+        end_amount: entry.amount,
+        deload_amount: week.deload ? entry.amount : null,
+        sessions: entry.sessions
+      }))
     }))
   };
 }

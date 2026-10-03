@@ -9,135 +9,157 @@
     },
     "raw": {
       "rationale": "Der Plan führt in 11 Wochen zum Ziel am 2026-12-13 und verteilt die Zeit nach deinen Schwerpunkten (Laufen 100 %). Jede vierte Woche ist eine Entlastungswoche, danach steigt der Umfang um etwa 8 % pro Woche bis zu deinen 4 Stunden. Vor dem Wettkampf spitzt eine Woche zu.",
-      "weeks": [
+      "blocks": [
         {
-          "week_start": "2026-09-28",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "run",
-              "amount": 115,
+              "start_amount": 115,
+              "end_amount": 115,
+              "deload_amount": null,
               "sessions": 3
             }
           ]
         },
         {
-          "week_start": "2026-10-05",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "run",
-              "amount": 125,
+              "start_amount": 125,
+              "end_amount": 125,
+              "deload_amount": null,
               "sessions": 3
             }
           ]
         },
         {
-          "week_start": "2026-10-12",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "run",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             }
           ]
         },
         {
-          "week_start": "2026-10-19",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "run",
-              "amount": 100,
+              "start_amount": 100,
+              "end_amount": 100,
+              "deload_amount": 100,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2026-10-26",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "run",
-              "amount": 145,
+              "start_amount": 145,
+              "end_amount": 145,
+              "deload_amount": null,
               "sessions": 3
             }
           ]
         },
         {
-          "week_start": "2026-11-02",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "run",
-              "amount": 155,
+              "start_amount": 155,
+              "end_amount": 155,
+              "deload_amount": null,
               "sessions": 3
             }
           ]
         },
         {
-          "week_start": "2026-11-09",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "run",
-              "amount": 170,
+              "start_amount": 170,
+              "end_amount": 170,
+              "deload_amount": null,
               "sessions": 4
             }
           ]
         },
         {
-          "week_start": "2026-11-16",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "run",
-              "amount": 130,
+              "start_amount": 130,
+              "end_amount": 130,
+              "deload_amount": 130,
               "sessions": 3
             }
           ]
         },
         {
-          "week_start": "2026-11-23",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "run",
-              "amount": 180,
+              "start_amount": 180,
+              "end_amount": 180,
+              "deload_amount": null,
               "sessions": 4
             }
           ]
         },
         {
-          "week_start": "2026-11-30",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Zuspitzen, frisch werden",
           "sports": [
             {
               "sport": "run",
-              "amount": 110,
+              "start_amount": 110,
+              "end_amount": 110,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2026-12-07",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfwoche",
           "sports": [
             {
               "sport": "run",
-              "amount": 75,
+              "start_amount": 75,
+              "end_amount": 75,
+              "deload_amount": null,
               "sessions": 2
             }
           ]

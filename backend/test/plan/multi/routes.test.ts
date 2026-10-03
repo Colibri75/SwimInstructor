@@ -19,7 +19,7 @@ import { buildApp, TEST_TOKEN, testConfig } from "../../helpers";
 import { goodPlan, snapshot as snapshotV1 } from "../fixtures";
 import { goodMacro as goodMacroV1, MACRO_TODAY } from "../macroFixtures";
 import { goodWeek as goodWeekV1, WEEK_START } from "../weekFixtures";
-import { dayPlan, macroPlan, multiSnapshot, session, swimStep, TODAY, weekPlan, weekSession } from "./fixtures";
+import { asBlocks, dayPlan, macroPlan, multiSnapshot, session, swimStep, TODAY, weekPlan, weekSession } from "./fixtures";
 
 const auth = { Authorization: `Bearer ${TEST_TOKEN}` };
 const NOW_ISO = "2026-09-30T10:00:00.000Z";
@@ -31,7 +31,7 @@ const timeout = () => jest.fn().mockRejectedValue(new PlanGenerationError("timeo
 
 const goodDay = () => dayPlan([session("swim", { steps: [swimStep(300, { name: "Einschwimmen" }), swimStep(400), swimStep(150, { name: "Ausschwimmen" })] })]);
 const goodWeek = () => weekPlan([[weekSession("swim", 800)], [weekSession("bike", 45)], [], [weekSession("run", 20)], [weekSession("swim", 1500)], [], [weekSession("bike", 60)]]);
-const goodMacro = () => macroPlan(WEEKS, () => ({ swim: 3000, bike: 90, run: 30 }), (index) => index % 4 === 3);
+const goodMacro = () => asBlocks(macroPlan(WEEKS, () => ({ swim: 3000, bike: 90, run: 30 }), (index) => index % 4 === 3));
 const revision = (changes: string[]) => ({ ...goodMacro(), changes });
 
 const currentWeeks: MacroWeekTargetV2[] = WEEKS.slice(0, 2).map((week_start) => ({

@@ -40,18 +40,19 @@ else
 fi
 read -r -p "Weiter mit Enter, Abbruch mit Strg+C. " _ >&2
 
+# --init: Strg+C beendet den Container wirklich (sonst laeuft er im Hintergrund weiter und fragt Claude weiter).
 # Der Quellordner wird nur lesend eingehaengt und im Container kopiert, damit im Repo nichts
 # (node_modules) zurueckbleibt. Die Installationsausgabe geht auf stderr, damit auf stdout nur das
 # Markdown landet. Nur der Ordner der Aufzeichnungen ist beschreibbar; die Dateien gehoeren danach dir.
 if [ "$MODE" = "multisport" ]; then
   RECORDED="$BACKEND_DIR/scenarios/multisport/recorded"
-  docker run --rm --env-file "$ENV_FILE" -e EVAL_RECORD=1 -e EVAL_RECORD_DIR=/recorded -e EVAL_ONLY \
+  docker run --rm --init --env-file "$ENV_FILE" -e EVAL_RECORD=1 -e EVAL_RECORD_DIR=/recorded -e EVAL_ONLY \
     -e HOST_IDS="$(id -u):$(id -g)" -v "$BACKEND_DIR":/src:ro -v "$RECORDED":/recorded node:22-alpine \
     sh -c 'cp -r /src /app && cd /app && npm ci --silent >&2 && npx tsx scripts/eval-multisport.ts; status=$?; chown -R "$HOST_IDS" /recorded; exit $status' \
     > "$OUT"
   echo "Fertig: $OUT. Neue Aufzeichnungen in $RECORDED, bitte committen." >&2
 else
-  docker run --rm --env-file "$ENV_FILE" -v "$BACKEND_DIR":/src:ro node:22-alpine \
+  docker run --rm --init --env-file "$ENV_FILE" -v "$BACKEND_DIR":/src:ro node:22-alpine \
     sh -c 'cp -r /src /app && cd /app && npm ci --silent >&2 && npx tsx scripts/eval-scenarios.ts' \
     > "$OUT"
   echo "Fertig: $OUT" >&2

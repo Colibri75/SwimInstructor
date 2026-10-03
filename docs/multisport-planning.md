@@ -70,7 +70,11 @@ Ziel, mindestens ein Ruhetag, insgesamt höchstens die Wochenstunden. Je Sportar
 Zahl der Einheiten. Was nicht passt, wird gekürzt, leichter oder gestrichen; jede Korrektur steht in `adjustments`
 und als Hinweis in der Begründung.
 
-**Gesamtplan:** Die Phase setzt der Code (Aufbau, zielspezifisch in den 8 Wochen vor dem Zuspitzen, Zuspitzen,
+**Gesamtplan:** Claude liefert ihn in Abschnitten von einer bis sechs Wochen: je Sportart den Umfang der ersten und
+der letzten Belastungswoche (dazwischen gleichmäßig), die Einheiten je Woche und, wenn die letzte Woche entlastet, deren
+Umfang. Der Server rechnet die Abschnitte in Wochen um und prüft dann jede Woche. Woche für Woche wäre die Antwort bei
+40 Wochen und drei Sportarten zu lang für das Zeitlimit von 85 s (erster echter Lauf am 03.10.2026: Zeitüberschreitung).
+Die Phase setzt der Code (Aufbau, zielspezifisch in den 8 Wochen vor dem Zuspitzen, Zuspitzen,
 Zielwoche, nach dem Ziel erhalten). Je Sportart steigt der Umfang höchstens um 10 % über die letzte Woche ohne
 Entlastung; spätestens nach drei Belastungswochen kommt eine Entlastungswoche mit höchstens 70 %. Zuspitzen: bei
 Wettkämpfen ab vier Stunden zwei Wochen (75 % und 55 % des Höhepunkts), sonst eine (60 %). Die Zielwoche hat höchstens
@@ -129,7 +133,8 @@ scripts/eval-in-docker.sh multisport                      # auf dem Server, nimm
 Die Aufzeichnungen liegen in `backend/scenarios/multisport/recorded/`. Bis zum ersten echten Lauf sind sie
 synthetisch (von Hand nach Regeln gebaut, Modell `synthetisch`); sie zeigen den Ablauf und die Sicherheitsschicht,
 nicht Claudes Qualität. `test/plan/multi/scenarios.test.ts` spielt sie in der CI ab. Ein Lauf mit Claude kostet für
-alle sieben Szenarien 23 Anfragen.
+alle sieben Szenarien 23 Anfragen. Nur ein Szenario, in dem jede Stufe klappt, ersetzt seine Aufzeichnung; schlägt ein
+Aufruf fehl, zeigt die Konsole die Meldung und die Dauer.
 
 ## Eine Sportart dazunehmen
 

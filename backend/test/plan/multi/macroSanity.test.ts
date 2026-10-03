@@ -1,7 +1,7 @@
 import { macroWeekStarts } from "../../../src/plan/macro";
-import { MacroContextV2, macroSportLimits, sanitizeMacroV2 } from "../../../src/plan/multi/macroSanity";
-import { MultiMacroPlanRaw } from "../../../src/plan/multi/schemas";
-import { macroPlan, multiSnapshot, TODAY } from "./fixtures";
+import { expandMacroBlocks, MacroContextV2, macroSportLimits, sanitizeMacroV2 } from "../../../src/plan/multi/macroSanity";
+import { MacroBlockRaw, MacroWeeksRaw } from "../../../src/plan/multi/schemas";
+import { asBlocks, macroPlan, multiSnapshot, TODAY } from "./fixtures";
 
 const GOAL_DAY = "2027-07-04";
 const ALL_WEEKS = macroWeekStarts(TODAY, GOAL_DAY);
@@ -45,7 +45,7 @@ describe("sanitizeMacroV2", () => {
     ["mit viel zu vielen Wochen", macroPlan(Array.from({ length: 17 }, () => ALL_WEEKS[0]), flat(1000, 60, 20)), "zu viele Wochen (17)"],
     ["mit unendlichen Zahlen", macroPlan(ALL_WEEKS.slice(0, 1), flat(NaN, 60, 20)), "Zahlenwert in einer Woche ungültig"]
   ])("blockt einen Plan %s", (_name, raw, reason) => {
-    expect(sanitizeMacroV2(raw as MultiMacroPlanRaw, multiSnapshot(), context()).blocked).toBe(reason);
+    expect(sanitizeMacroV2(raw as MacroWeeksRaw, multiSnapshot(), context()).blocked).toBe(reason);
   });
 
   it("blockt zu viele Sportarten in einer Woche", () => {
@@ -202,5 +202,57 @@ describe("sanitizeMacroV2", () => {
     const result = sanitizeMacroV2(macroPlan(ALL_WEEKS.slice(0, 1), flat(5000, 100, 30)), multiSnapshot(), context(ALL_WEEKS.slice(0, 1)));
 
     expect(result.plan.rationale).toContain("an 1 Stelle angepasst");
+  });
+});
+
+describe("expandMacroBlocks", () => {
+  const block = (weeks: number, deloadLast: boolean, swim: [number, number, number | null], patch: Partial<MacroBlockRaw> = {}): MacroBlockRaw => ({
+    weeks,
+    deload_last: deloadLast,
+    focus: "Grundlage",
+    sports: [{ sport: "swim", start_amount: swim[0], end_amount: swim[1], deload_amount: swim[2], sessions: 3 }],
+    ...patch
+  });
+  const swim = (weeks: { sports: { amount: number }[] }[]) => weeks.map((week) => week.sports[0].amount);
+
+  it("steigt im Abschnitt gleichmaessig und haengt die Entlastungswoche an", () => {
+    const weeks = expandMacroBlocks([block(4, true, [3000, 3600, 2200], { focus: "Aufbau" }), block(2, false, [3400, 3400, null])], ALL_WEEKS);
+
+    expect(weeks.map((week) => week.week_start)).toEqual(ALL_WEEKS.slice(0, 6));
+    expect(swim(weeks)).toEqual([3000, 3300, 3600, 2200, 3400, 3400]);
+    expect(weeks.map((week) => week.deload)).toEqual([false, false, false, true, false, false]);
+    expect(weeks[0]).toMatchObject({ focus: "Aufbau", sports: [{ sport: "swim", sessions: 3 }] });
+  });
+
+  it("nimmt ohne Umfang der Entlastungswoche 65 % der letzten Woche davor", () => {
+    expect(swim(expandMacroBlocks([block(2, true, [3000, 3000, null])], ALL_WEEKS))).toEqual([3000, 1950]);
+  });
+
+  it("macht aus einem Abschnitt mit einer Woche und Entlastung eine Entlastungswoche", () => {
+    const weeks = expandMacroBlocks([block(1, true, [3000, 3000, 2000])], ALL_WEEKS);
+
+    expect(weeks).toEqual([{ week_start: ALL_WEEKS[0], deload: true, focus: "Grundlage", sports: [{ sport: "swim", amount: 2000, sessions: 3 }] }]);
+  });
+
+  it("zaehlt einen Abschnitt ohne gueltige Wochenzahl als eine Woche", () => {
+    expect(expandMacroBlocks([block(0, false, [1000, 1000, null]), block(Number.NaN, false, [1200, 1200, null])], ALL_WEEKS)).toHaveLength(2);
+  });
+
+  it("gibt Wochen ueber den Plan hinaus fortlaufende Montage und hoert beim Doppelten plus eins auf", () => {
+    const weeks = expandMacroBlocks([block(10, false, [1000, 1000, null])], ALL_WEEKS.slice(0, 3));
+
+    expect(weeks.map((week) => week.week_start)).toEqual([...ALL_WEEKS.slice(0, 3), ...ALL_WEEKS.slice(3, 7)]);
+  });
+
+  it("ergibt mit je einer Woche pro Abschnitt genau den Wochenplan", () => {
+    const raw = macroPlan(ALL_WEEKS.slice(0, 8), (index) => ({ swim: 3000 + index * 100, bike: 90, run: 30 }), (index) => index === 3);
+
+    expect(expandMacroBlocks(asBlocks(raw).blocks, ALL_WEEKS.slice(0, 8))).toEqual(raw.weeks);
+  });
+
+  it("wird von der Sicherheitsschicht als zu lang erkannt, wenn die Abschnitte weit ueber den Plan hinausgehen", () => {
+    const weeks = expandMacroBlocks([block(20, false, [1000, 1000, null])], ALL_WEEKS.slice(0, 3));
+
+    expect(sanitizeMacroV2({ rationale: "Zu lang.", weeks }, multiSnapshot(), context(ALL_WEEKS.slice(0, 3))).blocked).toBe("zu viele Wochen (7)");
   });
 });

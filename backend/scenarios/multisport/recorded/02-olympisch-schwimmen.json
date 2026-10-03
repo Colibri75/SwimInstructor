@@ -9,883 +9,1123 @@
     },
     "raw": {
       "rationale": "Der Plan führt in 40 Wochen zum Ziel am 2027-07-04 und verteilt die Zeit nach deinen Schwerpunkten (Schwimmen 50 %, Radfahren 30 %, Laufen 20 %). Jede vierte Woche ist eine Entlastungswoche, danach steigt der Umfang um etwa 8 % pro Woche bis zu deinen 7.5 Stunden. Vor dem Wettkampf spitzt eine Woche zu.",
-      "weeks": [
+      "blocks": [
         {
-          "week_start": "2026-09-28",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 3350,
+              "start_amount": 3350,
+              "end_amount": 3350,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 85,
+              "start_amount": 85,
+              "end_amount": 85,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 30,
+              "start_amount": 30,
+              "end_amount": 30,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-10-05",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 3600,
+              "start_amount": 3600,
+              "end_amount": 3600,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 30,
+              "start_amount": 30,
+              "end_amount": 30,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-10-12",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 3900,
+              "start_amount": 3900,
+              "end_amount": 3900,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 100,
+              "start_amount": 100,
+              "end_amount": 100,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 35,
+              "start_amount": 35,
+              "end_amount": 35,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-10-19",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 2950,
+              "start_amount": 2950,
+              "end_amount": 2950,
+              "deload_amount": 2950,
               "sessions": 1
             },
             {
               "sport": "bike",
-              "amount": 75,
+              "start_amount": 75,
+              "end_amount": 75,
+              "deload_amount": 75,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 25,
+              "start_amount": 25,
+              "end_amount": 25,
+              "deload_amount": 25,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-10-26",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 4200,
+              "start_amount": 4200,
+              "end_amount": 4200,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 105,
+              "start_amount": 105,
+              "end_amount": 105,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 40,
+              "start_amount": 40,
+              "end_amount": 40,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-11-02",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 4550,
+              "start_amount": 4550,
+              "end_amount": 4550,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 115,
+              "start_amount": 115,
+              "end_amount": 115,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 40,
+              "start_amount": 40,
+              "end_amount": 40,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-11-09",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 4900,
+              "start_amount": 4900,
+              "end_amount": 4900,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 125,
+              "start_amount": 125,
+              "end_amount": 125,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 45,
+              "start_amount": 45,
+              "end_amount": 45,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-11-16",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 3700,
+              "start_amount": 3700,
+              "end_amount": 3700,
+              "deload_amount": 3700,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 95,
+              "start_amount": 95,
+              "end_amount": 95,
+              "deload_amount": 95,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 35,
+              "start_amount": 35,
+              "end_amount": 35,
+              "deload_amount": 35,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-11-23",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 5300,
+              "start_amount": 5300,
+              "end_amount": 5300,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 50,
+              "start_amount": 50,
+              "end_amount": 50,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-11-30",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 5750,
+              "start_amount": 5750,
+              "end_amount": 5750,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 50,
+              "start_amount": 50,
+              "end_amount": 50,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-12-07",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 6200,
+              "start_amount": 6200,
+              "end_amount": 6200,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 55,
+              "start_amount": 55,
+              "end_amount": 55,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-12-14",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 4700,
+              "start_amount": 4700,
+              "end_amount": 4700,
+              "deload_amount": 4700,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 95,
+              "start_amount": 95,
+              "end_amount": 95,
+              "deload_amount": 95,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 40,
+              "start_amount": 40,
+              "end_amount": 40,
+              "deload_amount": 40,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-12-21",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 6700,
+              "start_amount": 6700,
+              "end_amount": 6700,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 60,
+              "start_amount": 60,
+              "end_amount": 60,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-12-28",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 7250,
+              "start_amount": 7250,
+              "end_amount": 7250,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 65,
+              "start_amount": 65,
+              "end_amount": 65,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2027-01-04",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 7800,
+              "start_amount": 7800,
+              "end_amount": 7800,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 70,
+              "start_amount": 70,
+              "end_amount": 70,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-01-11",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 5900,
+              "start_amount": 5900,
+              "end_amount": 5900,
+              "deload_amount": 5900,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "amount": 95,
+              "start_amount": 95,
+              "end_amount": 95,
+              "deload_amount": 95,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 55,
+              "start_amount": 55,
+              "end_amount": 55,
+              "deload_amount": 55,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2027-01-18",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 8450,
+              "start_amount": 8450,
+              "end_amount": 8450,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 75,
+              "start_amount": 75,
+              "end_amount": 75,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-01-25",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 9100,
+              "start_amount": 9100,
+              "end_amount": 9100,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 80,
+              "start_amount": 80,
+              "end_amount": 80,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-02-01",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 9850,
+              "start_amount": 9850,
+              "end_amount": 9850,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-02-08",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 7450,
+              "start_amount": 7450,
+              "end_amount": 7450,
+              "deload_amount": 7450,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 95,
+              "start_amount": 95,
+              "end_amount": 95,
+              "deload_amount": 95,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 65,
+              "start_amount": 65,
+              "end_amount": 65,
+              "deload_amount": 65,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2027-02-15",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 10650,
+              "start_amount": 10650,
+              "end_amount": 10650,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-02-22",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 11250,
+              "start_amount": 11250,
+              "end_amount": 11250,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-03-01",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 11250,
+              "start_amount": 11250,
+              "end_amount": 11250,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-03-08",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 7850,
+              "start_amount": 7850,
+              "end_amount": 7850,
+              "deload_amount": 7850,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 95,
+              "start_amount": 95,
+              "end_amount": 95,
+              "deload_amount": 95,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 65,
+              "start_amount": 65,
+              "end_amount": 65,
+              "deload_amount": 65,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2027-03-15",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 11250,
+              "start_amount": 11250,
+              "end_amount": 11250,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-03-22",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 11250,
+              "start_amount": 11250,
+              "end_amount": 11250,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-03-29",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 11250,
+              "start_amount": 11250,
+              "end_amount": 11250,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-04-05",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 7850,
+              "start_amount": 7850,
+              "end_amount": 7850,
+              "deload_amount": 7850,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 95,
+              "start_amount": 95,
+              "end_amount": 95,
+              "deload_amount": 95,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 65,
+              "start_amount": 65,
+              "end_amount": 65,
+              "deload_amount": 65,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2027-04-12",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 11250,
+              "start_amount": 11250,
+              "end_amount": 11250,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-04-19",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 11250,
+              "start_amount": 11250,
+              "end_amount": 11250,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-04-26",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "swim",
-              "amount": 11250,
+              "start_amount": 11250,
+              "end_amount": 11250,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-05-03",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 7850,
+              "start_amount": 7850,
+              "end_amount": 7850,
+              "deload_amount": 7850,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 95,
+              "start_amount": 95,
+              "end_amount": 95,
+              "deload_amount": 95,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 65,
+              "start_amount": 65,
+              "end_amount": 65,
+              "deload_amount": 65,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2027-05-10",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "swim",
-              "amount": 11250,
+              "start_amount": 11250,
+              "end_amount": 11250,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-05-17",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "swim",
-              "amount": 11250,
+              "start_amount": 11250,
+              "end_amount": 11250,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-05-24",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "swim",
-              "amount": 11250,
+              "start_amount": 11250,
+              "end_amount": 11250,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-05-31",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 7850,
+              "start_amount": 7850,
+              "end_amount": 7850,
+              "deload_amount": 7850,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 95,
+              "start_amount": 95,
+              "end_amount": 95,
+              "deload_amount": 95,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 65,
+              "start_amount": 65,
+              "end_amount": 65,
+              "deload_amount": 65,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2027-06-07",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "swim",
-              "amount": 11250,
+              "start_amount": 11250,
+              "end_amount": 11250,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-06-14",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "swim",
-              "amount": 11250,
+              "start_amount": 11250,
+              "end_amount": 11250,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-06-21",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Zuspitzen, frisch werden",
           "sports": [
             {
               "sport": "swim",
-              "amount": 6750,
+              "start_amount": 6750,
+              "end_amount": 6750,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "amount": 80,
+              "start_amount": 80,
+              "end_amount": 80,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 55,
+              "start_amount": 55,
+              "end_amount": 55,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2027-06-28",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfwoche",
           "sports": [
             {
               "sport": "swim",
-              "amount": 4500,
+              "start_amount": 4500,
+              "end_amount": 4500,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 55,
+              "start_amount": 55,
+              "end_amount": 55,
+              "deload_amount": null,
               "sessions": 1
             },
             {
               "sport": "run",
-              "amount": 35,
+              "start_amount": 35,
+              "end_amount": 35,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
@@ -1064,883 +1304,1123 @@
         "Schwimmen dafür um etwa 15 % weniger",
         "Entlastungswochen und Tests bleiben"
       ],
-      "weeks": [
+      "blocks": [
         {
-          "week_start": "2026-09-28",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 2850,
+              "start_amount": 2850,
+              "end_amount": 2850,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 85,
+              "start_amount": 85,
+              "end_amount": 85,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 40,
+              "start_amount": 40,
+              "end_amount": 40,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-10-05",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 3050,
+              "start_amount": 3050,
+              "end_amount": 3050,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 40,
+              "start_amount": 40,
+              "end_amount": 40,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-10-12",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 3300,
+              "start_amount": 3300,
+              "end_amount": 3300,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 100,
+              "start_amount": 100,
+              "end_amount": 100,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 45,
+              "start_amount": 45,
+              "end_amount": 45,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-10-19",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 2300,
+              "start_amount": 2300,
+              "end_amount": 2300,
+              "deload_amount": 2300,
               "sessions": 1
             },
             {
               "sport": "bike",
-              "amount": 70,
+              "start_amount": 70,
+              "end_amount": 70,
+              "deload_amount": 70,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 25,
+              "start_amount": 25,
+              "end_amount": 25,
+              "deload_amount": 25,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-10-26",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 3550,
+              "start_amount": 3550,
+              "end_amount": 3550,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 105,
+              "start_amount": 105,
+              "end_amount": 105,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 50,
+              "start_amount": 50,
+              "end_amount": 50,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-11-02",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 3850,
+              "start_amount": 3850,
+              "end_amount": 3850,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 115,
+              "start_amount": 115,
+              "end_amount": 115,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 50,
+              "start_amount": 50,
+              "end_amount": 50,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-11-09",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 4150,
+              "start_amount": 4150,
+              "end_amount": 4150,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 125,
+              "start_amount": 125,
+              "end_amount": 125,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 55,
+              "start_amount": 55,
+              "end_amount": 55,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-11-16",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 2900,
+              "start_amount": 2900,
+              "end_amount": 2900,
+              "deload_amount": 2900,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 85,
+              "start_amount": 85,
+              "end_amount": 85,
+              "deload_amount": 85,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 40,
+              "start_amount": 40,
+              "end_amount": 40,
+              "deload_amount": 40,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-11-23",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 4500,
+              "start_amount": 4500,
+              "end_amount": 4500,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 65,
+              "start_amount": 65,
+              "end_amount": 65,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-11-30",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 4900,
+              "start_amount": 4900,
+              "end_amount": 4900,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 65,
+              "start_amount": 65,
+              "end_amount": 65,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-12-07",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 5250,
+              "start_amount": 5250,
+              "end_amount": 5250,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 70,
+              "start_amount": 70,
+              "end_amount": 70,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-12-14",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 3650,
+              "start_amount": 3650,
+              "end_amount": 3650,
+              "deload_amount": 3650,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": 90,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 45,
+              "start_amount": 45,
+              "end_amount": 45,
+              "deload_amount": 45,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-12-21",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 5700,
+              "start_amount": 5700,
+              "end_amount": 5700,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 75,
+              "start_amount": 75,
+              "end_amount": 75,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2026-12-28",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 6150,
+              "start_amount": 6150,
+              "end_amount": 6150,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 80,
+              "start_amount": 80,
+              "end_amount": 80,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2027-01-04",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 6650,
+              "start_amount": 6650,
+              "end_amount": 6650,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-01-11",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 4650,
+              "start_amount": 4650,
+              "end_amount": 4650,
+              "deload_amount": 4650,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": 90,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 55,
+              "start_amount": 55,
+              "end_amount": 55,
+              "deload_amount": 55,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2027-01-18",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 7200,
+              "start_amount": 7200,
+              "end_amount": 7200,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 95,
+              "start_amount": 95,
+              "end_amount": 95,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-01-25",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 7750,
+              "start_amount": 7750,
+              "end_amount": 7750,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 100,
+              "start_amount": 100,
+              "end_amount": 100,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-02-01",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 8350,
+              "start_amount": 8350,
+              "end_amount": 8350,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 105,
+              "start_amount": 105,
+              "end_amount": 105,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-02-08",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 5800,
+              "start_amount": 5800,
+              "end_amount": 5800,
+              "deload_amount": 5800,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": 90,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 70,
+              "start_amount": 70,
+              "end_amount": 70,
+              "deload_amount": 70,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2027-02-15",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 9050,
+              "start_amount": 9050,
+              "end_amount": 9050,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 115,
+              "start_amount": 115,
+              "end_amount": 115,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-02-22",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 9550,
+              "start_amount": 9550,
+              "end_amount": 9550,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 115,
+              "start_amount": 115,
+              "end_amount": 115,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-03-01",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 9550,
+              "start_amount": 9550,
+              "end_amount": 9550,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 115,
+              "start_amount": 115,
+              "end_amount": 115,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-03-08",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 6650,
+              "start_amount": 6650,
+              "end_amount": 6650,
+              "deload_amount": 6650,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": 90,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 75,
+              "start_amount": 75,
+              "end_amount": 75,
+              "deload_amount": 75,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2027-03-15",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 9550,
+              "start_amount": 9550,
+              "end_amount": 9550,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 115,
+              "start_amount": 115,
+              "end_amount": 115,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-03-22",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 9550,
+              "start_amount": 9550,
+              "end_amount": 9550,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 115,
+              "start_amount": 115,
+              "end_amount": 115,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-03-29",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 9550,
+              "start_amount": 9550,
+              "end_amount": 9550,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 115,
+              "start_amount": 115,
+              "end_amount": 115,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-04-05",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 6650,
+              "start_amount": 6650,
+              "end_amount": 6650,
+              "deload_amount": 6650,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": 90,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 75,
+              "start_amount": 75,
+              "end_amount": 75,
+              "deload_amount": 75,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2027-04-12",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 9550,
+              "start_amount": 9550,
+              "end_amount": 9550,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 115,
+              "start_amount": 115,
+              "end_amount": 115,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-04-19",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Grundlage aufbauen",
           "sports": [
             {
               "sport": "swim",
-              "amount": 9550,
+              "start_amount": 9550,
+              "end_amount": 9550,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 115,
+              "start_amount": 115,
+              "end_amount": 115,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-04-26",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "swim",
-              "amount": 9550,
+              "start_amount": 9550,
+              "end_amount": 9550,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 115,
+              "start_amount": 115,
+              "end_amount": 115,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-05-03",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 6650,
+              "start_amount": 6650,
+              "end_amount": 6650,
+              "deload_amount": 6650,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": 90,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 75,
+              "start_amount": 75,
+              "end_amount": 75,
+              "deload_amount": 75,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2027-05-10",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "swim",
-              "amount": 9550,
+              "start_amount": 9550,
+              "end_amount": 9550,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 115,
+              "start_amount": 115,
+              "end_amount": 115,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-05-17",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "swim",
-              "amount": 9550,
+              "start_amount": 9550,
+              "end_amount": 9550,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 115,
+              "start_amount": 115,
+              "end_amount": 115,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-05-24",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "swim",
-              "amount": 9550,
+              "start_amount": 9550,
+              "end_amount": 9550,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 115,
+              "start_amount": 115,
+              "end_amount": 115,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-05-31",
-          "deload": true,
+          "weeks": 1,
+          "deload_last": true,
           "focus": "Entlastung",
           "sports": [
             {
               "sport": "swim",
-              "amount": 6650,
+              "start_amount": 6650,
+              "end_amount": 6650,
+              "deload_amount": 6650,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 90,
+              "start_amount": 90,
+              "end_amount": 90,
+              "deload_amount": 90,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 75,
+              "start_amount": 75,
+              "end_amount": 75,
+              "deload_amount": 75,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2027-06-07",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "swim",
-              "amount": 9550,
+              "start_amount": 9550,
+              "end_amount": 9550,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 115,
+              "start_amount": 115,
+              "end_amount": 115,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-06-14",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfnah",
           "sports": [
             {
               "sport": "swim",
-              "amount": 9550,
+              "start_amount": 9550,
+              "end_amount": 9550,
+              "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "amount": 135,
+              "start_amount": 135,
+              "end_amount": 135,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "run",
-              "amount": 115,
+              "start_amount": 115,
+              "end_amount": 115,
+              "deload_amount": null,
               "sessions": 2
             }
           ]
         },
         {
-          "week_start": "2027-06-21",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Zuspitzen, frisch werden",
           "sports": [
             {
               "sport": "swim",
-              "amount": 6750,
+              "start_amount": 6750,
+              "end_amount": 6750,
+              "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "amount": 80,
+              "start_amount": 80,
+              "end_amount": 80,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "run",
-              "amount": 50,
+              "start_amount": 50,
+              "end_amount": 50,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
         },
         {
-          "week_start": "2027-06-28",
-          "deload": false,
+          "weeks": 1,
+          "deload_last": false,
           "focus": "Wettkampfwoche",
           "sports": [
             {
               "sport": "swim",
-              "amount": 4500,
+              "start_amount": 4500,
+              "end_amount": 4500,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "amount": 55,
+              "start_amount": 55,
+              "end_amount": 55,
+              "deload_amount": null,
               "sessions": 1
             },
             {
               "sport": "run",
-              "amount": 35,
+              "start_amount": 35,
+              "end_amount": 35,
+              "deload_amount": null,
               "sessions": 1
             }
           ]
