@@ -1,3 +1,4 @@
+import { PerformanceMetricDefinition, PerformanceTestDefinition } from "./performance";
 import { StepMeasure, StepTarget } from "./vocabulary";
 
 /**
@@ -19,4 +20,10 @@ export interface SportDefinition {
    * `SportModule.goalSpeedRange`, beide pruefen contracts/sports.json.
    */
   readonly goalSpeed: { readonly minMetersPerSecond: number; readonly maxMetersPerSecond: number };
+  /** Wie stark eine Minute dieser Sportart belastet, verglichen mit einer Minute Laufen (1,0). Gegenstueck: `SportModule.loadFactor`. */
+  readonly loadFactor: number;
+  /** Leistungswerte dieser Sportart; die fuer alle Sportarten stehen in `ATHLETE_METRICS`. */
+  readonly performanceMetrics: readonly PerformanceMetricDefinition[];
+  /** Leistungstests; jeder ermittelt Werte aus `performanceMetrics`. */
+  readonly performanceTests: readonly PerformanceTestDefinition[];
 }

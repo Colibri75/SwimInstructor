@@ -65,6 +65,51 @@ describe("Snapshot v2: Eingabepruefung", () => {
   });
 });
 
+describe("Snapshot v2 mit Leistungsprofil", () => {
+  const withProfile = (): any => JSON.parse(readFileSync(path.join(__dirname, "../../../contracts/wire/snapshot-v2-profile.json"), "utf8"));
+
+  it("nimmt den Vertrags-Snapshot mit Profil an, ohne Profil bleibt er gueltig", () => {
+    expect(issues(withProfile())).toEqual([]);
+    expect(issues(v2())).toEqual([]);
+  });
+
+  it("lehnt Werte ab, die die Sportart nicht kennt oder die unplausibel sind", () => {
+    const snapshot = withProfile();
+    snapshot.performance.athlete[0].value = 250;
+    snapshot.performance.athlete.push({ ...snapshot.performance.athlete[1] });
+    snapshot.performance.sports[0].values[0].metric = "threshold_pace_per_km";
+    snapshot.performance.sports[2].values.push({ metric: "max_heart_rate", value: 188, source: "estimated", measured_at: "2026-09-30T12:00:00Z" });
+    expect(issues(snapshot)).toEqual([
+      "performance.athlete.0.value: unplausibler Leistungswert",
+      "performance.athlete.2.metric: Leistungswert doppelt",
+      "performance.sports.0.values.0.metric: unbekannter Leistungswert",
+      "performance.sports.2.values.2.metric: unbekannter Leistungswert"
+    ]);
+  });
+
+  it("lehnt Zonen fuer fremde Ziele, unbekannte Grundwerte und doppelte Sportarten ab", () => {
+    const snapshot = withProfile();
+    snapshot.performance.sports[1].zones[0].target = "pace_per_100m";
+    snapshot.performance.sports[2].zones[0].basis = "css_pace_per_100m";
+    snapshot.performance.sports.push({ ...snapshot.performance.sports[0] });
+    expect(issues(snapshot)).toEqual([
+      "performance.sports.1.zones.0.target: Ziel passt nicht zur Sportart",
+      "performance.sports.2.zones.0.basis: unbekannter Grundwert",
+      "performance.sports.3.sport: Sportart doppelt"
+    ]);
+  });
+
+  it("lehnt unbekannte Herkunft und Unsinn in Zonen ab", () => {
+    const snapshot = withProfile();
+    snapshot.performance.athlete[0].source = "guessed";
+    snapshot.performance.sports[0].zones[0].zones[0].zone = 0;
+    expect(issues(snapshot).map((issue) => issue.split(":")[0])).toEqual([
+      "performance.athlete.0.source",
+      "performance.sports.0.zones.0.zones.0.zone"
+    ]);
+  });
+});
+
 describe("v2-Sicht auf einen v1-Snapshot", () => {
   it("das Gesamtziel ist das Schwimmziel mit 100 % Schwerpunkt", () => {
     const goal = trainingGoalOf(v1());

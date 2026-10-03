@@ -1,6 +1,7 @@
 import { bike } from "./modules/bike";
 import { run } from "./modules/run";
 import { swim } from "./modules/swim";
+import { ATHLETE_METRICS, PerformanceMetricDefinition } from "./performance";
 import { SportDefinition } from "./types";
 import { STEP_MEASURES, STEP_TARGETS, StepMeasure, StepTarget } from "./vocabulary";
 
@@ -8,7 +9,17 @@ const SPORT_ID_PATTERN = /^[a-z][a-z0-9_]{1,31}$/;
 
 export class SportRegistryError extends Error {
   constructor(
-    readonly problem: "malformed_id" | "duplicate" | "missing_display_name" | "no_measures" | "unknown_measure" | "unknown_target" | "invalid_goal_speed",
+    readonly problem:
+      | "malformed_id"
+      | "duplicate"
+      | "missing_display_name"
+      | "no_measures"
+      | "unknown_measure"
+      | "unknown_target"
+      | "invalid_goal_speed"
+      | "invalid_load_factor"
+      | "invalid_performance_metric"
+      | "invalid_performance_test",
     readonly sportId: string
   ) {
     super(`Sportart ${sportId}: ${problem}`);
@@ -37,6 +48,8 @@ export class SportRegistry {
       if (!(Number.isFinite(min) && Number.isFinite(max) && min > 0 && min < max)) {
         throw new SportRegistryError("invalid_goal_speed", sport.id);
       }
+      if (!(Number.isFinite(sport.loadFactor) && sport.loadFactor > 0)) throw new SportRegistryError("invalid_load_factor", sport.id);
+      validatePerformance(sport);
       byId.set(sport.id, sport);
     }
     this.byId = byId;
@@ -59,11 +72,49 @@ export class SportRegistry {
     return speed >= sport.goalSpeed.minMetersPerSecond && speed <= sport.goalSpeed.maxMetersPerSecond;
   }
 
+  /** Was ein Leistungswert bedeutet: `sportId` undefined fuer die Werte aller Sportarten. `undefined`, wenn unbekannt. */
+  metric(sportId: string | undefined, metricId: string): PerformanceMetricDefinition | undefined {
+    const metrics = sportId === undefined ? ATHLETE_METRICS : this.byId.get(sportId)?.performanceMetrics;
+    return metrics?.find((metric) => metric.id === metricId);
+  }
+
   /** Ob ein Schritt mit diesem Mass und Ziel zur Sportart passt (ohne Ziel immer erlaubt). */
   supports(id: string, measure: StepMeasure, target?: StepTarget): boolean {
     const sport = this.byId.get(id);
     if (sport === undefined) return false;
     return sport.measures.includes(measure) && (target === undefined || sport.targets.includes(target));
+  }
+}
+
+/** Leistungswerte und Tests: gueltige Kennungen, nichts doppelt, Bereiche ueber 0, Tests messen eigene Werte. */
+function validatePerformance(sport: SportDefinition): void {
+  const athlete = new Set(ATHLETE_METRICS.map((metric) => metric.id));
+  const metrics = new Set<string>();
+  for (const metric of sport.performanceMetrics) {
+    const valid =
+      SPORT_ID_PATTERN.test(metric.id) &&
+      !athlete.has(metric.id) &&
+      !metrics.has(metric.id) &&
+      metric.displayName.trim() !== "" &&
+      metric.unit !== "" &&
+      Number.isFinite(metric.max) &&
+      metric.min > 0 &&
+      metric.min < metric.max;
+    if (!valid) throw new SportRegistryError("invalid_performance_metric", sport.id);
+    metrics.add(metric.id);
+  }
+  const tests = new Set<string>();
+  for (const test of sport.performanceTests) {
+    const valid =
+      SPORT_ID_PATTERN.test(test.id) &&
+      !tests.has(test.id) &&
+      test.displayName.trim() !== "" &&
+      test.produces.length > 0 &&
+      test.produces.every((metric) => metrics.has(metric)) &&
+      Number.isInteger(test.durationMinutes) &&
+      test.durationMinutes > 0;
+    if (!valid) throw new SportRegistryError("invalid_performance_test", sport.id);
+    tests.add(test.id);
   }
 }
 

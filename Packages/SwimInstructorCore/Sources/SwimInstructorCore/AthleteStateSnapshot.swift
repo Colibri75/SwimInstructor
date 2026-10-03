@@ -50,6 +50,8 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
     public let sports: [SportStateSummary]?
     /// Ab v2: Belastung über alle Sportarten.
     public let totalLoad: TotalLoadSummary?
+    /// Ab v2, optional: Leistungswerte und Zonen (T2b). Fehlt, solange die App kein Profil rechnet.
+    public let performance: PerformanceSummary?
 
     public init(
         schemaVersion: Int = AthleteStateSnapshot.currentSchemaVersion,
@@ -62,7 +64,8 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
         flags: [AthleteFlag],
         trainingGoal: TrainingGoalSummary? = nil,
         sports: [SportStateSummary]? = nil,
-        totalLoad: TotalLoadSummary? = nil
+        totalLoad: TotalLoadSummary? = nil,
+        performance: PerformanceSummary? = nil
     ) {
         self.schemaVersion = schemaVersion
         self.generatedAt = generatedAt
@@ -75,6 +78,7 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
         self.trainingGoal = trainingGoal
         self.sports = sports
         self.totalLoad = totalLoad
+        self.performance = performance
     }
 
     /// Derselbe Snapshot als v2, mit Gesamtziel, Werten je Sportart und Gesamtlast.
@@ -86,7 +90,16 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
         AthleteStateSnapshot(
             schemaVersion: Self.multiSportSchemaVersion,
             generatedAt: generatedAt, goal: goal, volume: volume, pace: pace, load: load, recovery: recovery, flags: flags,
-            trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad
+            trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad, performance: performance
+        )
+    }
+
+    /// Derselbe Snapshot mit Leistungswerten und Zonen (nur für v2 gedacht; `version1` lässt sie wieder weg).
+    public func withPerformance(_ performance: PerformanceSummary) -> AthleteStateSnapshot {
+        AthleteStateSnapshot(
+            schemaVersion: schemaVersion,
+            generatedAt: generatedAt, goal: goal, volume: volume, pace: pace, load: load, recovery: recovery, flags: flags,
+            trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad, performance: performance
         )
     }
 
@@ -280,6 +293,48 @@ public extension AthleteStateSnapshot {
             self.loadLastSevenDays = loadLastSevenDays
             self.averageWeeklyLoad = averageWeeklyLoad
             self.daysSinceLastSession = daysSinceLastSession
+        }
+    }
+
+    /// Leistungswerte mit Herkunft und die Zonen daraus: die für alle Sportarten (Maximal-, Ruhepuls) und je Sportart.
+    /// Die Zonen rechnet die App (`ZoneScheme`), der Server übernimmt sie.
+    struct PerformanceSummary: Codable, Equatable, Sendable {
+        public struct Value: Codable, Equatable, Sendable {
+            public let metric: PerformanceMetric
+            public let value: Double
+            public let source: PerformanceOrigin
+            public let measuredAt: Date
+
+            public init(metric: PerformanceMetric, value: Double, source: PerformanceOrigin, measuredAt: Date) {
+                self.metric = metric
+                self.value = value
+                self.source = source
+                self.measuredAt = measuredAt
+            }
+
+            public init(_ value: PerformanceValue) {
+                self.init(metric: value.metric, value: value.value, source: value.source, measuredAt: value.measuredAt)
+            }
+        }
+
+        public struct Sport: Codable, Equatable, Sendable {
+            public let sport: SportID
+            public let values: [Value]
+            public let zones: [TrainingZones]
+
+            public init(sport: SportID, values: [Value], zones: [TrainingZones]) {
+                self.sport = sport
+                self.values = values
+                self.zones = zones
+            }
+        }
+
+        public let athlete: [Value]
+        public let sports: [Sport]
+
+        public init(athlete: [Value], sports: [Sport]) {
+            self.athlete = athlete
+            self.sports = sports
         }
     }
 

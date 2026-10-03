@@ -679,6 +679,33 @@ Schritt bleibt sie fürs Schwimmen voll nutzbar.
       und neu starten: Ziel und Schwerpunkte sind noch da. Auf Heute nach unten ziehen: Der Plan erwähnt Rad und
       Laufen als Belastung.
 
+### T2b – Leistungsprofil und Zonen
+
+- **Leistungsprofil (`PerformanceProfile`):** Maximal- und Ruhepuls für alle Sportarten, dazu je Sportart ihre
+  Werte: CSS-Pace beim Schwimmen, Schwellenpuls und FTP beim Rad, Schwellenpuls und -tempo beim Laufen. Jeder Wert
+  hat eine Herkunft (Test, eigene Eingabe, aus Health geschätzt, Faustformel) und ein Datum; bestätigte Werte
+  behalten einen Verlauf. Bestätigtes geht vor Geschätztem, Geschätztes vor Faustformel. Ein höherer gemessener
+  Maximalpuls löst den alten ab.
+- **Startwerte ohne Test:** Maximalpuls aus dem höchsten Puls der letzten sechs Monate (sonst 208 − 0,7 × Alter),
+  Ruhepuls aus den letzten Tagen, CSS aus der schnellsten Schwimmeinheit, Schwellenpuls als Anteil des Maximalpulses,
+  Schwellentempo aus Puls und Tempo der Läufe (Details in [`docs/AthleteStateSnapshot.md`](docs/AthleteStateSnapshot.md)).
+  Für die Faustformel liest die App einmalig das Geburtsdatum aus Health.
+- **Zonen je Modul (`ZoneScheme`):** Puls nach Friel, Rad-Leistung nach Coggan, Pace als Anteil der
+  Schwellengeschwindigkeit, Schwimm-Puls aus dem Maximalpuls. Die App rechnet sie und schickt sie mit Herkunft im
+  Snapshot v2 mit (`performance`, optional); der Server prüft die Werte gegen dieselben Grenzen.
+- **Leistungstests je Modul:** CSS-Test 400/200 m und 1000-m-Test (Schwimmen), 30-Minuten-Test (Rad und Laufen),
+  lockerer Einstiegstest (Laufen). Hier steht erst, was ein Test ermittelt; eingeplant werden sie ab T3, auf der Watch
+  laufen sie ab T5, das Ergebnis bestätigst du ab T4.
+- Mit Ruhe- und Maximalpuls rechnet die Last jetzt nach TRIMP statt nach Minuten.
+
+### T2b – Definition of Done
+
+- [x] Zonen und Schätzungen von Hand nachgerechnet (`TrainingZonesTests`, `PerformanceEstimatorTests`)
+- [x] Die Test-Sportart Rudern hat ein eigenes Profil mit eigenem Wert, eigenem Test und vier Zonen
+- [x] Ein Snapshot ohne Profil bleibt gültig; App und Server prüfen `contracts/wire/snapshot-v2-profile.json`, und
+      die App rechnet aus derselben Lage genau dieses Profil
+- [ ] **Für dich:** nichts Neues zu prüfen. Beim nächsten Start fragt Health einmal nach dem Geburtsdatum.
+
 ## Projektstruktur
 
 ```

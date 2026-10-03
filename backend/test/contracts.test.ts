@@ -12,6 +12,7 @@ import { SnapshotSchema } from "../src/plan/snapshot";
 import { MemoryPlanStore } from "../src/plan/store";
 import { weekRoutes } from "../src/plan/weekRoutes";
 import { WeekPlanService } from "../src/plan/weekService";
+import { ATHLETE_METRICS } from "../src/sports/performance";
 import { SPORTS } from "../src/sports/registry";
 import { STEP_MEASURES, STEP_TARGETS } from "../src/sports/vocabulary";
 import { buildApp, TEST_TOKEN, testConfig } from "./helpers";
@@ -68,9 +69,28 @@ describe("contracts/sports.json", () => {
         minMetersPerSecond: sport.goal_speed.min_meters_per_second,
         maxMetersPerSecond: sport.goal_speed.max_meters_per_second
       });
+      expect(definition?.loadFactor).toBe(sport.load_factor);
+      expect(definition?.performanceMetrics).toEqual(sport.performance_metrics.map(metricOf));
+      expect(definition?.performanceTests).toEqual(
+        sport.performance_tests.map((test: any) => ({
+          id: test.id,
+          displayName: test.display_name,
+          produces: test.produces,
+          maximalEffort: test.maximal_effort,
+          durationMinutes: test.duration_minutes
+        }))
+      );
     }
   });
+
+  it("nennt dieselben Leistungswerte fuer alle Sportarten wie der Server", () => {
+    expect([...ATHLETE_METRICS]).toEqual(sports.athlete_metrics.map(metricOf));
+  });
 });
+
+function metricOf(metric: any) {
+  return { id: metric.id, displayName: metric.display_name, unit: metric.unit, min: metric.min, max: metric.max };
+}
 
 describe("contracts/wire", () => {
   const snapshot = contract("wire/snapshot-v1.json");
@@ -81,8 +101,8 @@ describe("contracts/wire", () => {
     expect(sorted(keyPaths(parsed.data))).toEqual(sorted(keyPaths(snapshot)));
   });
 
-  it("nimmt den Snapshot v2 der App vollstaendig an (kein Feld wird verworfen)", () => {
-    const v2 = contract("wire/snapshot-v2.json");
+  it.each(["wire/snapshot-v2.json", "wire/snapshot-v2-profile.json"])("nimmt %s der App vollstaendig an (kein Feld wird verworfen)", (file) => {
+    const v2 = contract(file);
     const parsed = SnapshotSchema.safeParse(v2);
     expect(parsed.success).toBe(true);
     expect(sorted(keyPaths(parsed.data))).toEqual(sorted(keyPaths(v2)));

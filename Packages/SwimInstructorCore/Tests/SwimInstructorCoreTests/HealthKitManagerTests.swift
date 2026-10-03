@@ -13,6 +13,8 @@ final class HealthKitManagerTests: XCTestCase {
         XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .distanceSwimming)!))
         XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .swimmingStrokeCount)!))
         XCTAssertTrue(types.contains(HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!))
+        // Maximalpuls nach Faustformel (Leistungsprofil).
+        XCTAssertTrue(types.contains(HKObjectType.characteristicType(forIdentifier: .dateOfBirth)!))
     }
 
     func testReadTypesIncludeEverySportModule() {

@@ -131,6 +131,61 @@ final class SnapshotBuilderTests: XCTestCase {
         XCTAssertEqual(reading.snapshot.goal.distanceMeters, 1500)
     }
 
+    // MARK: - Leistungsprofil (T2b)
+
+    private func profileBuilder(
+        performance: FakePerformanceRepository?, workouts: [Workout], vitals: [DailyVitals] = [], profile: PerformanceProfile = .empty
+    ) -> SnapshotBuilder {
+        let goal = GoalTemplate.template(id: "triathlon_olympic")!
+            .goal(targetDate: AthleteGoal.default.targetDate, trainingDaysPerWeek: 5, weeklyHours: 7)
+        return SnapshotBuilder(
+            repository: FakeAllSportsRepository(workouts: workouts),
+            vitalsRepository: FakeVitalsRepository(vitals: vitals),
+            trainingGoalProvider: { goal },
+            performanceRepository: performance,
+            profileProvider: { profile },
+            calendar: TestFixtures.utc
+        )
+    }
+
+    func testPerformanceProfileGoesIntoTheSnapshotAndLoadUsesHeartRate() async throws {
+        let ride = TestFixtures.workout(.bike, daysAgo: 2, minutes: 60, meters: 30_000, heartRate: 150)
+        let repository = FakePerformanceRepository(maximumHeartRate: 190, age: 40)
+        let profile = PerformanceProfile(values: [TestFixtures.performance(.criticalSwimPace, 105, .tested, sport: .swim, daysAgo: 5)])
+        let vitals = [DailyVitals(date: TestFixtures.date(daysAgo: 0, hour: 0), restingHeartRate: 50)]
+
+        let reading = try await profileBuilder(performance: repository, workouts: [ride], vitals: vitals, profile: profile)
+            .build(now: TestFixtures.now)
+
+        XCTAssertEqual(repository.requestedStart, TestFixtures.utc.date(byAdding: .day, value: -182, to: TestFixtures.now))
+        let performance = try XCTUnwrap(reading.snapshot.performance)
+        XCTAssertEqual(performance.athlete.map(\.value), [190, 50])
+        XCTAssertEqual(performance.sports.map(\.sport), [.swim, .bike, .run])
+        XCTAssertEqual(performance.sports.first?.values.first?.source, .tested)
+        XCTAssertEqual(performance.sports[1].values.first?.value, 162, "85 % von 190")
+        // TRIMP mit Ruhepuls 50 und Maximalpuls 190: 60 min, Reserve 100/140, mal 0,8 für Rad.
+        let reserve = 100.0 / 140
+        let trimp = 60 * reserve * 0.64 * exp(1.92 * reserve) * 0.8
+        XCTAssertEqual(reading.snapshot.sports?[1].loadLastSevenDays ?? 0, (trimp * 10).rounded() / 10, accuracy: 0.001)
+        XCTAssertEqual(reading.snapshot.version1.performance, nil)
+    }
+
+    func testWithoutHeartRateFromHealthTheProfileUsesConfirmedValuesAndFormulas() async throws {
+        let repository = FakePerformanceRepository(age: 40, error: TestError(message: "kein Puls"))
+        let reading = try await profileBuilder(performance: repository, workouts: []).build(now: TestFixtures.now)
+
+        let performance = try XCTUnwrap(reading.snapshot.performance)
+        XCTAssertEqual(performance.athlete, [.init(metric: .maxHeartRate, value: 180, source: .formula, measuredAt: TestFixtures.now)])
+        XCTAssertEqual(performance.sports.map(\.sport), [.swim, .bike, .run], "Pulszonen aus der Faustformel")
+    }
+
+    func testWithoutPerformanceRepositoryTheSnapshotHasNoProfile() async throws {
+        let ride = TestFixtures.workout(.bike, daysAgo: 2, minutes: 60, meters: 30_000, heartRate: 150)
+        let reading = try await profileBuilder(performance: nil, workouts: [ride]).build(now: TestFixtures.now)
+        XCTAssertNil(reading.snapshot.performance)
+        XCTAssertEqual(reading.snapshot.sports?[1].loadLastSevenDays, 48, "ohne Puls: Minuten mal 0,8")
+    }
+
     func testLegacyReadingListsSwimWorkoutsAsAllWorkouts() async throws {
         let swim = TestFixtures.workout(daysAgo: 1, meters: 1500)
         let builder = SnapshotBuilder(

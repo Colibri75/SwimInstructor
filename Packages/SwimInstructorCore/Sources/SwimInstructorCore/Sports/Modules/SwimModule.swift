@@ -5,6 +5,11 @@ public extension SportID {
     static let swim: SportID = "swim"
 }
 
+public extension PerformanceMetric {
+    /// Critical Swim Speed als Pace in Sekunden pro 100 m: das Tempo, das sich etwa 30 Minuten halten lässt.
+    static let criticalSwimPace: PerformanceMetric = "css_pace_per_100m"
+}
+
 /// Schwimmen, im Becken und im Freiwasser.
 public struct SwimModule: SportModule {
     public init() {}
@@ -22,6 +27,33 @@ public struct SwimModule: SportModule {
     public let loadFactor = 1.0
     /// 10:00 bis 0:40 pro 100 m.
     public let goalSpeedRange: ClosedRange<Double> = 0.15...2.5
+
+    public let performanceMetrics: [PerformanceMetricDefinition] = [
+        PerformanceMetricDefinition(metric: .criticalSwimPace, displayName: "CSS-Pace", unit: "s/100m", plausibleRange: 50...300)
+    ]
+    public let performanceTests: [PerformanceTest] = [
+        // CSS = 200 m / (Zeit 400 m − Zeit 200 m), beide voll mit Pause dazwischen.
+        PerformanceTest(id: "css_400_200", displayName: "CSS-Test 400/200 m", produces: [.criticalSwimPace], maximalEffort: true, durationMinutes: 10),
+        // Zeit durch 10 ergibt die Pace pro 100 m, etwas langsamer als die CSS.
+        PerformanceTest(id: "time_trial_1000m", displayName: "1000-m-Test", produces: [.criticalSwimPace], maximalEffort: true, durationMinutes: 20)
+    ]
+    public let zoneSchemes: [ZoneScheme] = [
+        // Anteile der CSS-Geschwindigkeit; Zone 4 liegt um die CSS.
+        ZoneScheme(target: .pacePerHundredMeters, basis: .criticalSwimPace, scale: .inversePace, bounds: [0.80, 0.88, 0.95, 1.02]),
+        // Ohne eigenen Schwellenpuls im Wasser: Anteile des Maximalpulses (im Wasser liegt der Puls niedriger).
+        ZoneScheme(target: .heartRateZone, basis: .maxHeartRate, bounds: [0.60, 0.70, 0.80, 0.90])
+    ]
+
+    /// CSS ohne Test: die schnellste Durchschnittspace einer Einheit ab 400 m. Pausen am Beckenrand zählen mit,
+    /// die Schätzung ist also eher zu langsam als zu schnell.
+    public func estimatePerformance(_ context: PerformanceEstimationContext) -> [PerformanceEstimate] {
+        let paces = context.workouts.compactMap { workout -> Double? in
+            guard let meters = workout.distanceMeters, meters >= 400, workout.duration > 0 else { return nil }
+            return workout.duration / meters * 100
+        }
+        guard let fastest = paces.min() else { return [] }
+        return [PerformanceEstimate(metric: .criticalSwimPace, value: fastest.rounded(), source: .estimated)]
+    }
 }
 
 // MARK: - Brücke zum bisherigen Schwimm-Modell

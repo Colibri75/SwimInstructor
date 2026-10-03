@@ -207,3 +207,47 @@ struct TestError: Error, LocalizedError {
     let message: String
     var errorDescription: String? { message }
 }
+
+/// Höchster Puls und Alter wie aus Health.
+final class FakePerformanceRepository: PerformanceDataRepository {
+    var maximumHeartRate: Double?
+    var ageInYears: Int?
+    var error: Error?
+    private(set) var requestedStart: Date?
+
+    init(maximumHeartRate: Double? = nil, age: Int? = nil, error: Error? = nil) {
+        self.maximumHeartRate = maximumHeartRate
+        self.ageInYears = age
+        self.error = error
+    }
+
+    func fetchMaximumHeartRate(from startDate: Date) async throws -> Double? {
+        requestedStart = startDate
+        if let error { throw error }
+        return maximumHeartRate
+    }
+
+    func age(now: Date) -> Int? {
+        ageInYears
+    }
+}
+
+extension TestFixtures {
+    /// Eine Einheit irgendeiner Sportart, um 8 Uhr.
+    static func workout(
+        _ sport: SportID, daysAgo: Int, minutes: Double, meters: Double? = nil, heartRate: Double? = nil
+    ) -> Workout {
+        let start = date(daysAgo: daysAgo, hour: 8)
+        return Workout(
+            id: UUID(), sport: sport, startDate: start, endDate: start.addingTimeInterval(minutes * 60),
+            duration: minutes * 60, distanceMeters: meters, averageHeartRate: heartRate
+        )
+    }
+
+    /// Ein Leistungswert mit Datum `daysAgo` Tage vor `now`.
+    static func performance(
+        _ metric: PerformanceMetric, _ value: Double, _ source: PerformanceOrigin, sport: SportID? = nil, daysAgo: Int = 0
+    ) -> PerformanceValue {
+        PerformanceValue(sport: sport, metric: metric, value: value, source: source, measuredAt: date(daysAgo: daysAgo, hour: 12))
+    }
+}

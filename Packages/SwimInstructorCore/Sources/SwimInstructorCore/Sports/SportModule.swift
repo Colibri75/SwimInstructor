@@ -24,6 +24,19 @@ public protocol SportModule: Sendable {
     /// Durchschnittstempo in m/s, das ein Wettkampfziel dieser Sportart haben darf (Strecke durch Zielzeit). Schützt
     /// vor Tippfehlern wie "10 km in 10 Minuten". Steht auch in `contracts/sports.json`, der Server prüft dasselbe.
     var goalSpeedRange: ClosedRange<Double> { get }
+
+    // MARK: Leistungsprofil (T2b)
+
+    /// Leistungswerte dieser Sportart (z. B. CSS, Schwellenpuls). Die für alle Sportarten (Maximal-, Ruhepuls) stehen
+    /// in `PerformanceMetricDefinition.athlete`. Steht auch in `contracts/sports.json`.
+    var performanceMetrics: [PerformanceMetricDefinition] { get }
+    /// Die Leistungstests dieser Sportart; jeder ermittelt Werte aus `performanceMetrics`.
+    var performanceTests: [PerformanceTest] { get }
+    /// Wie die Zonen der Ziele aus den Leistungswerten entstehen.
+    var zoneSchemes: [ZoneScheme] { get }
+    /// Startwerte ohne Test aus den Einheiten dieser Sportart und den schon bekannten Werten. Bestätigte Werte gehen
+    /// später immer vor, die Schätzung muss sie nicht beachten.
+    func estimatePerformance(_ context: PerformanceEstimationContext) -> [PerformanceEstimate]
 }
 
 public extension SportModule {
@@ -31,6 +44,12 @@ public extension SportModule {
     func supports(measure: StepMeasure, target: StepTarget?) -> Bool {
         measures.contains(measure) && (target.map { targets.contains($0) } ?? true)
     }
+
+    // Eine Sportart ohne Leistungsprofil plant nur nach gefühlter Anstrengung und Dauer.
+    var performanceMetrics: [PerformanceMetricDefinition] { [] }
+    var performanceTests: [PerformanceTest] { [] }
+    var zoneSchemes: [ZoneScheme] { [] }
+    func estimatePerformance(_ context: PerformanceEstimationContext) -> [PerformanceEstimate] { [] }
 }
 
 /// Die angemeldeten Sportarten. Prüft beim Anlegen, dass jede Sportart vollständig beschrieben ist und keine
@@ -46,6 +65,12 @@ public struct SportRegistry: Sendable {
         /// Zwei Sportarten beanspruchen dieselbe Workout-Art aus Health; die zweite wird genannt.
         case sharedActivityType(SportID)
         case invalidGoalSpeed(SportID)
+        /// Ein Leistungswert ohne gültige Kennung, Namen, Einheit oder Bereich, doppelt oder einer für alle Sportarten.
+        case invalidPerformanceMetric(SportID)
+        /// Ein Test ohne gültige Kennung oder Dauer, doppelt oder mit einem Ergebnis, das die Sportart nicht kennt.
+        case invalidPerformanceTest(SportID)
+        /// Zonen für ein fremdes Ziel, aus einem unbekannten Grundwert oder mit ungültigen Grenzen.
+        case invalidZoneScheme(SportID)
     }
 
     /// In der Reihenfolge der Anmeldung (die App zeigt sie so an).
@@ -69,8 +94,40 @@ public struct SportRegistry: Sendable {
             for rawValue in module.health.activityTypeRawValues {
                 guard claimedActivityTypes.insert(rawValue).inserted else { throw Problem.sharedActivityType(module.id) }
             }
+            try Self.validatePerformance(of: module)
         }
         self.modules = modules
+    }
+
+    private static func validatePerformance(of module: any SportModule) throws {
+        let athleteMetrics = Set(PerformanceMetricDefinition.athlete.map(\.metric))
+        var metrics = Set<PerformanceMetric>()
+        for definition in module.performanceMetrics {
+            guard definition.metric.isWellFormed,
+                  !athleteMetrics.contains(definition.metric),
+                  metrics.insert(definition.metric).inserted,
+                  !definition.displayName.isEmpty,
+                  !definition.unit.isEmpty,
+                  definition.plausibleRange.lowerBound > 0,
+                  definition.plausibleRange.upperBound.isFinite
+            else { throw Problem.invalidPerformanceMetric(module.id) }
+        }
+        var testIDs = Set<String>()
+        for test in module.performanceTests {
+            guard SportID(rawValue: test.id).isWellFormed,
+                  testIDs.insert(test.id).inserted,
+                  !test.displayName.isEmpty,
+                  !test.produces.isEmpty,
+                  test.produces.allSatisfy({ metrics.contains($0) }),
+                  test.durationMinutes > 0
+            else { throw Problem.invalidPerformanceTest(module.id) }
+        }
+        for scheme in module.zoneSchemes {
+            guard module.targets.contains(scheme.target),
+                  metrics.contains(scheme.basis) || athleteMetrics.contains(scheme.basis),
+                  scheme.hasValidBounds
+            else { throw Problem.invalidZoneScheme(module.id) }
+        }
     }
 
     /// Die Sportarten der App. `try!` ist hier sicher: `SportRegistryTests` und `ContractTests` legen genau diese
@@ -103,6 +160,12 @@ public struct SportRegistry: Sendable {
     /// Die Sportart, zu der ein Health-Workout dieser Art gehört; `nil` für Arten, die keine Sportart kennt.
     public func module(forActivityType activityType: HKWorkoutActivityType) -> (any SportModule)? {
         modules.first { $0.health.activityTypeRawValues.contains(activityType.rawValue) }
+    }
+
+    /// Was ein Leistungswert bedeutet (`sport == nil`: einer für alle Sportarten); `nil` für unbekannte Werte.
+    public func metricDefinition(_ metric: PerformanceMetric, sport: SportID?) -> PerformanceMetricDefinition? {
+        guard let sport else { return PerformanceMetricDefinition.athlete.first { $0.metric == metric } }
+        return module(for: sport)?.performanceMetrics.first { $0.metric == metric }
     }
 
     /// Alle Workout-Arten aller Sportarten, für die Abfrage in Health.

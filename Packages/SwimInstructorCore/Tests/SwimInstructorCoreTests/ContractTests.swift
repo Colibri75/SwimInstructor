@@ -13,6 +13,9 @@ final class ContractTests: XCTestCase {
             let measures: [String]
             let targets: [String]
             let goalSpeed: GoalSpeed
+            let loadFactor: Double
+            let performanceMetrics: [Metric]
+            let performanceTests: [Test]
         }
 
         struct GoalSpeed: Decodable {
@@ -20,9 +23,56 @@ final class ContractTests: XCTestCase {
             let maxMetersPerSecond: Double
         }
 
+        struct Metric: Decodable, Equatable {
+            let id: String
+            let displayName: String
+            let unit: String
+            let min: Double
+            let max: Double
+
+            init(id: String, displayName: String, unit: String, min: Double, max: Double) {
+                self.id = id
+                self.displayName = displayName
+                self.unit = unit
+                self.min = min
+                self.max = max
+            }
+
+            init(_ definition: PerformanceMetricDefinition) {
+                self.init(
+                    id: definition.metric.rawValue, displayName: definition.displayName, unit: definition.unit,
+                    min: definition.plausibleRange.lowerBound, max: definition.plausibleRange.upperBound
+                )
+            }
+        }
+
+        struct Test: Decodable, Equatable {
+            let id: String
+            let displayName: String
+            let produces: [String]
+            let maximalEffort: Bool
+            let durationMinutes: Int
+
+            init(id: String, displayName: String, produces: [String], maximalEffort: Bool, durationMinutes: Int) {
+                self.id = id
+                self.displayName = displayName
+                self.produces = produces
+                self.maximalEffort = maximalEffort
+                self.durationMinutes = durationMinutes
+            }
+
+            init(_ test: PerformanceTest) {
+                self.init(
+                    id: test.id, displayName: test.displayName, produces: test.produces.map(\.rawValue),
+                    maximalEffort: test.maximalEffort, durationMinutes: test.durationMinutes
+                )
+            }
+        }
+
         let schemaVersion: Int
         let measures: [String]
         let targets: [String]
+        let athleteMetrics: [Metric]
         let sports: [Sport]
     }
 
@@ -48,7 +98,14 @@ final class ContractTests: XCTestCase {
             XCTAssertEqual(Set(module.measures.map(\.rawValue)), Set(sport.measures), sport.id)
             XCTAssertEqual(Set(module.targets.map(\.rawValue)), Set(sport.targets), sport.id)
             XCTAssertEqual(module.goalSpeedRange, sport.goalSpeed.minMetersPerSecond...sport.goalSpeed.maxMetersPerSecond, sport.id)
+            XCTAssertEqual(module.loadFactor, sport.loadFactor, sport.id)
+            XCTAssertEqual(module.performanceMetrics.map { SportsContract.Metric($0) }, sport.performanceMetrics, sport.id)
+            XCTAssertEqual(module.performanceTests.map { SportsContract.Test($0) }, sport.performanceTests, sport.id)
         }
+    }
+
+    func testAthleteMetricsMatchContract() throws {
+        XCTAssertEqual(PerformanceMetricDefinition.athlete.map { SportsContract.Metric($0) }, try sportsContract().athleteMetrics)
     }
 
     // MARK: - Was über die Leitung geht
@@ -97,6 +154,42 @@ final class ContractTests: XCTestCase {
         let built = try JSONKeyPaths.of(AthleteStateSnapshot.jsonEncoder().encode(v2)).filter(isV2Part)
         let contract = try JSONKeyPaths.of(RepoPaths.contractData("wire/snapshot-v2.json")).filter(isV2Part)
         XCTAssertEqual(built, contract)
+    }
+
+    func testSnapshotV2WithProfileRoundTripsWithoutLosingFields() throws {
+        let data = try RepoPaths.contractData("wire/snapshot-v2-profile.json")
+        let snapshot = try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: data)
+        let reencoded = try AthleteStateSnapshot.jsonEncoder().encode(snapshot)
+
+        XCTAssertEqual(try JSONKeyPaths.of(reencoded), try JSONKeyPaths.of(data))
+        XCTAssertEqual(try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: reencoded), snapshot)
+        XCTAssertEqual(snapshot.performance?.sports.map(\.sport), [.swim, .bike, .run])
+        // Ohne Profil ist es genau der Snapshot v2 von vorher, für v1 genau der v1-Snapshot.
+        let withoutProfile = try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: RepoPaths.contractData("wire/snapshot-v2.json"))
+        XCTAssertNil(withoutProfile.performance)
+        XCTAssertEqual(snapshot.withMultiSport(trainingGoal: snapshot.trainingGoal!, sports: snapshot.sports!, totalLoad: snapshot.totalLoad!).performance, snapshot.performance)
+        XCTAssertNil(snapshot.version1.performance)
+    }
+
+    func testAppBuildsExactlyTheContractProfile() throws {
+        // Die Lage von snapshot-v2-profile.json: CSS getestet, Maximal- und Ruhepuls aus Health, zwei lockere Läufe.
+        let profile = PerformanceProfile(values: [
+            PerformanceValue(sport: .swim, metric: .criticalSwimPace, value: 105, source: .tested, measuredAt: ISO8601DateFormatter().date(from: "2026-09-20T08:00:00Z")!)
+        ])
+        let runs = [3, 6].map { TestFixtures.workout(.run, daysAgo: $0, minutes: 30, meters: 4944, heartRate: 142) }
+        let input = PerformanceEstimationInput(
+            now: TestFixtures.now,
+            workouts: runs,
+            vitals: [DailyVitals(date: TestFixtures.date(daysAgo: 0, hour: 0), restingHeartRate: 52)],
+            observedMaximumHeartRate: 188,
+            age: nil
+        )
+        let built = PerformanceEstimator().resolve(profile: profile, input: input).summary(sports: [.swim, .bike, .run])
+
+        let contract = try AthleteStateSnapshot.jsonDecoder().decode(
+            AthleteStateSnapshot.self, from: RepoPaths.contractData("wire/snapshot-v2-profile.json")
+        )
+        XCTAssertEqual(built, contract.performance)
     }
 
     func testTodayResponsesDecode() throws {
@@ -180,6 +273,18 @@ final class ContractTests: XCTestCase {
         XCTAssertEqual(goal.disciplines.map(\.sport), [.swim, .bike, .run])
         XCTAssertNil(goal.disciplines.last?.targetDurationSeconds)
         XCTAssertEqual(goal.percent(for: .bike), 35)
+    }
+
+    func testStoredPerformanceProfileLoads() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "ContractTests-\(UUID().uuidString)"))
+        defaults.set(try RepoPaths.contractData("app-storage/performance-profile.json"), forKey: UserDefaultsPerformanceProfileStore.storageKey)
+
+        let profile = UserDefaultsPerformanceProfileStore(defaults: defaults).profile()
+
+        XCTAssertEqual(profile.history(of: .criticalSwimPace, sport: .swim).map(\.value), [112, 105])
+        XCTAssertEqual(profile.history(of: .thresholdHeartRate, sport: .run).first?.source, .manual)
+        XCTAssertEqual(profile.history(of: .maxHeartRate).first?.value, 191)
+        XCTAssertEqual(profile.values.count, 4)
     }
 
     func testStoredMacroPlanLoads() throws {

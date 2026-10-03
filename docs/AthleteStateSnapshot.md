@@ -135,6 +135,39 @@ schickt v2, sobald ein Gesamtziel eingestellt ist (immer, seit T2). Vollständig
 - `total_load`: Minuten und Last über alle Sportarten (7 Tage und Wochenschnitt) und `acute_chronic_ratio`
   (7-Tage-Last durch Wochenschnitt; fehlt ohne Vergleichswert). Nur ein Hinweis für die Planung, keine harte Grenze.
 
+### Leistungsprofil (T2b, optional)
+
+`performance` kommt dazu, sobald die App Leistungswerte kennt. Vollständiges Beispiel:
+[`contracts/wire/snapshot-v2-profile.json`](../contracts/wire/snapshot-v2-profile.json). Ein v2-Snapshot ohne
+`performance` bleibt gültig; ein Server ohne T2b verwirft das Feld beim Parsen.
+
+- `athlete`: Werte für alle Sportarten (`max_heart_rate`, `resting_heart_rate`), je mit `metric`, `value`, `source`
+  und `measured_at`.
+- `sports`: je Sportart ihre Werte (z. B. `css_pace_per_100m`, `threshold_heart_rate`, `threshold_pace_per_km`,
+  `threshold_power`) und die Zonen daraus: `target` (Ziel eines Schritts), `basis` (Grundwert) und `zones` mit
+  `zone` ab 1 und `minimum`/`maximum` in der Einheit des Ziels (bpm, W, Sekunden pro 100 m oder km). Eine offene
+  Grenze fehlt. Bei Pace ist Zone 1 die langsamste, also die längste Zeit.
+- `source`: `tested` (Leistungstest), `manual` (eigene Eingabe), `estimated` (aus Health geschätzt), `formula`
+  (Faustformel). Bestätigtes (Test, Eingabe) geht vor Geschätztem, Geschätztes vor Faustformel, bei gleicher
+  Herkunft der neuere Wert. Ausnahme: Ein höherer gemessener Maximalpuls löst jeden anderen ab.
+
+Woher die Startwerte ohne Test kommen (App, `PerformanceEstimator` und Sport-Module):
+
+| Wert | Schätzung | Faustformel |
+|---|---|---|
+| Maximalpuls | höchster Puls der letzten 182 Tage | 208 − 0,7 × Alter (Tanaka) |
+| Ruhepuls | Schnitt der letzten 7 Tage mit Messung | – |
+| CSS (Schwimmen) | schnellste Durchschnittspace einer Einheit ab 400 m (mit Pausen, also eher zu langsam) | – |
+| Schwellenpuls Rad | – | 85 % des Maximalpulses |
+| Schwellenpuls Laufen | – | 88 % des Maximalpulses |
+| Schwellentempo Laufen | Median von Tempo durch (Puls − Ruhepuls) aus Läufen ab 2 km und 15 min, mal (Schwellenpuls − Ruhepuls) | – |
+| FTP (Rad) | – (nur aus Test oder Eingabe) | – |
+
+Werte außerhalb der Grenzen aus `contracts/sports.json` verwirft die App, der Server lehnt sie ab. Die Zonen rechnet
+die App aus den Anteilen im Modul (`ZoneScheme`: Puls nach Friel in % des Schwellenpulses, Rad-Leistung nach Coggan
+in % der FTP, Pace in % der Schwellengeschwindigkeit, Schwimm-Puls in % des Maximalpulses); der Server übernimmt sie.
+Sobald ein Leistungsprofil da ist, rechnet die Last mit Ruhe- und Maximalpuls (TRIMP).
+
 Der v1-Teil (`goal` usw.) bleibt bis T3 das Schwimmziel: die Schwimm-Disziplin des Gesamtziels (ohne Zielzeit mit
 2:00 pro 100 m), ohne Schwimm-Disziplin ein Platzhalter (1500 m in 45 Minuten), den der Server dann nur als Ausgleich
 nimmt.

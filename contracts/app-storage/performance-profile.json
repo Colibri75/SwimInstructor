@@ -1,0 +1,31 @@
+{
+  "values": [
+    {
+      "sport": "swim",
+      "metric": "css_pace_per_100m",
+      "value": 112,
+      "source": "tested",
+      "measuredAt": 807350400.0
+    },
+    {
+      "sport": "swim",
+      "metric": "css_pace_per_100m",
+      "value": 105,
+      "source": "tested",
+      "measuredAt": 811584000.0
+    },
+    {
+      "sport": "run",
+      "metric": "threshold_heart_rate",
+      "value": 168,
+      "source": "manual",
+      "measuredAt": 809978400.0
+    },
+    {
+      "metric": "max_heart_rate",
+      "value": 191,
+      "source": "manual",
+      "measuredAt": 805831200.0
+    }
+  ]
+}

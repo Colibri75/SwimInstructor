@@ -1,5 +1,7 @@
 import { z } from "zod";
+import { PERFORMANCE_SOURCES } from "../sports/performance";
 import { LEGACY_SPORT_ID, SPORTS } from "../sports/registry";
+import { STEP_TARGETS } from "../sports/vocabulary";
 
 /**
  * Eingabe-Schema des Zustands-Snapshots (v1 und v2, siehe docs/AthleteStateSnapshot.md). Spiegelt das
@@ -10,6 +12,7 @@ import { LEGACY_SPORT_ID, SPORTS } from "../sports/registry";
  *
  * v2 ist v1 plus Gesamtziel, Werte je Sportart und Gesamtlast. Ein v1-Snapshot bleibt unveraendert (gleicher
  * Prompt wie vor v2); was neuer Code aus v2 braucht, liefern `trainingGoalOf` und `sportStatesOf` auch fuer v1.
+ * Optional dazu (T2b): Leistungswerte mit Herkunft und die Zonen, die die App daraus gerechnet hat (`performance`).
  */
 const distance = z.number().min(0).max(1_000_000);
 const count = z.number().int().min(0).max(10_000);
@@ -130,6 +133,69 @@ const TotalLoadSchema = z.object({
   acute_chronic_ratio: z.number().min(0).max(100).optional()
 });
 
+const metricId = z.string().regex(/^[a-z][a-z0-9_]{1,31}$/);
+
+const PerformanceValueSchema = z.object({
+  metric: metricId,
+  value: z.number().positive().max(100_000),
+  source: z.enum(PERFORMANCE_SOURCES),
+  measured_at: z.iso.datetime()
+});
+
+const ZoneBound = z.number().min(0).max(100_000);
+
+const ZonesSchema = z.object({
+  target: z.enum(STEP_TARGETS),
+  basis: metricId,
+  zones: z
+    .array(z.object({ zone: z.number().int().min(1).max(10), minimum: ZoneBound.optional(), maximum: ZoneBound.optional() }))
+    .min(1)
+    .max(10)
+});
+
+/**
+ * Leistungswerte fuer alle Sportarten (`athlete`) und je Sportart. Jeder Wert muss zu seiner Sportart gehoeren und im
+ * plausiblen Bereich liegen (dieselben Grenzen wie in der App, contracts/sports.json); jede Zone braucht ein Ziel der
+ * Sportart und einen bekannten Grundwert.
+ */
+const PerformanceSchema = z
+  .object({
+    athlete: z.array(PerformanceValueSchema).max(16),
+    sports: z
+      .array(z.object({ sport: sportId, values: z.array(PerformanceValueSchema).max(16), zones: z.array(ZonesSchema).max(16) }))
+      .max(16)
+  })
+  .superRefine((performance, ctx) => {
+    const checkValues = (values: Array<{ metric: string; value: number }>, sport: string | undefined, path: Array<string | number>) => {
+      const seen = new Set<string>();
+      values.forEach((entry, index) => {
+        const definition = SPORTS.metric(sport, entry.metric);
+        if (definition === undefined) {
+          ctx.addIssue({ code: "custom", path: [...path, index, "metric"], message: "unbekannter Leistungswert" });
+        } else if (entry.value < definition.min || entry.value > definition.max) {
+          ctx.addIssue({ code: "custom", path: [...path, index, "value"], message: "unplausibler Leistungswert" });
+        }
+        if (seen.has(entry.metric)) ctx.addIssue({ code: "custom", path: [...path, index, "metric"], message: "Leistungswert doppelt" });
+        seen.add(entry.metric);
+      });
+    };
+    checkValues(performance.athlete, undefined, ["athlete"]);
+    const sports = new Set<string>();
+    performance.sports.forEach((entry, index) => {
+      if (sports.has(entry.sport)) ctx.addIssue({ code: "custom", path: ["sports", index, "sport"], message: "Sportart doppelt" });
+      sports.add(entry.sport);
+      checkValues(entry.values, entry.sport, ["sports", index, "values"]);
+      entry.zones.forEach((zones, zonesIndex) => {
+        if (!(SPORTS.get(entry.sport)?.targets.includes(zones.target) ?? false)) {
+          ctx.addIssue({ code: "custom", path: ["sports", index, "zones", zonesIndex, "target"], message: "Ziel passt nicht zur Sportart" });
+        }
+        if (SPORTS.metric(entry.sport, zones.basis) === undefined && SPORTS.metric(undefined, zones.basis) === undefined) {
+          ctx.addIssue({ code: "custom", path: ["sports", index, "zones", zonesIndex, "basis"], message: "unbekannter Grundwert" });
+        }
+      });
+    });
+  });
+
 const SnapshotV1Schema = z.object({ schema_version: z.literal(1), ...v1Fields });
 
 const SnapshotV2Schema = z
@@ -138,7 +204,8 @@ const SnapshotV2Schema = z
     ...v1Fields,
     training_goal: TrainingGoalSchema,
     sports: z.array(SportStateSchema).max(16),
-    total_load: TotalLoadSchema
+    total_load: TotalLoadSchema,
+    performance: PerformanceSchema.optional()
   })
   .superRefine((snapshot, ctx) => {
     const ids = snapshot.sports.map((state) => state.sport);
@@ -151,6 +218,7 @@ export type Snapshot = z.infer<typeof SnapshotSchema>;
 export type SnapshotV2 = z.infer<typeof SnapshotV2Schema>;
 export type TrainingGoal = SnapshotV2["training_goal"];
 export type SportState = SnapshotV2["sports"][number];
+export type Performance = NonNullable<SnapshotV2["performance"]>;
 export type SnapshotFlag = Snapshot["flags"][number];
 
 
