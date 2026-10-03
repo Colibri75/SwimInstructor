@@ -195,6 +195,7 @@ final class SportRegistryTests: XCTestCase {
         XCTAssertEqual(String(decoding: encoded, as: UTF8.self), #"["max_heart_rate","vo2max"]"#)
         XCTAssertEqual(try JSONDecoder().decode([PerformanceMetric].self, from: encoded), [.maxHeartRate, "vo2max"])
         XCTAssertEqual(PerformanceMetric.thresholdPower.description, "threshold_power")
+        XCTAssertEqual(PerformanceMetric(rawValue: "threshold_power"), .thresholdPower)
         XCTAssertTrue(PerformanceMetric.criticalSwimPace.isWellFormed)
         XCTAssertFalse(PerformanceMetric("Max HR").isWellFormed)
     }
