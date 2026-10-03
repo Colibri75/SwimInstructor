@@ -1,0 +1,15 @@
+{
+  "goal_day": "2027-07-04",
+  "generated_at": "2026-09-30T10:00:00.000Z",
+  "adjustments": ["Woche ab 28.09.: Umfang von 6000 m auf 3900 m begrenzt (Grenze für die erste Woche)"],
+  "plan": {
+    "rationale": "40 Wochen bis zum Ziel.",
+    "weeks": [
+      { "week_start": "2026-09-28", "target_meters": 3500, "sessions": 3, "deload": false, "focus": "Ausdauer und Technik", "phase": "base" },
+      { "week_start": "2026-10-05", "target_meters": 3800, "sessions": 3, "deload": false, "focus": "Ausdauer", "phase": "base" },
+      { "week_start": "2026-10-12", "target_meters": 3000, "sessions": 3, "deload": true, "focus": "Entlastung", "phase": "base" },
+      { "week_start": "2027-06-14", "target_meters": 3500, "sessions": 3, "deload": false, "focus": "Zuspitzen", "phase": "taper" },
+      { "week_start": "2027-06-28", "target_meters": 3600, "sessions": 2, "deload": false, "focus": "Zielwoche", "phase": "goal_week" }
+    ]
+  }
+}

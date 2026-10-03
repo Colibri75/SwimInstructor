@@ -1,0 +1,38 @@
+{
+  "source": "claude",
+  "date": "2026-09-30",
+  "generated_at": "2026-09-30T10:00:00.000Z",
+  "stale": false,
+  "adjustments": ["Umfang von 4000 m auf 2400 m gekürzt (Grenze für heute: 2400 m)"],
+  "wishes": "mehr Technik",
+  "plan": {
+    "session_type": "endurance",
+    "intensity": "moderate",
+    "rationale": "Gute Erholung, maßvoll steigern.",
+    "total_distance_meters": 1600,
+    "estimated_duration_minutes": 45,
+    "sets": [
+      {
+        "name": "Einschwimmen",
+        "repetitions": 1,
+        "distance_meters": 400,
+        "target_pace_seconds_per_hundred_meters": null,
+        "rest_seconds": 0,
+        "instructions": "Locker kraulen, ruhig ausatmen.",
+        "cue": "Locker kraulen",
+        "equipment": []
+      },
+      {
+        "name": "Hauptsatz",
+        "repetitions": 6,
+        "distance_meters": 200,
+        "target_pace_seconds_per_hundred_meters": null,
+        "rest_seconds": 30,
+        "instructions": "Mit Pull Buoy gleichmäßig ziehen.",
+        "cue": "Zug lang",
+        "equipment": ["pull_buoy"]
+      }
+    ],
+    "coach_notes": ["Auf lockere Atmung achten."]
+  }
+}

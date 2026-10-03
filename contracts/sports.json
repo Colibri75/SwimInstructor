@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "measures": ["distance", "duration", "repetitions"],
+  "targets": ["pace_per_100m", "pace_per_km", "speed", "heart_rate_zone", "power", "cadence", "stroke_rate", "perceived_effort"],
+  "sports": [
+    {
+      "id": "swim",
+      "display_name": "Schwimmen",
+      "measures": ["distance", "duration"],
+      "targets": ["pace_per_100m", "heart_rate_zone", "perceived_effort"]
+    },
+    {
+      "id": "bike",
+      "display_name": "Radfahren",
+      "measures": ["duration", "distance"],
+      "targets": ["power", "heart_rate_zone", "speed", "cadence", "perceived_effort"]
+    },
+    {
+      "id": "run",
+      "display_name": "Laufen",
+      "measures": ["distance", "duration"],
+      "targets": ["pace_per_km", "heart_rate_zone", "cadence", "perceived_effort"]
+    }
+  ]
+}
