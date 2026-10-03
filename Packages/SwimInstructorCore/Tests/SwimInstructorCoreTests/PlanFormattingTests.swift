@@ -8,6 +8,13 @@ final class PlanFormattingTests: XCTestCase {
         XCTAssertEqual(PlanFormatting.pace(65), "1:05")
     }
 
+    func testDistanceSwitchesToKilometersAboveFive() {
+        XCTAssertEqual(PlanFormatting.distance(1600), "1.600 m")
+        XCTAssertEqual(PlanFormatting.distance(4999.6), "5.000 m")
+        XCTAssertEqual(PlanFormatting.distance(5000), "5,0 km")
+        XCTAssertEqual(PlanFormatting.distance(42195), "42,2 km")
+    }
+
     func testMetersAndRest() {
         XCTAssertEqual(PlanFormatting.meters(400), "400 m")
         XCTAssertEqual(PlanFormatting.meters(1600), "1.600 m")

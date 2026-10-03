@@ -18,6 +18,13 @@ public enum PlanFormatting {
         return "\(formatter.string(from: NSNumber(value: meters)) ?? String(meters)) m"
     }
 
+    /// Strecke einer Einheit beliebiger Sportart: bis 5 km in Metern ("1.600 m"), darüber in Kilometern mit einer
+    /// Nachkommastelle ("42,2 km").
+    public static func distance(_ meters: Double) -> String {
+        guard meters >= 5000 else { return Self.meters(Int(meters.rounded())) }
+        return String(format: "%.1f km", meters / 1000).replacingOccurrences(of: ".", with: ",")
+    }
+
     /// 30 → "30 s", 90 → "1:30 min".
     public static func rest(_ seconds: Int) -> String {
         guard seconds >= 60 else { return "\(seconds) s" }

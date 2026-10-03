@@ -4,15 +4,24 @@ import Foundation
 /// entstanden ist (die App zeigt sie als "bisherige Einheiten").
 public struct AthleteStateReading: Equatable, Sendable {
     public let snapshot: AthleteStateSnapshot
-    /// Bereinigt um Duplikate, neueste zuerst.
+    /// Die Schwimmeinheiten, bereinigt um Duplikate, neueste zuerst (Grundlage von Snapshot v1 und Statistik).
     public let workouts: [SwimWorkout]
+    /// Die Einheiten aller Sportarten, bereinigt um Duplikate je Sportart, neueste zuerst.
+    public let allWorkouts: [Workout]
     /// `false`, wenn die Erholungswerte nicht gelesen werden konnten; der Snapshot hat dann
     /// Erholungsstatus `unknown`.
     public let vitalsAvailable: Bool
 
-    public init(snapshot: AthleteStateSnapshot, workouts: [SwimWorkout], vitalsAvailable: Bool) {
+    public init(
+        snapshot: AthleteStateSnapshot,
+        workouts: [SwimWorkout],
+        allWorkouts: [Workout]? = nil,
+        vitalsAvailable: Bool
+    ) {
         self.snapshot = snapshot
         self.workouts = workouts
+        // Ohne eigene Angabe (ältere Aufrufer, Tests): die Schwimmeinheiten.
+        self.allWorkouts = allWorkouts ?? workouts.map(Workout.init(swim:))
         self.vitalsAvailable = vitalsAvailable
     }
 }
@@ -30,7 +39,8 @@ public struct SnapshotBuilder: SnapshotBuilding {
     public static let workoutWindowDays = 56
     public static let vitalsWindowDays = 31
 
-    private let workoutRepository: SwimWorkoutRepository
+    /// Alle Einheiten ab einem Datum, aus welchem Repository auch immer.
+    private let fetchWorkouts: (Date) async throws -> [Workout]
     private let vitalsRepository: DailyVitalsRepository
     private let calculator: AthleteStateCalculator
     /// Wird bei jedem Durchlauf gelesen: Ein in den Einstellungen geändertes Ziel gilt sofort.
@@ -43,7 +53,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         goal: AthleteGoal = .default,
         calendar: Calendar = .current
     ) {
-        self.workoutRepository = workoutRepository
+        self.fetchWorkouts = { try await workoutRepository.fetchSwimWorkouts(from: $0).map(Workout.init(swim:)) }
         self.vitalsRepository = vitalsRepository
         self.calculator = AthleteStateCalculator(calendar: calendar)
         self.goalProvider = { goal }
@@ -57,7 +67,21 @@ public struct SnapshotBuilder: SnapshotBuilding {
         goalProvider: @escaping () -> AthleteGoal,
         calendar: Calendar = .current
     ) {
-        self.workoutRepository = workoutRepository
+        self.fetchWorkouts = { try await workoutRepository.fetchSwimWorkouts(from: $0).map(Workout.init(swim:)) }
+        self.vitalsRepository = vitalsRepository
+        self.calculator = AthleteStateCalculator(calendar: calendar)
+        self.goalProvider = goalProvider
+        self.calendar = calendar
+    }
+
+    /// Liest die Einheiten aller Sportarten. Snapshot v1 und Statistik sehen davon weiter nur das Schwimmen.
+    public init(
+        repository: WorkoutRepository,
+        vitalsRepository: DailyVitalsRepository,
+        goalProvider: @escaping () -> AthleteGoal,
+        calendar: Calendar = .current
+    ) {
+        self.fetchWorkouts = { try await repository.fetchWorkouts(from: $0) }
         self.vitalsRepository = vitalsRepository
         self.calculator = AthleteStateCalculator(calendar: calendar)
         self.goalProvider = goalProvider
@@ -69,7 +93,8 @@ public struct SnapshotBuilder: SnapshotBuilding {
         let workoutStart = calendar.date(byAdding: .day, value: -(Self.workoutWindowDays - 1), to: today) ?? today
         let vitalsStart = calendar.date(byAdding: .day, value: -(Self.vitalsWindowDays - 1), to: today) ?? today
 
-        let workouts = try await workoutRepository.fetchSwimWorkouts(from: workoutStart)
+        let allWorkouts = try await fetchWorkouts(workoutStart)
+        let workouts = allWorkouts.compactMap(SwimWorkout.init(workout:))
 
         // Ohne Erholungswerte gibt es trotzdem einen Plan (Status unknown); ohne Workouts nicht,
         // denn dann wäre der Snapshot falsch statt nur unvollständig.
@@ -85,6 +110,14 @@ public struct SnapshotBuilder: SnapshotBuilding {
         let cleaned = SwimWorkoutDeduplicator.deduplicate(workouts)
             .filter { $0.startDate <= now }
             .sorted { $0.startDate > $1.startDate }
-        return AthleteStateReading(snapshot: snapshot, workouts: cleaned, vitalsAvailable: vitalsAvailable)
+        let cleanedAll = WorkoutDeduplicator.deduplicate(allWorkouts)
+            .filter { $0.startDate <= now }
+            .sorted { $0.startDate > $1.startDate }
+        return AthleteStateReading(
+            snapshot: snapshot,
+            workouts: cleaned,
+            allWorkouts: cleanedAll,
+            vitalsAvailable: vitalsAvailable
+        )
     }
 }

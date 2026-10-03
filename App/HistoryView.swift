@@ -48,12 +48,12 @@ extension HistoryView {
                 ProgressView()
             } else if let error = loader.healthError {
                 Text("Health: \(error)").foregroundStyle(.red)
-            } else if let workouts = loader.reading?.workouts, !workouts.isEmpty {
+            } else if let workouts = loader.reading?.allWorkouts, !workouts.isEmpty {
                 ForEach(workouts.prefix(20)) { workout in
-                    SwimWorkoutRow(workout: workout)
+                    WorkoutRow(workout: workout)
                 }
             } else {
-                Text("Noch keine Schwimm-Workouts gefunden")
+                Text("Noch keine Einheiten gefunden")
                     .foregroundStyle(.secondary)
             }
         }

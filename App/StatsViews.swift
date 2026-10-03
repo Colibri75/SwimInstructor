@@ -54,24 +54,38 @@ struct StateSummaryView: View {
     }
 }
 
-struct SwimWorkoutRow: View {
-    let workout: SwimWorkout
+/// Eine Einheit beliebiger Sportart im Verlauf: Symbol und Name kommen aus dem Sport-Modul.
+struct WorkoutRow: View {
+    let workout: Workout
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(workout.startDate, style: .date)
+        let sports = SportRegistry.standard
+        HStack(spacing: 12) {
+            Image(systemName: sports.symbolName(for: workout.sport))
+                .font(.title3)
+                .frame(width: 28)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(sports.displayName(for: workout.sport))
+                    Spacer()
+                    Text(workout.startDate, style: .date)
+                        .foregroundStyle(.secondary)
+                }
                 .font(.subheadline)
-            HStack(spacing: 12) {
-                if let distance = workout.totalDistanceMeters {
-                    Text(PlanFormatting.meters(Int(distance)))
+                HStack(spacing: 12) {
+                    if let distance = workout.distanceMeters, distance > 0 {
+                        Text(PlanFormatting.distance(distance))
+                    }
+                    Text(Duration.seconds(workout.duration).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated)))
+                    if let heartRate = workout.averageHeartRate {
+                        Text("\(Int(heartRate.rounded())) bpm")
+                    }
                 }
-                Text(Duration.seconds(workout.duration).formatted(.units(allowed: [.minutes, .seconds])))
-                if let pace = workout.averagePaceSecondsPer100m {
-                    Text("\(PlanFormatting.pace(pace)) /100 m")
-                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
-            .font(.caption)
-            .foregroundStyle(.secondary)
         }
     }
 }
+
