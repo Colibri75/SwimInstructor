@@ -52,14 +52,9 @@ public struct SportRegistry: Sendable {
         self.modules = modules
     }
 
-    /// Die Sportarten der App. Die Tests prüfen, dass sie gültig sind und zu `contracts/sports.json` passen.
-    public static let standard: SportRegistry = {
-        do {
-            return try SportRegistry(modules: [SwimModule(), BikeModule(), RunModule()])
-        } catch {
-            preconditionFailure("Ungültige Sportarten: \(error)")
-        }
-    }()
+    /// Die Sportarten der App. `try!` ist hier sicher: `SportRegistryTests` und `ContractTests` legen genau diese
+    /// Registry an und prüfen sie gegen `contracts/sports.json`, eine ungültige Liste kommt nie über die CI hinaus.
+    public static let standard: SportRegistry = try! SportRegistry(modules: [SwimModule(), BikeModule(), RunModule()])
 
     public var ids: [SportID] { modules.map(\.id) }
 
