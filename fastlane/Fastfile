@@ -1,4 +1,5 @@
 require "fileutils"
+require "json"
 
 default_platform(:ios)
 
@@ -33,6 +34,10 @@ platform :ios do
       rescue StandardError => e
         UI.important("Coverage-Report nicht verfuegbar: #{e.message}")
       end
+
+      # Sport-Module (Triathlon-Umbau, Sources/.../Sports/): mindestens 90 % Zeilen-Coverage, sonst rot.
+      # Anders als der Report oben ist das eine Pruefung: Ohne Coverage-Daten schlaegt sie ebenfalls fehl.
+      check_sports_coverage(minimum_percent: 90)
     end
 
     # App-Code (iPhone + eingebettete Watch-App) mitkompilieren, ohne Signatur. Sonst fielen
@@ -48,6 +53,27 @@ platform :ios do
         "-quiet"
       )
     end
+  end
+
+  # Liest die Zeilen-Coverage aller Dateien unter Sports/ aus dem letzten `swift test --enable-code-coverage`
+  # (laeuft im Package-Ordner) und bricht ab, wenn eine darunter liegt.
+  private_lane :check_sports_coverage do |options|
+    minimum = options[:minimum_percent]
+    bundle = Dir.glob(".build/debug/*.xctest").first
+    UI.user_error!("Sport-Coverage: kein .xctest-Bundle gefunden") if bundle.nil?
+    binary = File.join(bundle, "Contents", "MacOS", File.basename(bundle, ".xctest"))
+    output = sh("xcrun llvm-cov export -summary-only '#{binary}' " \
+                "-instr-profile=.build/debug/codecov/default.profdata", log: false)
+    files = JSON.parse(output).dig("data", 0, "files") || []
+    sports = files.select { |file| file["filename"].include?("/Sources/SwimInstructorCore/Sports/") }
+    UI.user_error!("Sport-Coverage: keine Dateien unter Sports/ gefunden") if sports.empty?
+
+    too_low = sports.filter_map do |file|
+      percent = file.dig("summary", "lines", "percent").to_f
+      UI.message(format("Sport-Coverage %5.1f %%  %s", percent, File.basename(file["filename"])))
+      "#{File.basename(file['filename'])} (#{percent.round(1)} %)" if percent < minimum
+    end
+    UI.user_error!("Sport-Coverage unter #{minimum} %: #{too_low.join(', ')}") unless too_low.empty?
   end
 
   desc "Build, sign and upload a new build to TestFlight"

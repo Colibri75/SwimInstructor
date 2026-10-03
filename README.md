@@ -594,6 +594,37 @@ Die Bildschirme (`WeekView`, `TodayView`) werden in der CI mitkompiliert.
 - [ ] **Ziel ändern** (Einstellungen, "Mein Ziel"): Beim nächsten Öffnen entsteht ein neuer Gesamtplan zum neuen Ziel
 - [ ] **Dashboard** zeigt die Statistik, **Verlauf** die letzten Einheiten, **Heute** nur den Tag
 
+## Triathlon-Umbau (Schwimmen, Rad, Laufen)
+
+Die App wird schrittweise zur Triathlon-App umgebaut (Schritte T0 bis T7, Plan im Projekt-Chat). Nach jedem
+Schritt bleibt sie fürs Schwimmen voll nutzbar.
+
+### T0 – Fundament: Sport-Module und Verträge
+
+- **Sport-Module:** Jede Sportart ist ein Modul, das sich in einer Registry anmeldet: `SportModule` und
+  `SportRegistry` im Package (`Sources/SwimInstructorCore/Sports/`), `SportDefinition` und `SPORTS` im Backend
+  (`backend/src/sports/`). Eine Sportart hat eine Kennung (`swim`, `bike`, `run`), einen deutschen Namen und die
+  Maße (Strecke, Dauer, Wiederholungen) und Ziele (Pace, Pulszone, Leistung, …), nach denen ihre Schritte geplant
+  werden. Eine neue Sportart ist ein neues Modul, keine Änderung quer durch den Code.
+- **Verträge zwischen App und Server** (`contracts/`, siehe [`contracts/README.md`](contracts/README.md)): Sportarten,
+  Snapshot, Plan-Antworten und die Dateien, die die App heute auf dem Gerät speichert. Swift-Tests
+  (`ContractTests`) und Jest-Tests (`test/contracts.test.ts`) lesen dieselben Dateien; das Backend erzeugt die
+  Antworten dabei über die echten Routen.
+- **Konformitätstests:** Jedes Modul, dazu die erfundene Test-Sportart *Rudern* (plant nach Schlagzahl, was keine
+  echte Sportart kann), läuft durch dieselben Prüfungen (`SportModuleConformanceTests`, `test/sports/conformance.test.ts`).
+- **Lint:** Außerhalb der Module darf niemand nach einer bestimmten Sportart verzweigen (`SportLintTests`,
+  `test/sports/lint.test.ts`).
+- **Coverage-Schwelle 90 %** für die Sport-Module, in der CI erzwungen (Fastlane `check_sports_coverage`, Jest
+  `coverageThreshold`).
+
+### T0 – Definition of Done
+
+- [x] Swift und Jest prüfen dieselben Vertragsdateien; eine absichtlich entfernte Antwort-Eigenschaft macht den
+      Test rot (von Hand ausprobiert)
+- [x] Die Test-Sportart Rudern besteht die Konformitätstests auf beiden Seiten
+- [x] Alle bisherigen Tests laufen unverändert
+- [x] Nichts für dich zu prüfen: An der App ändert sich sichtbar nichts
+
 ## Projektstruktur
 
 ```
@@ -665,6 +696,7 @@ backend/                            # Node/TypeScript-Server (Proxy fuer Claude,
   test/                              # Jest + supertest
   Dockerfile, compose.yaml           # Container-Image und Start auf dem Server
   deploy/                            # Caddyfile-Vorlage, deploy.sh
+contracts/                           # Verträge App <-> Server, von Swift- und Jest-Tests gelesen
 docs/
   AthleteStateSnapshot.md            # JSON-Schema, Definitionen, Schwellenwerte
   backend-deploy.md                  # Server-Einrichtung Schritt fuer Schritt
