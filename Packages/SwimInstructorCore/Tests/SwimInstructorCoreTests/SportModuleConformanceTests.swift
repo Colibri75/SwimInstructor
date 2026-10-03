@@ -1,4 +1,5 @@
 import XCTest
+import HealthKit
 @testable import SwimInstructorCore
 
 /// Erfundene Sportart nur für Tests, mit anderer Logik als die drei echten: geplant nach Zeit, Intensität nach
@@ -10,6 +11,13 @@ struct RowingTestModule: SportModule {
     let symbolName = "figure.rower"
     let measures: Set<StepMeasure> = [.duration, .distance]
     let targets: Set<StepTarget> = [.strokeRate, .power, .heartRateZone]
+    // Anders als die echten Sportarten: ohne Strecke aus Health, nur mit eigenem Messwert.
+    let health = SportHealthMapping(
+        activityTypes: [.rowing],
+        distance: nil,
+        metrics: ["average_power": HealthQuantity(.runningPower, unit: "W", aggregation: .average)]
+    )
+    let loadFactor = 0.9
 }
 
 /// Prüfungen, die jedes Modul bestehen muss. Jeder Umbauschritt hängt hier seine neuen Anforderungen an
@@ -47,6 +55,66 @@ final class SportModuleConformanceTests: XCTestCase {
         let registry = try SportRegistry(modules: allModules)
         for module in allModules {
             XCTAssertEqual(registry.module(for: module.id)?.displayName, module.displayName)
+        }
+    }
+
+    // MARK: - T1: Health und Belastung
+
+    func testEveryHealthQuantityExistsAndFitsItsUnit() {
+        for module in allModules {
+            for quantity in module.health.quantities {
+                guard let type = quantity.quantityType else {
+                    XCTFail("\(module.id): \(quantity.identifier) gibt es in HealthKit nicht")
+                    continue
+                }
+                XCTAssertTrue(type.is(compatibleWith: quantity.healthUnit), "\(module.id): \(quantity.identifier) in \(quantity.unit)")
+                XCTAssertTrue(module.health.readTypes.contains(type), "\(module.id): \(quantity.identifier)")
+            }
+            if let distance = module.health.distance {
+                XCTAssertEqual(distance.aggregation, .sum, "\(module.id): Strecke wird summiert")
+                XCTAssertEqual(distance.healthUnit, .meter(), "\(module.id): Strecke in Metern")
+            }
+        }
+    }
+
+    func testEveryModuleIsFoundByItsHealthActivityTypes() throws {
+        let registry = try SportRegistry(modules: allModules)
+        for module in allModules {
+            XCTAssertFalse(module.health.activityTypes.isEmpty, "\(module.id): ohne Workout-Art kommt nichts aus Health")
+            for activityType in module.health.activityTypes {
+                XCTAssertEqual(registry.module(forActivityType: activityType)?.id, module.id)
+            }
+        }
+    }
+
+    func testEveryModuleTurnsAHealthWorkoutIntoAWorkoutOfItsSport() throws {
+        let registry = try SportRegistry(modules: allModules)
+        let start = Date(timeIntervalSince1970: 1_000_000)
+        for module in allModules {
+            let activityType = try XCTUnwrap(module.health.activityTypes.first)
+            let healthWorkout = HKWorkout(
+                activityType: activityType, start: start, end: start.addingTimeInterval(2400),
+                workoutEvents: nil, totalEnergyBurned: nil, totalDistance: nil, metadata: nil
+            )
+            let found = try XCTUnwrap(registry.module(forActivityType: healthWorkout.workoutActivityType))
+            let metrics = Dictionary(uniqueKeysWithValues: found.health.metrics.keys.map { ($0, 1.0) })
+            let workout = HealthKitWorkoutRepository.map(
+                workout: healthWorkout, sport: found.id, distanceMeters: found.health.distance == nil ? nil : 5000,
+                averageHeartRate: 140, activeEnergyKilocalories: 400, metrics: metrics
+            )
+            XCTAssertEqual(workout.sport, module.id)
+            XCTAssertEqual(workout.duration, 2400)
+            XCTAssertEqual(Set(workout.metrics.keys), Set(module.health.metrics.keys))
+        }
+    }
+
+    func testEveryModuleHasAPositiveLoadAndLoadGrowsWithDuration() {
+        let calculator = TrainingLoadCalculator(registry: try! SportRegistry(modules: allModules))
+        for module in allModules {
+            XCTAssertGreaterThan(module.loadFactor, 0, "\(module.id)")
+            let short = Workout(id: UUID(), sport: module.id, startDate: Date(), endDate: Date(), duration: 1800)
+            let long = Workout(id: UUID(), sport: module.id, startDate: Date(), endDate: Date(), duration: 3600)
+            XCTAssertGreaterThan(calculator.load(of: long), calculator.load(of: short), "\(module.id)")
         }
     }
 

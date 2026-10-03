@@ -144,6 +144,24 @@ final class FakeWorkoutRepository: SwimWorkoutRepository {
     }
 }
 
+/// Liefert Einheiten aller Sportarten, wie `HealthKitWorkoutRepository`.
+final class FakeAllSportsRepository: WorkoutRepository {
+    var workouts: [Workout]
+    var error: Error?
+    private(set) var requestedStart: Date?
+
+    init(workouts: [Workout] = [], error: Error? = nil) {
+        self.workouts = workouts
+        self.error = error
+    }
+
+    func fetchWorkouts(from startDate: Date) async throws -> [Workout] {
+        requestedStart = startDate
+        if let error { throw error }
+        return workouts.filter { $0.startDate >= startDate }
+    }
+}
+
 final class FakeVitalsRepository: DailyVitalsRepository {
     var vitals: [DailyVitals]
     var error: Error?

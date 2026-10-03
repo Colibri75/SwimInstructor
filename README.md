@@ -625,6 +625,33 @@ Schritt bleibt sie fürs Schwimmen voll nutzbar.
 - [x] Alle bisherigen Tests laufen unverändert
 - [x] Nichts für dich zu prüfen: An der App ändert sich sichtbar nichts
 
+### T1 – Sportart im Datenmodell und Health
+
+- **`Workout` mit Sportart:** Eine Einheit hat eine Sportart (`SportID`), Dauer, Strecke, Puls, Energie und offene
+  Zusatzwerte (`WorkoutMetric`: Bahnen, Züge, Watt, Trittfrequenz, Höhenmeter). Was eine Sportart zusätzlich misst,
+  bringt ihr Modul mit.
+- **Health je Modul:** Jedes Modul nennt seine Workout-Arten und Messwerte (`SportHealthMapping`): Schwimmen mit
+  Strecke und Zügen, Rad mit Strecke, Watt und Trittfrequenz (falls vorhanden), Laufen mit Strecke und Laufleistung.
+  `HealthKitWorkoutRepository` liest damit alle Sportarten der Registry, ohne selbst eine zu kennen. Die App fragt
+  die neuen Health-Typen beim nächsten Start einmal zusätzlich an.
+- **Duplikate je Sportart:** `WorkoutDeduplicator` bereinigt doppelte Einheiten nur innerhalb einer Sportart; Rad
+  und Lauf eines Koppeltrainings bleiben beide stehen.
+- **Trainingslast je Einheit:** `TrainingLoadCalculator` rechnet Banisters TRIMP, wenn Ruhe- und Maximalpuls
+  bekannt sind, sonst Minuten. Der Faktor des Moduls gleicht die Sportarten an (Rad 0,8, Schwimmen und Laufen 1,0).
+  Der Plan nutzt die Last ab Snapshot v2 (T2).
+- **Verlauf:** "Letzte Einheiten" zeigt alle Sportarten mit Symbol und Namen. Snapshot, Dashboard und Plan
+  rechnen bis T2 weiter nur mit dem Schwimmen; Einheiten ohne Sportart gelten als Schwimmen.
+
+### T1 – Definition of Done
+
+- [x] Konformitätstests prüfen für jedes Modul (auch Rudern): Health-Typen existieren und passen zur Einheit, die
+      Workout-Art findet das Modul, ein Health-Workout wird eine Einheit dieser Sportart, Last wächst mit der Dauer
+- [x] Der Schwimm-Snapshot ist mit Rad- und Laufeinheiten im Health genau derselbe wie vorher (`SnapshotBuilderTests`)
+- [ ] **Für dich auf dem iPhone:** Nach dem Update fragt Health nach den neuen Typen (Radstrecke, Lauf-/Gehstrecke,
+      Leistung, Trittfrequenz, Energie); erlauben. Ein Lauf und eine Radfahrt aus der Fitness- oder Trainings-App
+      erscheinen danach unter Verlauf → Letzte Einheiten mit richtigem Symbol, Strecke und Dauer. Die
+      Schwimm-Zahlen im Dashboard bleiben gleich.
+
 ## Projektstruktur
 
 ```
@@ -634,7 +661,7 @@ App/                                # iOS-App
   RootView.swift                     # Tabs: Heute, Dashboard, Verlauf (M8)
   TodayView.swift                    # Heute: Eintrag aus dem Plan, Einheit für heute, Wunsch
   WeekView.swift                     # Plan: Gesamtplan, nächste 7 Tage, Status, Anpassen, Planen
-  StatsViews.swift                   # Statistik-Zeilen (Dashboard), Einheiten-Zeile (Verlauf)
+  StatsViews.swift                   # Statistik-Zeilen (Dashboard), Einheiten-Zeile aller Sportarten (Verlauf)
   DashboardView.swift                # Ziel, Wochenumfang, Pace-Verlauf (Swift Charts, M8)
   HistoryView.swift                  # Verlauf geplant gegen tatsächlich (M8)
   PlanCardView.swift                 # Darstellung des Tagesplans

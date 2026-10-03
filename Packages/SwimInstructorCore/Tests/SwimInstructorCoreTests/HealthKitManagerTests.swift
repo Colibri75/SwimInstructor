@@ -15,6 +15,15 @@ final class HealthKitManagerTests: XCTestCase {
         XCTAssertTrue(types.contains(HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!))
     }
 
+    func testReadTypesIncludeEverySportModule() {
+        let types = HealthKitManager.readTypes
+
+        XCTAssertTrue(types.isSuperset(of: SportRegistry.standard.healthReadTypes))
+        XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .distanceCycling)!))
+        XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning)!))
+        XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!))
+    }
+
     func testWorkoutShareTypesCoverWhatTheWatchRecords() {
         let types = HealthKitManager.workoutShareTypes
 

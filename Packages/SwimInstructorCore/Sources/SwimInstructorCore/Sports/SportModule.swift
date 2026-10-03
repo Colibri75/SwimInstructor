@@ -1,4 +1,5 @@
 import Foundation
+import HealthKit
 
 /// Alles, was eine Sportart der App beibringt. Der Kern fragt nie "welche Sportart ist das?", sondern
 /// immer das Modul: Eine neue Sportart ist ein neues Modul plus Tests, ohne Änderungen quer durch den Code.
@@ -15,6 +16,11 @@ public protocol SportModule: Sendable {
     var measures: Set<StepMeasure> { get }
     /// Ziele, nach denen sich die Intensität eines Schritts richten kann.
     var targets: Set<StepTarget> { get }
+    /// Woran die Sportart in Health zu erkennen ist und welche Messwerte sie liest.
+    var health: SportHealthMapping { get }
+    /// Wie stark eine Minute dieser Sportart belastet, verglichen mit einer Minute Laufen (1,0). Rad belastet
+    /// bei gleichem Puls weniger, weil das Körpergewicht getragen wird. Muss größer als 0 sein.
+    var loadFactor: Double { get }
 }
 
 public extension SportModule {
@@ -33,6 +39,9 @@ public struct SportRegistry: Sendable {
         case missingDisplayName(SportID)
         case missingSymbol(SportID)
         case noMeasures(SportID)
+        case invalidLoadFactor(SportID)
+        /// Zwei Sportarten beanspruchen dieselbe Workout-Art aus Health; die zweite wird genannt.
+        case sharedActivityType(SportID)
     }
 
     /// In der Reihenfolge der Anmeldung (die App zeigt sie so an).
@@ -40,6 +49,7 @@ public struct SportRegistry: Sendable {
 
     public init(modules: [any SportModule]) throws {
         var seen = Set<SportID>()
+        var claimedActivityTypes = Set<UInt>()
         for module in modules {
             guard module.id.isWellFormed else { throw Problem.malformedID(module.id) }
             guard seen.insert(module.id).inserted else { throw Problem.duplicate(module.id) }
@@ -48,6 +58,10 @@ public struct SportRegistry: Sendable {
             }
             guard !module.symbolName.isEmpty else { throw Problem.missingSymbol(module.id) }
             guard !module.measures.isEmpty else { throw Problem.noMeasures(module.id) }
+            guard module.loadFactor > 0, module.loadFactor.isFinite else { throw Problem.invalidLoadFactor(module.id) }
+            for rawValue in module.health.activityTypeRawValues {
+                guard claimedActivityTypes.insert(rawValue).inserted else { throw Problem.sharedActivityType(module.id) }
+            }
         }
         self.modules = modules
     }
@@ -61,5 +75,30 @@ public struct SportRegistry: Sendable {
     /// `nil` für eine Kennung, die diese App-Version nicht kennt.
     public func module(for id: SportID) -> (any SportModule)? {
         modules.first { $0.id == id }
+    }
+
+    /// Name für die Anzeige, auch für eine Kennung, die diese App-Version nicht kennt (dann die Kennung selbst).
+    public func displayName(for id: SportID) -> String {
+        module(for: id)?.displayName ?? id.rawValue
+    }
+
+    /// SF-Symbol für die Anzeige, mit neutralem Symbol für unbekannte Kennungen.
+    public func symbolName(for id: SportID) -> String {
+        module(for: id)?.symbolName ?? "figure.mixed.cardio"
+    }
+
+    /// Die Sportart, zu der ein Health-Workout dieser Art gehört; `nil` für Arten, die keine Sportart kennt.
+    public func module(forActivityType activityType: HKWorkoutActivityType) -> (any SportModule)? {
+        modules.first { $0.health.activityTypeRawValues.contains(activityType.rawValue) }
+    }
+
+    /// Alle Workout-Arten aller Sportarten, für die Abfrage in Health.
+    public var activityTypes: [HKWorkoutActivityType] {
+        modules.flatMap(\.health.activityTypes)
+    }
+
+    /// Alle sportartspezifischen Messwerte, die die App in Health lesen darf.
+    public var healthReadTypes: Set<HKObjectType> {
+        modules.reduce(into: Set<HKObjectType>()) { $0.formUnion($1.health.readTypes) }
     }
 }

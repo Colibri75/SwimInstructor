@@ -20,12 +20,16 @@ public final class HealthKitManager: ObservableObject, HealthDataAuthorizing {
     private let healthStore = HKHealthStore()
     private let shareTypes: Set<HKSampleType>
 
-    /// All types M2 (data layer) will read: swim workouts plus the vitals the training-state
-    /// calculation in M3 needs (heart rate, resting HR, HRV, sleep).
+    /// All types the app reads: workouts plus the vitals the training-state calculation needs (heart
+    /// rate, resting HR, HRV, sleep, energy), plus whatever each sport module reads (distance, strokes,
+    /// power, cadence ...).
     // Plain constant data, not tied to actor state - keeping it nonisolated lets callers read it
     // without hopping onto the main actor (and avoids a Swift 6 strict-concurrency error).
-    public nonisolated static let readTypes: Set<HKObjectType> = [
+    public nonisolated static let readTypes: Set<HKObjectType> = coreReadTypes.union(SportRegistry.standard.healthReadTypes)
+
+    nonisolated static let coreReadTypes: Set<HKObjectType> = [
         HKObjectType.workoutType(),
+        HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
         HKObjectType.quantityType(forIdentifier: .heartRate)!,
         HKObjectType.quantityType(forIdentifier: .restingHeartRate)!,
         HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN)!,

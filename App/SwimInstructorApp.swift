@@ -16,7 +16,7 @@ struct SwimInstructorApp: App {
         let settings = BackendSettings()
         let goalStore = UserDefaultsGoalStore()
         let builder = SnapshotBuilder(
-            workoutRepository: HealthKitSwimWorkoutRepository(),
+            repository: HealthKitWorkoutRepository(),
             vitalsRepository: HealthKitDailyVitalsRepository(),
             // Das Gesamtziel aus den Einstellungen, bei jedem Durchlauf neu gelesen.
             goalProvider: { goalStore.goal() }
