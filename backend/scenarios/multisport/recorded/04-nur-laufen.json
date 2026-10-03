@@ -1,0 +1,287 @@
+{
+  "macro": {
+    "source": "synthetic",
+    "model": "synthetisch",
+    "recorded_at": "2026-10-03T12:00:00Z",
+    "usage": {
+      "inputTokens": 4442,
+      "outputTokens": 506
+    },
+    "raw": {
+      "rationale": "Der Plan führt in 11 Wochen zum Ziel am 2026-12-13 und verteilt die Zeit nach deinen Schwerpunkten (Laufen 100 %). Jede vierte Woche ist eine Entlastungswoche, danach steigt der Umfang um etwa 8 % pro Woche bis zu deinen 4 Stunden. Vor dem Wettkampf spitzt eine Woche zu.",
+      "weeks": [
+        {
+          "week_start": "2026-09-28",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "run",
+              "amount": 115,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "week_start": "2026-10-05",
+          "deload": false,
+          "focus": "Wettkampfnah",
+          "sports": [
+            {
+              "sport": "run",
+              "amount": 125,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "week_start": "2026-10-12",
+          "deload": false,
+          "focus": "Wettkampfnah",
+          "sports": [
+            {
+              "sport": "run",
+              "amount": 135,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "week_start": "2026-10-19",
+          "deload": true,
+          "focus": "Entlastung",
+          "sports": [
+            {
+              "sport": "run",
+              "amount": 100,
+              "sessions": 2
+            }
+          ]
+        },
+        {
+          "week_start": "2026-10-26",
+          "deload": false,
+          "focus": "Wettkampfnah",
+          "sports": [
+            {
+              "sport": "run",
+              "amount": 145,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "week_start": "2026-11-02",
+          "deload": false,
+          "focus": "Wettkampfnah",
+          "sports": [
+            {
+              "sport": "run",
+              "amount": 155,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "week_start": "2026-11-09",
+          "deload": false,
+          "focus": "Wettkampfnah",
+          "sports": [
+            {
+              "sport": "run",
+              "amount": 170,
+              "sessions": 4
+            }
+          ]
+        },
+        {
+          "week_start": "2026-11-16",
+          "deload": true,
+          "focus": "Entlastung",
+          "sports": [
+            {
+              "sport": "run",
+              "amount": 130,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "week_start": "2026-11-23",
+          "deload": false,
+          "focus": "Wettkampfnah",
+          "sports": [
+            {
+              "sport": "run",
+              "amount": 180,
+              "sessions": 4
+            }
+          ]
+        },
+        {
+          "week_start": "2026-11-30",
+          "deload": false,
+          "focus": "Zuspitzen, frisch werden",
+          "sports": [
+            {
+              "sport": "run",
+              "amount": 110,
+              "sessions": 2
+            }
+          ]
+        },
+        {
+          "week_start": "2026-12-07",
+          "deload": false,
+          "focus": "Wettkampfwoche",
+          "sports": [
+            {
+              "sport": "run",
+              "amount": 75,
+              "sessions": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "week": {
+    "source": "synthetic",
+    "model": "synthetisch",
+    "recorded_at": "2026-10-03T12:00:00Z",
+    "usage": {
+      "inputTokens": 4333,
+      "outputTokens": 311
+    },
+    "raw": {
+      "rationale": "Die Woche setzt die Vorgabe des Gesamtplans für dein Ziel um: 3 Einheiten an 4 Tagen, dazu die vorgesehenen Leistungstests. Harte Tage liegen nie hintereinander.",
+      "days": [
+        {
+          "date": "2026-09-30",
+          "focus": "Grundlage locker",
+          "sessions": [
+            {
+              "sport": "run",
+              "session_type": "endurance",
+              "intensity": "easy",
+              "amount": 35,
+              "focus": "Grundlage locker",
+              "test_id": null
+            }
+          ]
+        },
+        {
+          "date": "2026-10-01",
+          "focus": "Leistungstest: 30-Minuten-Test",
+          "sessions": [
+            {
+              "sport": "run",
+              "session_type": "test",
+              "intensity": "hard",
+              "amount": 45,
+              "focus": "Leistungstest: 30-Minuten-Test",
+              "test_id": "threshold_30min"
+            }
+          ]
+        },
+        {
+          "date": "2026-10-02",
+          "focus": "Ruhetag",
+          "sessions": []
+        },
+        {
+          "date": "2026-10-03",
+          "focus": "Lange Laufen-Einheit, ruhig",
+          "sessions": [
+            {
+              "sport": "run",
+              "session_type": "endurance",
+              "intensity": "easy",
+              "amount": 50,
+              "focus": "Lange Laufen-Einheit, ruhig",
+              "test_id": null
+            }
+          ]
+        },
+        {
+          "date": "2026-10-04",
+          "focus": "Ruhetag",
+          "sessions": []
+        },
+        {
+          "date": "2026-10-05",
+          "focus": "Ruhetag",
+          "sessions": []
+        },
+        {
+          "date": "2026-10-06",
+          "focus": "Ruhetag",
+          "sessions": []
+        }
+      ]
+    }
+  },
+  "day": {
+    "source": "synthetic",
+    "model": "synthetisch",
+    "recorded_at": "2026-10-03T12:00:00Z",
+    "usage": {
+      "inputTokens": 4357,
+      "outputTokens": 312
+    },
+    "raw": {
+      "rationale": "Heute steht Laufen an, wie im Wochenplan für dein Ziel vorgesehen.",
+      "sessions": [
+        {
+          "sport": "run",
+          "session_type": "endurance",
+          "intensity": "easy",
+          "focus": "Grundlage locker",
+          "test_id": null,
+          "steps": [
+            {
+              "name": "Einwärmen",
+              "repetitions": 1,
+              "measure": "duration",
+              "distance_meters": null,
+              "duration_seconds": 300,
+              "target_type": "perceived_effort",
+              "target_value": 3,
+              "rest_seconds": 0,
+              "instructions": "Locker einlaufen.",
+              "cue": "Locker einlaufen",
+              "equipment": []
+            },
+            {
+              "name": "Grundlage",
+              "repetitions": 1,
+              "measure": "duration",
+              "distance_meters": null,
+              "duration_seconds": 900,
+              "target_type": "perceived_effort",
+              "target_value": 4,
+              "rest_seconds": 0,
+              "instructions": "Gleichmäßig, du kannst dich noch unterhalten.",
+              "cue": "Ruhig gleichmäßig",
+              "equipment": []
+            },
+            {
+              "name": "Ausklang",
+              "repetitions": 1,
+              "measure": "duration",
+              "distance_meters": null,
+              "duration_seconds": 300,
+              "target_type": "perceived_effort",
+              "target_value": 2,
+              "rest_seconds": 0,
+              "instructions": "Ganz locker auslaufen.",
+              "cue": "Locker auslaufen",
+              "equipment": []
+            }
+          ]
+        }
+      ],
+      "coach_notes": []
+    }
+  }
+}

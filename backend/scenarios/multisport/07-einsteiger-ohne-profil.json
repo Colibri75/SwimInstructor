@@ -1,0 +1,123 @@
+{
+  "description": "Einsteiger ohne Leistungsprofil: erster Sprint-Triathlon im Juni, drei Tage und drei Stunden pro Woche. In jeder Sportart erst eine kurze Einheit. Die Einstiegstests sollen in den ersten zwei Wochen kommen.",
+  "today": "2026-09-30",
+  "snapshot": {
+    "schema_version": 2,
+    "generated_at": "2026-09-30T12:00:00Z",
+    "goal": {
+      "distance_meters": 750,
+      "target_duration_seconds": 900,
+      "target_pace_seconds_per_hundred_meters": 120,
+      "target_date": "2027-06-13T08:00:00Z",
+      "days_until_goal": 256
+    },
+    "volume": {
+      "last_seven_days_meters": 600,
+      "average_weekly_meters": 300,
+      "weekly_change_percent": 100,
+      "sessions_last_seven_days": 1,
+      "sessions_last_four_weeks": 2,
+      "longest_session_meters": 600
+    },
+    "pace": {
+      "recent_pace_seconds_per_hundred_meters": 200
+    },
+    "load": {
+      "days_since_last_workout": 3
+    },
+    "recovery": {
+      "status": "good",
+      "resting_heart_rate_deviation_bpm": 0,
+      "hrv_deviation_percent": 0,
+      "recent_average_sleep_hours": 7.5,
+      "warning_signals": []
+    },
+    "flags": [],
+    "training_goal": {
+      "template": "triathlon_sprint",
+      "target_date": "2027-06-13T08:00:00Z",
+      "days_until_goal": 256,
+      "training_days_per_week": 3,
+      "weekly_hours": 3,
+      "disciplines": [
+        {
+          "sport": "swim",
+          "distance_meters": 750
+        },
+        {
+          "sport": "bike",
+          "distance_meters": 20000
+        },
+        {
+          "sport": "run",
+          "distance_meters": 5000
+        }
+      ],
+      "emphasis": [
+        {
+          "sport": "swim",
+          "percent": 34
+        },
+        {
+          "sport": "bike",
+          "percent": 33
+        },
+        {
+          "sport": "run",
+          "percent": 33
+        }
+      ]
+    },
+    "sports": [
+      {
+        "sport": "swim",
+        "sessions_last_seven_days": 1,
+        "sessions_last_four_weeks": 2,
+        "minutes_last_seven_days": 20,
+        "average_weekly_minutes": 10,
+        "meters_last_seven_days": 600,
+        "average_weekly_meters": 300,
+        "longest_session_meters": 600,
+        "longest_session_minutes": 20,
+        "load_last_seven_days": 20,
+        "average_weekly_load": 10,
+        "days_since_last_session": 3
+      },
+      {
+        "sport": "bike",
+        "sessions_last_seven_days": 1,
+        "sessions_last_four_weeks": 2,
+        "minutes_last_seven_days": 30,
+        "average_weekly_minutes": 15,
+        "meters_last_seven_days": 10000,
+        "average_weekly_meters": 5000,
+        "longest_session_meters": 10000,
+        "longest_session_minutes": 30,
+        "load_last_seven_days": 24,
+        "average_weekly_load": 12,
+        "days_since_last_session": 5
+      },
+      {
+        "sport": "run",
+        "sessions_last_seven_days": 1,
+        "sessions_last_four_weeks": 2,
+        "minutes_last_seven_days": 15,
+        "average_weekly_minutes": 8,
+        "meters_last_seven_days": 2200,
+        "average_weekly_meters": 1100,
+        "longest_session_meters": 2200,
+        "longest_session_minutes": 15,
+        "load_last_seven_days": 17,
+        "average_weekly_load": 9,
+        "days_since_last_session": 6
+      }
+    ],
+    "total_load": {
+      "minutes_last_seven_days": 65,
+      "average_weekly_minutes": 33,
+      "load_last_seven_days": 61,
+      "average_weekly_load": 31,
+      "acute_chronic_ratio": 1.97
+    }
+  }
+}

@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { ClaudeOptions, ClaudePlanGenerator } from "../../src/plan/generator";
 import { PlanGenerationError } from "../../src/plan/errors";
+import { MULTI_DAY_SYSTEM_PROMPT } from "../../src/plan/multi/prompts";
+import { MultiDayPlanSchema } from "../../src/plan/multi/schemas";
 import { SYSTEM_PROMPT } from "../../src/plan/prompt";
 import { buildWeekUserMessage, WEEK_SYSTEM_PROMPT } from "../../src/plan/weekPrompt";
 import { context, goodWeek } from "./weekFixtures";
@@ -191,3 +193,29 @@ describe("ClaudePlanGenerator: Tagesvorgabe", () => {
   });
 });
 
+describe("ClaudePlanGenerator: freie Anfrage (Plan v2)", () => {
+  const raw = { rationale: "Lockerer Tag.", sessions: [], coach_notes: [] };
+
+  it("sendet den gegebenen System-Prompt, die Nachricht und das Schema und liefert das geparste JSON", async () => {
+    const create = jest.fn().mockResolvedValue(response({ content: [{ type: "text", text: JSON.stringify(raw) }] }));
+
+    const result = await generatorWith(create).complete(MULTI_DAY_SYSTEM_PROMPT, "Erstelle die Einheiten für heute.", MultiDayPlanSchema);
+
+    const [body, requestOptions] = create.mock.calls[0];
+    expect(body.system).toBe(MULTI_DAY_SYSTEM_PROMPT);
+    expect(body.messages).toEqual([{ role: "user", content: "Erstelle die Einheiten für heute." }]);
+    expect(body.model).toBe("claude-opus-5-5");
+    expect(body.thinking).toEqual({ type: "adaptive" });
+    expect(body.output_config.format.type).toBe("json_schema");
+    expect(body.output_config.format.schema.properties).toHaveProperty("sessions");
+    expect(body.output_config.format.schema.properties.sets).toBeUndefined();
+    expect(requestOptions).toEqual({ timeout: 75_000, maxRetries: 0 });
+    expect(result).toEqual({ raw, model: "claude-opus-5-5", usage: { inputTokens: 1800, outputTokens: 2500 } });
+  });
+
+  it("klassifiziert Fehler wie beim Tagesplan", async () => {
+    const create = jest.fn().mockRejectedValue(new Anthropic.APIConnectionTimeoutError());
+
+    await expect(generatorWith(create).complete(MULTI_DAY_SYSTEM_PROMPT, "x", MultiDayPlanSchema)).rejects.toMatchObject({ name: "PlanGenerationError", reason: "timeout" });
+  });
+});

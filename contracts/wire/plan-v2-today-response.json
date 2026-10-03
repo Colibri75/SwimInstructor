@@ -1,0 +1,144 @@
+{
+  "plan_version": 2,
+  "source": "claude",
+  "date": "2026-09-30",
+  "generated_at": "2026-09-30T10:00:00.000Z",
+  "stale": false,
+  "plan": {
+    "rationale": "Heute locker schwimmen und der 30-Minuten-Test auf dem Rad, wie im Gesamtplan für dein Ziel vorgesehen. Die letzte harte Einheit liegt drei Tage zurück.",
+    "sessions": [
+      {
+        "sport": "swim",
+        "session_type": "technique",
+        "intensity": "easy",
+        "focus": "Technik, lange Züge",
+        "test": null,
+        "amount": 500,
+        "unit": "meters",
+        "distance_meters": 500,
+        "duration_minutes": 12,
+        "steps": [
+          {
+            "name": "Einschwimmen",
+            "repetitions": 1,
+            "measure": "distance",
+            "distance_meters": 200,
+            "duration_seconds": null,
+            "target_type": "perceived_effort",
+            "target_value": 3,
+            "rest_seconds": 20,
+            "instructions": "Locker einschwimmen.",
+            "cue": "Locker einschwimmen",
+            "equipment": []
+          },
+          {
+            "name": "Technik",
+            "repetitions": 4,
+            "measure": "distance",
+            "distance_meters": 50,
+            "duration_seconds": null,
+            "target_type": "pace_per_100m",
+            "target_value": 125,
+            "rest_seconds": 20,
+            "instructions": "Abschlag, auf lange Züge achten.",
+            "cue": "Abschlag",
+            "equipment": [
+              "pull_buoy"
+            ]
+          },
+          {
+            "name": "Ausschwimmen",
+            "repetitions": 1,
+            "measure": "distance",
+            "distance_meters": 100,
+            "duration_seconds": null,
+            "target_type": null,
+            "target_value": null,
+            "rest_seconds": 0,
+            "instructions": "Ganz locker ausschwimmen.",
+            "cue": "Ausschwimmen",
+            "equipment": []
+          }
+        ]
+      },
+      {
+        "sport": "bike",
+        "session_type": "test",
+        "intensity": "hard",
+        "focus": "30-Minuten-Test",
+        "test": {
+          "id": "threshold_30min",
+          "display_name": "30-Minuten-Test",
+          "maximal_effort": true,
+          "produces": [
+            "threshold_heart_rate",
+            "threshold_power"
+          ]
+        },
+        "amount": 58,
+        "unit": "minutes",
+        "distance_meters": 25250,
+        "duration_minutes": 58,
+        "steps": [
+          {
+            "name": "Einfahren",
+            "repetitions": 1,
+            "measure": "duration",
+            "distance_meters": null,
+            "duration_seconds": 720,
+            "target_type": "perceived_effort",
+            "target_value": 3,
+            "rest_seconds": 0,
+            "instructions": "Locker einrollen, leichter Gang, hohe Trittfrequenz.",
+            "cue": "Locker einfahren",
+            "equipment": []
+          },
+          {
+            "name": "Steigerung",
+            "repetitions": 3,
+            "measure": "duration",
+            "distance_meters": null,
+            "duration_seconds": 60,
+            "target_type": "perceived_effort",
+            "target_value": 6,
+            "rest_seconds": 60,
+            "instructions": "Eine Minute zügig, dann eine Minute locker.",
+            "cue": "Steigern",
+            "equipment": []
+          },
+          {
+            "name": "Test 30 Minuten",
+            "repetitions": 1,
+            "measure": "duration",
+            "distance_meters": null,
+            "duration_seconds": 1800,
+            "target_type": "perceived_effort",
+            "target_value": 9,
+            "rest_seconds": 0,
+            "instructions": "30 Minuten allein so hart, wie du sie gleichmäßig durchhältst, wie im Wettkampf. Nicht zu schnell anfangen. Am besten auf der Rolle oder auf einer flachen Strecke ohne Ampeln.",
+            "cue": "30 min hart, gleichmäßig",
+            "equipment": []
+          },
+          {
+            "name": "Ausfahren",
+            "repetitions": 1,
+            "measure": "duration",
+            "distance_meters": null,
+            "duration_seconds": 600,
+            "target_type": "perceived_effort",
+            "target_value": 2,
+            "rest_seconds": 0,
+            "instructions": "Ganz locker ausrollen.",
+            "cue": "Locker ausfahren",
+            "equipment": []
+          }
+        ]
+      }
+    ],
+    "coach_notes": [
+      "Vor dem Test gut essen und trinken."
+    ]
+  },
+  "adjustments": [],
+  "wishes": "heute etwas Technik"
+}

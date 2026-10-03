@@ -1,0 +1,140 @@
+{
+  "description": "Erster Sprint-Triathlon in viereinhalb Monaten. Schwimmt und fährt ein wenig, läuft noch gar nicht. Vier Tage, vier Stunden pro Woche, unter der Woche wenig Zeit.",
+  "today": "2026-09-30",
+  "snapshot": {
+    "schema_version": 2,
+    "generated_at": "2026-09-30T12:00:00Z",
+    "goal": {
+      "distance_meters": 750,
+      "target_duration_seconds": 900,
+      "target_pace_seconds_per_hundred_meters": 120,
+      "target_date": "2027-02-14T08:00:00Z",
+      "days_until_goal": 137
+    },
+    "volume": {
+      "last_seven_days_meters": 1000,
+      "average_weekly_meters": 950,
+      "weekly_change_percent": 5.3,
+      "sessions_last_seven_days": 1,
+      "sessions_last_four_weeks": 4,
+      "longest_session_meters": 1200
+    },
+    "pace": {
+      "recent_pace_seconds_per_hundred_meters": 180
+    },
+    "load": {
+      "days_since_last_workout": 2
+    },
+    "recovery": {
+      "status": "good",
+      "resting_heart_rate_deviation_bpm": 0,
+      "hrv_deviation_percent": 0,
+      "recent_average_sleep_hours": 7.5,
+      "warning_signals": []
+    },
+    "flags": [],
+    "training_goal": {
+      "template": "triathlon_sprint",
+      "target_date": "2027-02-14T08:00:00Z",
+      "days_until_goal": 137,
+      "training_days_per_week": 4,
+      "weekly_hours": 4,
+      "disciplines": [
+        {
+          "sport": "swim",
+          "distance_meters": 750
+        },
+        {
+          "sport": "bike",
+          "distance_meters": 20000
+        },
+        {
+          "sport": "run",
+          "distance_meters": 5000
+        }
+      ],
+      "emphasis": [
+        {
+          "sport": "swim",
+          "percent": 35
+        },
+        {
+          "sport": "bike",
+          "percent": 35
+        },
+        {
+          "sport": "run",
+          "percent": 30
+        }
+      ]
+    },
+    "sports": [
+      {
+        "sport": "swim",
+        "sessions_last_seven_days": 1,
+        "sessions_last_four_weeks": 4,
+        "minutes_last_seven_days": 30,
+        "average_weekly_minutes": 30,
+        "meters_last_seven_days": 1000,
+        "average_weekly_meters": 950,
+        "longest_session_meters": 1200,
+        "longest_session_minutes": 35,
+        "load_last_seven_days": 30,
+        "average_weekly_load": 30,
+        "days_since_last_session": 2
+      },
+      {
+        "sport": "bike",
+        "sessions_last_seven_days": 1,
+        "sessions_last_four_weeks": 3,
+        "minutes_last_seven_days": 45,
+        "average_weekly_minutes": 40,
+        "meters_last_seven_days": 18000,
+        "average_weekly_meters": 16000,
+        "longest_session_meters": 24000,
+        "longest_session_minutes": 60,
+        "load_last_seven_days": 36,
+        "average_weekly_load": 32,
+        "days_since_last_session": 4
+      },
+      {
+        "sport": "run",
+        "sessions_last_seven_days": 0,
+        "sessions_last_four_weeks": 0,
+        "minutes_last_seven_days": 0,
+        "average_weekly_minutes": 0,
+        "meters_last_seven_days": 0,
+        "average_weekly_meters": 0,
+        "longest_session_meters": 0,
+        "longest_session_minutes": 0,
+        "load_last_seven_days": 0,
+        "average_weekly_load": 0
+      }
+    ],
+    "total_load": {
+      "minutes_last_seven_days": 75,
+      "average_weekly_minutes": 70,
+      "load_last_seven_days": 66,
+      "average_weekly_load": 62,
+      "acute_chronic_ratio": 1.06
+    },
+    "performance": {
+      "athlete": [
+        {
+          "metric": "max_heart_rate",
+          "value": 186,
+          "source": "formula",
+          "measured_at": "2026-09-30T12:00:00Z"
+        },
+        {
+          "metric": "resting_heart_rate",
+          "value": 56,
+          "source": "estimated",
+          "measured_at": "2026-09-30T12:00:00Z"
+        }
+      ],
+      "sports": []
+    }
+  },
+  "week_wishes": "Unter der Woche habe ich höchstens 45 Minuten am Tag, am Samstag und Sonntag gern länger."
+}

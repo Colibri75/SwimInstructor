@@ -1,5 +1,33 @@
 import { SportRegistry, SportRegistryError, SPORTS } from "../../src/sports/registry";
-import { SportDefinition } from "../../src/sports/types";
+import { SportDefinition, SportPlanning } from "../../src/sports/types";
+
+const planning: SportPlanning = {
+  limitUnit: "minutes",
+  limits: {
+    sessionGrowthFactor: 1.2,
+    minSessionCap: 45,
+    absoluteMaxSession: 120,
+    weeklyGrowthFactor: 1.3,
+    minWeeklyCap: 60,
+    minSession: 15,
+    pauseSessionCap: 30,
+    pauseAfterDays: 14,
+    maxSessionsPerWeek: 5,
+    macroGrowthFactor: 1.1,
+    amountStep: 5
+  },
+  typicalSpeedMetersPerSecond: 0.5,
+  stepMeasures: ["duration"],
+  distanceStepMeters: 100,
+  minStepMeters: 100,
+  maxStepMeters: 1000,
+  minStepSeconds: 30,
+  maxStepSeconds: 3600,
+  targetRange: () => ({ min: 1, max: 10 }),
+  testSessions: {},
+  equipment: {},
+  promptRules: "- Ruhig atmen."
+};
 
 const stub = (patch: Partial<SportDefinition> = {}): SportDefinition => ({
   id: "yoga",
@@ -10,6 +38,7 @@ const stub = (patch: Partial<SportDefinition> = {}): SportDefinition => ({
   loadFactor: 1,
   performanceMetrics: [],
   performanceTests: [],
+  planning,
   ...patch
 });
 
@@ -79,8 +108,41 @@ describe("SportRegistry", () => {
     expect(problemOf([stub({ performanceMetrics: [lactate], performanceTests: tests })])).toBe("invalid_performance_test");
   });
 
+  const rampSession = { ramp: [{ name: "Rampe", repetitions: 1, measure: "duration" as const, distance_meters: null, duration_seconds: 1200, target_type: null, target_value: null, rest_seconds: 0, instructions: "", cue: "", equipment: [] }] };
+
   it("nimmt eine Sportart mit eigenem Wert und Test an", () => {
-    expect(problemOf([stub({ performanceMetrics: [lactate], performanceTests: [rampTest] })])).toBeUndefined();
+    expect(problemOf([stub({ performanceMetrics: [lactate], performanceTests: [rampTest], planning: { ...planning, testSessions: rampSession } })])).toBeUndefined();
+  });
+
+  const limits = planning.limits;
+  it.each([
+    ["Grenze 0", { limits: { ...limits, minSession: 0 } }],
+    ["Grenze unendlich", { limits: { ...limits, absoluteMaxSession: Infinity } }],
+    ["Wachstum unter 1", { limits: { ...limits, sessionGrowthFactor: 0.9 } }],
+    ["Woche schrumpft", { limits: { ...limits, weeklyGrowthFactor: 0.8 } }],
+    ["Gesamtplan schrumpft", { limits: { ...limits, macroGrowthFactor: 0.95 } }],
+    ["kleinste Einheit ueber der Untergrenze", { limits: { ...limits, minSession: 50 } }],
+    ["Untergrenze ueber der Obergrenze", { limits: { ...limits, minSessionCap: 200 } }],
+    ["Wiedereinstieg unter der kleinsten Einheit", { limits: { ...limits, pauseSessionCap: 10 } }],
+    ["Wochengrenze unter der kleinsten Einheit", { limits: { ...limits, minWeeklyCap: 10 } }],
+    ["krumme Einheitenzahl", { limits: { ...limits, maxSessionsPerWeek: 2.5 } }],
+    ["zu viele Einheiten", { limits: { ...limits, maxSessionsPerWeek: 21 } }],
+    ["unbekannte Einheit", { limitUnit: "laps" as never }],
+    ["Tempo 0", { typicalSpeedMetersPerSecond: 0 }],
+    ["ohne Schrittmass", { stepMeasures: [] }],
+    ["fremdes Schrittmass", { stepMeasures: ["distance" as const] }],
+    ["Streckenraster 0", { distanceStepMeters: 0 }],
+    ["Streckenbereich verkehrt", { minStepMeters: 2000 }],
+    ["Dauerbereich verkehrt", { minStepSeconds: 7200 }],
+    ["ohne Regeln", { promptRules: " " }],
+    ["Testeinheit fuer unbekannten Test", { testSessions: rampSession }]
+  ])("lehnt ungueltige Planungsangaben ab: %s", (_why, patch) => {
+    expect(problemOf([stub({ planning: { ...planning, ...patch } })])).toBe("invalid_planning");
+  });
+
+  it("verlangt eine Testeinheit je Leistungstest", () => {
+    expect(problemOf([stub({ performanceMetrics: [lactate], performanceTests: [rampTest] })])).toBe("invalid_planning");
+    expect(problemOf([stub({ performanceMetrics: [lactate], performanceTests: [rampTest], planning: { ...planning, testSessions: { ramp: [] } } })])).toBe("invalid_planning");
   });
 
   it("findet Leistungswerte je Sportart und fuer alle Sportarten", () => {

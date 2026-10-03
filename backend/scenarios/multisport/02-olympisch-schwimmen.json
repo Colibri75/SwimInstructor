@@ -1,0 +1,217 @@
+{
+  "description": "Olympische Distanz im Juli, Schwerpunkt Schwimmen (50 %). Erfahrener Schwimmer mit getesteter CSS, fährt etwas Rad, läuft kaum. Danach Feedback: mehr Laufen.",
+  "today": "2026-09-30",
+  "snapshot": {
+    "schema_version": 2,
+    "generated_at": "2026-09-30T12:00:00Z",
+    "goal": {
+      "distance_meters": 1500,
+      "target_duration_seconds": 1800,
+      "target_pace_seconds_per_hundred_meters": 120,
+      "target_date": "2027-07-04T08:00:00Z",
+      "days_until_goal": 277
+    },
+    "volume": {
+      "last_seven_days_meters": 3500,
+      "average_weekly_meters": 3350,
+      "weekly_change_percent": 4.5,
+      "sessions_last_seven_days": 2,
+      "sessions_last_four_weeks": 8,
+      "longest_session_meters": 2000
+    },
+    "pace": {
+      "recent_pace_seconds_per_hundred_meters": 120
+    },
+    "load": {
+      "days_since_last_workout": 1,
+      "days_since_last_hard_session": 3
+    },
+    "recovery": {
+      "status": "good",
+      "resting_heart_rate_deviation_bpm": 0,
+      "hrv_deviation_percent": 0,
+      "recent_average_sleep_hours": 7.5,
+      "warning_signals": []
+    },
+    "flags": [],
+    "training_goal": {
+      "template": "triathlon_olympic",
+      "target_date": "2027-07-04T08:00:00Z",
+      "days_until_goal": 277,
+      "training_days_per_week": 5,
+      "weekly_hours": 7.5,
+      "disciplines": [
+        {
+          "sport": "swim",
+          "distance_meters": 1500,
+          "target_duration_seconds": 1800
+        },
+        {
+          "sport": "bike",
+          "distance_meters": 40000,
+          "target_duration_seconds": 4800
+        },
+        {
+          "sport": "run",
+          "distance_meters": 10000
+        }
+      ],
+      "emphasis": [
+        {
+          "sport": "swim",
+          "percent": 50
+        },
+        {
+          "sport": "bike",
+          "percent": 30
+        },
+        {
+          "sport": "run",
+          "percent": 20
+        }
+      ]
+    },
+    "sports": [
+      {
+        "sport": "swim",
+        "sessions_last_seven_days": 2,
+        "sessions_last_four_weeks": 8,
+        "minutes_last_seven_days": 70,
+        "average_weekly_minutes": 67,
+        "meters_last_seven_days": 3500,
+        "average_weekly_meters": 3350,
+        "longest_session_meters": 2000,
+        "longest_session_minutes": 40,
+        "load_last_seven_days": 70,
+        "average_weekly_load": 67,
+        "days_since_last_session": 1
+      },
+      {
+        "sport": "bike",
+        "sessions_last_seven_days": 1,
+        "sessions_last_four_weeks": 4,
+        "minutes_last_seven_days": 90,
+        "average_weekly_minutes": 85,
+        "meters_last_seven_days": 42000,
+        "average_weekly_meters": 39000,
+        "longest_session_meters": 52000,
+        "longest_session_minutes": 110,
+        "load_last_seven_days": 72,
+        "average_weekly_load": 68,
+        "days_since_last_session": 3
+      },
+      {
+        "sport": "run",
+        "sessions_last_seven_days": 1,
+        "sessions_last_four_weeks": 3,
+        "minutes_last_seven_days": 20,
+        "average_weekly_minutes": 15,
+        "meters_last_seven_days": 3200,
+        "average_weekly_meters": 2400,
+        "longest_session_meters": 4000,
+        "longest_session_minutes": 25,
+        "load_last_seven_days": 22,
+        "average_weekly_load": 17,
+        "days_since_last_session": 4
+      }
+    ],
+    "total_load": {
+      "minutes_last_seven_days": 180,
+      "average_weekly_minutes": 167,
+      "load_last_seven_days": 164,
+      "average_weekly_load": 152,
+      "acute_chronic_ratio": 1.08
+    },
+    "performance": {
+      "athlete": [
+        {
+          "metric": "max_heart_rate",
+          "value": 188,
+          "source": "estimated",
+          "measured_at": "2026-09-30T12:00:00Z"
+        },
+        {
+          "metric": "resting_heart_rate",
+          "value": 52,
+          "source": "estimated",
+          "measured_at": "2026-09-30T12:00:00Z"
+        }
+      ],
+      "sports": [
+        {
+          "sport": "swim",
+          "values": [
+            {
+              "metric": "css_pace_per_100m",
+              "value": 105,
+              "source": "tested",
+              "measured_at": "2026-09-20T08:00:00Z"
+            }
+          ],
+          "zones": [
+            {
+              "target": "pace_per_100m",
+              "basis": "css_pace_per_100m",
+              "zones": [
+                {
+                  "zone": 1,
+                  "minimum": 131
+                },
+                {
+                  "zone": 2,
+                  "minimum": 119,
+                  "maximum": 131
+                },
+                {
+                  "zone": 3,
+                  "minimum": 111,
+                  "maximum": 119
+                },
+                {
+                  "zone": 4,
+                  "minimum": 103,
+                  "maximum": 111
+                },
+                {
+                  "zone": 5,
+                  "maximum": 103
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "sport": "bike",
+          "values": [
+            {
+              "metric": "threshold_heart_rate",
+              "value": 160,
+              "source": "formula",
+              "measured_at": "2026-09-30T12:00:00Z"
+            }
+          ],
+          "zones": []
+        },
+        {
+          "sport": "run",
+          "values": [
+            {
+              "metric": "threshold_heart_rate",
+              "value": 165,
+              "source": "formula",
+              "measured_at": "2026-09-30T12:00:00Z"
+            },
+            {
+              "metric": "threshold_pace_per_km",
+              "value": 330,
+              "source": "estimated",
+              "measured_at": "2026-09-30T12:00:00Z"
+            }
+          ],
+          "zones": []
+        }
+      ]
+    }
+  },
+  "feedback": "Mehr Laufen bitte, beim Laufen habe ich am meisten Nachholbedarf. Dafür darf das Schwimmen etwas weniger werden."
+}
