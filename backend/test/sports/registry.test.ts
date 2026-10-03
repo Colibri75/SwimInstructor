@@ -6,6 +6,7 @@ const stub = (patch: Partial<SportDefinition> = {}): SportDefinition => ({
   displayName: "Yoga",
   measures: ["duration"],
   targets: ["perceived_effort"],
+  goalSpeed: { minMetersPerSecond: 0.1, maxMetersPerSecond: 1 },
   ...patch
 });
 
@@ -33,11 +34,25 @@ describe("SportRegistry", () => {
     expect(problemOf([stub({ measures: [] })])).toBe("no_measures");
     expect(problemOf([stub({ measures: ["laps" as never] })])).toBe("unknown_measure");
     expect(problemOf([stub({ targets: ["watts" as never] })])).toBe("unknown_target");
+    expect(problemOf([stub({ goalSpeed: { minMetersPerSecond: 0, maxMetersPerSecond: 1 } })])).toBe("invalid_goal_speed");
+    expect(problemOf([stub({ goalSpeed: { minMetersPerSecond: 2, maxMetersPerSecond: 1 } })])).toBe("invalid_goal_speed");
+    expect(problemOf([stub({ goalSpeed: { minMetersPerSecond: 1, maxMetersPerSecond: Infinity } })])).toBe("invalid_goal_speed");
+    expect(problemOf([stub({ goalSpeed: { minMetersPerSecond: Number.NaN, maxMetersPerSecond: 1 } })])).toBe("invalid_goal_speed");
     expect(problemOf([stub()])).toBeUndefined();
   });
 
   it("meldet den Fehler lesbar", () => {
     expect(() => new SportRegistry([stub(), stub()])).toThrow("Sportart yoga: duplicate");
+  });
+
+  it("prueft, ob ein Ziel ein plausibles Tempo hat", () => {
+    expect(SPORTS.plausibleGoal("swim", 3800, 3600)).toBe(true);
+    expect(SPORTS.plausibleGoal("swim", 3800, 60)).toBe(false);
+    expect(SPORTS.plausibleGoal("run", 10_000, 600)).toBe(false);
+    expect(SPORTS.plausibleGoal("run", 10_000, 3000)).toBe(true);
+    expect(SPORTS.plausibleGoal("bike", 40_000, 4 * 3600)).toBe(true);
+    expect(SPORTS.plausibleGoal("bike", 40_000, 0)).toBe(false);
+    expect(SPORTS.plausibleGoal("kayak", 1000, 600)).toBe(false);
   });
 
   it("prueft Mass und Ziel eines Schritts", () => {

@@ -20,6 +20,8 @@ public struct SwimModule: SportModule {
         metrics: [.strokes: HealthQuantity(.swimmingStrokeCount, unit: "count", aggregation: .sum)]
     )
     public let loadFactor = 1.0
+    /// 10:00 bis 0:40 pro 100 m.
+    public let goalSpeedRange: ClosedRange<Double> = 0.15...2.5
 }
 
 // MARK: - Brücke zum bisherigen Schwimm-Modell
@@ -59,6 +61,40 @@ public extension SwimWorkout {
             lapCount: workout[.laps].map { Int($0.rounded()) },
             totalStrokeCount: workout[.strokes],
             averageHeartRate: workout.averageHeartRate
+        )
+    }
+}
+
+// MARK: - Brücke zum bisherigen Schwimmziel
+
+public extension TrainingGoal {
+    /// Das bisherige Schwimmziel als Gesamtziel: eine Disziplin, Schwerpunkt 100 % Schwimmen. Trainingstage und
+    /// Stunden kannte das alte Ziel nicht; 4 Tage und 4 Stunden passen zu dem, was der Plan bisher vorsah.
+    init(legacy goal: AthleteGoal) {
+        self.init(
+            template: goal.distanceMeters == 3_800 ? "swim_long" : nil,
+            disciplines: [Discipline(sport: .swim, distanceMeters: goal.distanceMeters, targetDurationSeconds: goal.targetDurationSeconds)],
+            targetDate: goal.targetDate,
+            trainingDaysPerWeek: 4,
+            weeklyHours: 4,
+            emphasis: [Emphasis(sport: .swim, percent: 100)]
+        )
+    }
+
+    /// 3,8 km Schwimmen in unter 60 Minuten bis zum 04.07.2027, wie `AthleteGoal.default`.
+    static let `default` = TrainingGoal(legacy: .default)
+
+    /// Bis die Planung alle Sportarten kann (T3), plant der Server nur Schwimmen und braucht dafür ein Schwimmziel
+    /// (`goal` im Snapshot). Das ist die Schwimm-Disziplin; ohne Zielzeit gilt 2:00 pro 100 m. Ohne Schwimm-Disziplin
+    /// steht dort ein Platzhalter (1500 m in 45 Minuten), den der Server laut v2-Abschnitt nur als Ausgleich nimmt.
+    var legacySwimGoal: AthleteGoal {
+        guard let swim = discipline(for: .swim) else {
+            return AthleteGoal(distanceMeters: 1_500, targetDurationSeconds: 2_700, targetDate: targetDate)
+        }
+        return AthleteGoal(
+            distanceMeters: swim.distanceMeters,
+            targetDurationSeconds: swim.targetDurationSeconds ?? swim.distanceMeters / 100 * 120,
+            targetDate: targetDate
         )
     }
 }

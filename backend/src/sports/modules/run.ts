@@ -5,5 +5,7 @@ export const run: SportDefinition = {
   id: "run",
   displayName: "Laufen",
   measures: ["distance", "duration"],
-  targets: ["pace_per_km", "heart_rate_zone", "cadence", "perceived_effort"]
+  targets: ["pace_per_km", "heart_rate_zone", "cadence", "perceived_effort"],
+  // 16:40 bis 2:23 pro km.
+  goalSpeed: { minMetersPerSecond: 1, maxMetersPerSecond: 7 }
 };

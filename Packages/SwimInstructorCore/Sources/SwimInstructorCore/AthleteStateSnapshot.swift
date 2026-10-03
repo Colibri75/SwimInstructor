@@ -27,8 +27,14 @@ public enum RecoverySignal: String, Codable, Sendable {
 ///
 /// Feldnamen bewusst ohne Ziffern, damit die snake_case-Umwandlung im JSON eindeutig ist.
 /// Optionale Felder fehlen im JSON, wenn es keinen Wert gibt (z. B. keine Vergleichsdaten).
+///
+/// Schema v1 beschreibt nur das Schwimmen. v2 (Triathlon-Umbau) hängt Gesamtziel, Werte je Sportart und Gesamtlast an
+/// und lässt alle v1-Felder unverändert; `version1` macht daraus wieder genau den v1-Snapshot.
 public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
+    /// Die Version, die `AthleteStateCalculator` erzeugt (nur Schwimmen).
     public static let currentSchemaVersion = 1
+    /// Die Version mit Gesamtziel und allen Sportarten (`withMultiSport`).
+    public static let multiSportSchemaVersion = 2
 
     public let schemaVersion: Int
     public let generatedAt: Date
@@ -38,6 +44,12 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
     public let load: LoadSummary
     public let recovery: RecoverySummary
     public let flags: [AthleteFlag]
+    /// Ab v2: das Gesamtziel über alle Sportarten.
+    public let trainingGoal: TrainingGoalSummary?
+    /// Ab v2: Werte je Sportart (alle Sportarten mit Training oder Schwerpunkt, in der Reihenfolge der Registry).
+    public let sports: [SportStateSummary]?
+    /// Ab v2: Belastung über alle Sportarten.
+    public let totalLoad: TotalLoadSummary?
 
     public init(
         schemaVersion: Int = AthleteStateSnapshot.currentSchemaVersion,
@@ -47,7 +59,10 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
         pace: PaceSummary,
         load: LoadSummary,
         recovery: RecoverySummary,
-        flags: [AthleteFlag]
+        flags: [AthleteFlag],
+        trainingGoal: TrainingGoalSummary? = nil,
+        sports: [SportStateSummary]? = nil,
+        totalLoad: TotalLoadSummary? = nil
     ) {
         self.schemaVersion = schemaVersion
         self.generatedAt = generatedAt
@@ -57,6 +72,30 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
         self.load = load
         self.recovery = recovery
         self.flags = flags
+        self.trainingGoal = trainingGoal
+        self.sports = sports
+        self.totalLoad = totalLoad
+    }
+
+    /// Derselbe Snapshot als v2, mit Gesamtziel, Werten je Sportart und Gesamtlast.
+    public func withMultiSport(
+        trainingGoal: TrainingGoalSummary,
+        sports: [SportStateSummary],
+        totalLoad: TotalLoadSummary
+    ) -> AthleteStateSnapshot {
+        AthleteStateSnapshot(
+            schemaVersion: Self.multiSportSchemaVersion,
+            generatedAt: generatedAt, goal: goal, volume: volume, pace: pace, load: load, recovery: recovery, flags: flags,
+            trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad
+        )
+    }
+
+    /// Nur die v1-Felder, für einen Server, der v2 noch nicht kennt.
+    public var version1: AthleteStateSnapshot {
+        AthleteStateSnapshot(
+            schemaVersion: Self.currentSchemaVersion,
+            generatedAt: generatedAt, goal: goal, volume: volume, pace: pace, load: load, recovery: recovery, flags: flags
+        )
     }
 
     public struct GoalSummary: Codable, Equatable, Sendable {
@@ -163,6 +202,108 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
             self.hrvDeviationPercent = hrvDeviationPercent
             self.recentAverageSleepHours = recentAverageSleepHours
             self.warningSignals = warningSignals
+        }
+    }
+}
+
+// MARK: - v2
+
+public extension AthleteStateSnapshot {
+    /// Das Gesamtziel über alle Sportarten, wie es zum Server geht (ohne Freitext).
+    struct TrainingGoalSummary: Codable, Equatable, Sendable {
+        public let template: String?
+        public let targetDate: Date
+        public let daysUntilGoal: Int
+        public let trainingDaysPerWeek: Int
+        public let weeklyHours: Double
+        public let disciplines: [TrainingGoal.Discipline]
+        public let emphasis: [TrainingGoal.Emphasis]
+
+        public init(
+            template: String?,
+            targetDate: Date,
+            daysUntilGoal: Int,
+            trainingDaysPerWeek: Int,
+            weeklyHours: Double,
+            disciplines: [TrainingGoal.Discipline],
+            emphasis: [TrainingGoal.Emphasis]
+        ) {
+            self.template = template
+            self.targetDate = targetDate
+            self.daysUntilGoal = daysUntilGoal
+            self.trainingDaysPerWeek = trainingDaysPerWeek
+            self.weeklyHours = weeklyHours
+            self.disciplines = disciplines
+            self.emphasis = emphasis
+        }
+    }
+
+    /// Was in einer Sportart zuletzt trainiert wurde. Fenster wie bei v1: letzte 7 Tage (Tag 0 bis 6) und
+    /// Wochenschnitt der letzten 4 Wochen (Tag 0 bis 27, geteilt durch 4).
+    struct SportStateSummary: Codable, Equatable, Sendable {
+        public let sport: SportID
+        public let sessionsLastSevenDays: Int
+        public let sessionsLastFourWeeks: Int
+        public let minutesLastSevenDays: Double
+        public let averageWeeklyMinutes: Double
+        public let metersLastSevenDays: Double
+        public let averageWeeklyMeters: Double
+        public let longestSessionMeters: Double
+        public let longestSessionMinutes: Double
+        public let loadLastSevenDays: Double
+        public let averageWeeklyLoad: Double
+        public let daysSinceLastSession: Int?
+
+        public init(
+            sport: SportID,
+            sessionsLastSevenDays: Int,
+            sessionsLastFourWeeks: Int,
+            minutesLastSevenDays: Double,
+            averageWeeklyMinutes: Double,
+            metersLastSevenDays: Double,
+            averageWeeklyMeters: Double,
+            longestSessionMeters: Double,
+            longestSessionMinutes: Double,
+            loadLastSevenDays: Double,
+            averageWeeklyLoad: Double,
+            daysSinceLastSession: Int?
+        ) {
+            self.sport = sport
+            self.sessionsLastSevenDays = sessionsLastSevenDays
+            self.sessionsLastFourWeeks = sessionsLastFourWeeks
+            self.minutesLastSevenDays = minutesLastSevenDays
+            self.averageWeeklyMinutes = averageWeeklyMinutes
+            self.metersLastSevenDays = metersLastSevenDays
+            self.averageWeeklyMeters = averageWeeklyMeters
+            self.longestSessionMeters = longestSessionMeters
+            self.longestSessionMinutes = longestSessionMinutes
+            self.loadLastSevenDays = loadLastSevenDays
+            self.averageWeeklyLoad = averageWeeklyLoad
+            self.daysSinceLastSession = daysSinceLastSession
+        }
+    }
+
+    /// Belastung über alle Sportarten (Last nach `TrainingLoadCalculator`).
+    struct TotalLoadSummary: Codable, Equatable, Sendable {
+        public let minutesLastSevenDays: Double
+        public let averageWeeklyMinutes: Double
+        public let loadLastSevenDays: Double
+        public let averageWeeklyLoad: Double
+        /// Last der letzten 7 Tage durch den Wochenschnitt der letzten 4 Wochen; `nil` ohne Vergleichswert.
+        public let acuteChronicRatio: Double?
+
+        public init(
+            minutesLastSevenDays: Double,
+            averageWeeklyMinutes: Double,
+            loadLastSevenDays: Double,
+            averageWeeklyLoad: Double,
+            acuteChronicRatio: Double?
+        ) {
+            self.minutesLastSevenDays = minutesLastSevenDays
+            self.averageWeeklyMinutes = averageWeeklyMinutes
+            self.loadLastSevenDays = loadLastSevenDays
+            self.averageWeeklyLoad = averageWeeklyLoad
+            self.acuteChronicRatio = acuteChronicRatio
         }
     }
 }

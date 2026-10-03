@@ -20,4 +20,6 @@ public struct RunModule: SportModule {
         metrics: [.averagePower: HealthQuantity(.runningPower, unit: "W", aggregation: .average)]
     )
     public let loadFactor = 1.0
+    /// 16:40 bis 2:23 pro km.
+    public let goalSpeedRange: ClosedRange<Double> = 1...7
 }

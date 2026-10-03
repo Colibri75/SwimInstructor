@@ -1,4 +1,4 @@
-# Athleten-Zustands-Snapshot (Schema v1)
+# Athleten-Zustands-Snapshot (Schema v1 und v2)
 
 Der Snapshot fasst Workouts, Erholungswerte und Ziel in einem kompakten JSON zusammen. Die App
 berechnet ihn lokal (`AthleteStateCalculator` in `SwimInstructorCore`) und schickt ihn ans
@@ -117,3 +117,32 @@ Alle Zeitfenster zählen in Kalendertagen ab heute (Tag 0). Die Schwellen stehen
 
 - Die Dauer eines Workouts ist die von Health gemeldete Dauer. Pausen zwischen den Bahnen können darin enthalten sein, dann liegt die Pace über dem echten Schwimmtempo. Eine Pace aus reiner Schwimmzeit kommt später, wenn die Bahnzeiten (Lap-Events) ausgewertet werden.
 - Die Erholungswerte holt seit M6 der `SnapshotBuilder` aus Health (`HealthKitDailyVitalsRepository`): Ruhepuls und HRV als Tagesmittel, Schlaf als Summe der Schlafphasen pro Nacht (ohne "im Bett" und "wach"), gezählt zum Aufwachtag. Überlappende Abschnitte mehrerer Quellen zählen nur einmal.
+
+## Schema v2 (Triathlon-Umbau, T2)
+
+v2 ist v1 plus drei Blöcke; alle v1-Felder bleiben unverändert und beziehen sich weiter aufs Schwimmen. Die App
+schickt v2, sobald ein Gesamtziel eingestellt ist (immer, seit T2). Vollständiges Beispiel und Prüfung beider Seiten:
+[`contracts/wire/snapshot-v2.json`](../contracts/wire/snapshot-v2.json).
+
+- `training_goal`: das Gesamtziel aus dem Ziel-Assistenten. `template` (Vorlage, fehlt bei eigenem Ziel),
+  `target_date`, `days_until_goal`, `training_days_per_week` (1 bis 7), `weekly_hours` (0,5 bis 40),
+  `disciplines` (Sportart, `distance_meters`, optional `target_duration_seconds`) und `emphasis` (Sportart, `percent`,
+  zusammen genau 100; jede Disziplin braucht mehr als 0 %). Das Zieltempo jeder Disziplin muss im Fenster
+  `goal_speed` des Sport-Moduls liegen (`contracts/sports.json`).
+- `sports`: je Sportart mit Training in den letzten 4 Wochen oder mit Schwerpunkt/Disziplin: Einheiten, Minuten
+  und Meter der letzten 7 Tage, Wochenschnitt der letzten 4 Wochen, längste Einheit (Meter und Minuten), Last
+  (`TrainingLoadCalculator`: TRIMP mit Puls, sonst Minuten, mal Faktor des Moduls) und Tage seit der letzten Einheit.
+- `total_load`: Minuten und Last über alle Sportarten (7 Tage und Wochenschnitt) und `acute_chronic_ratio`
+  (7-Tage-Last durch Wochenschnitt; fehlt ohne Vergleichswert). Nur ein Hinweis für die Planung, keine harte Grenze.
+
+Der v1-Teil (`goal` usw.) bleibt bis T3 das Schwimmziel: die Schwimm-Disziplin des Gesamtziels (ohne Zielzeit mit
+2:00 pro 100 m), ohne Schwimm-Disziplin ein Platzhalter (1500 m in 45 Minuten), den der Server dann nur als Ausgleich
+nimmt.
+
+**Verträglichkeit:**
+
+- Der Server nimmt v1 und v2 an. Ein v1-Snapshot ergibt Zeichen für Zeichen dieselben Prompts wie vor v2
+  (Golden-Test `backend/test/golden/v1Prompts.test.ts`). `trainingGoalOf` und `sportStatesOf` liefern die v2-Sicht
+  auch für v1.
+- Kennt der Server v2 noch nicht (400 auf `snapshot.schema_version`), schickt die App dieselbe Anfrage einmal mit dem
+  v1-Teil (`PlanAPIClient.postSnapshot`).

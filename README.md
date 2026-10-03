@@ -652,6 +652,33 @@ Schritt bleibt sie fürs Schwimmen voll nutzbar.
       erscheinen danach unter Verlauf → Letzte Einheiten mit richtigem Symbol, Strecke und Dauer. Die
       Schwimm-Zahlen im Dashboard bleiben gleich.
 
+### T2 – Ziel, Schwerpunkte und Snapshot v2
+
+- **Gesamtziel (`TrainingGoal`):** Disziplinen mit Strecke und optional Zielzeit, Zieltag, Trainingstage, Stunden pro
+  Woche und Schwerpunkt je Sportart (zusammen 100 %). Vorlagen für Triathlon Sprint, Olympisch, 70.3 und
+  Langdistanz, 3,8 km Schwimmen, 10 km, Halbmarathon, Marathon und 100 km Rad (`GoalTemplate`); danach ist alles frei
+  einstellbar. Die Prüfung lehnt Unsinn ab: Schwerpunkte ungleich 100 %, Zieltag nicht in der Zukunft, Zieltempo
+  außerhalb dessen, was das Sport-Modul für plausibel hält (z. B. 10 km Laufen in 10 Minuten).
+- **Ziel-Assistent:** Einstellungen → Mein Ziel. Vorlage wählen, Disziplinen an- und ausschalten, Strecken und
+  Zeiten eintragen, Schwerpunkte per Regler (die anderen passen sich an), Zieltag, Trainingstage und -zeit. Ein
+  gültiges Ziel wird sofort gespeichert. Das bisherige Schwimmziel zieht beim ersten Start automatisch um.
+- **Snapshot v2:** zusätzlich das Gesamtziel, Werte je Sportart und die Gesamtlast (siehe
+  [`docs/AthleteStateSnapshot.md`](docs/AthleteStateSnapshot.md)). Der Server nimmt v1 und v2 an; mit v2 erfährt
+  Claude, was in Rad und Laufen los ist, und plant das Schwimmen entsprechend. Rad- und Laufeinheiten plant er erst ab
+  T3. Läuft auf dem Server noch die alte Version, schickt die App automatisch v1, der Plan kommt wie bisher.
+
+### T2 – Definition of Done
+
+- [x] Snapshot-Berechnung je Sportart und gemischt, Werte von Hand nachgerechnet (`MultiSportStateCalculatorTests`)
+- [x] Schema v2 in `contracts/` dokumentiert und von App und Server geprüft
+- [x] Ein v1-Snapshot liefert im Backend Zeichen für Zeichen denselben Prompt wie vorher (Golden-Test über alle
+      v1-Szenarien, Tages-, Wochen- und Gesamtplan)
+- [x] Die Zielprüfung lehnt Unsinn ab (Schwerpunkte ungleich 100 %, Zieltag nicht in der Zukunft, unplausibles Tempo)
+- [ ] **Für dich:** Server mit `deploy.sh` aktualisieren (sonst bleibt es bei v1, siehe oben). Dann auf dem iPhone
+      Einstellungen → Mein Ziel: z. B. "Triathlon Olympisch" wählen, Schwimmen auf 40 % ziehen, App ganz beenden
+      und neu starten: Ziel und Schwerpunkte sind noch da. Auf Heute nach unten ziehen: Der Plan erwähnt Rad und
+      Laufen als Belastung.
+
 ## Projektstruktur
 
 ```

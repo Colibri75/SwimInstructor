@@ -25,6 +25,15 @@ describe.each(allSports.map((sport) => [sport.id, sport] as const))("Sportart %s
     }
   });
 
+  it("hat ein Zieltempo-Fenster, in dem typische Wettkampfziele liegen", () => {
+    const { minMetersPerSecond: min, maxMetersPerSecond: max } = sport.goalSpeed;
+    expect(min).toBeGreaterThan(0);
+    expect(max).toBeGreaterThan(min * 2);
+    const registry = new SportRegistry(allSports);
+    // Eine Stunde mit dem mittleren Tempo des Fensters ist immer ein plausibles Ziel.
+    expect(registry.plausibleGoal(sport.id, ((min + max) / 2) * 3600, 3600)).toBe(true);
+  });
+
   it("nennt Masse und Ziele nur einmal", () => {
     expect(new Set(sport.measures).size).toBe(sport.measures.length);
     expect(new Set(sport.targets).size).toBe(sport.targets.length);

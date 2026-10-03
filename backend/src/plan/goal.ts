@@ -1,3 +1,4 @@
+import { multiSportSection } from "./multiSport";
 import { Snapshot } from "./snapshot";
 
 /**
@@ -85,5 +86,7 @@ export function goalSection(snapshot: Snapshot): string {
       `- Realismus: Mit etwa 10 % Steigerung pro Woche braucht der Aufbau bis zur Zieldistanz rund ${a.weeksNeededForDistance} Wochen, es bleiben ${a.weeksLeft}. Baue so zielgerichtet auf, wie die Grenzen erlauben, und sage ehrlich in einem Satz der Begründung, dass das Ziel zum Zieltag so wohl nicht ganz erreichbar ist. Die Grenzen hebst du dafür nie auf.`
     );
   }
+  // Snapshot v2: Gesamtziel und andere Sportarten. Ein v1-Snapshot ergibt genau den Abschnitt wie vor v2.
+  if (snapshot.schema_version === 2) lines.push("", multiSportSection(snapshot));
   return lines.join("\n");
 }

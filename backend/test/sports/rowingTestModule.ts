@@ -9,5 +9,6 @@ export const rowingTestSport: SportDefinition = {
   id: "rowing",
   displayName: "Rudern",
   measures: ["duration", "distance"],
-  targets: ["stroke_rate", "power", "heart_rate_zone"]
+  targets: ["stroke_rate", "power", "heart_rate_zone"],
+  goalSpeed: { minMetersPerSecond: 0.5, maxMetersPerSecond: 7 }
 };

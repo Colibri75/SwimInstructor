@@ -64,6 +64,10 @@ describe("contracts/sports.json", () => {
       expect(definition?.displayName).toBe(sport.display_name);
       expect([...(definition?.measures ?? [])].sort()).toEqual([...sport.measures].sort());
       expect([...(definition?.targets ?? [])].sort()).toEqual([...sport.targets].sort());
+      expect(definition?.goalSpeed).toEqual({
+        minMetersPerSecond: sport.goal_speed.min_meters_per_second,
+        maxMetersPerSecond: sport.goal_speed.max_meters_per_second
+      });
     }
   });
 });
@@ -75,6 +79,40 @@ describe("contracts/wire", () => {
     const parsed = SnapshotSchema.safeParse(snapshot);
     expect(parsed.success).toBe(true);
     expect(sorted(keyPaths(parsed.data))).toEqual(sorted(keyPaths(snapshot)));
+  });
+
+  it("nimmt den Snapshot v2 der App vollstaendig an (kein Feld wird verworfen)", () => {
+    const v2 = contract("wire/snapshot-v2.json");
+    const parsed = SnapshotSchema.safeParse(v2);
+    expect(parsed.success).toBe(true);
+    expect(sorted(keyPaths(parsed.data))).toEqual(sorted(keyPaths(v2)));
+  });
+
+  it.each([
+    ["/v1/plan/today", (snapshot: unknown) => ({ snapshot })],
+    ["/v1/plan/week", (snapshot: unknown) => ({ snapshot, from_date: "2026-09-30", today: "2026-09-30" })],
+    ["/v1/plan/macro", (snapshot: unknown) => ({ snapshot, today: "2026-09-30" })]
+  ])("%s nimmt Snapshot v2 an", async (path, body) => {
+    const today = contract("wire/plan-today-response.json");
+    const week = contract("wire/plan-week-response.json");
+    const macro = contract("wire/plan-macro-response.json");
+    const deps = { budget: new GenerationBudget(100, 100), logger, now };
+    const app = buildApp({
+      registerV1Routes: (router) => {
+        planRoutes(new PlanService({ ...deps, generator: { generate: generated(today.plan) }, store: new MemoryPlanStore(), timezone: "Europe/Berlin" }))(router);
+        weekRoutes(new WeekPlanService({ ...deps, generator: { generateWeek: generated({ rationale: week.plan.rationale, days: week.plan.days }) } }))(router);
+        macroRoutes(
+          new MacroPlanService({
+            ...deps,
+            generator: { generateMacro: generated({ rationale: macro.plan.rationale, weeks: macro.plan.weeks.map(({ phase: _phase, ...w }: { phase: string }) => w) }) }
+          })
+        )(router);
+      }
+    });
+
+    const response = await request(app).post(path).set(auth).send(body(contract("wire/snapshot-v2.json")));
+
+    expect(response.status).toBe(200);
   });
 
   it("antwortet auf /v1/plan/today mit genau den Feldern des Vertrags", async () => {

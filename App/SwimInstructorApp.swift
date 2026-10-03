@@ -14,12 +14,12 @@ struct SwimInstructorApp: App {
     init() {
         let healthKitManager = HealthKitManager()
         let settings = BackendSettings()
-        let goalStore = UserDefaultsGoalStore()
+        let goalStore = UserDefaultsTrainingGoalStore()
         let builder = SnapshotBuilder(
             repository: HealthKitWorkoutRepository(),
             vitalsRepository: HealthKitDailyVitalsRepository(),
-            // Das Gesamtziel aus den Einstellungen, bei jedem Durchlauf neu gelesen.
-            goalProvider: { goalStore.goal() }
+            // Das Gesamtziel aus den Einstellungen, bei jedem Durchlauf neu gelesen (Snapshot v2).
+            trainingGoalProvider: { goalStore.goal() }
         )
         let ownedEquipment = UserDefaultsOwnedEquipmentStore()
         let weekLoader = WeekPlanLoader(
@@ -34,7 +34,8 @@ struct SwimInstructorApp: App {
             planProvider: { [weak settings] in
                 settings?.configuration.map { PlanAPIClient(configuration: $0) }
             },
-            goal: { goalStore.goal() }
+            // Bis T3 plant der Gesamtplan nur Schwimmen: Er gilt für den Schwimmteil des Ziels.
+            goal: { goalStore.goal().legacySwimGoal }
         )
         let wishStore = UserDefaultsDailyWishStore()
         let loader = TodayPlanLoader(

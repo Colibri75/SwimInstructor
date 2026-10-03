@@ -18,6 +18,7 @@ struct RowingTestModule: SportModule {
         metrics: ["average_power": HealthQuantity(.runningPower, unit: "W", aggregation: .average)]
     )
     let loadFactor = 0.9
+    let goalSpeedRange: ClosedRange<Double> = 0.5...7
 }
 
 /// Prüfungen, die jedes Modul bestehen muss. Jeder Umbauschritt hängt hier seine neuen Anforderungen an
@@ -115,6 +116,35 @@ final class SportModuleConformanceTests: XCTestCase {
             let short = Workout(id: UUID(), sport: module.id, startDate: Date(), endDate: Date(), duration: 1800)
             let long = Workout(id: UUID(), sport: module.id, startDate: Date(), endDate: Date(), duration: 3600)
             XCTAssertGreaterThan(calculator.load(of: long), calculator.load(of: short), "\(module.id)")
+        }
+    }
+
+    // MARK: - T2: Ziel
+
+    func testEveryModuleHasAGoalSpeedWindowThatAcceptsTypicalGoals() throws {
+        let registry = try SportRegistry(modules: allModules)
+        for module in allModules {
+            let range = module.goalSpeedRange
+            XCTAssertGreaterThan(range.lowerBound, 0, "\(module.id)")
+            XCTAssertGreaterThan(range.upperBound, range.lowerBound * 2, "\(module.id)")
+            // Eine Stunde mit mittlerem Tempo ist ein plausibles Ziel, eine Minute für dieselbe Strecke nicht.
+            let meters = (range.lowerBound + range.upperBound) / 2 * 3600
+            XCTAssertTrue(registry.isPlausibleGoal(sport: module.id, distanceMeters: meters, durationSeconds: 3600), "\(module.id)")
+            XCTAssertFalse(registry.isPlausibleGoal(sport: module.id, distanceMeters: meters, durationSeconds: 60), "\(module.id)")
+        }
+    }
+
+    func testEveryModuleCanBeAGoalDisciplineAndCarryTheWholeEmphasis() throws {
+        let registry = try SportRegistry(modules: allModules)
+        for module in allModules {
+            let goal = TrainingGoal(
+                disciplines: [.init(sport: module.id, distanceMeters: 10_000)],
+                targetDate: Date().addingTimeInterval(90 * 86_400),
+                trainingDaysPerWeek: 4,
+                weeklyHours: 5,
+                emphasis: [.init(sport: module.id, percent: 100)]
+            )
+            XCTAssertNil(goal.problem(now: Date(), registry: registry), "\(module.id)")
         }
     }
 

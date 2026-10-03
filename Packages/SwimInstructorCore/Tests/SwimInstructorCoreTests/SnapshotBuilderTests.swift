@@ -94,6 +94,43 @@ final class SnapshotBuilderTests: XCTestCase {
         XCTAssertEqual(repository.requestedStart, TestFixtures.date(daysAgo: 55, hour: 0))
     }
 
+    func testTrainingGoalMakesASnapshotV2() async throws {
+        let swim = TestFixtures.workout(daysAgo: 1, meters: 1500)
+        let run = Workout(
+            id: UUID(), sport: .run, startDate: TestFixtures.date(daysAgo: 2, hour: 7),
+            endDate: TestFixtures.date(daysAgo: 2, hour: 8), duration: 3600, distanceMeters: 10_000
+        )
+        let goal = GoalTemplate.template(id: "triathlon_olympic")!
+            .goal(targetDate: AthleteGoal.default.targetDate, trainingDaysPerWeek: 5, weeklyHours: 7)
+        var reads = 0
+        let builder = SnapshotBuilder(
+            repository: FakeAllSportsRepository(workouts: [Workout(swim: swim), run]),
+            vitalsRepository: FakeVitalsRepository(),
+            trainingGoalProvider: {
+                reads += 1
+                return goal
+            },
+            calendar: TestFixtures.utc
+        )
+
+        let reading = try await builder.build(now: TestFixtures.now)
+
+        XCTAssertEqual(reads, 1, "Ziel einmal pro Durchlauf lesen")
+        XCTAssertEqual(reading.snapshot.schemaVersion, 2)
+        XCTAssertEqual(reading.snapshot.trainingGoal?.template, "triathlon_olympic")
+        XCTAssertEqual(reading.snapshot.sports?.map(\.sport), [.swim, .bike, .run])
+        XCTAssertEqual(reading.snapshot.sports?.last?.metersLastSevenDays, 10_000)
+        // v1-Teil: genau der bisherige Snapshot für den Schwimmteil des Ziels.
+        let swimOnly = try await SnapshotBuilder(
+            workoutRepository: FakeWorkoutRepository(workouts: [swim]),
+            vitalsRepository: FakeVitalsRepository(),
+            goal: goal.legacySwimGoal,
+            calendar: TestFixtures.utc
+        ).build(now: TestFixtures.now)
+        XCTAssertEqual(reading.snapshot.version1, swimOnly.snapshot)
+        XCTAssertEqual(reading.snapshot.goal.distanceMeters, 1500)
+    }
+
     func testLegacyReadingListsSwimWorkoutsAsAllWorkouts() async throws {
         let swim = TestFixtures.workout(daysAgo: 1, meters: 1500)
         let builder = SnapshotBuilder(

@@ -12,6 +12,12 @@ final class ContractTests: XCTestCase {
             let displayName: String
             let measures: [String]
             let targets: [String]
+            let goalSpeed: GoalSpeed
+        }
+
+        struct GoalSpeed: Decodable {
+            let minMetersPerSecond: Double
+            let maxMetersPerSecond: Double
         }
 
         let schemaVersion: Int
@@ -41,6 +47,7 @@ final class ContractTests: XCTestCase {
             XCTAssertEqual(module.displayName, sport.displayName, sport.id)
             XCTAssertEqual(Set(module.measures.map(\.rawValue)), Set(sport.measures), sport.id)
             XCTAssertEqual(Set(module.targets.map(\.rawValue)), Set(sport.targets), sport.id)
+            XCTAssertEqual(module.goalSpeedRange, sport.goalSpeed.minMetersPerSecond...sport.goalSpeed.maxMetersPerSecond, sport.id)
         }
     }
 
@@ -54,6 +61,42 @@ final class ContractTests: XCTestCase {
         XCTAssertEqual(try JSONKeyPaths.of(reencoded), try JSONKeyPaths.of(data), "Die App schickt andere Felder als der Vertrag")
         XCTAssertEqual(try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: reencoded), snapshot)
         XCTAssertEqual(snapshot.schemaVersion, AthleteStateSnapshot.currentSchemaVersion)
+    }
+
+    func testSnapshotV2RoundTripsWithoutLosingFields() throws {
+        let data = try RepoPaths.contractData("wire/snapshot-v2.json")
+        let snapshot = try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: data)
+        let reencoded = try AthleteStateSnapshot.jsonEncoder().encode(snapshot)
+
+        XCTAssertEqual(try JSONKeyPaths.of(reencoded), try JSONKeyPaths.of(data))
+        XCTAssertEqual(try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: reencoded), snapshot)
+        XCTAssertEqual(snapshot.schemaVersion, AthleteStateSnapshot.multiSportSchemaVersion)
+        XCTAssertEqual(snapshot.sports?.map(\.sport), [.swim, .bike, .run])
+        // v1-Teil für einen älteren Server: genau die Felder von snapshot-v1.json.
+        let version1 = try AthleteStateSnapshot.jsonEncoder().encode(snapshot.version1)
+        XCTAssertEqual(try JSONKeyPaths.of(version1), try JSONKeyPaths.of(RepoPaths.contractData("wire/snapshot-v1.json")))
+    }
+
+    func testAppBuildsTheV2PartsWithExactlyTheContractFields() throws {
+        let now = TestFixtures.now
+        let goal = try JSONDecoder().decode(TrainingGoal.self, from: RepoPaths.contractData("app-storage/training-goal.json"))
+        func workout(_ sport: SportID, daysAgo: Int, minutes: Double, meters: Double) -> Workout {
+            let start = TestFixtures.date(daysAgo: daysAgo, hour: 8)
+            return Workout(id: UUID(), sport: sport, startDate: start, endDate: start.addingTimeInterval(minutes * 60), duration: minutes * 60, distanceMeters: meters)
+        }
+        let workouts = [
+            workout(.swim, daysAgo: 1, minutes: 40, meters: 2000),
+            workout(.bike, daysAgo: 3, minutes: 90, meters: 42_000),
+            workout(.bike, daysAgo: 10, minutes: 80, meters: 36_000)
+        ]
+        let v1 = AthleteStateCalculator(calendar: TestFixtures.utc)
+            .snapshot(workouts: workouts.compactMap(SwimWorkout.init(workout:)), goal: goal.legacySwimGoal, now: now)
+        let v2 = MultiSportStateCalculator(calendar: TestFixtures.utc).extend(v1, workouts: workouts, goal: goal, now: now)
+
+        let isV2Part = { (path: String) in ["training_goal", "sports", "total_load"].contains { path.hasPrefix($0) } }
+        let built = try JSONKeyPaths.of(AthleteStateSnapshot.jsonEncoder().encode(v2)).filter(isV2Part)
+        let contract = try JSONKeyPaths.of(RepoPaths.contractData("wire/snapshot-v2.json")).filter(isV2Part)
+        XCTAssertEqual(built, contract)
     }
 
     func testTodayResponsesDecode() throws {
@@ -113,6 +156,30 @@ final class ContractTests: XCTestCase {
         XCTAssertEqual(blocked?.isUnavailable, true)
         XCTAssertEqual(blocked?.contentBeforeUnavailable?.targetDistanceMeters, 1000)
         XCTAssertEqual(weeks.last?.day(on: "2026-10-07")?.isEdited, true)
+    }
+
+    func testStoredSwimGoalFromBeforeT2BecomesTheTrainingGoal() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "ContractTests-\(UUID().uuidString)"))
+        defaults.set(try RepoPaths.contractData("app-storage/goal-swim-v1.json"), forKey: UserDefaultsGoalStore.storageKey)
+
+        let goal = UserDefaultsTrainingGoalStore(defaults: defaults).goal()
+
+        XCTAssertEqual(goal.disciplines, [.init(sport: .swim, distanceMeters: 2000, targetDurationSeconds: 2700)])
+        XCTAssertEqual(goal.emphasis, [.init(sport: .swim, percent: 100)])
+        XCTAssertEqual(goal.targetDate, Date(timeIntervalSinceReferenceDate: 836_388_000))
+        XCTAssertEqual(goal.legacySwimGoal, try JSONDecoder().decode(AthleteGoal.self, from: RepoPaths.contractData("app-storage/goal-swim-v1.json")))
+    }
+
+    func testStoredTrainingGoalLoads() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "ContractTests-\(UUID().uuidString)"))
+        defaults.set(try RepoPaths.contractData("app-storage/training-goal.json"), forKey: UserDefaultsTrainingGoalStore.storageKey)
+
+        let goal = UserDefaultsTrainingGoalStore(defaults: defaults).goal()
+
+        XCTAssertEqual(goal.template, "triathlon_olympic")
+        XCTAssertEqual(goal.disciplines.map(\.sport), [.swim, .bike, .run])
+        XCTAssertNil(goal.disciplines.last?.targetDurationSeconds)
+        XCTAssertEqual(goal.percent(for: .bike), 35)
     }
 
     func testStoredMacroPlanLoads() throws {
