@@ -1,8 +1,9 @@
 import { LimitUnit } from "../../sports/types";
 import { MacroPhase } from "../macro";
 import { SnapshotV2 } from "../snapshot";
+import { addDays } from "../week";
 import { multiPhase, MULTI_RULES, sportLimits, SportLimitsNow, taperFactors, taperWeeks, weeksToGoal } from "./limits";
-import { MacroWeekRawV2, MultiMacroPlanRaw, TestSettings } from "./schemas";
+import { MacroBlockRaw, MacroWeekRawV2, MacroWeeksRaw, TestSettings } from "./schemas";
 import { amountToMeters, amountToMinutes, floorAmount, formatAmount, plannedSports, raceAmount, roundAmount, sportName } from "./sports";
 import { scheduleMacroTests, ScheduledTest } from "./tests";
 
@@ -87,7 +88,45 @@ function label(weekStart: string): string {
   return `Woche ab ${weekStart.slice(8, 10)}.${weekStart.slice(5, 7)}.`;
 }
 
-export function sanitizeMacroV2(input: MultiMacroPlanRaw, snapshot: SnapshotV2, context: MacroContextV2): MacroSanityResultV2 {
+/** Ohne Angabe hat eine Entlastungswoche so viel der letzten Woche davor (etwas unter der Grenze `deloadFactor`). */
+export const DEFAULT_DELOAD_SHARE = 0.65;
+
+/**
+ * Rechnet Claudes Abschnitte in Wochen um, in der Reihenfolge der Wochen des Plans. In einem Abschnitt steigt (oder
+ * sinkt) der Umfang jeder Sportart gleichmaessig von `start_amount` bis `end_amount`; mit `deload_last` ist die letzte
+ * Woche eine Entlastungswoche mit `deload_amount` (ohne Angabe 65 % von `end_amount`). Ueberzaehlige Wochen bekommen
+ * fortlaufende Montage, damit die Sicherheitsschicht zu lange Plaene erkennt; mehr als doppelt so viele wie geplant
+ * werden gar nicht erst erzeugt.
+ */
+export function expandMacroBlocks(blocks: readonly MacroBlockRaw[], weeks: readonly string[]): MacroWeekRawV2[] {
+  const limit = weeks.length * 2 + 1;
+  const result: MacroWeekRawV2[] = [];
+  for (const block of blocks) {
+    const count = Number.isFinite(block.weeks) ? Math.max(Math.round(block.weeks), 1) : 1;
+    const loadingWeeks = block.deload_last ? count - 1 : count;
+    for (let index = 0; index < count && result.length < limit; index += 1) {
+      const deload = block.deload_last && index === count - 1;
+      const share = loadingWeeks > 1 ? index / (loadingWeeks - 1) : 0;
+      const position = result.length;
+      const weekStart = weeks[position] ?? addDays(weeks[weeks.length - 1] ?? "2000-01-03", (position - weeks.length + 1) * 7);
+      result.push({
+        week_start: weekStart,
+        deload,
+        focus: block.focus,
+        sports: block.sports.map((entry) => ({
+          sport: entry.sport,
+          amount: deload
+            ? (entry.deload_amount ?? entry.end_amount * DEFAULT_DELOAD_SHARE)
+            : entry.start_amount + (entry.end_amount - entry.start_amount) * share,
+          sessions: entry.sessions
+        }))
+      });
+    }
+  }
+  return result;
+}
+
+export function sanitizeMacroV2(input: MacroWeeksRaw, snapshot: SnapshotV2, context: MacroContextV2): MacroSanityResultV2 {
   const problem = findProblem(input, context);
   if (problem !== null) return { plan: { rationale: input.rationale, weeks: [] }, adjustments: [], blocked: problem };
 
@@ -241,7 +280,7 @@ export function sanitizeMacroV2(input: MultiMacroPlanRaw, snapshot: SnapshotV2, 
   return { plan: { rationale, weeks }, adjustments, blocked: null };
 }
 
-function findProblem(input: MultiMacroPlanRaw, context: MacroContextV2): string | null {
+function findProblem(input: MacroWeeksRaw, context: MacroContextV2): string | null {
   if (input.rationale.trim() === "") return "Begründung fehlt";
   if (input.weeks.length === 0) return "Gesamtplan ohne Wochen";
   if (input.weeks.length > context.weeks.length * 2) return `zu viele Wochen (${input.weeks.length})`;

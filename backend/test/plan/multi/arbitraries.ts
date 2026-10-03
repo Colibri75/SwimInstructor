@@ -1,6 +1,6 @@
 import fc from "fast-check";
 import { INTENSITIES, SESSION_TYPES } from "../../../src/plan/plan";
-import { DaySessionRaw, MultiDayPlanRaw, MultiMacroPlanRaw, MultiWeekPlanRaw, RecentTraining, StepRaw, TestSettings } from "../../../src/plan/multi/schemas";
+import { DaySessionRaw, MultiDayPlanRaw, MacroWeeksRaw, MultiWeekPlanRaw, RecentTraining, StepRaw, TestSettings } from "../../../src/plan/multi/schemas";
 import { SnapshotSchema, SnapshotV2, SportState } from "../../../src/plan/snapshot";
 import { SPORTS } from "../../../src/sports/registry";
 import { STEP_TARGETS } from "../../../src/sports/vocabulary";
@@ -184,7 +184,7 @@ export function weekPlanArb(dates: string[]): fc.Arbitrary<MultiWeekPlanRaw> {
   });
 }
 
-export function macroPlanArb(weeks: string[]): fc.Arbitrary<MultiMacroPlanRaw> {
+export function macroPlanArb(weeks: string[]): fc.Arbitrary<MacroWeeksRaw> {
   const weekArb = (week_start: string) =>
     fc.record({
       week_start: fc.constant(week_start),
@@ -196,7 +196,7 @@ export function macroPlanArb(weeks: string[]): fc.Arbitrary<MultiMacroPlanRaw> {
     .tuple(...weeks.map(weekArb), fc.array(fc.boolean(), { minLength: weeks.length, maxLength: weeks.length }))
     .map((items) => {
       const keep = items[items.length - 1] as boolean[];
-      const all = items.slice(0, -1) as MultiMacroPlanRaw["weeks"];
+      const all = items.slice(0, -1) as MacroWeeksRaw["weeks"];
       // Meist alle Wochen, manchmal fehlen einzelne.
       const chosen = all.filter((_, index) => keep[index] || index % 3 !== 0);
       return { rationale: "Aufbau bis zum Ziel.", weeks: chosen.length > 0 ? chosen : all.slice(0, 1) };

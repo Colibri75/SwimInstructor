@@ -70,16 +70,23 @@ export const MultiWeekPlanSchema = z.object({
   )
 });
 
-const MacroWeekRawSchema = z.object({
-  week_start: z.string().describe("Montag der Woche im Format YYYY-MM-DD, genau eine der angegebenen Wochen"),
-  deload: z.boolean().describe("true bei einer Entlastungswoche mit deutlich weniger Umfang als davor"),
-  focus: z.string().describe("Schwerpunkt der Woche in höchstens 60 Zeichen auf Deutsch"),
+/**
+ * Der Gesamtplan kommt von Claude in Abschnitten statt Woche fuer Woche: Eine Woche je Zeile ueber 40 Wochen und drei
+ * Sportarten dauerte zu lange fuer das Zeitlimit. Der Server rechnet die Abschnitte in Wochen um (`expandMacroBlocks`),
+ * danach prueft die Sicherheitsschicht jede Woche.
+ */
+const MacroBlockRawSchema = z.object({
+  weeks: z.number().int().describe("Anzahl der Wochen dieses Abschnitts, 1 bis 6; die Abschnitte folgen lückenlos aufeinander"),
+  deload_last: z.boolean().describe("true, wenn die letzte Woche des Abschnitts eine Entlastungswoche ist"),
+  focus: z.string().describe("Schwerpunkt des Abschnitts in höchstens 60 Zeichen auf Deutsch"),
   sports: z
     .array(
       z.object({
         sport: Sport,
-        amount: z.number().int().describe("Wochenumfang in der Einheit der Sportart (Meter oder Minuten, siehe Nutzernachricht)"),
-        sessions: z.number().int().describe("Einheiten dieser Sportart in der Woche")
+        start_amount: z.number().int().describe("Wochenumfang der ersten Woche des Abschnitts in der Einheit der Sportart (Meter oder Minuten, siehe Nutzernachricht)"),
+        end_amount: z.number().int().describe("Wochenumfang der letzten Woche ohne Entlastung; dazwischen steigt oder sinkt der Umfang gleichmäßig"),
+        deload_amount: z.number().int().nullable().describe("Wochenumfang der Entlastungswoche, null ohne Entlastungswoche"),
+        sessions: z.number().int().describe("Einheiten dieser Sportart je Woche")
       })
     )
     .describe("Jede geplante Sportart einmal")
@@ -87,21 +94,35 @@ const MacroWeekRawSchema = z.object({
 
 export const MultiMacroPlanSchema = z.object({
   rationale: z.string().describe("Begründung des Gesamtplans auf Deutsch, höchstens fünf Sätze, mit konkreten Zahlen"),
-  weeks: z.array(MacroWeekRawSchema)
+  blocks: z.array(MacroBlockRawSchema).describe("Die Abschnitte von der ersten Woche bis zur Zielwoche, in zeitlicher Reihenfolge")
 });
 
 export const MacroRevisionSchema = z.object({
   rationale: z.string().describe("Begründung des geänderten Gesamtplans auf Deutsch, höchstens fünf Sätze"),
   changes: z.array(z.string()).describe("Was sich gegenüber dem bisherigen Plan ändert, ein Punkt je Änderung, höchstens acht, auf Deutsch"),
-  weeks: z.array(MacroWeekRawSchema)
+  blocks: z.array(MacroBlockRawSchema).describe("Die Abschnitte von der ersten Woche bis zur Zielwoche, in zeitlicher Reihenfolge")
 });
+
+/** Eine Woche des Gesamtplans, wie die Sicherheitsschicht sie prueft (aus den Abschnitten berechnet). */
+export interface MacroWeekRawV2 {
+  week_start: string;
+  deload: boolean;
+  focus: string;
+  sports: { sport: string; amount: number; sessions: number }[];
+}
+
+/** Der Gesamtplan Woche fuer Woche, Eingang der Sicherheitsschicht. */
+export interface MacroWeeksRaw {
+  rationale: string;
+  weeks: MacroWeekRawV2[];
+}
 
 export type StepRaw = z.infer<typeof StepSchema>;
 export type DaySessionRaw = z.infer<typeof DaySessionSchema>;
 export type MultiDayPlanRaw = z.infer<typeof MultiDayPlanSchema>;
 export type WeekSessionRaw = z.infer<typeof WeekSessionSchema>;
 export type MultiWeekPlanRaw = z.infer<typeof MultiWeekPlanSchema>;
-export type MacroWeekRawV2 = z.infer<typeof MacroWeekRawSchema>;
+export type MacroBlockRaw = z.infer<typeof MacroBlockRawSchema>;
 export type MultiMacroPlanRaw = z.infer<typeof MultiMacroPlanSchema>;
 export type MacroRevisionRaw = z.infer<typeof MacroRevisionSchema>;
 

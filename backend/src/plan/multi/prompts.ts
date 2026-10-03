@@ -75,13 +75,15 @@ ${SNAPSHOT_AND_RULES}
 ## Ausgabe
 Antworte ausschließlich im vorgegebenen JSON-Format und auf Deutsch. days enthält genau die genannten Tage, jeden einmal. Ein Ruhetag hat keine Einheiten. Tage, an denen der Athlet keine Zeit hat, sind Ruhetage mit dem Schwerpunkt "Keine Zeit"; verteile den Umfang auf die übrigen Tage. Schwerpunkte haben höchstens 60 Zeichen. Die rationale hat höchstens vier Sätze und nennt zwei bis drei konkrete Zahlen.`;
 
-const MACRO_TASK = "Du planst jede Woche von heute bis zum Zieltag als Gerüst: je Sportart den Wochenumfang (amount in der Einheit der Sportart) und die Zahl der Einheiten, ob die Woche eine Entlastungswoche ist, und einen kurzen Schwerpunkt. Die einzelnen Tage plant die App danach jeden Tag neu auf den Zustand des Athleten; dein Gesamtplan gibt die Richtung vor.";
+const MACRO_TASK = "Du planst die Zeit von heute bis zum Zieltag als Gerüst in Abschnitten von einer bis sechs Wochen: je Abschnitt und Sportart den Wochenumfang der ersten und der letzten Woche ohne Entlastung (amount in der Einheit der Sportart, dazwischen steigt er gleichmäßig), die Zahl der Einheiten je Woche, ob die letzte Woche des Abschnitts eine Entlastungswoche ist, und einen kurzen Schwerpunkt. Die einzelnen Tage plant die App danach jeden Tag neu auf den Zustand des Athleten; dein Gesamtplan gibt die Richtung vor.";
 
 const MACRO_RULES = `## Gesamtplan
-- Der Umfang jeder Sportart steigt schrittweise, höchstens um den Faktor der Nutzernachricht gegenüber der letzten Woche ohne Entlastung. Laufen steigt am vorsichtigsten.
-- Nach höchstens drei Belastungswochen kommt eine Entlastungswoche (deload true) mit etwa 30 Prozent weniger Umfang; nicht in der ersten Woche, nicht beim Zuspitzen und nicht in der Zielwoche.
-- Der Höhepunkt liegt vor dem Zuspitzen. Beim Zuspitzen sinkt der Umfang deutlich, die Intensität bleibt.
-- Die Wochen mit Leistungstests legt das System fest (sie stehen bei den Wochen). Plane diese Wochen etwas leichter.`;
+- Der Umfang jeder Sportart steigt schrittweise, höchstens um den Faktor der Nutzernachricht pro Woche gegenüber der letzten Woche ohne Entlastung. Das gilt innerhalb eines Abschnitts (von start_amount bis end_amount) und von einem Abschnitt zum nächsten. Laufen steigt am vorsichtigsten.
+- Nach höchstens drei Belastungswochen kommt eine Entlastungswoche mit etwa 30 Prozent weniger Umfang: deload_last true und deload_amount je Sportart. Typisch ist ein Abschnitt aus drei Belastungswochen und einer Entlastungswoche. Keine Entlastung in der ersten Woche, beim Zuspitzen und in der Zielwoche.
+- Der Höhepunkt liegt vor dem Zuspitzen. Beim Zuspitzen sinkt der Umfang deutlich, die Intensität bleibt. Zuspitzen und Zielwoche sind eigene, kurze Abschnitte.
+- Die Wochen mit Leistungstests legt das System fest (sie stehen bei den Wochen); ein Test ersetzt dort eine harte Einheit. Dafür brauchst du keinen eigenen Abschnitt.`;
+
+const BLOCKS_OUTPUT = "blocks enthält die Abschnitte in zeitlicher Reihenfolge, der erste beginnt mit der ersten genannten Woche. Zusammen haben sie genau so viele Wochen, wie die Nutzernachricht nennt. Jeder Abschnitt enthält jede geplante Sportart einmal; deload_amount ist null, wenn deload_last false ist. Schwerpunkte haben höchstens 60 Zeichen.";
 
 export const MULTI_MACRO_SYSTEM_PROMPT = `${ROLE} ${MACRO_TASK}
 
@@ -90,7 +92,7 @@ ${SNAPSHOT_AND_RULES}
 ${MACRO_RULES}
 
 ## Ausgabe
-Antworte ausschließlich im vorgegebenen JSON-Format und auf Deutsch. weeks enthält genau die genannten Wochen, jede einmal, mit dem Montag als week_start, und in jeder Woche jede geplante Sportart einmal. Schwerpunkte haben höchstens 60 Zeichen. Die rationale hat höchstens fünf Sätze und nennt konkrete Zahlen: Wochen bis zum Ziel, Umfang jetzt und am Höhepunkt.`;
+Antworte ausschließlich im vorgegebenen JSON-Format und auf Deutsch. ${BLOCKS_OUTPUT} Die rationale hat höchstens fünf Sätze und nennt konkrete Zahlen: Wochen bis zum Ziel, Umfang jetzt und am Höhepunkt.`;
 
 export const MULTI_REVISE_SYSTEM_PROMPT = `${ROLE} ${MACRO_TASK} Der Athlet hat einen Gesamtplan und gibt dazu Feedback. Du änderst den Plan so, wie das Feedback es verlangt und die Grenzen es erlauben, und lässt den Rest möglichst, wie er ist.
 
@@ -99,7 +101,7 @@ ${SNAPSHOT_AND_RULES}
 ${MACRO_RULES}
 
 ## Ausgabe
-Antworte ausschließlich im vorgegebenen JSON-Format und auf Deutsch. weeks enthält genau die genannten Wochen, jede einmal, mit jeder geplanten Sportart. changes nennt jede Änderung gegenüber dem bisherigen Plan in einem kurzen Satz (höchstens acht); kann das Feedback wegen der Grenzen nicht oder nur teilweise umgesetzt werden, steht das dort auch. Die rationale hat höchstens fünf Sätze.`;
+Antworte ausschließlich im vorgegebenen JSON-Format und auf Deutsch. ${BLOCKS_OUTPUT} Plane den ganzen Zeitraum neu in Abschnitten, auch wo sich nichts ändert. changes nennt jede Änderung gegenüber dem bisherigen Plan in einem kurzen Satz (höchstens acht); kann das Feedback wegen der Grenzen nicht oder nur teilweise umgesetzt werden, steht das dort auch. Die rationale hat höchstens fünf Sätze.`;
 
 // --- Bausteine der Nutzernachricht ---
 
@@ -479,7 +481,7 @@ export function buildMacroUserMessageV2(snapshot: SnapshotV2, context: MacroCont
     context.today,
     context.testSettings
   );
-  lines.push("Zu planende Wochen (Montag, Phase, Wochen bis zur Zielwoche, Leistungstests vom System):");
+  lines.push(`Zu planende Wochen, zusammen ${weeksLabel(context.weeks.length)}; die Abschnitte ergeben genau so viele Wochen (Montag, Phase, Wochen bis zur Zielwoche, Leistungstests vom System):`);
   for (const week of context.weeks) {
     const phase = multiPhase(week, context.goalDay, context.today, taper);
     const tests = (preview.get(week) ?? []).map((test) => `Leistungstest ${sportName(test.sport)} (${test.display_name})`).join(", ");

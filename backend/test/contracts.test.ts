@@ -254,6 +254,14 @@ describe("contracts/wire, Plan v2", () => {
   });
   const rawWeeks = (weeks: any[]) =>
     weeks.map((week) => ({ week_start: week.week_start, deload: week.deload, focus: week.focus, sports: week.sports.map((entry: any) => ({ sport: entry.sport, amount: entry.amount, sessions: entry.sessions })) }));
+  // So liefert Claude den Gesamtplan: in Abschnitten, hier jede Woche ein eigener.
+  const rawBlocks = (weeks: any[]) =>
+    rawWeeks(weeks).map((week) => ({
+      weeks: 1,
+      deload_last: week.deload,
+      focus: week.focus,
+      sports: week.sports.map((entry: any) => ({ sport: entry.sport, start_amount: entry.amount, end_amount: entry.amount, deload_amount: week.deload ? entry.amount : null, sessions: entry.sessions }))
+    }));
   const targets = (weeks: any[]) =>
     weeks.map((week) => ({ ...rawWeeks([week])[0], phase: week.phase, tests: week.tests.map((test: any) => ({ sport: test.sport, test_id: test.test_id })) }));
 
@@ -309,7 +317,7 @@ describe("contracts/wire, Plan v2", () => {
 
   it("antwortet auf /v1/plan/macro mit Plan v2 mit genau den Feldern des Vertrags", async () => {
     const fixture = contract("wire/plan-v2-macro-response.json");
-    const { response } = await expectContract("wire/plan-v2-macro-response.json", appWith(generated({ rationale: fixture.plan.rationale, weeks: rawWeeks(fixture.plan.weeks) })), "/v1/plan/macro", {
+    const { response } = await expectContract("wire/plan-v2-macro-response.json", appWith(generated({ rationale: fixture.plan.rationale, blocks: rawBlocks(fixture.plan.weeks) })), "/v1/plan/macro", {
       plan_version: 2,
       snapshot: near,
       today: "2026-09-30"
@@ -321,7 +329,7 @@ describe("contracts/wire, Plan v2", () => {
   it("antwortet auf /v1/plan/macro/revise mit genau den Feldern des Vertrags", async () => {
     const before = contract("wire/plan-v2-macro-response.json");
     const fixture = contract("wire/plan-v2-revise-response.json");
-    const raw = { rationale: fixture.plan.rationale, changes: fixture.changes, weeks: rawWeeks(fixture.plan.weeks) };
+    const raw = { rationale: fixture.plan.rationale, changes: fixture.changes, blocks: rawBlocks(fixture.plan.weeks) };
     await expectContract("wire/plan-v2-revise-response.json", appWith(generated(raw)), "/v1/plan/macro/revise", {
       plan_version: 2,
       snapshot: near,

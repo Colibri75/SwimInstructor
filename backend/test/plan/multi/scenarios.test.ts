@@ -18,6 +18,7 @@ import {
   recentFromSnapshot,
   ReplayGenerator,
   runScenario,
+  stepSummary,
   ScenarioReport
 } from "../../../src/plan/multi/scenarios";
 import { MultiMacroPlanSchema } from "../../../src/plan/multi/schemas";
@@ -174,6 +175,9 @@ describe("Durchlauf und Generatoren", () => {
     const revised = await runScenario("02", scenario, failing);
     expect(revised.revise?.error).toBe("unknown");
     expect(formatScenarioReport(revised)).toContain("**Keine Überarbeitung:** unknown");
+    expect(formatScenarioReport(revised)).toMatch(/Aufruf fehlgeschlagen nach \d+\.\d s: kaputt/);
+    expect(stepSummary(revised)).toMatch(/^ok, ok, ok, unknown \(kaputt, nach \d+ s\)$/);
+    expect(stepSummary(item)).toBe("unknown (keine Aufzeichnung für macro, nach 0 s), unknown (keine Aufzeichnung für week, nach 0 s), unknown (keine Aufzeichnung für day, nach 0 s)");
   });
 
   it("haelt beim Aufzeichnen jede Antwort mit Quelle, Modell und Zeit fest", async () => {

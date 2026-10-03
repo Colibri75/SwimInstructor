@@ -28,7 +28,8 @@ import {
   RecordingGenerator,
   ReplayGenerator,
   runScenario,
-  ScenarioReport
+  ScenarioReport,
+  stepSummary
 } from "../src/plan/multi/scenarios";
 
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const;
@@ -92,11 +93,16 @@ async function main(): Promise<void> {
     const started = Date.now();
     const report = await runScenario(name, scenario, generator);
     reports.push(report);
-    const steps = [report.macro, report.week, report.day, report.revise].filter((step) => step !== undefined);
-    console.error(`${name}: ${steps.map((step) => step.error ?? "ok").join(", ")} (${((Date.now() - started) / 1000).toFixed(0)} s)`);
+    console.error(`${name}: ${stepSummary(report)} (${((Date.now() - started) / 1000).toFixed(0)} s)`);
     if (recorder !== undefined) {
-      mkdirSync(recordDir, { recursive: true });
-      writeFileSync(path.join(recordDir, file), `${JSON.stringify(recorder.recording, null, 2)}\n`);
+      // Nur vollstaendige Laeufe ersetzen die Aufzeichnung: Mit einer Luecke wuerde die Wiedergabe in der CI scheitern.
+      const complete = [report.macro, report.week, report.day, report.revise].every((item) => item === undefined || item.error === undefined);
+      if (complete) {
+        mkdirSync(recordDir, { recursive: true });
+        writeFileSync(path.join(recordDir, file), `${JSON.stringify(recorder.recording, null, 2)}\n`);
+      } else {
+        console.error(`${name}: nicht alle Stufen ok, die bisherige Aufzeichnung bleibt.`);
+      }
     }
   }
 

@@ -10,7 +10,7 @@ import { SnapshotV2 } from "../snapshot";
 import { windowDates } from "../week";
 import { DayPlanV2, sanitizeDayV2 } from "./daySanity";
 import { goalDayOf, MULTI_RULES } from "./limits";
-import { MacroContextV2, MacroPlanV2, sanitizeMacroV2 } from "./macroSanity";
+import { expandMacroBlocks, MacroContextV2, MacroPlanV2, sanitizeMacroV2 } from "./macroSanity";
 import {
   buildDayUserMessageV2,
   buildMacroUserMessageV2,
@@ -189,9 +189,10 @@ export class MultiPlanService {
   async planMacro(input: { snapshot: SnapshotV2; today: string; testSettings?: TestSettings }): Promise<MacroResultV2> {
     const context = macroContext(input.snapshot, input.today, input.testSettings);
     const generated = await this.generate("macro", MULTI_MACRO_SYSTEM_PROMPT, buildMacroUserMessageV2(input.snapshot, context), MultiMacroPlanSchema);
-    const sanitized = sanitizeMacroV2(generated.data, input.snapshot, context);
+    const weeks = expandMacroBlocks(generated.data.blocks, context.weeks);
+    const sanitized = sanitizeMacroV2({ rationale: generated.data.rationale, weeks }, input.snapshot, context);
     if (sanitized.blocked !== null) throw this.blocked("macro", sanitized.blocked);
-    this.logGenerated("macro", generated.meta, sanitized.adjustments.length, { weeks: sanitized.plan.weeks.length });
+    this.logGenerated("macro", generated.meta, sanitized.adjustments.length, { blocks: generated.data.blocks.length, weeks: sanitized.plan.weeks.length });
     return { goalDay: context.goalDay, generatedAt: this.now().toISOString(), plan: sanitized.plan, adjustments: sanitized.adjustments };
   }
 
@@ -204,13 +205,14 @@ export class MultiPlanService {
       buildReviseUserMessage({ snapshot: input.snapshot, context, plan: input.plan, feedback, history: input.history }),
       MacroRevisionSchema
     );
-    const sanitized = sanitizeMacroV2(generated.data, input.snapshot, context);
+    const weeks = expandMacroBlocks(generated.data.blocks, context.weeks);
+    const sanitized = sanitizeMacroV2({ rationale: generated.data.rationale, weeks }, input.snapshot, context);
     if (sanitized.blocked !== null) throw this.blocked("revise", sanitized.blocked);
     const changes = generated.data.changes
       .map((change) => change.trim().slice(0, MULTI_RULES.maxChangeLength))
       .filter((change) => change !== "")
       .slice(0, MULTI_RULES.maxChanges);
-    this.logGenerated("revise", generated.meta, sanitized.adjustments.length, { weeks: sanitized.plan.weeks.length, changes: changes.length, feedbackChars: feedback.length });
+    this.logGenerated("revise", generated.meta, sanitized.adjustments.length, { blocks: generated.data.blocks.length, weeks: sanitized.plan.weeks.length, changes: changes.length, feedbackChars: feedback.length });
     return { goalDay: context.goalDay, generatedAt: this.now().toISOString(), plan: sanitized.plan, adjustments: sanitized.adjustments, changes, feedback };
   }
 
