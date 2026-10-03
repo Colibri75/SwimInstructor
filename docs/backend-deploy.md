@@ -187,6 +187,79 @@ docker logs --since 1h swiminstructor-backend
 Jeder Request und jeder Fehler steht als JSON-Zeile im Log (rotiert bei 10 MB, 5 Dateien).
 Der Token wird nie geloggt. Health-Checks werden bewusst nicht protokolliert.
 
+Docker löscht diese Logs, sobald der Container neu erstellt wird (bei jedem Deploy und bei
+`--force-recreate`). `deploy.sh` sichert sie deshalb vorher nach `/var/log/swiminstructor/`
+(eine `.log.gz` pro Deploy, 30 Tage aufbewahrt):
+
+```bash
+ls -lt /var/log/swiminstructor/
+zcat /var/log/swiminstructor/backend-<Zeitstempel>.log.gz | grep '"level":50'   # nur Fehler
+```
+
+## Backups
+
+Auf dem Server liegt wenig Zustand, Trainingsdaten speichert er nicht. Gesichert werden
+zwei Dinge:
+
+- `/etc/swiminstructor/backend.env` mit API-Token und Anthropic-Key. Geht sie verloren, musst du
+  einen neuen Token erzeugen, ihn in der App eintragen und den Key neu anlegen.
+- Das Volume `swim_data` mit dem letzten gültigen Plan. Er ist nur Cache und Fallback, ohne ihn
+  läuft alles weiter, bis Claude wieder einen Plan liefert.
+
+`backend/deploy/backup.sh` packt beides in ein Archiv unter `/var/backups/swiminstructor/`
+(nur für root lesbar) und löscht Archive, die älter als 14 Tage sind. Einmal von Hand testen:
+
+```bash
+/opt/stack/swiminstructor/backend/deploy/backup.sh
+# Backup erstellt: /var/backups/swiminstructor/swiminstructor-2026-10-03_031500.tar.gz (4.0K)
+```
+
+Dann täglich per Cron laufen lassen (`crontab -e` als root):
+
+```cron
+15 3 * * * /opt/stack/swiminstructor/backend/deploy/backup.sh >> /var/log/swiminstructor-backup.log 2>&1
+```
+
+Ein Backup nur auf demselben Server hilft nicht, wenn der Server selbst ausfällt. Nimm den Ordner
+`/var/backups/swiminstructor/` deshalb in die Sicherung auf, die du für die anderen Dienste
+ohnehin nach außen schickst. Weil das Archiv Token und API-Key enthält, gehört es nur an einen
+verschlüsselten Ort. Hast du noch keine externe Sicherung, sichere zumindest die `backend.env`
+zusätzlich in deinem Passwort-Manager (Vaultwarden).
+
+Wiederherstellen:
+
+```bash
+mkdir /tmp/restore && tar -xzf /var/backups/swiminstructor/swiminstructor-<Zeitstempel>.tar.gz -C /tmp/restore
+install -m 600 /tmp/restore/backend.env /etc/swiminstructor/backend.env
+cd /opt/stack/swiminstructor/backend && docker compose up -d --force-recreate
+tar -xf /tmp/restore/data.tar -C /tmp/restore
+docker run --rm --volumes-from swiminstructor-backend -v /tmp/restore/data:/restore:ro \
+  alpine cp -a /restore/. /data/
+rm -rf /tmp/restore
+```
+
+## Monitoring
+
+Der Container startet nach einem Absturz von selbst neu (`restart: unless-stopped`), und Docker
+markiert ihn als `unhealthy`, wenn `/health` nicht mehr antwortet. Benachrichtigt wirst du davon
+aber nicht. Dafür zwei kostenlose Dienste, beide ohne Änderung am Server:
+
+1. **Erreichbarkeit von außen**: Ein Uptime-Monitor (z. B. UptimeRobot, oder Uptime Kuma, falls
+   du es schon betreibst) ruft alle 5 Minuten `https://swiminstructor.kellner.v6.rocks/health`
+   auf, erwartet Status 200 und das Stichwort `"ok"`, und meldet sich per Mail oder Push. Schalte
+   dort auch die Warnung vor Ablauf des Zertifikats ein. Das deckt Container, Caddy, DNS und
+   Zertifikat in einem ab.
+2. **Backup bleibt aus**: Lege bei healthchecks.io einen Check mit Periode 1 Tag an und trage die
+   Ping-URL im Cron-Eintrag ein. Das Skript meldet Erfolg und Fehler, und der Dienst schlägt Alarm,
+   wenn ein Tag lang nichts kommt:
+
+```cron
+15 3 * * * HEALTHCHECK_URL=https://hc-ping.com/<uuid> /opt/stack/swiminstructor/backend/deploy/backup.sh >> /var/log/swiminstructor-backup.log 2>&1
+```
+
+Die Kosten der Claude-Aufrufe überwachst du über das Ausgabenlimit in der Anthropic Console (siehe
+oben).
+
 ## Token wechseln
 
 Falls der Token je in falsche Hände gerät:

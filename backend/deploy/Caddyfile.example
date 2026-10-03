@@ -12,6 +12,12 @@
 swiminstructor.kellner.v6.rocks {
 	encode zstd gzip
 
+	header {
+		# Nur HTTPS, auch beim naechsten Aufruf; Server-Kennung nicht verraten.
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
 	request_body {
 		max_size 200KB
 	}

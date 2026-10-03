@@ -7,9 +7,20 @@ set -euo pipefail
 # egal ist, wohin das Repo geklont wurde.
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 HOST_PORT="${HOST_PORT:-3100}"
+# Docker loescht die Logs eines Containers, sobald er neu erstellt wird. Deshalb vor jedem Deploy
+# sichern, sonst sind Fehler aus der Zeit vor dem Update weg.
+LOG_ARCHIVE_DIR="${LOG_ARCHIVE_DIR:-/var/log/swiminstructor}"
+LOG_KEEP_DAYS="${LOG_KEEP_DAYS:-30}"
 
 cd "$APP_DIR"
 git pull --ff-only origin main
+
+if docker inspect swiminstructor-backend >/dev/null 2>&1; then
+  mkdir -p "$LOG_ARCHIVE_DIR"
+  chmod 700 "$LOG_ARCHIVE_DIR"
+  docker logs swiminstructor-backend 2>&1 | gzip > "$LOG_ARCHIVE_DIR/backend-$(date +%Y-%m-%d_%H%M%S).log.gz"
+  find "$LOG_ARCHIVE_DIR" -name 'backend-*.log.gz' -type f -mtime +"$LOG_KEEP_DAYS" -delete
+fi
 
 cd backend
 docker compose up -d --build
