@@ -1,0 +1,127 @@
+{
+  "plan_version": 2,
+  "from_date": "2026-09-30",
+  "generated_at": "2026-09-30T10:00:00.000Z",
+  "plan": {
+    "rationale": "Die Woche setzt den Gesamtplan für dein Ziel um: der Radtest am Freitag, dazu Grundlage in allen drei Sportarten.",
+    "total_minutes": 202,
+    "days": [
+      {
+        "date": "2026-09-30",
+        "focus": "Ruhetag",
+        "sessions": []
+      },
+      {
+        "date": "2026-10-01",
+        "focus": "Schwimmen locker",
+        "sessions": [
+          {
+            "sport": "swim",
+            "session_type": "endurance",
+            "intensity": "easy",
+            "amount": 1500,
+            "unit": "meters",
+            "minutes": 30,
+            "distance_meters": 1500,
+            "focus": "Grundlage",
+            "test": null
+          }
+        ]
+      },
+      {
+        "date": "2026-10-02",
+        "focus": "Leistungstest Rad",
+        "sessions": [
+          {
+            "sport": "bike",
+            "session_type": "test",
+            "intensity": "hard",
+            "amount": 58,
+            "unit": "minutes",
+            "minutes": 58,
+            "distance_meters": 25250,
+            "focus": "30-Minuten-Test",
+            "test": {
+              "id": "threshold_30min",
+              "display_name": "30-Minuten-Test",
+              "maximal_effort": true,
+              "produces": [
+                "threshold_heart_rate",
+                "threshold_power"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "date": "2026-10-03",
+        "focus": "Laufen und Schwimmen",
+        "sessions": [
+          {
+            "sport": "run",
+            "session_type": "endurance",
+            "intensity": "easy",
+            "amount": 20,
+            "unit": "minutes",
+            "minutes": 20,
+            "distance_meters": 3350,
+            "focus": "Lockerer Einstieg",
+            "test": null
+          },
+          {
+            "sport": "swim",
+            "session_type": "technique",
+            "intensity": "easy",
+            "amount": 1000,
+            "unit": "meters",
+            "minutes": 20,
+            "distance_meters": 1000,
+            "focus": "Technik",
+            "test": null
+          }
+        ]
+      },
+      {
+        "date": "2026-10-04",
+        "focus": "Lange Ausfahrt",
+        "sessions": [
+          {
+            "sport": "bike",
+            "session_type": "endurance",
+            "intensity": "easy",
+            "amount": 50,
+            "unit": "minutes",
+            "minutes": 50,
+            "distance_meters": 22950,
+            "focus": "Grundlage lang",
+            "test": null
+          }
+        ]
+      },
+      {
+        "date": "2026-10-05",
+        "focus": "Ruhetag",
+        "sessions": []
+      },
+      {
+        "date": "2026-10-06",
+        "focus": "Schwimmen zügig",
+        "sessions": [
+          {
+            "sport": "swim",
+            "session_type": "intervals",
+            "intensity": "hard",
+            "amount": 1200,
+            "unit": "meters",
+            "minutes": 24,
+            "distance_meters": 1200,
+            "focus": "100er zügig",
+            "test": null
+          }
+        ]
+      }
+    ]
+  },
+  "adjustments": [],
+  "wishes": "Freitag habe ich viel Zeit"
+}

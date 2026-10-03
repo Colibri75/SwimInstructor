@@ -1,0 +1,127 @@
+{
+  "description": "Halbmarathon im März nach sechs Wochen Laufpause (Knie). Hält sich mit Rad fit, Schwerpunkt Laufen 60 %, Rad 40 % als Ausgleich. Wünscht flache Strecken, danach Feedback: mehr Rad am Anfang.",
+  "today": "2026-09-30",
+  "snapshot": {
+    "schema_version": 2,
+    "generated_at": "2026-09-30T12:00:00Z",
+    "goal": {
+      "distance_meters": 1500,
+      "target_duration_seconds": 2700,
+      "target_pace_seconds_per_hundred_meters": 180,
+      "target_date": "2027-03-21T08:00:00Z",
+      "days_until_goal": 172
+    },
+    "volume": {
+      "last_seven_days_meters": 0,
+      "average_weekly_meters": 0,
+      "sessions_last_seven_days": 0,
+      "sessions_last_four_weeks": 0,
+      "longest_session_meters": 0
+    },
+    "pace": {},
+    "load": {
+      "days_since_last_workout": 2
+    },
+    "recovery": {
+      "status": "good",
+      "resting_heart_rate_deviation_bpm": 0,
+      "hrv_deviation_percent": 0,
+      "recent_average_sleep_hours": 7.5,
+      "warning_signals": []
+    },
+    "flags": [],
+    "training_goal": {
+      "template": "run_half_marathon",
+      "target_date": "2027-03-21T08:00:00Z",
+      "days_until_goal": 172,
+      "training_days_per_week": 5,
+      "weekly_hours": 5,
+      "disciplines": [
+        {
+          "sport": "run",
+          "distance_meters": 21097,
+          "target_duration_seconds": 7200
+        }
+      ],
+      "emphasis": [
+        {
+          "sport": "run",
+          "percent": 60
+        },
+        {
+          "sport": "bike",
+          "percent": 40
+        }
+      ]
+    },
+    "sports": [
+      {
+        "sport": "bike",
+        "sessions_last_seven_days": 2,
+        "sessions_last_four_weeks": 8,
+        "minutes_last_seven_days": 120,
+        "average_weekly_minutes": 110,
+        "meters_last_seven_days": 52000,
+        "average_weekly_meters": 48000,
+        "longest_session_meters": 35000,
+        "longest_session_minutes": 75,
+        "load_last_seven_days": 96,
+        "average_weekly_load": 88,
+        "days_since_last_session": 2
+      },
+      {
+        "sport": "run",
+        "sessions_last_seven_days": 0,
+        "sessions_last_four_weeks": 0,
+        "minutes_last_seven_days": 0,
+        "average_weekly_minutes": 0,
+        "meters_last_seven_days": 0,
+        "average_weekly_meters": 0,
+        "longest_session_meters": 0,
+        "longest_session_minutes": 0,
+        "load_last_seven_days": 0,
+        "average_weekly_load": 0,
+        "days_since_last_session": 45
+      }
+    ],
+    "total_load": {
+      "minutes_last_seven_days": 120,
+      "average_weekly_minutes": 110,
+      "load_last_seven_days": 96,
+      "average_weekly_load": 88,
+      "acute_chronic_ratio": 1.09
+    },
+    "performance": {
+      "athlete": [
+        {
+          "metric": "max_heart_rate",
+          "value": 186,
+          "source": "formula",
+          "measured_at": "2026-09-30T12:00:00Z"
+        },
+        {
+          "metric": "resting_heart_rate",
+          "value": 56,
+          "source": "estimated",
+          "measured_at": "2026-09-30T12:00:00Z"
+        }
+      ],
+      "sports": [
+        {
+          "sport": "run",
+          "values": [
+            {
+              "metric": "threshold_pace_per_km",
+              "value": 315,
+              "source": "tested",
+              "measured_at": "2026-06-20T08:00:00Z"
+            }
+          ],
+          "zones": []
+        }
+      ]
+    }
+  },
+  "week_wishes": "Mein Knie ist noch empfindlich: beim Laufen nur flach und locker, keine Intervalle.",
+  "feedback": "Bitte in den ersten Wochen mehr Rad und weniger Laufen, das Knie braucht noch Zeit."
+}

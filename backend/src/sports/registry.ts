@@ -19,7 +19,8 @@ export class SportRegistryError extends Error {
       | "invalid_goal_speed"
       | "invalid_load_factor"
       | "invalid_performance_metric"
-      | "invalid_performance_test",
+      | "invalid_performance_test"
+      | "invalid_planning",
     readonly sportId: string
   ) {
     super(`Sportart ${sportId}: ${problem}`);
@@ -50,6 +51,7 @@ export class SportRegistry {
       }
       if (!(Number.isFinite(sport.loadFactor) && sport.loadFactor > 0)) throw new SportRegistryError("invalid_load_factor", sport.id);
       validatePerformance(sport);
+      if (!validPlanning(sport)) throw new SportRegistryError("invalid_planning", sport.id);
       byId.set(sport.id, sport);
     }
     this.byId = byId;
@@ -116,6 +118,32 @@ function validatePerformance(sport: SportDefinition): void {
     if (!valid) throw new SportRegistryError("invalid_performance_test", sport.id);
     tests.add(test.id);
   }
+}
+
+const positive = (value: number) => Number.isFinite(value) && value > 0;
+
+/**
+ * Planungsangaben: Grenzen ueber 0 und in sich stimmig (kleinste Einheit <= Untergrenze <= Obergrenze, Faktoren ab 1),
+ * Schrittmasse aus den eigenen Massen, eine Testeinheit je Leistungstest und keine fuer unbekannte Tests.
+ */
+function validPlanning(sport: SportDefinition): boolean {
+  const planning = sport.planning;
+  const limits = planning.limits;
+  const values = Object.values(limits) as number[];
+  if (!values.every(positive)) return false;
+  if (limits.sessionGrowthFactor < 1 || limits.weeklyGrowthFactor < 1 || limits.macroGrowthFactor < 1) return false;
+  if (!(limits.minSession <= limits.minSessionCap && limits.minSessionCap <= limits.absoluteMaxSession)) return false;
+  if (limits.pauseSessionCap < limits.minSession || limits.minWeeklyCap < limits.minSession) return false;
+  if (!Number.isInteger(limits.maxSessionsPerWeek) || limits.maxSessionsPerWeek > 14) return false;
+  if (planning.limitUnit !== "meters" && planning.limitUnit !== "minutes") return false;
+  if (!positive(planning.typicalSpeedMetersPerSecond)) return false;
+  if (planning.stepMeasures.length === 0 || !planning.stepMeasures.every((measure) => sport.measures.includes(measure))) return false;
+  if (![planning.distanceStepMeters, planning.minStepMeters, planning.minStepSeconds].every(positive)) return false;
+  if (planning.minStepMeters > planning.maxStepMeters || planning.minStepSeconds > planning.maxStepSeconds) return false;
+  if (planning.promptRules.trim() === "") return false;
+  const tests = sport.performanceTests.map((test) => test.id);
+  const templates = Object.keys(planning.testSessions);
+  return tests.every((id) => (planning.testSessions[id]?.length ?? 0) > 0) && templates.every((id) => tests.includes(id));
 }
 
 /** Die Sportart, um die es vor dem Triathlon-Umbau allein ging: Snapshot v1 und alte Plaene sind Schwimmen. */

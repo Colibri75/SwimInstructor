@@ -706,6 +706,37 @@ Schritt bleibt sie fürs Schwimmen voll nutzbar.
       die App rechnet aus derselben Lage genau dieses Profil
 - [ ] **Für dich:** nichts Neues zu prüfen. Beim nächsten Start fragt Health einmal nach dem Geburtsdatum.
 
+### T3 – Planung für mehrere Sportarten (Backend)
+
+- **Plan v2 neben v1:** Mit `plan_version: 2` im Body planen `/v1/plan/today`, `/week` und `/macro` Schwimmen, Rad
+  und Laufen gemeinsam: Gesamtplan mit Umfang und Einheiten je Sportart und Woche, sieben Tage mit 0 bis 2 Einheiten
+  je Tag, der Tag mit allen Schritten. Ohne das Feld antwortet alles wie bisher, die heutige App merkt nichts. Neu ist
+  `POST /v1/plan/macro/revise`: Feedback zum Gesamtplan, Claude überarbeitet ihn und nennt die Änderungen.
+  Details in [`docs/multisport-planning.md`](docs/multisport-planning.md).
+- **Grenzen je Sportart aus dem Modul:** Einheit, Woche, Wiedereinstieg, Steigerung im Gesamtplan. Laufen am
+  strengsten (eine Einheit höchstens 10 % länger als die längste der letzten vier Wochen). Dazu Regeln über alle
+  Sportarten: höchstens zwei harte Tage pro Woche, nie hintereinander, Tagesgrenze, Ruhetag, Wochenstunden,
+  Entlastung spätestens nach drei Wochen, Zuspitzen vor dem Ziel.
+- **Leistungstests im Plan:** Der Code setzt die Termine (ohne bestätigten Wert in den ersten zwei Wochen, danach alle
+  6 Wochen, einstellbar), Woche und Tag prüfen, ob der Test passt, und setzen die Schritte des Moduls ein. Ein Test, der
+  nicht passt, wird eine lockere Einheit.
+- **Prompts aus den Regelblöcken der Module:** Eine neue Sportart bringt ihre Regeln selbst mit.
+- **Bewertung:** sieben Szenarien mit Aufzeichnungen, abspielbar ohne Kosten (`EVAL_REPLAY=1 npm run eval:multisport`),
+  mit Claude über `scripts/eval-in-docker.sh multisport`.
+
+### T3 – Definition of Done
+
+- [x] Property-Tests für Tag, Woche und Gesamtplan (zu viel Laufumfang, harte Tage hintereinander über Sportarten
+      hinweg, zu wenig Ruhe, Testregeln) laufen grün, auch mit 5000 Fällen je Regel
+- [x] Fehlerfälle wie bisher (Zeitüberschreitung, ungültiges JSON, Budget), Feedback-Endpunkt mit Mock getestet
+- [x] Die alten Endpunkte antworten der alten App unverändert (Routen-Tests ohne `plan_version`)
+- [x] Die Bewertung läuft mit Aufzeichnungen in der CI; der Einsteiger ohne Profil bekommt seine Einstiegstests in
+      den ersten zwei Wochen
+- [ ] **Für dich:** Server mit `deploy.sh` aktualisieren, dann einmal `backend/scripts/eval-in-docker.sh multisport`
+      (rund 3 US-Dollar). Die neuen Aufzeichnungen ersetzen die synthetischen; sie und die Ausgabe in
+      `docs/eval-runs/` danach committen, dann spielt die CI echte Antworten ab. In der App ändert sich noch nichts,
+      sie nutzt Plan v2 ab T4.
+
 ## Projektstruktur
 
 ```
@@ -772,8 +803,11 @@ Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
 backend/                            # Node/TypeScript-Server (Proxy fuer Claude, ab M5)
   src/                               # app.ts, auth.ts, config.ts, logger.ts, server.ts
   src/plan/                          # Plan-Erzeugung (M5): Claude-Aufruf, Sicherheitsschicht, Fallback
+  src/plan/multi/                    # Plan v2 für mehrere Sportarten (T3): Grenzen, Sicherheitsschicht, Tests, Prompts
   scenarios/                         # die 5 Snapshots aus M3 (Eingabe für npm run eval:scenarios)
+  scenarios/multisport/              # 7 Szenarien für Plan v2, recorded/: aufgezeichnete Antworten
   scripts/eval-scenarios.ts          # echter Lauf gegen die Claude-API zur manuellen Bewertung
+  scripts/eval-multisport.ts         # Bewertung Plan v2: Claude, mit Aufzeichnung oder Wiedergabe
   test/                              # Jest + supertest
   Dockerfile, compose.yaml           # Container-Image und Start auf dem Server
   deploy/                            # Caddyfile-Vorlage, deploy.sh
@@ -782,6 +816,7 @@ docs/
   AthleteStateSnapshot.md            # JSON-Schema, Definitionen, Schwellenwerte
   backend-deploy.md                  # Server-Einrichtung Schritt fuer Schritt
   plan-generation.md                 # /v1/plan/today: Ablauf, Regeln, Kosten, Konfiguration
+  multisport-planning.md             # Plan v2: Endpunkte, Einheiten, Grenzen, Leistungstests, Bewertung
   Package.swift
 project.yml                          # XcodeGen-Konfiguration (beide Targets + Package)
 fastlane/

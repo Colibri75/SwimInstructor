@@ -11,6 +11,9 @@ import { MacroPlanService } from "./plan/macroService";
 import { weekRoutes } from "./plan/weekRoutes";
 import { WeekPlanService } from "./plan/weekService";
 import { FilePlanStore } from "./plan/store";
+import { multiRoutes } from "./plan/multi/routes";
+import { MultiPlanService } from "./plan/multi/service";
+import { FileDayPlanStoreV2 } from "./plan/multi/store";
 
 let config: Config;
 try {
@@ -36,7 +39,7 @@ const generator =
         serverFallback: config.claudeServerFallback
       });
 
-// Ein Budget fuer Tages- und Wochenplaene: Beide kosten Claude-Aufrufe.
+// Ein Budget fuer alle Plaene (v1 und v2): Jeder kostet einen Claude-Aufruf.
 const budget = new GenerationBudget(config.maxGenerationsPerHour, config.maxGenerationsPerDay);
 
 const planService = new PlanService({
@@ -48,12 +51,22 @@ const planService = new PlanService({
 });
 const weekService = new WeekPlanService({ generator, budget, logger });
 const macroService = new MacroPlanService({ generator, budget, logger });
+const multiService = new MultiPlanService({
+  generator,
+  store: new FileDayPlanStoreV2(config.dataDir),
+  budget,
+  logger,
+  timezone: config.planTimezone
+});
 
 const registerPlanRoutes = planRoutes(planService);
 const registerWeekRoutes = weekRoutes(weekService);
 const registerMacroRoutes = macroRoutes(macroService);
+const registerMultiRoutes = multiRoutes(multiService);
 const app = createApp(config, logger, {
   registerV1Routes: (router) => {
+    // Plan v2 zuerst: Anfragen ohne plan_version 2 reicht er an die Routen von v1 weiter.
+    registerMultiRoutes(router);
     registerPlanRoutes(router);
     registerWeekRoutes(router);
     registerMacroRoutes(router);

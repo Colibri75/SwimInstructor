@@ -1,0 +1,233 @@
+{
+  "plan_version": 2,
+  "goal_day": "2026-11-08",
+  "generated_at": "2026-09-30T10:00:00.000Z",
+  "plan": {
+    "rationale": "Sechs Wochen bis zum Ziel: zwei Wochen Aufbau, eine Entlastung, dann wettkampfnah, eine Woche Zuspitzen und die Wettkampfwoche.",
+    "weeks": [
+      {
+        "week_start": "2026-09-28",
+        "phase": "specific",
+        "deload": false,
+        "focus": "Wettkampfnah",
+        "total_minutes": 210,
+        "load": 190,
+        "sports": [
+          {
+            "sport": "swim",
+            "unit": "meters",
+            "amount": 3500,
+            "minutes": 70,
+            "distance_meters": 3500,
+            "sessions": 2
+          },
+          {
+            "sport": "bike",
+            "unit": "minutes",
+            "amount": 100,
+            "minutes": 100,
+            "distance_meters": 45900,
+            "sessions": 2
+          },
+          {
+            "sport": "run",
+            "unit": "minutes",
+            "amount": 40,
+            "minutes": 40,
+            "distance_meters": 6700,
+            "sessions": 2
+          }
+        ],
+        "tests": [
+          {
+            "sport": "bike",
+            "test_id": "threshold_30min",
+            "display_name": "30-Minuten-Test"
+          }
+        ]
+      },
+      {
+        "week_start": "2026-10-05",
+        "phase": "specific",
+        "deload": false,
+        "focus": "Wettkampfnah",
+        "total_minutes": 227,
+        "load": 205,
+        "sports": [
+          {
+            "sport": "swim",
+            "unit": "meters",
+            "amount": 3600,
+            "minutes": 72,
+            "distance_meters": 3600,
+            "sessions": 2
+          },
+          {
+            "sport": "bike",
+            "unit": "minutes",
+            "amount": 110,
+            "minutes": 110,
+            "distance_meters": 50450,
+            "sessions": 2
+          },
+          {
+            "sport": "run",
+            "unit": "minutes",
+            "amount": 45,
+            "minutes": 45,
+            "distance_meters": 7550,
+            "sessions": 2
+          }
+        ],
+        "tests": [
+          {
+            "sport": "run",
+            "test_id": "entry_easy_25min",
+            "display_name": "Einstiegstest locker"
+          }
+        ]
+      },
+      {
+        "week_start": "2026-10-12",
+        "phase": "specific",
+        "deload": true,
+        "focus": "Entlastung",
+        "total_minutes": 155,
+        "load": 140,
+        "sports": [
+          {
+            "sport": "swim",
+            "unit": "meters",
+            "amount": 2500,
+            "minutes": 50,
+            "distance_meters": 2500,
+            "sessions": 2
+          },
+          {
+            "sport": "bike",
+            "unit": "minutes",
+            "amount": 75,
+            "minutes": 75,
+            "distance_meters": 34400,
+            "sessions": 2
+          },
+          {
+            "sport": "run",
+            "unit": "minutes",
+            "amount": 30,
+            "minutes": 30,
+            "distance_meters": 5050,
+            "sessions": 2
+          }
+        ],
+        "tests": []
+      },
+      {
+        "week_start": "2026-10-19",
+        "phase": "specific",
+        "deload": false,
+        "focus": "Wettkampfnah",
+        "total_minutes": 246,
+        "load": 222,
+        "sports": [
+          {
+            "sport": "swim",
+            "unit": "meters",
+            "amount": 3800,
+            "minutes": 76,
+            "distance_meters": 3800,
+            "sessions": 2
+          },
+          {
+            "sport": "bike",
+            "unit": "minutes",
+            "amount": 120,
+            "minutes": 120,
+            "distance_meters": 55050,
+            "sessions": 2
+          },
+          {
+            "sport": "run",
+            "unit": "minutes",
+            "amount": 50,
+            "minutes": 50,
+            "distance_meters": 8400,
+            "sessions": 2
+          }
+        ],
+        "tests": []
+      },
+      {
+        "week_start": "2026-10-26",
+        "phase": "taper",
+        "deload": false,
+        "focus": "Frisch werden",
+        "total_minutes": 143,
+        "load": 129,
+        "sports": [
+          {
+            "sport": "swim",
+            "unit": "meters",
+            "amount": 2150,
+            "minutes": 43,
+            "distance_meters": 2150,
+            "sessions": 2
+          },
+          {
+            "sport": "bike",
+            "unit": "minutes",
+            "amount": 70,
+            "minutes": 70,
+            "distance_meters": 32100,
+            "sessions": 2
+          },
+          {
+            "sport": "run",
+            "unit": "minutes",
+            "amount": 30,
+            "minutes": 30,
+            "distance_meters": 5050,
+            "sessions": 2
+          }
+        ],
+        "tests": []
+      },
+      {
+        "week_start": "2026-11-02",
+        "phase": "goal_week",
+        "deload": false,
+        "focus": "Frisch werden",
+        "total_minutes": 121,
+        "load": 109,
+        "sports": [
+          {
+            "sport": "swim",
+            "unit": "meters",
+            "amount": 1800,
+            "minutes": 36,
+            "distance_meters": 1800,
+            "sessions": 2
+          },
+          {
+            "sport": "bike",
+            "unit": "minutes",
+            "amount": 60,
+            "minutes": 60,
+            "distance_meters": 27550,
+            "sessions": 2
+          },
+          {
+            "sport": "run",
+            "unit": "minutes",
+            "amount": 25,
+            "minutes": 25,
+            "distance_meters": 4200,
+            "sessions": 1
+          }
+        ],
+        "tests": []
+      }
+    ]
+  },
+  "adjustments": []
+}

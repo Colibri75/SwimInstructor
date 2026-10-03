@@ -42,6 +42,14 @@ export interface MacroGenerator {
   generateMacro(input: { snapshot: Snapshot; context: MacroContext }): Promise<GeneratedPlan>;
 }
 
+/**
+ * Ein Aufruf mit festem System-Prompt, Nutzernachricht und Ausgabe-Schema. Die Planung fuer mehrere Sportarten
+ * (src/plan/multi/) baut Prompts und Schemas selbst und braucht vom Generator nur das.
+ */
+export interface StructuredGenerator {
+  complete(system: string, user: string, schema: z.ZodType): Promise<GeneratedPlan>;
+}
+
 export interface ClaudeOptions {
   model: string;
   timeoutMs: number;
@@ -52,7 +60,7 @@ export interface ClaudeOptions {
 
 const MAX_TOKENS = 16_000;
 
-export class ClaudePlanGenerator implements PlanGenerator, WeekGenerator, MacroGenerator {
+export class ClaudePlanGenerator implements PlanGenerator, WeekGenerator, MacroGenerator, StructuredGenerator {
   constructor(
     private readonly client: Anthropic,
     private readonly options: ClaudeOptions
@@ -68,6 +76,10 @@ export class ClaudePlanGenerator implements PlanGenerator, WeekGenerator, MacroG
 
   async generateMacro({ snapshot, context }: Parameters<MacroGenerator["generateMacro"]>[0]): Promise<GeneratedPlan> {
     return this.call(MACRO_SYSTEM_PROMPT, buildMacroUserMessage(snapshot, context), MacroPlanSchema);
+  }
+
+  async complete(system: string, user: string, schema: z.ZodType): Promise<GeneratedPlan> {
+    return this.call(system, user, schema);
   }
 
   /** Ein Aufruf mit strukturierter Ausgabe nach `schema`; Fehler werden als PlanGenerationError klassifiziert. */

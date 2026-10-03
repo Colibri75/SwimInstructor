@@ -1,0 +1,111 @@
+{
+  "description": "Nur Schwimmen wie bisher: 1500 m in 30 Minuten im März. CSS getestet. Prüft, dass Plan v2 für reine Schwimmer so plant wie v1.",
+  "today": "2026-09-30",
+  "snapshot": {
+    "schema_version": 2,
+    "generated_at": "2026-09-30T12:00:00Z",
+    "goal": {
+      "distance_meters": 1500,
+      "target_duration_seconds": 1800,
+      "target_pace_seconds_per_hundred_meters": 120,
+      "target_date": "2027-03-14T08:00:00Z",
+      "days_until_goal": 165
+    },
+    "volume": {
+      "last_seven_days_meters": 5400,
+      "average_weekly_meters": 5000,
+      "weekly_change_percent": 8,
+      "sessions_last_seven_days": 3,
+      "sessions_last_four_weeks": 11,
+      "longest_session_meters": 2200
+    },
+    "pace": {
+      "recent_pace_seconds_per_hundred_meters": 122
+    },
+    "load": {
+      "days_since_last_workout": 1,
+      "days_since_last_hard_session": 4
+    },
+    "recovery": {
+      "status": "good",
+      "resting_heart_rate_deviation_bpm": 0,
+      "hrv_deviation_percent": 0,
+      "recent_average_sleep_hours": 7.5,
+      "warning_signals": []
+    },
+    "flags": [],
+    "training_goal": {
+      "target_date": "2027-03-14T08:00:00Z",
+      "days_until_goal": 165,
+      "training_days_per_week": 3,
+      "weekly_hours": 3,
+      "disciplines": [
+        {
+          "sport": "swim",
+          "distance_meters": 1500,
+          "target_duration_seconds": 1800
+        }
+      ],
+      "emphasis": [
+        {
+          "sport": "swim",
+          "percent": 100
+        }
+      ]
+    },
+    "sports": [
+      {
+        "sport": "swim",
+        "sessions_last_seven_days": 3,
+        "sessions_last_four_weeks": 11,
+        "minutes_last_seven_days": 110,
+        "average_weekly_minutes": 100,
+        "meters_last_seven_days": 5400,
+        "average_weekly_meters": 5000,
+        "longest_session_meters": 2200,
+        "longest_session_minutes": 45,
+        "load_last_seven_days": 110,
+        "average_weekly_load": 100,
+        "days_since_last_session": 1
+      }
+    ],
+    "total_load": {
+      "minutes_last_seven_days": 110,
+      "average_weekly_minutes": 100,
+      "load_last_seven_days": 110,
+      "average_weekly_load": 100,
+      "acute_chronic_ratio": 1.1
+    },
+    "performance": {
+      "athlete": [
+        {
+          "metric": "max_heart_rate",
+          "value": 186,
+          "source": "formula",
+          "measured_at": "2026-09-30T12:00:00Z"
+        },
+        {
+          "metric": "resting_heart_rate",
+          "value": 56,
+          "source": "estimated",
+          "measured_at": "2026-09-30T12:00:00Z"
+        }
+      ],
+      "sports": [
+        {
+          "sport": "swim",
+          "values": [
+            {
+              "metric": "css_pace_per_100m",
+              "value": 112,
+              "source": "tested",
+              "measured_at": "2026-09-10T07:00:00Z"
+            }
+          ],
+          "zones": []
+        }
+      ]
+    }
+  },
+  "day_wishes": "Heute gern etwas mit Technik."
+}

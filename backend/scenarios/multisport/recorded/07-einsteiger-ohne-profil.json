@@ -1,0 +1,969 @@
+{
+  "macro": {
+    "source": "synthetic",
+    "model": "synthetisch",
+    "recorded_at": "2026-10-03T12:00:00Z",
+    "usage": {
+      "inputTokens": 5210,
+      "outputTokens": 2496
+    },
+    "raw": {
+      "rationale": "Der Plan führt in 37 Wochen zum Ziel am 2027-06-13 und verteilt die Zeit nach deinen Schwerpunkten (Schwimmen 34 %, Radfahren 33 %, Laufen 33 %). Jede vierte Woche ist eine Entlastungswoche, danach steigt der Umfang um etwa 8 % pro Woche bis zu deinen 3 Stunden. Vor dem Wettkampf spitzt eine Woche zu.",
+      "weeks": [
+        {
+          "week_start": "2026-09-28",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 800,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 40,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 30,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2026-10-05",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 850,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 45,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 30,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2026-10-12",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 950,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 45,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 35,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2026-10-19",
+          "deload": true,
+          "focus": "Entlastung",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 700,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 35,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 25,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2026-10-26",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1000,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 50,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 40,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2026-11-02",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1100,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 55,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 40,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2026-11-09",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1200,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 45,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2026-11-16",
+          "deload": true,
+          "focus": "Entlastung",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 900,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 40,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 35,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2026-11-23",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1250,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 50,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2026-11-30",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1350,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 50,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2026-12-07",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1500,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 55,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2026-12-14",
+          "deload": true,
+          "focus": "Entlastung",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1100,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 40,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 40,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2026-12-21",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1600,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2026-12-28",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1750,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-01-04",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1850,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-01-11",
+          "deload": true,
+          "focus": "Entlastung",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1300,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 40,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 40,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-01-18",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1850,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-01-25",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1850,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-02-01",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1850,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-02-08",
+          "deload": true,
+          "focus": "Entlastung",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1300,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 40,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 40,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-02-15",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1850,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-02-22",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1850,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-03-01",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1850,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-03-08",
+          "deload": true,
+          "focus": "Entlastung",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1300,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 40,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 40,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-03-15",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1850,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-03-22",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1850,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-03-29",
+          "deload": false,
+          "focus": "Grundlage aufbauen",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1850,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-04-05",
+          "deload": true,
+          "focus": "Entlastung",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1300,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 40,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 40,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-04-12",
+          "deload": false,
+          "focus": "Wettkampfnah",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1850,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-04-19",
+          "deload": false,
+          "focus": "Wettkampfnah",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1850,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-04-26",
+          "deload": false,
+          "focus": "Wettkampfnah",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1850,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-05-03",
+          "deload": true,
+          "focus": "Entlastung",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1300,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 40,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 40,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-05-10",
+          "deload": false,
+          "focus": "Wettkampfnah",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1850,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-05-17",
+          "deload": false,
+          "focus": "Wettkampfnah",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1850,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-05-24",
+          "deload": false,
+          "focus": "Wettkampfnah",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1850,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 60,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 60,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-05-31",
+          "deload": false,
+          "focus": "Zuspitzen, frisch werden",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 1100,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 35,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 35,
+              "sessions": 1
+            }
+          ]
+        },
+        {
+          "week_start": "2027-06-07",
+          "deload": false,
+          "focus": "Wettkampfwoche",
+          "sports": [
+            {
+              "sport": "swim",
+              "amount": 750,
+              "sessions": 1
+            },
+            {
+              "sport": "bike",
+              "amount": 25,
+              "sessions": 1
+            },
+            {
+              "sport": "run",
+              "amount": 25,
+              "sessions": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "week": {
+    "source": "synthetic",
+    "model": "synthetisch",
+    "recorded_at": "2026-10-03T12:00:00Z",
+    "usage": {
+      "inputTokens": 4819,
+      "outputTokens": 317
+    },
+    "raw": {
+      "rationale": "Die Woche setzt die Vorgabe des Gesamtplans für dein Ziel um: 3 Einheiten an 3 Tagen, dazu die vorgesehenen Leistungstests. Harte Tage liegen nie hintereinander.",
+      "days": [
+        {
+          "date": "2026-09-30",
+          "focus": "Grundlage locker",
+          "sessions": [
+            {
+              "sport": "run",
+              "session_type": "endurance",
+              "intensity": "easy",
+              "amount": 30,
+              "focus": "Grundlage locker",
+              "test_id": null
+            }
+          ]
+        },
+        {
+          "date": "2026-10-01",
+          "focus": "Ruhetag",
+          "sessions": []
+        },
+        {
+          "date": "2026-10-02",
+          "focus": "Leistungstest: 30-Minuten-Test",
+          "sessions": [
+            {
+              "sport": "bike",
+              "session_type": "test",
+              "intensity": "hard",
+              "amount": 60,
+              "focus": "Leistungstest: 30-Minuten-Test",
+              "test_id": "threshold_30min"
+            }
+          ]
+        },
+        {
+          "date": "2026-10-03",
+          "focus": "Ruhetag",
+          "sessions": []
+        },
+        {
+          "date": "2026-10-04",
+          "focus": "Leistungstest: CSS-Test 400/200 m",
+          "sessions": [
+            {
+              "sport": "swim",
+              "session_type": "test",
+              "intensity": "hard",
+              "amount": 1000,
+              "focus": "Leistungstest: CSS-Test 400/200 m",
+              "test_id": "css_400_200"
+            }
+          ]
+        },
+        {
+          "date": "2026-10-05",
+          "focus": "Ruhetag",
+          "sessions": []
+        },
+        {
+          "date": "2026-10-06",
+          "focus": "Ruhetag",
+          "sessions": []
+        }
+      ]
+    }
+  },
+  "day": {
+    "source": "synthetic",
+    "model": "synthetisch",
+    "recorded_at": "2026-10-03T12:00:00Z",
+    "usage": {
+      "inputTokens": 4673,
+      "outputTokens": 312
+    },
+    "raw": {
+      "rationale": "Heute steht Laufen an, wie im Wochenplan für dein Ziel vorgesehen.",
+      "sessions": [
+        {
+          "sport": "run",
+          "session_type": "endurance",
+          "intensity": "easy",
+          "focus": "Grundlage locker",
+          "test_id": null,
+          "steps": [
+            {
+              "name": "Einwärmen",
+              "repetitions": 1,
+              "measure": "duration",
+              "distance_meters": null,
+              "duration_seconds": 300,
+              "target_type": "perceived_effort",
+              "target_value": 3,
+              "rest_seconds": 0,
+              "instructions": "Locker einlaufen.",
+              "cue": "Locker einlaufen",
+              "equipment": []
+            },
+            {
+              "name": "Grundlage",
+              "repetitions": 1,
+              "measure": "duration",
+              "distance_meters": null,
+              "duration_seconds": 1200,
+              "target_type": "perceived_effort",
+              "target_value": 4,
+              "rest_seconds": 0,
+              "instructions": "Gleichmäßig, du kannst dich noch unterhalten.",
+              "cue": "Ruhig gleichmäßig",
+              "equipment": []
+            },
+            {
+              "name": "Ausklang",
+              "repetitions": 1,
+              "measure": "duration",
+              "distance_meters": null,
+              "duration_seconds": 300,
+              "target_type": "perceived_effort",
+              "target_value": 2,
+              "rest_seconds": 0,
+              "instructions": "Ganz locker auslaufen.",
+              "cue": "Locker auslaufen",
+              "equipment": []
+            }
+          ]
+        }
+      ],
+      "coach_notes": []
+    }
+  }
+}

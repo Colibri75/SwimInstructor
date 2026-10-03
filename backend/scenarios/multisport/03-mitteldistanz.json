@@ -1,0 +1,203 @@
+{
+  "description": "Mitteldistanz (70.3) im Mai, Schwerpunkt Rad. Trainiert regelmäßig in allen drei Sportarten, CSS und FTP getestet. Tests alle 8 Wochen, beim Schwimmen lieber der 1000-m-Test.",
+  "today": "2026-09-30",
+  "snapshot": {
+    "schema_version": 2,
+    "generated_at": "2026-09-30T12:00:00Z",
+    "goal": {
+      "distance_meters": 1900,
+      "target_duration_seconds": 2280,
+      "target_pace_seconds_per_hundred_meters": 120,
+      "target_date": "2027-05-16T08:00:00Z",
+      "days_until_goal": 228
+    },
+    "volume": {
+      "last_seven_days_meters": 7500,
+      "average_weekly_meters": 7000,
+      "weekly_change_percent": 7.1,
+      "sessions_last_seven_days": 3,
+      "sessions_last_four_weeks": 11,
+      "longest_session_meters": 3000
+    },
+    "pace": {
+      "recent_pace_seconds_per_hundred_meters": 120
+    },
+    "load": {
+      "days_since_last_workout": 1,
+      "days_since_last_hard_session": 2
+    },
+    "recovery": {
+      "status": "good",
+      "resting_heart_rate_deviation_bpm": 0,
+      "hrv_deviation_percent": 0,
+      "recent_average_sleep_hours": 7.5,
+      "warning_signals": []
+    },
+    "flags": [],
+    "training_goal": {
+      "template": "triathlon_middle",
+      "target_date": "2027-05-16T08:00:00Z",
+      "days_until_goal": 228,
+      "training_days_per_week": 6,
+      "weekly_hours": 10,
+      "disciplines": [
+        {
+          "sport": "swim",
+          "distance_meters": 1900,
+          "target_duration_seconds": 2280
+        },
+        {
+          "sport": "bike",
+          "distance_meters": 90000,
+          "target_duration_seconds": 10800
+        },
+        {
+          "sport": "run",
+          "distance_meters": 21097,
+          "target_duration_seconds": 6600
+        }
+      ],
+      "emphasis": [
+        {
+          "sport": "swim",
+          "percent": 25
+        },
+        {
+          "sport": "bike",
+          "percent": 45
+        },
+        {
+          "sport": "run",
+          "percent": 30
+        }
+      ]
+    },
+    "sports": [
+      {
+        "sport": "swim",
+        "sessions_last_seven_days": 3,
+        "sessions_last_four_weeks": 11,
+        "minutes_last_seven_days": 150,
+        "average_weekly_minutes": 140,
+        "meters_last_seven_days": 7500,
+        "average_weekly_meters": 7000,
+        "longest_session_meters": 3000,
+        "longest_session_minutes": 60,
+        "load_last_seven_days": 150,
+        "average_weekly_load": 140,
+        "days_since_last_session": 1
+      },
+      {
+        "sport": "bike",
+        "sessions_last_seven_days": 3,
+        "sessions_last_four_weeks": 12,
+        "minutes_last_seven_days": 300,
+        "average_weekly_minutes": 280,
+        "meters_last_seven_days": 140000,
+        "average_weekly_meters": 130000,
+        "longest_session_meters": 80000,
+        "longest_session_minutes": 150,
+        "load_last_seven_days": 240,
+        "average_weekly_load": 224,
+        "days_since_last_session": 2
+      },
+      {
+        "sport": "run",
+        "sessions_last_seven_days": 3,
+        "sessions_last_four_weeks": 12,
+        "minutes_last_seven_days": 150,
+        "average_weekly_minutes": 140,
+        "meters_last_seven_days": 28000,
+        "average_weekly_meters": 26000,
+        "longest_session_meters": 15000,
+        "longest_session_minutes": 75,
+        "load_last_seven_days": 165,
+        "average_weekly_load": 154,
+        "days_since_last_session": 1
+      }
+    ],
+    "total_load": {
+      "minutes_last_seven_days": 600,
+      "average_weekly_minutes": 560,
+      "load_last_seven_days": 555,
+      "average_weekly_load": 518,
+      "acute_chronic_ratio": 1.07
+    },
+    "performance": {
+      "athlete": [
+        {
+          "metric": "max_heart_rate",
+          "value": 184,
+          "source": "tested",
+          "measured_at": "2026-06-12T09:00:00Z"
+        },
+        {
+          "metric": "resting_heart_rate",
+          "value": 48,
+          "source": "estimated",
+          "measured_at": "2026-09-30T12:00:00Z"
+        }
+      ],
+      "sports": [
+        {
+          "sport": "swim",
+          "values": [
+            {
+              "metric": "css_pace_per_100m",
+              "value": 98,
+              "source": "tested",
+              "measured_at": "2026-08-01T07:00:00Z"
+            }
+          ],
+          "zones": []
+        },
+        {
+          "sport": "bike",
+          "values": [
+            {
+              "metric": "threshold_power",
+              "value": 245,
+              "source": "tested",
+              "measured_at": "2026-08-15T09:00:00Z"
+            },
+            {
+              "metric": "threshold_heart_rate",
+              "value": 158,
+              "source": "tested",
+              "measured_at": "2026-08-15T09:00:00Z"
+            }
+          ],
+          "zones": []
+        },
+        {
+          "sport": "run",
+          "values": [
+            {
+              "metric": "threshold_pace_per_km",
+              "value": 268,
+              "source": "estimated",
+              "measured_at": "2026-09-30T12:00:00Z"
+            },
+            {
+              "metric": "threshold_heart_rate",
+              "value": 168,
+              "source": "formula",
+              "measured_at": "2026-09-30T12:00:00Z"
+            }
+          ],
+          "zones": []
+        }
+      ]
+    }
+  },
+  "test_settings": {
+    "offer": true,
+    "interval_weeks": 8,
+    "preferred": [
+      {
+        "sport": "swim",
+        "test_id": "time_trial_1000m"
+      }
+    ]
+  }
+}
