@@ -15,11 +15,15 @@ struct SwimInstructorApp: App {
         let healthKitManager = HealthKitManager()
         let settings = BackendSettings()
         let goalStore = UserDefaultsTrainingGoalStore()
+        let profileStore = UserDefaultsPerformanceProfileStore()
         let builder = SnapshotBuilder(
             repository: HealthKitWorkoutRepository(),
             vitalsRepository: HealthKitDailyVitalsRepository(),
             // Das Gesamtziel aus den Einstellungen, bei jedem Durchlauf neu gelesen (Snapshot v2).
-            trainingGoalProvider: { goalStore.goal() }
+            trainingGoalProvider: { goalStore.goal() },
+            // Leistungswerte und Zonen: bestätigte aus dem Profil, sonst aus Health geschätzt.
+            performanceRepository: HealthKitPerformanceDataRepository(),
+            profileProvider: { profileStore.profile() }
         )
         let ownedEquipment = UserDefaultsOwnedEquipmentStore()
         let weekLoader = WeekPlanLoader(

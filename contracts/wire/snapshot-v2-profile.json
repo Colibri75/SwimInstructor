@@ -1,0 +1,332 @@
+{
+  "schema_version": 2,
+  "generated_at": "2026-09-30T12:00:00Z",
+  "goal": {
+    "distance_meters": 1500,
+    "target_duration_seconds": 1800,
+    "target_pace_seconds_per_hundred_meters": 120,
+    "target_date": "2027-07-04T10:00:00Z",
+    "days_until_goal": 277
+  },
+  "volume": {
+    "last_seven_days_meters": 3500.0,
+    "average_weekly_meters": 3350.0,
+    "weekly_change_percent": 6.1,
+    "sessions_last_seven_days": 2,
+    "sessions_last_four_weeks": 8,
+    "longest_session_meters": 2000.0
+  },
+  "pace": {
+    "recent_pace_seconds_per_hundred_meters": 120.0,
+    "previous_pace_seconds_per_hundred_meters": 160.0,
+    "trend_seconds_per_hundred_meters": -40.0,
+    "gap_to_target_seconds_per_hundred_meters": 0.0
+  },
+  "load": {
+    "days_since_last_workout": 1,
+    "days_since_last_hard_session": 1
+  },
+  "recovery": {
+    "status": "good",
+    "resting_heart_rate_deviation_bpm": 0.0,
+    "hrv_deviation_percent": 0.0,
+    "recent_average_sleep_hours": 7.5,
+    "warning_signals": []
+  },
+  "flags": [],
+  "training_goal": {
+    "template": "triathlon_olympic",
+    "target_date": "2027-07-04T10:00:00Z",
+    "days_until_goal": 277,
+    "training_days_per_week": 5,
+    "weekly_hours": 7.5,
+    "disciplines": [
+      {
+        "sport": "swim",
+        "distance_meters": 1500,
+        "target_duration_seconds": 1800
+      },
+      {
+        "sport": "bike",
+        "distance_meters": 40000,
+        "target_duration_seconds": 4800
+      },
+      {
+        "sport": "run",
+        "distance_meters": 10000
+      }
+    ],
+    "emphasis": [
+      {
+        "sport": "swim",
+        "percent": 40
+      },
+      {
+        "sport": "bike",
+        "percent": 35
+      },
+      {
+        "sport": "run",
+        "percent": 25
+      }
+    ]
+  },
+  "sports": [
+    {
+      "sport": "swim",
+      "sessions_last_seven_days": 2,
+      "sessions_last_four_weeks": 8,
+      "minutes_last_seven_days": 70,
+      "average_weekly_minutes": 67,
+      "meters_last_seven_days": 3500,
+      "average_weekly_meters": 3350,
+      "longest_session_meters": 2000,
+      "longest_session_minutes": 40,
+      "load_last_seven_days": 70,
+      "average_weekly_load": 67,
+      "days_since_last_session": 1
+    },
+    {
+      "sport": "bike",
+      "sessions_last_seven_days": 1,
+      "sessions_last_four_weeks": 4,
+      "minutes_last_seven_days": 90,
+      "average_weekly_minutes": 85,
+      "meters_last_seven_days": 42000,
+      "average_weekly_meters": 39000,
+      "longest_session_meters": 52000,
+      "longest_session_minutes": 110,
+      "load_last_seven_days": 72,
+      "average_weekly_load": 68,
+      "days_since_last_session": 3
+    },
+    {
+      "sport": "run",
+      "sessions_last_seven_days": 0,
+      "sessions_last_four_weeks": 0,
+      "minutes_last_seven_days": 0,
+      "average_weekly_minutes": 0,
+      "meters_last_seven_days": 0,
+      "average_weekly_meters": 0,
+      "longest_session_meters": 0,
+      "longest_session_minutes": 0,
+      "load_last_seven_days": 0,
+      "average_weekly_load": 0
+    }
+  ],
+  "total_load": {
+    "minutes_last_seven_days": 160,
+    "average_weekly_minutes": 152,
+    "load_last_seven_days": 142,
+    "average_weekly_load": 135,
+    "acute_chronic_ratio": 1.05
+  },
+  "performance": {
+    "athlete": [
+      {
+        "metric": "max_heart_rate",
+        "value": 188,
+        "source": "estimated",
+        "measured_at": "2026-09-30T12:00:00Z"
+      },
+      {
+        "metric": "resting_heart_rate",
+        "value": 52,
+        "source": "estimated",
+        "measured_at": "2026-09-30T12:00:00Z"
+      }
+    ],
+    "sports": [
+      {
+        "sport": "swim",
+        "values": [
+          {
+            "metric": "css_pace_per_100m",
+            "value": 105,
+            "source": "tested",
+            "measured_at": "2026-09-20T08:00:00Z"
+          }
+        ],
+        "zones": [
+          {
+            "target": "pace_per_100m",
+            "basis": "css_pace_per_100m",
+            "zones": [
+              {
+                "zone": 1,
+                "minimum": 131
+              },
+              {
+                "zone": 2,
+                "minimum": 119,
+                "maximum": 131
+              },
+              {
+                "zone": 3,
+                "minimum": 111,
+                "maximum": 119
+              },
+              {
+                "zone": 4,
+                "minimum": 103,
+                "maximum": 111
+              },
+              {
+                "zone": 5,
+                "maximum": 103
+              }
+            ]
+          },
+          {
+            "target": "heart_rate_zone",
+            "basis": "max_heart_rate",
+            "zones": [
+              {
+                "zone": 1,
+                "maximum": 113
+              },
+              {
+                "zone": 2,
+                "minimum": 113,
+                "maximum": 132
+              },
+              {
+                "zone": 3,
+                "minimum": 132,
+                "maximum": 150
+              },
+              {
+                "zone": 4,
+                "minimum": 150,
+                "maximum": 169
+              },
+              {
+                "zone": 5,
+                "minimum": 169
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "sport": "bike",
+        "values": [
+          {
+            "metric": "threshold_heart_rate",
+            "value": 160,
+            "source": "formula",
+            "measured_at": "2026-09-30T12:00:00Z"
+          }
+        ],
+        "zones": [
+          {
+            "target": "heart_rate_zone",
+            "basis": "threshold_heart_rate",
+            "zones": [
+              {
+                "zone": 1,
+                "maximum": 130
+              },
+              {
+                "zone": 2,
+                "minimum": 130,
+                "maximum": 144
+              },
+              {
+                "zone": 3,
+                "minimum": 144,
+                "maximum": 150
+              },
+              {
+                "zone": 4,
+                "minimum": 150,
+                "maximum": 160
+              },
+              {
+                "zone": 5,
+                "minimum": 160
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "sport": "run",
+        "values": [
+          {
+            "metric": "threshold_heart_rate",
+            "value": 165,
+            "source": "formula",
+            "measured_at": "2026-09-30T12:00:00Z"
+          },
+          {
+            "metric": "threshold_pace_per_km",
+            "value": 290,
+            "source": "estimated",
+            "measured_at": "2026-09-30T12:00:00Z"
+          }
+        ],
+        "zones": [
+          {
+            "target": "heart_rate_zone",
+            "basis": "threshold_heart_rate",
+            "zones": [
+              {
+                "zone": 1,
+                "maximum": 140
+              },
+              {
+                "zone": 2,
+                "minimum": 140,
+                "maximum": 149
+              },
+              {
+                "zone": 3,
+                "minimum": 149,
+                "maximum": 157
+              },
+              {
+                "zone": 4,
+                "minimum": 157,
+                "maximum": 165
+              },
+              {
+                "zone": 5,
+                "minimum": 165
+              }
+            ]
+          },
+          {
+            "target": "pace_per_km",
+            "basis": "threshold_pace_per_km",
+            "zones": [
+              {
+                "zone": 1,
+                "minimum": 372
+              },
+              {
+                "zone": 2,
+                "minimum": 330,
+                "maximum": 372
+              },
+              {
+                "zone": 3,
+                "minimum": 309,
+                "maximum": 330
+              },
+              {
+                "zone": 4,
+                "minimum": 287,
+                "maximum": 309
+              },
+              {
+                "zone": 5,
+                "maximum": 287
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

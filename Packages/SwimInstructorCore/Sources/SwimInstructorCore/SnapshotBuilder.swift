@@ -47,6 +47,9 @@ public struct SnapshotBuilder: SnapshotBuilding {
     private let goalProvider: () -> AthleteGoal
     /// Gesetzt: Der Snapshot geht als v2 mit Gesamtziel und allen Sportarten zum Server.
     private let trainingGoalProvider: (() -> TrainingGoal)?
+    /// Gesetzt (nur v2): Der Snapshot bekommt Leistungswerte und Zonen.
+    private let performanceRepository: PerformanceDataRepository?
+    private let profileProvider: () -> PerformanceProfile
     private let calendar: Calendar
 
     public init(
@@ -60,6 +63,8 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.calculator = AthleteStateCalculator(calendar: calendar)
         self.goalProvider = { goal }
         self.trainingGoalProvider = nil
+        self.performanceRepository = nil
+        self.profileProvider = { .empty }
         self.calendar = calendar
     }
 
@@ -75,6 +80,8 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.calculator = AthleteStateCalculator(calendar: calendar)
         self.goalProvider = goalProvider
         self.trainingGoalProvider = nil
+        self.performanceRepository = nil
+        self.profileProvider = { .empty }
         self.calendar = calendar
     }
 
@@ -90,15 +97,22 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.calculator = AthleteStateCalculator(calendar: calendar)
         self.goalProvider = goalProvider
         self.trainingGoalProvider = nil
+        self.performanceRepository = nil
+        self.profileProvider = { .empty }
         self.calendar = calendar
     }
 
     /// Snapshot v2: liest die Einheiten aller Sportarten und das Gesamtziel (bei jedem Durchlauf neu). Die v1-Felder
     /// rechnen mit dem Schwimmteil des Ziels (`legacySwimGoal`) genau wie bisher.
+    ///
+    /// Mit `performanceRepository` kommen Leistungswerte und Zonen dazu: bestätigte aus `profileProvider`, sonst
+    /// geschätzt aus Health. Die Last rechnet dann mit Ruhe- und Maximalpuls (TRIMP).
     public init(
         repository: WorkoutRepository,
         vitalsRepository: DailyVitalsRepository,
         trainingGoalProvider: @escaping () -> TrainingGoal,
+        performanceRepository: PerformanceDataRepository? = nil,
+        profileProvider: @escaping () -> PerformanceProfile = { .empty },
         calendar: Calendar = .current
     ) {
         self.fetchWorkouts = { try await repository.fetchWorkouts(from: $0) }
@@ -106,6 +120,8 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.calculator = AthleteStateCalculator(calendar: calendar)
         self.goalProvider = { trainingGoalProvider().legacySwimGoal }
         self.trainingGoalProvider = trainingGoalProvider
+        self.performanceRepository = performanceRepository
+        self.profileProvider = profileProvider
         self.calendar = calendar
     }
 
@@ -133,8 +149,16 @@ public struct SnapshotBuilder: SnapshotBuilding {
             workouts: workouts, vitals: vitals, goal: trainingGoal?.legacySwimGoal ?? goalProvider(), now: now
         )
         if let trainingGoal {
-            snapshot = MultiSportStateCalculator(calendar: calendar)
+            let performance = await resolvePerformance(workouts: allWorkouts, vitals: vitals, now: now)
+            let loadCalculator = TrainingLoadCalculator(
+                restingHeartRate: performance?.value(.restingHeartRate)?.value,
+                maximumHeartRate: performance?.value(.maxHeartRate)?.value
+            )
+            snapshot = MultiSportStateCalculator(calendar: calendar, loadCalculator: loadCalculator)
                 .extend(snapshot, workouts: allWorkouts, goal: trainingGoal, now: now)
+            if let performance {
+                snapshot = snapshot.withPerformance(performance.summary(sports: snapshot.sports?.map(\.sport) ?? []))
+            }
         }
         let cleaned = SwimWorkoutDeduplicator.deduplicate(workouts)
             .filter { $0.startDate <= now }
@@ -148,5 +172,21 @@ public struct SnapshotBuilder: SnapshotBuilding {
             allWorkouts: cleanedAll,
             vitalsAvailable: vitalsAvailable
         )
+    }
+
+    /// Leistungswerte aus Profil und Health; `nil` ohne Repository. Fehlt der Puls aus Health, bleiben bestätigte
+    /// Werte und die Faustformel.
+    private func resolvePerformance(workouts: [Workout], vitals: [DailyVitals], now: Date) async -> ResolvedPerformance? {
+        guard let performanceRepository else { return nil }
+        let start = calendar.date(byAdding: .day, value: -PerformanceEstimator.maximumHeartRateWindowDays, to: now) ?? now
+        let observed = try? await performanceRepository.fetchMaximumHeartRate(from: start)
+        let input = PerformanceEstimationInput(
+            now: now,
+            workouts: WorkoutDeduplicator.deduplicate(workouts).filter { $0.startDate <= now },
+            vitals: vitals,
+            observedMaximumHeartRate: observed,
+            age: performanceRepository.age(now: now)
+        )
+        return PerformanceEstimator().resolve(profile: profileProvider(), input: input)
     }
 }

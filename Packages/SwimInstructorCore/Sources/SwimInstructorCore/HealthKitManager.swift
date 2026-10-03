@@ -35,7 +35,9 @@ public final class HealthKitManager: ObservableObject, HealthDataAuthorizing {
         HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN)!,
         HKObjectType.quantityType(forIdentifier: .distanceSwimming)!,
         HKObjectType.quantityType(forIdentifier: .swimmingStrokeCount)!,
-        HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!
+        HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!,
+        // Für den Maximalpuls nach Faustformel, solange es keinen gemessenen gibt.
+        HKObjectType.characteristicType(forIdentifier: .dateOfBirth)!
     ]
 
     /// Was die Watch beim Aufzeichnen einer Einheit in Health schreibt (Workout, Strecke, Züge,
