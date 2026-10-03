@@ -9,7 +9,8 @@ final class WorkoutRepositoryTests: XCTestCase {
         let events = [
             HKWorkoutEvent(type: .lap, dateInterval: DateInterval(start: start, duration: 300), metadata: nil),
             HKWorkoutEvent(type: .lap, dateInterval: DateInterval(start: start.addingTimeInterval(300), duration: 300), metadata: nil),
-            HKWorkoutEvent(type: .pause, dateInterval: DateInterval(start: start.addingTimeInterval(600), duration: 0), metadata: nil)
+            // Eine Markierung zählt nicht als Runde (eine Pause ohne Fortsetzen würde die Dauer kürzen).
+            HKWorkoutEvent(type: .marker, dateInterval: DateInterval(start: start.addingTimeInterval(600), duration: 0), metadata: nil)
         ]
         let workout = HKWorkout(
             activityType: .running, start: start, end: start.addingTimeInterval(3000),
