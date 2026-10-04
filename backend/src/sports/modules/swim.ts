@@ -100,6 +100,11 @@ export const swim: SportDefinition = {
       macroGrowthFactor: 1.1,
       amountStep: 50
     },
+    // Nach einer Pause steigt man beim Schwimmen schneller wieder ein als beim Laufen (Praxiswert).
+    startingLevel: {
+      factors: { regular: 1, short_break: 0.7, long_break: 0.5 },
+      returnGrowthFactor: 1.2
+    },
     // 2:05 pro 100 m inklusive Pausen.
     typicalSpeedMetersPerSecond: 0.8,
     stepMeasures: ["distance"],

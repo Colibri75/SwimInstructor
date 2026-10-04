@@ -47,7 +47,7 @@ Wochen im Snapshot.
 |---|---|---|---|
 | Einheit höchstens | längste × 1,25, mindestens 1500 m, höchstens 4500 m | längste × 1,25, mindestens 60 min, höchstens 360 min | längste × 1,1, mindestens 30 min, höchstens 210 min |
 | Woche höchstens | Schnitt × 1,3, mindestens 2500 m | Schnitt × 1,3, mindestens 120 min | Schnitt × 1,3, mindestens 60 min (geplant wird mit etwa +10 %) |
-| Wiedereinstieg (über 14 Tage Pause) | 800 m je Einheit, nur locker | 45 min je Einheit, nur locker | 20 min je Einheit, nur locker |
+| Wiedereinstieg (über 14 Tage Pause, ohne Startniveau) | 800 m je Einheit, nur locker | 45 min je Einheit, nur locker | 20 min je Einheit, nur locker |
 | kürzeste Einheit | 400 m | 20 min | 15 min |
 | Einheiten pro Woche | 5 | 4 | 4 |
 | Gesamtplan: Steigerung je Woche | 10 % | 10 % | 10 % |
@@ -55,6 +55,38 @@ Wochen im Snapshot.
 Laufen hat die strengsten Grenzen: Eine Einheit höchstens 10 % länger als die längste der letzten vier Wochen
 (Frandsen et al. 2025), die Woche hart bei +30 % (Nielsen et al. 2014), der Prompt verlangt etwa +10 %. ACWR ist keine
 Sperre, nur Information für Claude.
+
+## Selbst angegebenes Startniveau
+
+Health zeigt oft weniger, als jemand kann: Training ohne Uhr, eine Pause, ein Wechsel des Geräts. Deshalb gibt der
+Athlet in den Einstellungen je Sportart an, was er zurzeit schafft (Wochenumfang, längste Einheit) und wie sein
+Trainingsstand ist (Snapshot: `starting_levels`, siehe [AthleteStateSnapshot.md](AthleteStateSnapshot.md)).
+
+Der Server plant dann mit dem höheren Wert aus Health und dem Anteil der Angabe, der für den Trainingsstand gilt.
+"Längste" und "Schnitt" in der Tabelle oben sind dann diese Werte, die Untergrenzen bleiben. Mit gültiger Angabe gibt
+es keinen Wiedereinstieg aus der Lücke in Health; die Angabe ersetzt ihn.
+
+| Trainingsstand | Schwimmen | Rad | Laufen |
+|---|---|---|---|
+| regelmäßig | 100 % | 100 % | 100 % |
+| Pause 2 bis 8 Wochen | 70 % | 70 % | 50 % |
+| Pause über 8 Wochen | 50 % | 50 % | zählt nicht (Wiedereinstieg wie ohne Angabe) |
+| Einsteiger | zählt nicht | zählt nicht | zählt nicht |
+| Gesamtplan bis zum Niveau vor der Pause | +20 % pro Woche | +20 % pro Woche | +10 % pro Woche |
+
+- Die Angabe gilt 28 Tage ab `reported_at` (`MULTI_RULES.startingLevelValidDays`), danach zählt nur noch Health. Die
+  App zeigt, bis wann sie gilt; der Athlet kann sie erneuern.
+- Sie wird auf die absoluten Grenzen des Moduls gekappt (längste Einheit höchstens `absoluteMaxSession`, Woche
+  höchstens `absoluteMaxSession` mal Einheiten pro Woche).
+- Im Gesamtplan darf der Umfang bis zum angegebenen Wochenumfang vor der Pause um `returnGrowthFactor` steigen statt
+  um `macroGrowthFactor`, nie darüber hinaus.
+- Die Nutzernachricht von Tag, Woche und Gesamtplan nennt Angabe, geltenden Anteil und die Werte aus Health; Claude
+  soll in der Begründung sagen, dass der Plan von der Angabe ausgeht.
+- Die Anteile sind Praxiswerte (Modul: `planning.startingLevel`), im Betatest justieren.
+
+Beispiel: 6000 m pro Woche und 2500 m am Stück angegeben, Pause 2 bis 8 Wochen, Health zeigt 570 m pro Woche. Der
+Plan rechnet mit 4200 m pro Woche und 1750 m längster Einheit: Eine Einheit darf bis 2150 m lang sein (1750 × 1,25,
+abgerundet), die Woche bis 5450 m. Ohne Angabe wären es 800 m je Einheit (Wiedereinstieg).
 
 Beim Schwimmen liegen die Untergrenzen seit dem Betatest höher als im früheren Schwimmplan (1500 statt 1000 m je
 Einheit, 2500 statt 1500 m in 7 Tagen): Mit wenig Schwimmverlauf blieben sonst oft nur wenige hundert Meter am Tag.
@@ -123,8 +155,9 @@ Athlet: Der System-Prompt verbietet darin Feldnamen wie `acute_chronic_ratio`.
 
 ## Bewertung
 
-Sieben Szenarien in `backend/scenarios/multisport/` (Sprint-Einsteiger, Olympisch mit Schwerpunkt Schwimmen, 70.3,
-nur Laufen, nur Schwimmen, Laufen nach Verletzungspause, Einsteiger ohne Profil) laufen wie in der App durch den
+Acht Szenarien in `backend/scenarios/multisport/` (Sprint-Einsteiger, Olympisch mit Schwerpunkt Schwimmen, 70.3,
+nur Laufen, nur Schwimmen, Laufen nach Verletzungspause, Einsteiger ohne Profil, Schwimmen nach Pause mit
+selbst angegebenem Startniveau) laufen wie in der App durch den
 echten Service: Gesamtplan, die nächsten sieben Tage mit seiner Vorgabe, der Tag mit der Vorgabe der Woche und bei
 Feedback die Überarbeitung. Automatische Prüfungen zeigen, wo man hinschauen sollte (Verteilung nach Schwerpunkten,
 Höhepunkt vor dem Zuspitzen, Einstiegstests früh, Tests aus dem Gesamtplan in der Woche, Begründung mit Ziel und
@@ -141,7 +174,8 @@ scripts/eval-in-docker.sh multisport                      # auf dem Server, nimm
 Die Aufzeichnungen liegen in `backend/scenarios/multisport/recorded/`. Bis zum ersten echten Lauf sind sie
 synthetisch (von Hand nach Regeln gebaut, Modell `synthetisch`); sie zeigen den Ablauf und die Sicherheitsschicht,
 nicht Claudes Qualität. `test/plan/multi/scenarios.test.ts` spielt sie in der CI ab. Ein Lauf mit Claude kostet für
-alle sieben Szenarien 23 Anfragen. Nur ein Szenario, in dem jede Stufe klappt, ersetzt seine Aufzeichnung; schlägt ein
+alle acht Szenarien 26 Anfragen. Szenario 08 ist noch synthetisch (Modell `synthetisch`), bis es einmal mit Claude
+aufgenommen ist (`EVAL_ONLY=08`). Nur ein Szenario, in dem jede Stufe klappt, ersetzt seine Aufzeichnung; schlägt ein
 Aufruf fehl, zeigt die Konsole die Meldung und die Dauer.
 
 ## Eine Sportart dazunehmen

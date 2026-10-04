@@ -20,6 +20,7 @@ struct SwimInstructorApp: App {
         let goalStore = UserDefaultsTrainingGoalStore()
         let profileStore = UserDefaultsPerformanceProfileStore()
         let testSettingsStore = UserDefaultsTestSettingsStore()
+        let startingLevelStore = UserDefaultsStartingLevelStore()
         let builder = SnapshotBuilder(
             repository: HealthKitWorkoutRepository(),
             vitalsRepository: HealthKitDailyVitalsRepository(),
@@ -27,7 +28,9 @@ struct SwimInstructorApp: App {
             trainingGoalProvider: { goalStore.goal() },
             // Leistungswerte und Zonen: bestätigte aus dem Profil, sonst aus Health geschätzt.
             performanceRepository: HealthKitPerformanceDataRepository(),
-            profileProvider: { profileStore.profile() }
+            profileProvider: { profileStore.profile() },
+            // Selbst angegebenes Startniveau, nur solange es gilt (SnapshotBuilder filtert).
+            startingLevelsProvider: { startingLevelStore.levels() }
         )
         let ownedEquipment = UserDefaultsOwnedEquipmentStore()
         let weekLoader = MultiSportWeekLoader(

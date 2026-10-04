@@ -11,7 +11,7 @@
  *   sonst          fragt Claude, ohne etwas zu schreiben.
  * Nur einige Szenarien: EVAL_ONLY=01,06 (Anfang des Dateinamens).
  *
- * Aufruf (mit Claude kostet es echtes Geld, 23 Anfragen fuer alle sieben Szenarien):
+ * Aufruf (mit Claude kostet es echtes Geld, 26 Anfragen fuer alle acht Szenarien):
  *   EVAL_REPLAY=1 npm run eval:multisport
  *   ANTHROPIC_API_KEY=sk-ant-... EVAL_RECORD=1 npm run eval:multisport > ../docs/eval-runs/multisport-$(date +%F).md
  * Auf dem Server ohne Node: scripts/eval-in-docker.sh multisport

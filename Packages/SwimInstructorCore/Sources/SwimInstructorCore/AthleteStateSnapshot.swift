@@ -52,6 +52,8 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
     public let totalLoad: TotalLoadSummary?
     /// Ab v2, optional: Leistungswerte und Zonen (T2b). Fehlt, solange die App kein Profil rechnet.
     public let performance: PerformanceSummary?
+    /// Ab v2, optional: das Startniveau, das der Athlet selbst angegeben hat (nur gültige Angaben). Fehlt ohne Angabe.
+    public let startingLevels: [StartingLevel]?
 
     public init(
         schemaVersion: Int = AthleteStateSnapshot.currentSchemaVersion,
@@ -65,7 +67,8 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
         trainingGoal: TrainingGoalSummary? = nil,
         sports: [SportStateSummary]? = nil,
         totalLoad: TotalLoadSummary? = nil,
-        performance: PerformanceSummary? = nil
+        performance: PerformanceSummary? = nil,
+        startingLevels: [StartingLevel]? = nil
     ) {
         self.schemaVersion = schemaVersion
         self.generatedAt = generatedAt
@@ -79,6 +82,7 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
         self.sports = sports
         self.totalLoad = totalLoad
         self.performance = performance
+        self.startingLevels = startingLevels
     }
 
     /// Derselbe Snapshot als v2, mit Gesamtziel, Werten je Sportart und Gesamtlast.
@@ -90,7 +94,8 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
         AthleteStateSnapshot(
             schemaVersion: Self.multiSportSchemaVersion,
             generatedAt: generatedAt, goal: goal, volume: volume, pace: pace, load: load, recovery: recovery, flags: flags,
-            trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad, performance: performance
+            trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad, performance: performance,
+            startingLevels: startingLevels
         )
     }
 
@@ -99,7 +104,19 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
         AthleteStateSnapshot(
             schemaVersion: schemaVersion,
             generatedAt: generatedAt, goal: goal, volume: volume, pace: pace, load: load, recovery: recovery, flags: flags,
-            trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad, performance: performance
+            trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad, performance: performance,
+            startingLevels: startingLevels
+        )
+    }
+
+    /// Derselbe Snapshot mit dem selbst angegebenen Startniveau (nur für v2 gedacht; `version1` lässt es wieder weg).
+    /// Ohne Angabe bleibt das Feld weg.
+    public func withStartingLevels(_ levels: [StartingLevel]) -> AthleteStateSnapshot {
+        AthleteStateSnapshot(
+            schemaVersion: schemaVersion,
+            generatedAt: generatedAt, goal: goal, volume: volume, pace: pace, load: load, recovery: recovery, flags: flags,
+            trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad, performance: performance,
+            startingLevels: levels.isEmpty ? nil : levels
         )
     }
 

@@ -59,7 +59,7 @@ function report(name: string): ScenarioReport {
 const sportsOfWeek = (item: ScenarioReport) => new Set(item.week.result?.plan.days.flatMap((day) => day.sessions.map((entry) => entry.sport)));
 
 describe("Szenarien fuer mehrere Sportarten", () => {
-  it("hat die sieben Szenarien aus dem Plan, jedes mit Aufzeichnung fuer jede Stufe", () => {
+  it("hat die acht Szenarien, jedes mit Aufzeichnung fuer jede Stufe", () => {
     expect(NAMES).toEqual([
       "01-sprint-einsteiger",
       "02-olympisch-schwimmen",
@@ -67,7 +67,8 @@ describe("Szenarien fuer mehrere Sportarten", () => {
       "04-nur-laufen",
       "05-nur-schwimmen",
       "06-laufen-nach-verletzung",
-      "07-einsteiger-ohne-profil"
+      "07-einsteiger-ohne-profil",
+      "08-schwimmen-startniveau"
     ]);
     for (const name of NAMES) {
       const { scenario, recording } = load(name);
@@ -110,6 +111,17 @@ describe("Szenarien fuer mehrere Sportarten", () => {
     expect(swimTests[0].week_start).toBe("2026-09-28");
   });
 
+  it("startet nach einer angegebenen Pause mit dem Startniveau statt mit dem Wiedereinstieg aus Health", () => {
+    const item = report("08");
+    const weeks = item.macro.result!.plan.weeks.map((week) => week.sports[0].amount);
+    const swims = item.week.result!.plan.days.flatMap((day) => day.sessions.map((entry) => entry.amount));
+
+    // 70 % von 6000 m; ohne Angabe waeren es hoechstens 2400 m (Wiedereinstieg, 800 m je Einheit).
+    expect(weeks.slice(0, 3)).toEqual([4200, 5000, 5800]);
+    expect(Math.max(...swims)).toBe(2000);
+    expect(item.week.result!.adjustments).toEqual([]);
+  });
+
   it("haelt das Laufen nach der Verletzungspause kurz und locker", () => {
     const item = report("06");
     const runs = item.week.result!.plan.days.flatMap((day) => day.sessions.filter((entry) => entry.sport === "run"));
@@ -140,7 +152,7 @@ describe("Szenarien fuer mehrere Sportarten", () => {
     expect(formatScenarioReport(report("05"))).toContain('Wunsch für heute: "Heute gern etwas mit Technik."');
     expect(summary.split("\n").filter((line) => line.startsWith("| 0"))).toHaveLength(NAMES.length * 3 + 2);
     // Synthetische Aufzeichnungen kosten nichts, echte schon: Der Betrag haengt davon ab, welche schon aufgezeichnet sind.
-    expect(summary).toMatch(/Geschätzte Kosten: \$\d+\.\d{2} \(23 Aufrufe\)\.$/);
+    expect(summary).toMatch(/Geschätzte Kosten: \$\d+\.\d{2} \(26 Aufrufe\)\.$/);
   });
 });
 

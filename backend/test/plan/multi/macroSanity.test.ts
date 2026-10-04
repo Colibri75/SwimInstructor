@@ -1,7 +1,7 @@
 import { macroWeekStarts } from "../../../src/plan/macro";
 import { expandMacroBlocks, MacroContextV2, macroSportLimits, sanitizeMacroV2 } from "../../../src/plan/multi/macroSanity";
 import { MacroBlockRaw, MacroWeeksRaw } from "../../../src/plan/multi/schemas";
-import { asBlocks, macroPlan, multiSnapshot, TODAY } from "./fixtures";
+import { asBlocks, macroPlan, multiSnapshot, startingLevel, TODAY } from "./fixtures";
 
 const GOAL_DAY = "2027-07-04";
 const ALL_WEEKS = macroWeekStarts(TODAY, GOAL_DAY);
@@ -83,6 +83,21 @@ describe("sanitizeMacroV2", () => {
       // Laufen ohne Verlauf: Bezug ist mindestens die kleinste Wochengrenze (60 min), plus 10 %.
       expect(amounts(result.plan, "run")).toEqual([30, 60, 65, 45]);
       expect(result.adjustments).toContain("Woche ab 28.09.: Radfahren von 200 min auf 120 min begrenzt (Grenze für die erste Woche)");
+    });
+
+    it("steigert nach einer angegebenen Pause schneller bis zum Niveau davor, danach wieder normal", () => {
+      const snapshot = multiSnapshot({ goal: { weekly_hours: 15 }, startingLevels: [startingLevel("swim", 8000, 3000, "short_break")] });
+      const [swim] = macroSportLimits(snapshot);
+      expect(swim).toMatchObject({ firstWeekCap: 7250, returnTarget: 8000, returnGrowthFactor: 1.2 });
+
+      const raw = macroPlan(ALL_WEEKS.slice(0, 5), (index) => ({ swim: [5600, 7000, 8000, 5000, 9000][index], bike: 60, run: 20 }));
+      const result = sanitizeMacroV2(raw, snapshot, context(ALL_WEEKS.slice(0, 5)));
+
+      // 5600 * 1,2 = 6720, abgerundet 6700; dann bis 8000 (nicht 8040); nach der Entlastung wieder 10 % (8800).
+      expect(amounts(result.plan, "swim")).toEqual([5600, 6700, 8000, 5000, 8800]);
+      expect(result.adjustments).toContain("Woche ab 05.10.: Schwimmen von 7000 m auf 6700 m begrenzt (Rückkehr zum Niveau vor der Pause: höchstens 20 % mehr als die letzte Woche ohne Entlastung)");
+      // Ohne Angabe gilt nur die normale Steigerung.
+      expect(macroSportLimits(multiSnapshot())[0].returnTarget).toBe(0);
     });
 
     it("setzt spaetestens nach drei Belastungswochen eine Entlastungswoche mit hoechstens 70 %", () => {

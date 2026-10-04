@@ -1,0 +1,121 @@
+{
+  "description": "Wiedereinstieg nach Pause mit selbst angegebenem Startniveau: nur Schwimmen, 1500 m in 30 Minuten im März. Health zeigt wenig (Schnitt 570 m, längste 1175 m, seit 20 Tagen nichts), angegeben sind 6000 m pro Woche und 2500 m am Stück nach 2 bis 8 Wochen Pause. Prüft, dass der Plan mit 70 % der Angabe startet statt mit dem Wiedereinstieg aus Health und bis zum alten Niveau schneller steigt.",
+  "today": "2026-09-30",
+  "snapshot": {
+    "schema_version": 2,
+    "generated_at": "2026-09-30T12:00:00Z",
+    "goal": {
+      "distance_meters": 1500,
+      "target_duration_seconds": 1800,
+      "target_pace_seconds_per_hundred_meters": 120,
+      "target_date": "2027-03-14T08:00:00Z",
+      "days_until_goal": 165
+    },
+    "volume": {
+      "last_seven_days_meters": 0,
+      "average_weekly_meters": 570,
+      "weekly_change_percent": 0,
+      "sessions_last_seven_days": 0,
+      "sessions_last_four_weeks": 2,
+      "longest_session_meters": 1175
+    },
+    "pace": {
+      "recent_pace_seconds_per_hundred_meters": 122
+    },
+    "load": {
+      "days_since_last_workout": 20,
+      "days_since_last_hard_session": 40
+    },
+    "recovery": {
+      "status": "good",
+      "resting_heart_rate_deviation_bpm": 0,
+      "hrv_deviation_percent": 0,
+      "recent_average_sleep_hours": 7.5,
+      "warning_signals": []
+    },
+    "flags": [
+      "training_pause"
+    ],
+    "training_goal": {
+      "target_date": "2027-03-14T08:00:00Z",
+      "days_until_goal": 165,
+      "training_days_per_week": 3,
+      "weekly_hours": 4,
+      "disciplines": [
+        {
+          "sport": "swim",
+          "distance_meters": 1500,
+          "target_duration_seconds": 1800
+        }
+      ],
+      "emphasis": [
+        {
+          "sport": "swim",
+          "percent": 100
+        }
+      ]
+    },
+    "sports": [
+      {
+        "sport": "swim",
+        "sessions_last_seven_days": 0,
+        "sessions_last_four_weeks": 2,
+        "minutes_last_seven_days": 0,
+        "average_weekly_minutes": 13,
+        "meters_last_seven_days": 0,
+        "average_weekly_meters": 570,
+        "longest_session_meters": 1175,
+        "longest_session_minutes": 27,
+        "load_last_seven_days": 0,
+        "average_weekly_load": 13,
+        "days_since_last_session": 20
+      }
+    ],
+    "total_load": {
+      "minutes_last_seven_days": 0,
+      "average_weekly_minutes": 13,
+      "load_last_seven_days": 0,
+      "average_weekly_load": 13
+    },
+    "performance": {
+      "athlete": [
+        {
+          "metric": "max_heart_rate",
+          "value": 186,
+          "source": "formula",
+          "measured_at": "2026-09-30T12:00:00Z"
+        },
+        {
+          "metric": "resting_heart_rate",
+          "value": 56,
+          "source": "estimated",
+          "measured_at": "2026-09-30T12:00:00Z"
+        }
+      ],
+      "sports": [
+        {
+          "sport": "swim",
+          "values": [
+            {
+              "metric": "css_pace_per_100m",
+              "value": 112,
+              "source": "tested",
+              "measured_at": "2026-09-10T07:00:00Z"
+            }
+          ],
+          "zones": []
+        }
+      ]
+    },
+    "starting_levels": [
+      {
+        "sport": "swim",
+        "weekly_amount": 6000,
+        "longest_session": 2500,
+        "status": "short_break",
+        "reported_at": "2026-09-29T19:00:00Z"
+      }
+    ]
+  },
+  "day_wishes": "Heute gern etwas mit Technik."
+}

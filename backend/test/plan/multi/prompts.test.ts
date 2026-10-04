@@ -18,7 +18,7 @@ import { MacroWeekTargetV2 } from "../../../src/plan/multi/schemas";
 import { WeekContextV2 } from "../../../src/plan/multi/weekSanity";
 import { SnapshotV2 } from "../../../src/plan/snapshot";
 import { SPORTS } from "../../../src/sports/registry";
-import { contractSnapshot, multiSnapshot, TODAY, weekDates } from "./fixtures";
+import { contractSnapshot, multiSnapshot, startingLevel, TODAY, weekDates } from "./fixtures";
 
 /**
  * Prompts der Planung fuer mehrere Sportarten (src/plan/multi/prompts.ts). Grundlage ist der Snapshot aus contracts/:
@@ -565,6 +565,40 @@ describe("Nutzernachricht des Gesamtplans", () => {
 
     expect(count(text, SNAPSHOT_MARKER)).toBe(1);
     expect(snapshotJson(text).training_goal).toEqual(multiSnapshot().training_goal);
+  });
+});
+
+describe("Startniveau in den Nutzernachrichten", () => {
+  const snapshot = multiSnapshot({
+    goal: { weekly_hours: 15 },
+    sports: { swim: { average_weekly_meters: 570, longest_session_meters: 1175, days_since_last_session: 30 } },
+    startingLevels: [startingLevel("swim", 6000, 2500, "short_break")]
+  });
+  const header = "Startniveau (vom Athleten angegeben, in den Grenzen schon berücksichtigt):";
+  const expected = [
+    "- Schwimmen: Startniveau selbst angegeben: 6000 m pro Woche, längste Einheit 2500 m, Pause von 2 bis 8 Wochen; davon gelten 70 % (4200 m pro Woche, längste 1750 m). Aufgezeichnet in Health: 570 m pro Woche, längste 1175 m."
+  ];
+
+  it("steht in Tag, Woche und Gesamtplan, nur wenn eins gilt", () => {
+    const texts = [
+      buildDayUserMessageV2({ snapshot, date: TODAY }),
+      buildWeekUserMessageV2({ snapshot, context: weekContext() }),
+      buildMacroUserMessageV2(snapshot, macroContext())
+    ];
+    for (const text of texts) expect(section(text, header)).toEqual(expected);
+    expect(buildMacroUserMessageV2(multiSnapshot(), macroContext())).not.toContain("Startniveau");
+  });
+
+  it("nennt im Gesamtplan die schnellere Rueckkehr bis zum Niveau vor der Pause", () => {
+    const text = buildMacroUserMessageV2(snapshot, macroContext());
+
+    expect(text).toContain("erste Woche höchstens 5450 m, danach höchstens 10 % mehr als die letzte Woche ohne Entlastung (bis zum Niveau vor der Pause von 6000 m höchstens 20 %)");
+    expect(text).toContain("Geplant wird mit 4200 m pro Woche (Startniveau), Schnitt der letzten 4 Wochen in Health: 570 m.");
+    expect(text).toContain("längste Einheit (mit angegebenem Startniveau) 1750 m");
+  });
+
+  it("verlangt im System-Prompt, von der Angabe aus zu planen", () => {
+    expect(MULTI_MACRO_SYSTEM_PROMPT).toContain('Hat der Athlet sein Startniveau selbst angegeben (Abschnitt "Startniveau")');
   });
 });
 

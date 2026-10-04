@@ -129,9 +129,24 @@ export interface TargetRange {
   readonly max: number;
 }
 
+/** Trainingsstand, den der Athlet zu seinem Startniveau angibt (Snapshot v2, `starting_levels`). */
+export type TrainingStatus = "regular" | "short_break" | "long_break" | "beginner";
+
+/**
+ * Wie eine Sportart ein selbst angegebenes Startniveau (Wochenumfang, laengste Einheit) nutzt. Startwerte aus der
+ * Praxis, justierbar im Betatest (docs/multisport-planning.md).
+ */
+export interface StartingLevelRules {
+  /** So viel der Angabe gilt je Trainingsstand (0: die Angabe zaehlt nicht, wie bei Einsteigern). */
+  readonly factors: { readonly regular: number; readonly short_break: number; readonly long_break: number };
+  /** Gesamtplan: bis zum angegebenen Niveau darf eine Woche so viel mehr haben als die letzte ohne Entlastung. */
+  readonly returnGrowthFactor: number;
+}
+
 export interface SportPlanning {
   readonly limitUnit: LimitUnit;
   readonly limits: SportLimits;
+  readonly startingLevel: StartingLevelRules;
   /**
    * Typisches Trainingstempo ohne eigene Daten (m/s, inklusive Pausen). Damit schaetzt der Kern die Dauer einer
    * Strecke und die Dauer eines Wettkampfs, wenn der Athlet keine Zielzeit angegeben hat.

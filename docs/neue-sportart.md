@@ -179,6 +179,7 @@ export const rowing: SportDefinition = {
     limitUnit: "minutes",               // gleich plan_unit
     limits: { sessionGrowthFactor: 1.2, minSessionCap: 40, absoluteMaxSession: 150, weeklyGrowthFactor: 1.25, minWeeklyCap: 80,
               minSession: 20, pauseSessionCap: 30, pauseAfterDays: 10, maxSessionsPerWeek: 4, macroGrowthFactor: 1.1, amountStep: 5 },
+    startingLevel: { factors: { regular: 1, short_break: 0.7, long_break: 0.5 }, returnGrowthFactor: 1.2 },
     typicalSpeedMetersPerSecond: 3.5,   // gleich typical_speed_meters_per_second
     stepMeasures: ["duration", "distance"],
     distanceStepMeters: 250, minStepMeters: 250, maxStepMeters: 20_000,
@@ -194,6 +195,10 @@ export const rowing: SportDefinition = {
 - **`limits`**: die Sicherheitsgrenzen in `limitUnit` (Bedeutung jedes Felds in `types.ts`, die Werte der drei
   Triathlon-Sportarten in [`multisport-planning.md`](multisport-planning.md#grenzen-je-sportart)). Startwerte aus dem
   Trainingswissen, im Betatest justieren.
+- **`startingLevel`**: wie viel eines selbst angegebenen Startniveaus gilt (je Trainingsstand ein Anteil von 0 bis 1;
+  0 heißt, die Angabe zählt nicht) und wie schnell der Gesamtplan bis zum Niveau vor einer Pause steigen darf
+  (mindestens `macroGrowthFactor`, höchstens 1,5). Werte der drei Triathlon-Sportarten in
+  [`multisport-planning.md`](multisport-planning.md#selbst-angegebenes-startniveau).
 - **`targetRange`**: `perceived_effort` immer 1 bis 10; `heart_rate_zone` nur über `zoneRange(context, target)`, also
   nur, wenn die App Zonen gerechnet hat; Ziele außerhalb von `targets` geben `null`. Bausteine in `modules/shared.ts`.
 - **`testSessions`**: je Leistungstest die Schritte. Sie beginnen und enden locker (Anstrengung höchstens 3), die

@@ -104,6 +104,12 @@ export const run: SportDefinition = {
       macroGrowthFactor: 1.1,
       amountStep: 5
     },
+    // Laufen vorsichtiger: nach einer Pause hoechstens die Stufe darunter, nach langer Pause zaehlt die Angabe nicht
+    // (Wiedereinstieg wie ohne Angabe); zurueck nur mit den ueblichen 10 % pro Woche.
+    startingLevel: {
+      factors: { regular: 1, short_break: 0.5, long_break: 0 },
+      returnGrowthFactor: 1.1
+    },
     // 6:00 pro km.
     typicalSpeedMetersPerSecond: 2.8,
     stepMeasures: ["duration", "distance"],

@@ -168,6 +168,20 @@ die App aus den Anteilen im Modul (`ZoneScheme`: Puls nach Friel in % des Schwel
 in % der FTP, Pace in % der Schwellengeschwindigkeit, Schwimm-Puls in % des Maximalpulses); der Server übernimmt sie.
 Sobald ein Leistungsprofil da ist, rechnet die Last mit Ruhe- und Maximalpuls (TRIMP).
 
+### Startniveau (P1, optional)
+
+`starting_levels` gibt der Athlet in den Einstellungen selbst an, weil Health oft weniger zeigt, als er kann (Training
+ohne Uhr, Pause). Vollständiges Beispiel:
+[`contracts/wire/snapshot-v2-starting-levels.json`](../contracts/wire/snapshot-v2-starting-levels.json). Ohne das
+Feld plant der Server wie bisher nur mit Health.
+
+- Je Sportart höchstens ein Eintrag: `sport`, `weekly_amount` (Wochenumfang, den er zurzeit schafft oder vor der Pause
+  geschafft hat) und `longest_session` (längste Einheit ohne Probleme), beide in der Einheit der Sportart
+  (`plan_unit` in `contracts/sports.json`: Meter beim Schwimmen, Minuten bei Rad und Laufen), dazu `status`
+  (`regular`, `short_break` = Pause von 2 bis 8 Wochen, `long_break` = länger, `beginner`) und `reported_at`.
+- Wie der Server es nutzt (Anteil je Trainingsstand, wie lange es gilt, Rückkehr nach der Pause):
+  [`multisport-planning.md`](multisport-planning.md#selbst-angegebenes-startniveau).
+
 Der v1-Teil (`goal` usw.) bleibt bis T3 das Schwimmziel: die Schwimm-Disziplin des Gesamtziels (ohne Zielzeit mit
 2:00 pro 100 m), ohne Schwimm-Disziplin ein Platzhalter (1500 m in 45 Minuten), den der Server dann nur als Ausgleich
 nimmt.

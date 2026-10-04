@@ -20,6 +20,8 @@ struct SettingsView: View {
     private let equipmentStore = UserDefaultsOwnedEquipmentStore()
     @State private var trainingGoal = TrainingGoal.default
     private let trainingGoalStore = UserDefaultsTrainingGoalStore()
+    @State private var startingLevels: [StartingLevel] = []
+    private let startingLevelStore = UserDefaultsStartingLevelStore()
 
     init(onSave: @escaping () -> Void = {}) {
         self.onSave = onSave
@@ -57,6 +59,9 @@ struct SettingsView: View {
                 goalSection
                     // Auch beim Zurückkommen aus dem Ziel-Assistenten neu lesen.
                     .onAppear { trainingGoal = trainingGoalStore.goal() }
+
+                startingLevelSection
+                    .onAppear { startingLevels = startingLevelStore.levels() }
 
                 Section {
                     NavigationLink {
@@ -127,6 +132,20 @@ struct SettingsView: View {
             Text("Mein Ziel")
         } footer: {
             Text("Der Plan arbeitet auf dieses Ziel hin. Es bleibt gespeichert, bis du es änderst.")
+        }
+    }
+
+    // MARK: - Startniveau
+
+    private var startingLevelSection: some View {
+        Section {
+            NavigationLink {
+                StartingLevelView(store: startingLevelStore)
+            } label: {
+                LabeledContent("Startniveau", value: StartingLevelFormatting.summary(startingLevels, now: Date()))
+            }
+        } footer: {
+            Text("Wenn Health weniger zeigt, als du schaffst (Training ohne Uhr, Pause), gib hier deinen Wochenumfang und deine längste Einheit an. Die Angabe gilt 28 Tage.")
         }
     }
 

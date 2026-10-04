@@ -1,0 +1,296 @@
+{
+  "macro": {
+    "source": "claude",
+    "model": "synthetisch",
+    "recorded_at": "2026-10-04T20:00:00.000Z",
+    "usage": {
+      "inputTokens": 0,
+      "outputTokens": 0
+    },
+    "raw": {
+      "rationale": "Du hast angegeben, dass du vor deiner Pause etwa 6000 m pro Woche und 2500 m am Stück geschwommen bist. Health zeigt nur wenig, deshalb startet der Plan mit 70 % deiner Angabe, also 4200 m in der ersten Woche, überwiegend locker. Bis zu deinem alten Niveau darf der Umfang schneller steigen, danach wächst er um höchstens 10 % pro Woche bis zum Höhepunkt von 8200 m. Nach jeweils 3 Belastungswochen folgt eine Entlastungswoche. Mit 23 Wochen bis zum Ziel sind 1500 m in 30 min gut erreichbar; beim Zuspitzen und in der Zielwoche sinkt der Umfang, damit du frisch an den Start gehst.",
+      "blocks": [
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Wiedereinstieg: lockere Grundlage und Kraultechnik",
+          "sports": [
+            {
+              "sport": "swim",
+              "start_amount": 4200,
+              "end_amount": 5800,
+              "deload_amount": 4000,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Zurück auf das alte Niveau, lange lockere Serien",
+          "sports": [
+            {
+              "sport": "swim",
+              "start_amount": 6300,
+              "end_amount": 7300,
+              "deload_amount": 5100,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Grundlage festigen, erste kurze CSS-Serien",
+          "sports": [
+            {
+              "sport": "swim",
+              "start_amount": 7600,
+              "end_amount": 8000,
+              "deload_amount": 5500,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Übergang: CSS-Serien und Tempohärte",
+          "sports": [
+            {
+              "sport": "swim",
+              "start_amount": 7800,
+              "end_amount": 8200,
+              "deload_amount": 5700,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Wettkampftempo 2:00/100 m über längere Serien",
+          "sports": [
+            {
+              "sport": "swim",
+              "start_amount": 7800,
+              "end_amount": 8200,
+              "deload_amount": 5700,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 2,
+          "deload_last": false,
+          "focus": "Höhepunkt: 1500 m wettkampfnah schwimmen",
+          "sports": [
+            {
+              "sport": "swim",
+              "start_amount": 8000,
+              "end_amount": 8200,
+              "deload_amount": null,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 1,
+          "deload_last": false,
+          "focus": "Zuspitzen: weniger Umfang, kurze Tempoabschnitte",
+          "sports": [
+            {
+              "sport": "swim",
+              "start_amount": 4800,
+              "end_amount": 4800,
+              "deload_amount": null,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 1,
+          "deload_last": false,
+          "focus": "Zielwoche: kurz, frisch, Wettkampf 1500 m",
+          "sports": [
+            {
+              "sport": "swim",
+              "start_amount": 3600,
+              "end_amount": 3600,
+              "deload_amount": null,
+              "sessions": 3
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "week": {
+    "source": "claude",
+    "model": "synthetisch",
+    "recorded_at": "2026-10-04T20:00:00.000Z",
+    "usage": {
+      "inputTokens": 0,
+      "outputTokens": 0
+    },
+    "raw": {
+      "rationale": "Du steigst nach deiner Pause mit deinem angegebenen Startniveau ein: drei Einheiten mit zusammen 5200 m, fast alles locker. Die längste Einheit hat 2000 m und bleibt damit unter der Grenze von 2150 m, die sich aus deiner Angabe ergibt. Die Woche ab 05.10. beginnt mit gleichmäßigem Tempo nahe deiner CSS-Pace. So baust du sicher auf dein Ziel hin auf, 1500 m in 30 min im März.",
+      "days": [
+        {
+          "date": "2026-09-30",
+          "focus": "Technik nach der Pause",
+          "sessions": [
+            {
+              "sport": "swim",
+              "session_type": "technique",
+              "intensity": "easy",
+              "amount": 1400,
+              "focus": "Kraultechnik: Wasserlage und langer Zug",
+              "test_id": null
+            }
+          ]
+        },
+        {
+          "date": "2026-10-01",
+          "focus": "Ruhetag",
+          "sessions": []
+        },
+        {
+          "date": "2026-10-02",
+          "focus": "Lange lockere Grundlage",
+          "sessions": [
+            {
+              "sport": "swim",
+              "session_type": "endurance",
+              "intensity": "easy",
+              "amount": 2000,
+              "focus": "Lange Serien locker",
+              "test_id": null
+            }
+          ]
+        },
+        {
+          "date": "2026-10-03",
+          "focus": "Ruhetag",
+          "sessions": []
+        },
+        {
+          "date": "2026-10-04",
+          "focus": "Ruhetag",
+          "sessions": []
+        },
+        {
+          "date": "2026-10-05",
+          "focus": "Gleichmäßiges Tempo",
+          "sessions": [
+            {
+              "sport": "swim",
+              "session_type": "endurance",
+              "intensity": "moderate",
+              "amount": 1800,
+              "focus": "Gleichmäßig nahe CSS-Pace",
+              "test_id": null
+            }
+          ]
+        },
+        {
+          "date": "2026-10-06",
+          "focus": "Ruhetag",
+          "sessions": []
+        }
+      ]
+    }
+  },
+  "day": {
+    "source": "claude",
+    "model": "synthetisch",
+    "recorded_at": "2026-10-04T20:00:00.000Z",
+    "usage": {
+      "inputTokens": 0,
+      "outputTokens": 0
+    },
+    "raw": {
+      "rationale": "Der Wochenplan sieht heute 1400 m Technik vor, das passt zu deinem Wunsch. Nach deiner Pause bleibt alles locker; der Plan rechnet mit deinem angegebenen Startniveau, deshalb darf die Einheit länger sein als das, was Health zuletzt aufgezeichnet hat. Saubere Technik bringt dich deinem Ziel von 1500 m in 30 min näher als zusätzliche Meter.",
+      "sessions": [
+        {
+          "sport": "swim",
+          "session_type": "technique",
+          "intensity": "easy",
+          "focus": "Wasserlage und langer Zug im Kraul",
+          "test_id": null,
+          "steps": [
+            {
+              "name": "Einschwimmen",
+              "repetitions": 1,
+              "measure": "distance",
+              "distance_meters": 300,
+              "duration_seconds": null,
+              "target_type": "perceived_effort",
+              "target_value": 3,
+              "rest_seconds": 30,
+              "instructions": "Schwimm locker im Kraul ein und atme ruhig.",
+              "cue": "Locker einschwimmen",
+              "equipment": []
+            },
+            {
+              "name": "Technik Seitlage",
+              "repetitions": 6,
+              "measure": "distance",
+              "distance_meters": 50,
+              "duration_seconds": null,
+              "target_type": "perceived_effort",
+              "target_value": 3,
+              "rest_seconds": 20,
+              "instructions": "Lieg auf der Seite, den unteren Arm nach vorn gestreckt, und mach ruhigen Beinschlag; nach 6 Beinschlägen ein Zug und Seitenwechsel.",
+              "cue": "Seitlage, 6 Kicks",
+              "equipment": []
+            },
+            {
+              "name": "Technik Abschlag",
+              "repetitions": 6,
+              "measure": "distance",
+              "distance_meters": 50,
+              "duration_seconds": null,
+              "target_type": "perceived_effort",
+              "target_value": 3,
+              "rest_seconds": 20,
+              "instructions": "Eine Hand bleibt vorne, bis die andere nach dem Zug ankommt und sie abklatscht.",
+              "cue": "Vorne abklatschen",
+              "equipment": []
+            },
+            {
+              "name": "Hauptteil",
+              "repetitions": 3,
+              "measure": "distance",
+              "distance_meters": 100,
+              "duration_seconds": null,
+              "target_type": "pace_per_100m",
+              "target_value": 125,
+              "rest_seconds": 20,
+              "instructions": "Kraul im lockeren Grundlagentempo, lang strecken und ruhig gleiten.",
+              "cue": "Lang ziehen, 2:05",
+              "equipment": []
+            },
+            {
+              "name": "Ausschwimmen",
+              "repetitions": 1,
+              "measure": "distance",
+              "distance_meters": 200,
+              "duration_seconds": null,
+              "target_type": "perceived_effort",
+              "target_value": 2,
+              "rest_seconds": 0,
+              "instructions": "Schwimm ganz locker aus, gern in einer Lage deiner Wahl.",
+              "cue": "Locker ausschwimmen",
+              "equipment": []
+            }
+          ]
+        }
+      ],
+      "coach_notes": [
+        "Nach der Pause zählt heute die Bewegung, nicht das Tempo.",
+        "Melde dich, wenn die Schultern nach den ersten Einheiten ziehen; dann bleibt es noch eine Woche locker."
+      ]
+    }
+  }
+}
