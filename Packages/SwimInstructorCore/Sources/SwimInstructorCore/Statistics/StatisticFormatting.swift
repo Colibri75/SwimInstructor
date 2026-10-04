@@ -101,6 +101,54 @@ public enum StatisticFormatting {
         return parts.compactMap { $0 }.joined(separator: ". ")
     }
 
+    // MARK: - Detail
+
+    /// Beschriftung eines Abschnitts unter dem großen Diagramm: der Wochentag ("Mo") für Tage, der erste Tag ("22.9.")
+    /// für Wochen.
+    public static func axisLabel(_ point: StatisticPoint, calendar: Calendar = .current) -> String {
+        isSingleDay(point, calendar: calendar)
+            // Ohne Punkt: "Mi" statt "Mi.", das passt besser unter einen Balken.
+            ? format(point.start, "EEEEEE", calendar: calendar).replacingOccurrences(of: ".", with: "")
+            : format(point.start, "d.M.", calendar: calendar)
+    }
+
+    /// Überschrift eines Abschnitts: "Montag, 28.9." oder "22.9. – 28.9.".
+    public static func pointTitle(_ point: StatisticPoint, calendar: Calendar = .current) -> String {
+        if isSingleDay(point, calendar: calendar) {
+            return format(point.start, "EEEE, d.M.", calendar: calendar)
+        }
+        let last = calendar.date(byAdding: .day, value: -1, to: point.end) ?? point.end
+        return "\(format(point.start, "d.M.", calendar: calendar)) – \(format(last, "d.M.", calendar: calendar))"
+    }
+
+    /// Name eines Werts im Detail einer Einheit: Für eine einzelne Einheit heißt der Umfang "Strecke" und die Zeit
+    /// "Dauer".
+    public static func workoutValueName(_ definition: StatisticDefinition) -> String {
+        switch definition.metric {
+        case .distance: return "Strecke"
+        case .duration: return "Dauer"
+        default: return definition.displayName
+        }
+    }
+
+    /// "Sonntag, 4.10.2026, 07:12 – 08:03"
+    public static func workoutTime(_ workout: Workout, calendar: Calendar = .current) -> String {
+        "\(format(workout.startDate, "EEEE, d.M.yyyy, HH:mm", calendar: calendar)) – \(format(workout.endDate, "HH:mm", calendar: calendar))"
+    }
+
+    private static func isSingleDay(_ point: StatisticPoint, calendar: Calendar) -> Bool {
+        (calendar.dateComponents([.day], from: point.start, to: point.end).day ?? 1) <= 1
+    }
+
+    private static func format(_ date: Date, _ pattern: String, calendar: Calendar) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "de_DE")
+        formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
+        formatter.dateFormat = pattern
+        return formatter.string(from: date)
+    }
+
     private static func emptyReason(_ measure: StatisticMeasure) -> String {
         switch measure {
         case .restingHeartRate, .heartRateVariability, .sleep: return "keine Messung im Zeitraum"
