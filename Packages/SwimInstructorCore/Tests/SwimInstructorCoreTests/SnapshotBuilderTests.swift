@@ -146,7 +146,8 @@ final class SnapshotBuilderTests: XCTestCase {
             calendar: TestFixtures.utc
         )
 
-        let summary = try XCTUnwrap(try await builder.build(now: TestFixtures.now).snapshot.trainingGoal)
+        let reading = try await builder.build(now: TestFixtures.now)
+        let summary = try XCTUnwrap(reading.snapshot.trainingGoal)
 
         XCTAssertEqual(summary.kind, .race)
         XCTAssertEqual(summary.weeklySchedule, schedule.days)
