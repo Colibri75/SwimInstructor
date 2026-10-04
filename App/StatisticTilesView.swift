@@ -2,11 +2,14 @@ import Charts
 import SwiftUI
 import SwimInstructorCore
 
-/// Die Kacheln der Statistik. Lange drücken: Sportart, Kennzahl und Zeitraum wählen oder die Kachel entfernen. Ziehen
-/// auf eine andere Kachel: Reihenfolge ändern. Gespeichert wird auf dem Gerät (`StatisticDashboard`).
+/// Die Kacheln der Statistik. Tippen: die Kachel groß mit allen Werten (`StatisticDetailView`). Lange drücken: Sportart,
+/// Kennzahl und Zeitraum wählen oder die Kachel entfernen. Ziehen auf eine andere Kachel: Reihenfolge ändern. Gespeichert
+/// wird auf dem Gerät (`StatisticDashboard`).
 struct StatisticTilesGrid: View {
     @ObservedObject var dashboard: StatisticDashboard
     let input: StatisticInput
+    /// Öffnet das Detail einer Kachel. Die Navigation hängt am Dashboard, nicht in dieser (faulen) Liste.
+    let onOpen: (StatisticTile) -> Void
 
     private let calculator = StatisticCalculator()
 
@@ -21,7 +24,11 @@ struct StatisticTilesGrid: View {
             LazyVStack(spacing: 12) {
                 ForEach(results) { result in
                     StatisticTileView(result: result)
+                        .contentShape(RoundedRectangle(cornerRadius: 14))
                         .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 14))
+                        .onTapGesture { onOpen(result.tile) }
+                        .accessibilityAddTraits(.isButton)
+                        .accessibilityAction { onOpen(result.tile) }
                         .contextMenu {
                             StatisticTileMenu(dashboard: dashboard, tile: result.tile)
                         }
@@ -48,6 +55,8 @@ struct StatisticTilesGrid: View {
 /// Eine Kachel über die ganze Breite: Sportart und Zeitraum, Kennzahl, Wert, Verlauf, Vergleich mit dem Zeitraum davor.
 struct StatisticTileView: View {
     let result: StatisticResult
+    /// Pfeil rechts: Antippen öffnet das Detail (nicht in der Vorschau beim Hinzufügen).
+    var showsDisclosure = true
 
     private var definition: StatisticDefinition { result.definition }
 
@@ -103,12 +112,21 @@ struct StatisticTileView: View {
                     .lineLimit(2)
             }
         }
+        .overlay(alignment: .topTrailing) {
+            if showsDisclosure {
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+                    .offset(y: 30)
+                    .accessibilityHidden(true)
+            }
+        }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(StatisticFormatting.accessibilityLabel(result))
-        .accessibilityHint("Lange drücken, um Sportart, Kennzahl und Zeitraum zu ändern.")
+        .accessibilityHint("Öffnet die Details. Lange drücken, um Sportart, Kennzahl und Zeitraum zu ändern.")
     }
 
     private var trendSymbol: String {
@@ -273,7 +291,7 @@ struct AddStatisticTileSheet: View {
                     }
                 }
                 Section("Vorschau") {
-                    StatisticTileView(result: preview)
+                    StatisticTileView(result: preview, showsDisclosure: false)
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
                 }

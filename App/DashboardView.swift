@@ -9,6 +9,8 @@ struct DashboardView: View {
 
     @State private var showsAddTile = false
     @State private var confirmsReset = false
+    /// Die Kachel, deren Detail offen ist.
+    @State private var openedTileID: UUID?
 
     private let weekProgress = MultiSportWeekProgressCalculator()
 
@@ -33,13 +35,15 @@ struct DashboardView: View {
             List {
                 if let reading = loader.reading {
                     Section {
-                        StatisticTilesGrid(dashboard: dashboard, input: statisticInput)
+                        StatisticTilesGrid(dashboard: dashboard, input: statisticInput) { tile in
+                            openedTileID = tile.id
+                        }
                             .listRowInsets(EdgeInsets())
                             .listRowBackground(Color.clear)
                     } header: {
                         Text("Statistik")
                     } footer: {
-                        Text("Lange drücken: Sportart, Kennzahl und Zeitraum wählen. Auf eine andere Kachel ziehen: Reihenfolge ändern.")
+                        Text("Tippen: Details mit allen Werten. Lange drücken: Sportart, Kennzahl und Zeitraum wählen. Auf eine andere Kachel ziehen: Reihenfolge ändern.")
                     }
                     Section("Diese Woche") {
                         WeekStatsRows(
@@ -69,6 +73,9 @@ struct DashboardView: View {
                 }
             }
             .navigationTitle("Dashboard")
+            .navigationDestination(item: $openedTileID) { id in
+                StatisticDetailView(dashboard: dashboard, tileID: id, input: statisticInput)
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {

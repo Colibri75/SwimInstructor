@@ -27,7 +27,11 @@ struct HistoryView: View {
                     ChartSection(entries: entries)
                     Section("Tage") {
                         ForEach(entries) { entry in
-                            HistoryRow(entry: entry)
+                            NavigationLink {
+                                HistoryDayView(entry: entry, workouts: workouts(on: entry.date), input: statisticInput)
+                            } label: {
+                                HistoryRow(entry: entry)
+                            }
                         }
                     }
                 }
@@ -40,7 +44,20 @@ struct HistoryView: View {
 }
 
 extension HistoryView {
-    /// Die Einheiten aus Health (neueste zuerst), früher auf dem Heute-Bildschirm.
+    /// Für die Werte im Detail einer Einheit (Trainingslast mit Ruhe- und Maximalpuls wie in der Statistik).
+    fileprivate var statisticInput: StatisticInput {
+        guard let reading = loader.reading else { return StatisticInput(workouts: [], now: Date()) }
+        return StatisticInput(reading: reading, plans: loader.planHistory, now: Date())
+    }
+
+    /// Die Einheiten eines Tags (`yyyy-MM-dd`), neueste zuerst.
+    fileprivate func workouts(on day: String) -> [Workout] {
+        (loader.reading?.allWorkouts ?? [])
+            .filter { PlanFormatting.isoDay($0.startDate) == day }
+            .sorted { $0.startDate > $1.startDate }
+    }
+
+    /// Die Einheiten aus Health (neueste zuerst), früher auf dem Heute-Bildschirm. Antippen öffnet die Einheit.
     @ViewBuilder
     fileprivate var workoutsSection: some View {
         Section("Letzte Einheiten") {
@@ -50,7 +67,11 @@ extension HistoryView {
                 Text("Health: \(error)").foregroundStyle(.red)
             } else if let workouts = loader.reading?.allWorkouts, !workouts.isEmpty {
                 ForEach(workouts.prefix(20)) { workout in
-                    WorkoutRow(workout: workout)
+                    NavigationLink {
+                        WorkoutDetailView(workout: workout, input: statisticInput)
+                    } label: {
+                        WorkoutRow(workout: workout)
+                    }
                 }
             } else {
                 Text("Noch keine Einheiten gefunden")
@@ -136,9 +157,67 @@ private struct ChartSection: View {
     }
 }
 
+// MARK: - Tag
+
+/// Ein Tag des Verlaufs: Plan gegen Training, die geplanten Einheiten und die gemachten (antippen öffnet sie).
+private struct HistoryDayView: View {
+    let entry: MultiSportAdherenceEntry
+    let workouts: [Workout]
+    let input: StatisticInput
+
+    private let registry = SportRegistry.standard
+
+    var body: some View {
+        List {
+            Section {
+                HistoryRow(entry: entry)
+            }
+            if !entry.plan.sessions.isEmpty {
+                Section("Geplant") {
+                    ForEach(Array(entry.plan.sessions.enumerated()), id: \.offset) { _, session in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Label(
+                                PlanV2Formatting.sessionTitle(sport: session.sport, amount: session.amount, unit: session.unit),
+                                systemImage: registry.symbolName(for: session.sport)
+                            )
+                            if !session.focus.isEmpty {
+                                Text(session.focus)
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+            Section("Trainiert") {
+                if workouts.isEmpty {
+                    Text("Keine Einheit an diesem Tag.")
+                        .foregroundStyle(.secondary)
+                }
+                ForEach(workouts) { workout in
+                    NavigationLink {
+                        WorkoutDetailView(workout: workout, input: input)
+                    } label: {
+                        WorkoutRow(workout: workout)
+                    }
+                }
+            }
+            if !entry.plan.rationale.isEmpty {
+                Section("Warum dieser Plan") {
+                    Text(entry.plan.rationale)
+                        .font(.callout)
+                }
+            }
+        }
+        .navigationTitle(PlanFormatting.germanDate(entry.date))
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
 // MARK: - Zeile
 
-private struct HistoryRow: View {
+/// Ein Tag mit Plan: Ausgang und je Sportart geplant gegen gemacht. Auch in der Statistik ("Plan erfüllt").
+struct HistoryRow: View {
     let entry: MultiSportAdherenceEntry
 
     private let registry = SportRegistry.standard
