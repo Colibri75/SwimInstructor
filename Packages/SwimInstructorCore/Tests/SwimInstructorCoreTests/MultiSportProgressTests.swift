@@ -92,7 +92,7 @@ final class MultiSportProgressTests: XCTestCase {
                 ProgressV2Data.workout(.run, daysAgo: 1, minutes: 42, meters: 7_000),
                 ProgressV2Data.workout(.swim, daysAgo: 1, minutes: 30, meters: 1_200),
                 // Eine Sportart, die die App nicht kennt, zählt nicht.
-                ProgressV2Data.workout(SportID(rawValue: "rowing"), daysAgo: 1, minutes: 45)
+                ProgressV2Data.workout(SportID(rawValue: "kayak"), daysAgo: 1, minutes: 45)
             ]
         )
 
@@ -158,14 +158,14 @@ final class MultiSportProgressTests: XCTestCase {
     }
 
     func testAPlannedSportTheAppDoesNotKnowStaysInTheComparison() throws {
-        let rowing = SportID(rawValue: "rowing")
+        let kayak = SportID(rawValue: "kayak")
         let comparisons = comparator.compare(
-            planned: [MultiSportComparator.Planned(sport: rowing, unit: .minutes, amount: 30, minutes: 30)],
-            workouts: [ProgressV2Data.workout(rowing, daysAgo: 1, minutes: 30)]
+            planned: [MultiSportComparator.Planned(sport: kayak, unit: .minutes, amount: 30, minutes: 30)],
+            workouts: [ProgressV2Data.workout(kayak, daysAgo: 1, minutes: 30)]
         )
 
         let entry = try XCTUnwrap(comparisons.first)
-        XCTAssertEqual(comparisons.map(\.sport), [rowing])
+        XCTAssertEqual(comparisons.map(\.sport), [kayak])
         XCTAssertEqual(entry.planned, 30)
         // Ihre Einheiten zählen nicht.
         XCTAssertEqual(entry.workoutCount, 0)
@@ -186,7 +186,7 @@ final class MultiSportProgressTests: XCTestCase {
         XCTAssertEqual(outcome(swim, []), .missed)
         XCTAssertEqual(outcome(swim, [], isToday: true), .pending)
         // Einheiten unbekannter Sportarten zählen nicht.
-        XCTAssertEqual(outcome(swim, [ProgressV2Data.workout(SportID(rawValue: "rowing"), daysAgo: 1, minutes: 40)]), .missed)
+        XCTAssertEqual(outcome(swim, [ProgressV2Data.workout(SportID(rawValue: "kayak"), daysAgo: 1, minutes: 40)]), .missed)
     }
 
     func testTheToleranceBandRunsFrom75To125Percent() {
@@ -447,18 +447,18 @@ final class MultiSportProgressTests: XCTestCase {
     }
 
     func testAPlannedSportTheAppDoesNotKnowComesLastInTheWeekTotals() {
-        let rowing = SportID(rawValue: "rowing")
-        let rowingSession = WeekSession(
-            sport: rowing, sessionType: .endurance, intensity: .easy, amount: 30, unit: .minutes,
-            minutes: 30, distanceMeters: 6_000, focus: "Rudern"
+        let kayak = SportID(rawValue: "kayak")
+        let kayakSession = WeekSession(
+            sport: kayak, sessionType: .endurance, intensity: .easy, amount: 30, unit: .minutes,
+            minutes: 30, distanceMeters: 6_000, focus: "Kajak"
         )
         let plan = ProgressV2Data.week([
-            ProgressV2Data.plannedDay("2026-10-01", [rowingSession, ProgressV2Data.session(.run, 30, minutes: 30)])
+            ProgressV2Data.plannedDay("2026-10-01", [kayakSession, ProgressV2Data.session(.run, 30, minutes: 30)])
         ])
 
         let summary = weekProgress.summary(of: statuses(plan))
 
-        XCTAssertEqual(summary.sports.map(\.sport), [SportID.run, rowing])
+        XCTAssertEqual(summary.sports.map(\.sport), [SportID.run, kayak])
         XCTAssertEqual(summary.sessionsPlanned, 2)
     }
 }

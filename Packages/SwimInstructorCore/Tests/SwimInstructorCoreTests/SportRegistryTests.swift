@@ -3,8 +3,9 @@ import HealthKit
 @testable import SwimInstructorCore
 
 final class SportRegistryTests: XCTestCase {
-    func testStandardRegistryHasTheThreeTriathlonSportsInOrder() {
-        XCTAssertEqual(SportRegistry.standard.ids, [SportID.swim, .bike, .run])
+    func testStandardRegistryStartsWithTheThreeTriathlonSportsInOrder() {
+        // Weitere Sportarten kommen dahinter; die ganze Liste prüft ContractTests gegen contracts/sports.json.
+        XCTAssertEqual(Array(SportRegistry.standard.ids.prefix(3)), [SportID.swim, .bike, .run])
     }
 
     func testLookupFindsModulesAndIgnoresUnknownIDs() {
@@ -62,7 +63,7 @@ final class SportRegistryTests: XCTestCase {
     }
 
     func testPlanUnitsAndSpeedsOfTheTriathlonSports() {
-        let sports = SportRegistry.standard
+        let sports = TestFixtures.triathlon
         XCTAssertEqual(sports.modules.map(\.planUnit), [.meters, .minutes, .minutes])
         XCTAssertEqual(sports.modules.map(\.typicalSpeedMetersPerSecond), [0.8, 7, 2.8])
         XCTAssertEqual(PlanUnit.allCases.map(\.rawValue), ["meters", "minutes"])
@@ -80,7 +81,7 @@ final class SportRegistryTests: XCTestCase {
     }
 
     func testHealthLookupAndReadTypes() throws {
-        let sports = SportRegistry.standard
+        let sports = TestFixtures.triathlon
         XCTAssertEqual(sports.module(forActivityType: .swimming)?.id, .swim)
         XCTAssertEqual(sports.module(forActivityType: .cycling)?.id, .bike)
         XCTAssertEqual(sports.module(forActivityType: .running)?.id, .run)

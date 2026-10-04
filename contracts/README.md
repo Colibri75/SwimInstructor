@@ -20,4 +20,4 @@ Regeln:
 - Eine Datei hier ändert man nur zusammen mit beiden Seiten. Alte Formen bleiben als eigene Datei liegen, solange
   eine App oder ein Gerät sie noch schicken oder gespeichert haben kann.
 - Neue Sportarten kommen zuerst in `sports.json`, dann als Modul in App (`Sports/Modules/`) und Backend
-  (`src/sports/modules/`).
+  (`src/sports/modules/`), siehe [`docs/neue-sportart.md`](../docs/neue-sportart.md).

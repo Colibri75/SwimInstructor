@@ -13,9 +13,9 @@ describe("Bausteine je Sportart", () => {
 
     expect(plannedSports(snapshot).map((sport) => sport.id)).toEqual(["swim", "run"]);
     expect(isPlanned(snapshot, "bike")).toBe(false);
-    expect(isPlanned(snapshot, "rowing")).toBe(false);
+    expect(isPlanned(snapshot, "kayak")).toBe(false);
     expect(emphasisOf(snapshot, "run")).toBe(70);
-    expect(emphasisOf(snapshot, "rowing")).toBe(0);
+    expect(emphasisOf(snapshot, "kayak")).toBe(0);
   });
 
   it("nimmt fuer eine Sportart ohne Eintrag leere Werte und das typische Tempo", () => {
@@ -42,14 +42,14 @@ describe("Bausteine je Sportart", () => {
     expect(unitLabel(swim)).toBe("m");
     expect(formatAmount(run, 29.6)).toBe("30 min");
     expect(sportName("bike")).toBe("Radfahren");
-    expect(sportName("rowing")).toBe("rowing");
+    expect(sportName("kayak")).toBe("kayak");
   });
 
   it("schaetzt die Dauer des Wettkampfs ohne Zielzeit aus dem typischen Tempo", () => {
     const snapshot = multiSnapshot();
 
     expect(disciplineSeconds({ sport: "run", distance_meters: 10_000 })).toBeCloseTo(10_000 / 2.8);
-    expect(disciplineSeconds({ sport: "rowing", distance_meters: 2000 })).toBe(0);
+    expect(disciplineSeconds({ sport: "kayak", distance_meters: 2000 })).toBe(0);
     expect(raceSeconds(snapshot)).toBeCloseTo(1800 + 4800 + 10_000 / 2.8);
     expect(raceAmount(snapshot, swim)).toBe(1500);
     expect(raceAmount(snapshot, bike)).toBe(80);

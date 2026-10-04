@@ -17,6 +17,8 @@ final class StatisticLayoutTests: XCTestCase {
     }
 
     private static let withRowing = StatisticData.registry
+    /// Nur die drei Triathlon-Sportarten: Die erwarteten Kacheln bleiben gleich, wenn die App weitere Sportarten bekommt.
+    private static let triathlon = TestFixtures.triathlon
 
     /// "Sportart/Kennzahl/Zeitraum", `all` für alle Sportarten.
     private func describe(_ tiles: [StatisticTile]) -> [String] {
@@ -44,7 +46,7 @@ final class StatisticLayoutTests: XCTestCase {
         XCTAssertEqual(registry.statistics(for: nil).map(\.metric.rawValue), [
             "duration", "training_load", "sessions", "plan_adherence", "resting_heart_rate", "heart_rate_variability", "sleep"
         ])
-        XCTAssertEqual(registry.statistics(for: "rowing"), [], "Unbekannte Sportart")
+        XCTAssertEqual(registry.statistics(for: "kayak"), [], "Unbekannte Sportart")
     }
 
     func testRowingGetsACatalogWithoutListingOne() {
@@ -89,7 +91,7 @@ final class StatisticLayoutTests: XCTestCase {
     // MARK: - Standard
 
     func testStandardLayout() {
-        let layout = StatisticLayout.standard(registry: .standard)
+        let layout = StatisticLayout.standard(registry: Self.triathlon)
 
         XCTAssertEqual(describe(layout.tiles), [
             "all/duration/week", "all/plan_adherence/4_weeks",
@@ -144,7 +146,7 @@ final class StatisticLayoutTests: XCTestCase {
     }
 
     func testRemovedMetricsAndSportsFallBackToAStandard() throws {
-        let updated = try storedLayout().updated(for: .standard)
+        let updated = try storedLayout().updated(for: Self.triathlon)
 
         XCTAssertEqual(describe(updated.tiles), [
             "run/pace_per_km/4_weeks",
@@ -166,7 +168,7 @@ final class StatisticLayoutTests: XCTestCase {
     }
 
     func testAnUnknownSportKeepsAMetricThatAllSportsHave() {
-        let tile = StatisticTile(sport: "rowing", metric: .sessions, period: .sevenDays)
+        let tile = StatisticTile(sport: "kayak", metric: .sessions, period: .sevenDays)
 
         let resolved = SportRegistry.standard.resolve(tile)
 
@@ -207,9 +209,9 @@ final class StatisticLayoutTests: XCTestCase {
     @MainActor
     func testDashboardStartsWithTheStandardAndSavesOnlyChanges() {
         let store = MemoryStore()
-        let dashboard = StatisticDashboard(store: store)
+        let dashboard = StatisticDashboard(store: store, registry: Self.triathlon)
 
-        XCTAssertEqual(describe(dashboard.tiles), describe(StatisticLayout.standard().tiles))
+        XCTAssertEqual(describe(dashboard.tiles), describe(StatisticLayout.standard(registry: Self.triathlon).tiles))
         XCTAssertEqual(store.saves, 0)
         XCTAssertEqual(dashboard.sports, [nil, "swim", "bike", "run"])
         XCTAssertEqual(dashboard.catalog(for: "run"), SportRegistry.standard.statistics(for: "run"))
@@ -230,7 +232,7 @@ final class StatisticLayoutTests: XCTestCase {
         let time = StatisticTile(sport: "run", metric: .duration, period: .sevenDays)
         let store = MemoryStore()
         store.stored = StatisticLayout(tiles: [run, time], knownSports: ["swim", "bike", "run"])
-        let dashboard = StatisticDashboard(store: store)
+        let dashboard = StatisticDashboard(store: store, registry: Self.triathlon)
 
         dashboard.setSport("bike", for: time.id)
         dashboard.setSport("bike", for: run.id)
@@ -247,7 +249,7 @@ final class StatisticLayoutTests: XCTestCase {
         let tile = StatisticTile(sport: "swim", metric: .distance, period: .fourWeeks)
         let store = MemoryStore()
         store.stored = StatisticLayout(tiles: [tile], knownSports: ["swim", "bike", "run"])
-        let dashboard = StatisticDashboard(store: store)
+        let dashboard = StatisticDashboard(store: store, registry: Self.triathlon)
 
         dashboard.setMetric(.pacePerKilometer, for: tile.id)
         dashboard.setMetric(.pacePerKilometer, for: UUID())
@@ -261,7 +263,7 @@ final class StatisticLayoutTests: XCTestCase {
     @MainActor
     func testAddRemoveAndReset() {
         let store = MemoryStore()
-        let dashboard = StatisticDashboard(store: store)
+        let dashboard = StatisticDashboard(store: store, registry: Self.triathlon)
         let count = dashboard.tiles.count
 
         dashboard.add(sport: "bike", metric: .pacePerKilometer, period: .sevenDays)
@@ -274,7 +276,7 @@ final class StatisticLayoutTests: XCTestCase {
 
         dashboard.remove(dashboard.tiles[0].id)
         dashboard.reset()
-        XCTAssertEqual(describe(dashboard.tiles), describe(StatisticLayout.standard().tiles))
+        XCTAssertEqual(describe(dashboard.tiles), describe(StatisticLayout.standard(registry: Self.triathlon).tiles))
         XCTAssertEqual(store.saves, 4)
     }
 
@@ -283,7 +285,7 @@ final class StatisticLayoutTests: XCTestCase {
         let tiles = (0..<4).map { StatisticTile(sport: nil, metric: StatisticDefinition.overall[$0].metric, period: .fourWeeks) }
         let store = MemoryStore()
         store.stored = StatisticLayout(tiles: tiles, knownSports: ["swim", "bike", "run"])
-        let dashboard = StatisticDashboard(store: store)
+        let dashboard = StatisticDashboard(store: store, registry: Self.triathlon)
         let ids = tiles.map(\.id)
 
         // Nach hinten gezogen: dahinter.
@@ -305,7 +307,7 @@ final class StatisticLayoutTests: XCTestCase {
         let tiles = (0..<3).map { StatisticTile(sport: nil, metric: StatisticDefinition.overall[$0].metric, period: .fourWeeks) }
         let store = MemoryStore()
         store.stored = StatisticLayout(tiles: tiles, knownSports: ["swim", "bike", "run"])
-        let dashboard = StatisticDashboard(store: store)
+        let dashboard = StatisticDashboard(store: store, registry: Self.triathlon)
         let ids = tiles.map(\.id)
 
         dashboard.move(ids[0], by: 1)
@@ -322,12 +324,12 @@ final class StatisticLayoutTests: XCTestCase {
     @MainActor
     func testAStoredLayoutComesBackAfterARestart() {
         let store = MemoryStore()
-        let first = StatisticDashboard(store: store)
+        let first = StatisticDashboard(store: store, registry: Self.triathlon)
         let tile = first.tiles[2]
         first.setSport("run", for: tile.id)
         first.setMetric(.pacePerKilometer, for: tile.id)
 
-        let restarted = StatisticDashboard(store: store)
+        let restarted = StatisticDashboard(store: store, registry: Self.triathlon)
 
         XCTAssertEqual(restarted.tiles, first.tiles)
         XCTAssertEqual(restarted.tiles[2].sport, "run")

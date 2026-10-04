@@ -52,14 +52,21 @@ struct RowingTestModule: SportModule {
 /// Prüfungen, die jedes Modul bestehen muss. Jeder Umbauschritt hängt hier seine neuen Anforderungen an
 /// (Health-Umwandlung, Belastung, Fortschritt, Statistik); sie gelten dann automatisch für jede Sportart.
 final class SportModuleConformanceTests: XCTestCase {
-    /// Die echten Module plus die Test-Sportart.
+    /// Die echten Module plus die Test-Sportart. Gibt es Rudern schon als echtes Modul, prüfen die Tests dieses.
     private var allModules: [any SportModule] {
-        SportRegistry.standard.modules + [RowingTestModule() as any SportModule]
+        let real = SportRegistry.standard.modules
+        return real.contains { $0.id == RowingTestModule().id } ? real : real + [RowingTestModule() as any SportModule]
+    }
+
+    /// Die echten Module außer einem echten Rudern: Gegen sie muss sich die Test-Sportart unterscheiden.
+    private var otherRealModules: [any SportModule] {
+        SportRegistry.standard.modules.filter { $0.id != RowingTestModule().id }
     }
 
     func testEveryModuleIsCompleteAndRegistrable() throws {
         let registry = try SportRegistry(modules: allModules)
-        XCTAssertEqual(registry.ids.count, SportRegistry.standard.ids.count + 1)
+        XCTAssertEqual(registry.ids, allModules.map(\.id))
+        XCTAssertTrue(registry.ids.contains(RowingTestModule().id))
         for module in allModules {
             XCTAssertTrue(module.id.isWellFormed, "\(module.id)")
             XCTAssertFalse(module.displayName.isEmpty, "\(module.id)")
@@ -251,7 +258,7 @@ final class SportModuleConformanceTests: XCTestCase {
         // Eigener Wert, eigener Test, andere Zahl an Zonen: Das Profil hängt an keiner der echten Sportarten.
         let rowing = RowingTestModule()
         XCTAssertTrue(rowing.performanceTests.contains { $0.produces.contains(RowingTestModule.twoKilometerTime) })
-        XCTAssertFalse(SportRegistry.standard.modules.contains { module in
+        XCTAssertFalse(otherRealModules.contains { module in
             module.performanceMetrics.contains { $0.metric == RowingTestModule.twoKilometerTime }
         })
         XCTAssertEqual(rowing.zoneSchemes.first?.zones(basisValue: 160).zones.count, 4)
@@ -261,7 +268,7 @@ final class SportModuleConformanceTests: XCTestCase {
         // Rudern plant nach Schlagzahl, was keine der echten Sportarten kann: Der Test beweist nur dann etwas,
         // wenn die Test-Sportart nicht bloß eine Kopie einer echten ist.
         XCTAssertTrue(RowingTestModule().targets.contains(.strokeRate))
-        XCTAssertFalse(SportRegistry.standard.modules.contains { $0.targets.contains(.strokeRate) })
+        XCTAssertFalse(otherRealModules.contains { $0.targets.contains(.strokeRate) })
     }
 
     func testEveryModuleHasStatisticsFromItsOwnWorkouts() {

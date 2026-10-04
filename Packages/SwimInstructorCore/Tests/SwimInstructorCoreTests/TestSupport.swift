@@ -9,6 +9,10 @@ enum TestFixtures {
         return calendar
     }()
 
+    /// Nur Schwimmen, Rad und Laufen. Für Tests, deren Ergebnis von der Liste aller Sportarten abhängt: Sie bleiben grün,
+    /// wenn die App eine weitere Sportart bekommt (docs/neue-sportart.md).
+    static let triathlon = try! SportRegistry(modules: [SwimModule(), BikeModule(), RunModule()])
+
     /// 30.09.2026, 12:00 UTC, wie in den M3-Tests.
     static let now = utc.date(from: DateComponents(year: 2026, month: 9, day: 30, hour: 12))!
 

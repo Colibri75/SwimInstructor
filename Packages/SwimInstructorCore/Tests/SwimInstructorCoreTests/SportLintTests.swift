@@ -1,15 +1,19 @@
 import XCTest
+import SwimInstructorCore
 
 /// Sorgt dafür, dass außerhalb der Sport-Module niemand nach einer bestimmten Sportart verzweigt. Sonst wäre
 /// eine neue Sportart wieder eine Änderung quer durch den Code statt ein neues Modul.
 ///
-/// Erlaubt ist das nur unter `Sports/` im Package (Module, Registry, später die Umstellung alter Daten).
+/// Erlaubt ist das nur unter `Sports/` im Package (Module, Registry, später die Umstellung alter Daten). Geprüft werden
+/// die Kennungen aller angemeldeten Sportarten, eine neue ist damit automatisch dabei.
 final class SportLintTests: XCTestCase {
+    private static let ids = SportRegistry.standard.ids.map(\.rawValue).joined(separator: "|")
+
     private static let forbidden: [(pattern: String, why: String)] = [
-        (#"SportID\.(swim|bike|run)\b"#, "feste Sportart"),
-        (#"case\s+\.(swim|bike|run)\b"#, "switch über Sportarten"),
-        (#"[=!]=\s*\.(swim|bike|run)\b"#, "Vergleich mit fester Sportart"),
-        (#""(swim|bike|run)""#, "Sport-Kennung als Text")
+        (#"SportID\.("# + ids + #")\b"#, "feste Sportart"),
+        (#"case\s+\.("# + ids + #")\b"#, "switch über Sportarten"),
+        (#"[=!]=\s*\.("# + ids + #")\b"#, "Vergleich mit fester Sportart"),
+        (#""("# + ids + #")""#, "Sport-Kennung als Text")
     ]
 
     func testNoSportSpecificBranchingOutsideModules() throws {

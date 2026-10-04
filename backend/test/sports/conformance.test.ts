@@ -3,9 +3,12 @@ import { rowingTestSport } from "./rowingTestModule";
 
 /**
  * Pruefungen, die jede Sportart bestehen muss. Jeder Umbauschritt haengt hier seine neuen Anforderungen an
- * (Prompt-Regeln, Sicherheitsregeln, Lastfaktor); sie gelten dann automatisch fuer jede Sportart.
+ * (Prompt-Regeln, Sicherheitsregeln, Lastfaktor); sie gelten dann automatisch fuer jede Sportart. Gibt es Rudern schon
+ * als echtes Modul, laeuft dieses statt der Test-Sportart durch die Pruefungen.
  */
-const allSports = [...SPORTS.sports, rowingTestSport];
+const allSports = SPORTS.get(rowingTestSport.id) === undefined ? [...SPORTS.sports, rowingTestSport] : [...SPORTS.sports];
+/** Die echten Sportarten ausser einem echten Rudern: Gegen sie muss sich die Test-Sportart unterscheiden. */
+const otherRealSports = SPORTS.sports.filter((sport) => sport.id !== rowingTestSport.id);
 
 describe.each(allSports.map((sport) => [sport.id, sport] as const))("Sportart %s", (_id, sport) => {
   it("laesst sich zusammen mit allen anderen anmelden und wiederfinden", () => {
@@ -57,10 +60,10 @@ describe.each(allSports.map((sport) => [sport.id, sport] as const))("Sportart %s
 
 it("die Test-Sportart hat ein eigenes Leistungsprofil", () => {
   expect(rowingTestSport.performanceMetrics.map((metric) => metric.id)).toContain("time_2000m");
-  expect(SPORTS.sports.some((sport) => sport.performanceMetrics.some((metric) => metric.id === "time_2000m"))).toBe(false);
+  expect(otherRealSports.some((sport) => sport.performanceMetrics.some((metric) => metric.id === "time_2000m"))).toBe(false);
 });
 
 it("die Test-Sportart hat wirklich eigene Logik (Schlagzahl kennt keine echte Sportart)", () => {
   expect(rowingTestSport.targets).toContain("stroke_rate");
-  expect(SPORTS.sports.some((sport) => sport.targets.includes("stroke_rate"))).toBe(false);
+  expect(otherRealSports.some((sport) => sport.targets.includes("stroke_rate"))).toBe(false);
 });

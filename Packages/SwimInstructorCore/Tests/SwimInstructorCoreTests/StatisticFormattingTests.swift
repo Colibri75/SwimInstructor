@@ -123,7 +123,7 @@ final class StatisticFormattingTests: XCTestCase {
     func testSportNameAndSymbol() {
         XCTAssertEqual(StatisticFormatting.sportName(nil), "Alle Sportarten")
         XCTAssertEqual(StatisticFormatting.sportName("run"), "Laufen")
-        XCTAssertEqual(StatisticFormatting.sportName("rowing"), "rowing")
+        XCTAssertEqual(StatisticFormatting.sportName("kayak"), "kayak")
         XCTAssertEqual(StatisticFormatting.symbolName(nil), "square.grid.2x2")
         XCTAssertEqual(StatisticFormatting.symbolName("run"), "figure.run")
     }

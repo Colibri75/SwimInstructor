@@ -56,12 +56,12 @@ describe("sanitizeMacroV2", () => {
   });
 
   it("ergaenzt fehlende Wochen mit der Vorwoche und entfernt Sportarten ohne Schwerpunkt", () => {
-    const raw = macroPlan(ALL_WEEKS.slice(0, 1), () => ({ swim: 3000, bike: 100, run: 30, rowing: 50 }));
+    const raw = macroPlan(ALL_WEEKS.slice(0, 1), () => ({ swim: 3000, bike: 100, run: 30, kayak: 50 }));
     const result = sanitizeMacroV2(raw, multiSnapshot(), context(ALL_WEEKS.slice(0, 3)));
 
     expect(amounts(result.plan, "swim")).toEqual([3000, 3000, 3000]);
     expect(result.plan.weeks[1].focus).toBe("Grundlage");
-    expect(result.adjustments.slice(0, 2)).toEqual(["2 fehlende Wochen mit dem Umfang der Vorwoche ergänzt", "Sportarten ohne Schwerpunkt entfernt: rowing"]);
+    expect(result.adjustments.slice(0, 2)).toEqual(["2 fehlende Wochen mit dem Umfang der Vorwoche ergänzt", "Sportarten ohne Schwerpunkt entfernt: kayak"]);
   });
 
   it("ergaenzt eine fehlende erste Woche mit dem bisherigen Schnitt", () => {

@@ -96,7 +96,7 @@ final class TestResultSyncTests: XCTestCase {
     func testInboxIgnoresSportsAndTestsThisVersionDoesNotKnow() {
         let inbox = WatchTestResultInbox(store: MemoryStore())
 
-        inbox.receive(Self.result(sport: "rowing", testID: "time_trial_2000m"))
+        inbox.receive(Self.result(sport: "kayak", testID: "time_trial_2000m"))
         inbox.receive(Self.result(testID: "ramp_test"))
 
         XCTAssertEqual(inbox.results, [])

@@ -68,7 +68,7 @@ final class PerformanceProfileLoaderTests: XCTestCase {
         XCTAssertNil(swim.current)
         XCTAssertNil(loader.current(.criticalSwimPace, sport: SportID.swim))
 
-        XCTAssertEqual(loader.entries(for: SportID(rawValue: "rowing")), [])
+        XCTAssertEqual(loader.entries(for: SportID(rawValue: "kayak")), [])
     }
 
     func testConfirmedValuesWinOverEstimatesAndShowTheirHistory() throws {
@@ -127,7 +127,7 @@ final class PerformanceProfileLoaderTests: XCTestCase {
         XCTAssertFalse(loader.setManual(105, metric: .criticalSwimPace, sport: SportID.run))
         XCTAssertEqual(loader.error, "Diesen Wert kennt die App nicht.")
         XCTAssertFalse(loader.setManual(170, metric: .thresholdHeartRate, sport: nil))
-        XCTAssertFalse(loader.setManual(170, metric: .thresholdHeartRate, sport: SportID(rawValue: "rowing")))
+        XCTAssertFalse(loader.setManual(170, metric: .thresholdHeartRate, sport: SportID(rawValue: "kayak")))
         XCTAssertFalse(loader.setManual(170, metric: PerformanceMetric(rawValue: "vo2max"), sport: nil))
         XCTAssertEqual(store.stored, PerformanceProfile.empty)
     }
@@ -237,7 +237,7 @@ final class PerformanceProfileLoaderTests: XCTestCase {
         // Der CSS-Test gehört zum Schwimmen, nicht zum Laufen.
         XCTAssertFalse(loader.propose(testID: "css_400_200", sport: .run, entries: ["time_400m": 400, "time_200m": 190]))
         XCTAssertEqual(loader.error, "Diesen Test kennt die App nicht.")
-        XCTAssertFalse(loader.propose(testID: "threshold_30min", sport: SportID(rawValue: "rowing"), entries: ["threshold_heart_rate": 160]))
+        XCTAssertFalse(loader.propose(testID: "threshold_30min", sport: SportID(rawValue: "kayak"), entries: ["threshold_heart_rate": 160]))
         XCTAssertNil(loader.pending)
     }
 
