@@ -64,6 +64,12 @@ export interface MacroSportLimits {
   /** Untergrenze der Bezugswoche fuer das Wachstum (Einsteiger ohne Verlauf). */
   floor: number;
   growthFactor: number;
+  /**
+   * Rueckkehr nach einer Pause: der angegebene Wochenumfang vor der Pause (0 ohne Angabe oder wenn er schon gilt). Bis
+   * dahin darf eine Woche um `returnGrowthFactor` wachsen statt um `growthFactor`.
+   */
+  returnTarget: number;
+  returnGrowthFactor: number;
   /** Umfang der Disziplin im Wettkampf, 0 wenn die Sportart keine ist. */
   race: number;
   absoluteWeekly: number;
@@ -78,6 +84,8 @@ export function macroSportLimits(snapshot: SnapshotV2): MacroSportLimits[] {
       firstWeekCap: limits.weeklyCap,
       floor: Math.min(planning.minWeeklyCap, limits.weeklyCap),
       growthFactor: planning.macroGrowthFactor,
+      returnTarget: limits.declared !== null && limits.declared.reportedWeekly > limits.average ? floorAmount(sport, limits.declared.reportedWeekly) : 0,
+      returnGrowthFactor: sport.planning.startingLevel.returnGrowthFactor,
       race: raceAmount(snapshot, sport),
       absoluteWeekly: planning.absoluteMaxSession * planning.maxSessionsPerWeek
     };
@@ -191,8 +199,15 @@ export function sanitizeMacroV2(input: MacroWeeksRaw, snapshot: SnapshotV2, cont
         cap = floorAmount(sport, ref * MULTI_RULES.deloadFactor);
         why = "Entlastungswoche";
       } else {
-        cap = floorAmount(sport, Math.max(ref, entry.floor) * entry.growthFactor);
+        const base = Math.max(ref, entry.floor);
+        cap = floorAmount(sport, base * entry.growthFactor);
         why = `höchstens ${Math.round((entry.growthFactor - 1) * 100)} % mehr als die letzte Woche ohne Entlastung`;
+        // Zurueck zum Niveau vor der Pause geht es schneller, aber nie darueber hinaus.
+        const back = floorAmount(sport, Math.min(base * entry.returnGrowthFactor, entry.returnTarget));
+        if (back > cap) {
+          cap = back;
+          why = `Rückkehr zum Niveau vor der Pause: höchstens ${Math.round((entry.returnGrowthFactor - 1) * 100)} % mehr als die letzte Woche ohne Entlastung`;
+        }
       }
       if (phase === "taper" && sportPeak > 0) {
         const factor = factors[Math.min(Math.max(taper - toGoal, 0), factors.length - 1)];

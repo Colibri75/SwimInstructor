@@ -196,6 +196,27 @@ final class ContractTests: XCTestCase {
         XCTAssertEqual(built, contract.performance)
     }
 
+    func testSnapshotV2WithStartingLevelsRoundTripsWithoutLosingFields() throws {
+        let data = try RepoPaths.contractData("wire/snapshot-v2-starting-levels.json")
+        let snapshot = try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: data)
+        let reencoded = try AthleteStateSnapshot.jsonEncoder().encode(snapshot)
+
+        XCTAssertEqual(try JSONKeyPaths.of(reencoded), try JSONKeyPaths.of(data))
+        XCTAssertEqual(try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: reencoded), snapshot)
+        // Wie die App sie anlegt: Schwimmen nach kurzer Pause, Laufen regelmäßig, zwei Tage vor dem Snapshot angegeben.
+        let reportedAt = ISO8601DateFormatter().date(from: "2026-09-28T18:00:00Z")!
+        XCTAssertEqual(snapshot.startingLevels, [
+            StartingLevel(sport: .swim, weeklyAmount: 6000, longestSession: 2500, status: .shortBreak, reportedAt: reportedAt),
+            StartingLevel(sport: .run, weeklyAmount: 180, longestSession: 90, status: .regular, reportedAt: reportedAt)
+        ])
+        // Ohne Startniveau ist es genau der Snapshot v2, für v1 genau der v1-Snapshot.
+        let plain = try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: RepoPaths.contractData("wire/snapshot-v2.json"))
+        XCTAssertEqual(snapshot.withStartingLevels([]), plain)
+        XCTAssertEqual(plain.withStartingLevels(snapshot.startingLevels!), snapshot)
+        let version1 = try AthleteStateSnapshot.jsonEncoder().encode(snapshot.version1)
+        XCTAssertEqual(try JSONKeyPaths.of(version1), try JSONKeyPaths.of(RepoPaths.contractData("wire/snapshot-v1.json")))
+    }
+
     func testTodayResponsesDecode() throws {
         let decoder = PlanResponse.jsonDecoder()
         let today = try decoder.decode(PlanResponse.self, from: RepoPaths.contractData("wire/plan-today-response.json"))

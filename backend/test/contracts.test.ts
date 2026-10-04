@@ -106,7 +106,7 @@ describe("contracts/wire", () => {
     expect(sorted(keyPaths(parsed.data))).toEqual(sorted(keyPaths(snapshot)));
   });
 
-  it.each(["wire/snapshot-v2.json", "wire/snapshot-v2-profile.json"])("nimmt %s der App vollstaendig an (kein Feld wird verworfen)", (file) => {
+  it.each(["wire/snapshot-v2.json", "wire/snapshot-v2-profile.json", "wire/snapshot-v2-starting-levels.json"])("nimmt %s der App vollstaendig an (kein Feld wird verworfen)", (file) => {
     const v2 = contract(file);
     const parsed = SnapshotSchema.safeParse(v2);
     expect(parsed.success).toBe(true);

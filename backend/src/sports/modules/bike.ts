@@ -77,6 +77,11 @@ export const bike: SportDefinition = {
       macroGrowthFactor: 1.1,
       amountStep: 5
     },
+    // Wie beim Schwimmen (Praxiswert).
+    startingLevel: {
+      factors: { regular: 1, short_break: 0.7, long_break: 0.5 },
+      returnGrowthFactor: 1.2
+    },
     // 25 km/h.
     typicalSpeedMetersPerSecond: 7,
     stepMeasures: ["duration", "distance"],

@@ -1,10 +1,10 @@
-import { SportDefinition, SportStateValues } from "../../sports/types";
+import { SportDefinition, SportStateValues, TrainingStatus } from "../../sports/types";
 import { daysBetween, MacroPhase, mondayOf } from "../macro";
 import { Intensity } from "../plan";
 import { SnapshotV2 } from "../snapshot";
 import { addDays } from "../week";
 import { RecentTraining } from "./schemas";
-import { floorAmount, plannedSports, raceAmount, raceSeconds, stateAmounts, stateOf, trainingSpeed } from "./sports";
+import { floorAmount, formatAmount, plannedSports, raceAmount, raceSeconds, stateAmounts, stateOf, trainingSpeed } from "./sports";
 
 /**
  * Die Grenzen der Planung fuer mehrere Sportarten, aus dem Snapshot berechnet. Dieselben Zahlen gehen an Claude
@@ -38,6 +38,8 @@ export const MULTI_RULES = {
   goalWeekRaceFactor: 1.2,
   /** Kein Leistungstest in den letzten 14 Tagen vor dem Ziel. */
   testBlackoutDays: 14,
+  /** So lange gilt ein selbst angegebenes Startniveau; danach zaehlt nur noch, was Health aufgezeichnet hat. */
+  startingLevelValidDays: 28,
   defaultTestIntervalWeeks: 6,
   maxTestsPerWeek: 2,
   maxRationaleLength: 1200,
@@ -61,13 +63,53 @@ export function lower(a: Intensity, b: Intensity): Intensity {
   return RANK[a] <= RANK[b] ? a : b;
 }
 
+/**
+ * Ein selbst angegebenes Startniveau, wie es zaehlt: die Angabe (auf die Grenzen des Moduls gekappt) mal dem Anteil
+ * fuer den Trainingsstand.
+ */
+export interface DeclaredLevel {
+  status: Exclude<TrainingStatus, "beginner">;
+  /** Anteil der Angabe, der gilt (z. B. 0,7 nach 2 bis 8 Wochen Pause). */
+  factor: number;
+  /** Wie angegeben (gekappt), in der Einheit der Sportart. */
+  reportedWeekly: number;
+  reportedLongest: number;
+  /** Was davon gilt. */
+  weekly: number;
+  longest: number;
+}
+
+/**
+ * Das Startniveau des Athleten fuer eine Sportart, wenn es gilt: angegeben, nicht aelter als `startingLevelValidDays`,
+ * kein Einsteiger und ein Anteil ueber 0 (beim Laufen zaehlt eine Angabe nach langer Pause nicht).
+ */
+export function declaredLevel(snapshot: SnapshotV2, sport: SportDefinition): DeclaredLevel | null {
+  const entry = snapshot.starting_levels?.find((level) => level.sport === sport.id);
+  if (entry === undefined || entry.status === "beginner") return null;
+  const ageDays = (Date.parse(snapshot.generated_at) - Date.parse(entry.reported_at)) / 86_400_000;
+  if (!(ageDays >= -1 && ageDays <= MULTI_RULES.startingLevelValidDays)) return null;
+  const factor = sport.planning.startingLevel.factors[entry.status];
+  if (!(factor > 0)) return null;
+  const limits = sport.planning.limits;
+  const reportedLongest = Math.min(entry.longest_session, limits.absoluteMaxSession);
+  const reportedWeekly = Math.min(entry.weekly_amount, limits.absoluteMaxSession * limits.maxSessionsPerWeek);
+  return {
+    status: entry.status,
+    factor,
+    reportedWeekly,
+    reportedLongest,
+    weekly: reportedWeekly * factor,
+    longest: reportedLongest * factor
+  };
+}
+
 /** Die Grenzen einer Sportart nach ihrem Verlauf, alle in der Einheit der Sportart. */
 export interface SportLimitsNow {
   sport: SportDefinition;
   state: SportStateValues;
   /** Trainingstempo in m/s (fuer Umrechnungen zwischen Strecke und Dauer). */
   speed: number;
-  /** Lange keine Einheit dieser Sportart (oder noch nie): kurz und locker wieder einsteigen. */
+  /** Lange keine Einheit dieser Sportart (oder noch nie) und kein Startniveau angegeben: kurz und locker wieder einsteigen. */
   pause: boolean;
   /** Hoechstens so viel pro Einheit. */
   sessionCap: number;
@@ -75,17 +117,28 @@ export interface SportLimitsNow {
   weeklyCap: number;
   /** Was die letzten 7 Tage schon hatten. */
   lastSeven: number;
-  /** Bisheriger Wochenschnitt (letzte 4 Wochen). */
+  /** Wochenschnitt, mit dem geplant wird: der hoehere aus den letzten 4 Wochen und dem angegebenen Startniveau. */
   average: number;
+  /** Laengste Einheit, mit der geplant wird, ebenso. */
   longest: number;
+  /** Aus Health (letzte 4 Wochen), ohne Angabe. */
+  recordedAverage: number;
+  recordedLongest: number;
+  /** Das selbst angegebene Startniveau, wenn es gilt. */
+  declared: DeclaredLevel | null;
 }
 
 export function sportLimits(snapshot: SnapshotV2, sport: SportDefinition): SportLimitsNow {
   const limits = sport.planning.limits;
   const state = stateOf(snapshot, sport.id);
-  const { longest, average, lastSeven } = stateAmounts(sport, state);
+  const recorded = stateAmounts(sport, state);
+  const declared = declaredLevel(snapshot, sport);
+  const longest = Math.max(recorded.longest, declared?.longest ?? 0);
+  const average = Math.max(recorded.average, declared?.weekly ?? 0);
   const days = state.days_since_last_session;
-  const pause = days === undefined || days > limits.pauseAfterDays;
+  // Mit Startniveau sagt der angegebene Trainingsstand, wie es nach einer Pause weitergeht (der Anteil oben), nicht
+  // die Luecke in Health: Wer ohne Uhr trainiert, ist sonst immer im Wiedereinstieg.
+  const pause = declared === null && (days === undefined || days > limits.pauseAfterDays);
   let sessionCap = Math.min(Math.max(longest * limits.sessionGrowthFactor, limits.minSessionCap), limits.absoluteMaxSession);
   let weeklyCap = Math.max(average * limits.weeklyGrowthFactor, limits.minWeeklyCap);
   if (pause) {
@@ -99,10 +152,38 @@ export function sportLimits(snapshot: SnapshotV2, sport: SportDefinition): Sport
     pause,
     sessionCap: floorAmount(sport, sessionCap),
     weeklyCap: floorAmount(sport, weeklyCap),
-    lastSeven,
+    lastSeven: recorded.lastSeven,
     average,
-    longest
+    longest,
+    recordedAverage: recorded.average,
+    recordedLongest: recorded.longest,
+    declared
   };
+}
+
+const STATUS_TEXT: Record<DeclaredLevel["status"], string> = {
+  regular: "trainiert regelmäßig",
+  short_break: "Pause von 2 bis 8 Wochen",
+  long_break: "Pause über 8 Wochen"
+};
+
+/**
+ * Das angegebene Startniveau als Satz fuer die Nutzernachricht (leer ohne Angabe), damit Claude die Grenzen erklaeren
+ * kann: "Startniveau selbst angegeben: 6000 m pro Woche, längste Einheit 2500 m, Pause von 2 bis 8 Wochen; davon gelten
+ * 70 % (4200 m pro Woche, längste 1750 m). Aufgezeichnet in Health: 570 m pro Woche, längste 1175 m."
+ */
+export function declaredLevelText(limits: SportLimitsNow): string {
+  const declared = limits.declared;
+  if (declared === null) return "";
+  const sport = limits.sport;
+  const share = declared.factor < 1
+    ? `; davon gelten ${Math.round(declared.factor * 100)} % (${formatAmount(sport, declared.weekly)} pro Woche, längste ${formatAmount(sport, declared.longest)})`
+    : "";
+  return (
+    `Startniveau selbst angegeben: ${formatAmount(sport, declared.reportedWeekly)} pro Woche, längste Einheit ` +
+    `${formatAmount(sport, declared.reportedLongest)}, ${STATUS_TEXT[declared.status]}${share}. Aufgezeichnet in Health: ` +
+    `${formatAmount(sport, limits.recordedAverage)} pro Woche, längste ${formatAmount(sport, limits.recordedLongest)}.`
+  );
 }
 
 /** Grenzen einer Sportart fuer heute. */

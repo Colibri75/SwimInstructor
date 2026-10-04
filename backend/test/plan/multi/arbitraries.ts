@@ -86,7 +86,22 @@ export const snapshotArb: fc.Arbitrary<SnapshotV2> = fc
     recovery: fc.constantFrom("good", "moderate", "poor", "unknown"),
     flags: fc.subarray(["recovery_poor", "overreaching_risk", "volume_spike"] as const),
     hardDaysAgo: fc.option(fc.integer({ min: 0, max: 10 }), { nil: undefined }),
-    performance: performanceArb
+    performance: performanceArb,
+    // Selbst angegebenes Startniveau je Sportart (oder keins), auch unsinnig hoch und abgelaufen.
+    startingLevels: fc.tuple(
+      ...SPORT_IDS.map((sport) =>
+        fc.option(
+          fc.record({
+            sport: fc.constant(sport),
+            weekly_amount: fc.constantFrom(0, 30, 300, 6000, 50_000),
+            longest_session: fc.constantFrom(0, 20, 90, 2500, 20_000),
+            status: fc.constantFrom("regular" as const, "short_break" as const, "long_break" as const, "beginner" as const),
+            reported_at: fc.constantFrom("2026-09-29T19:00:00Z", "2026-08-01T19:00:00Z")
+          }),
+          { nil: undefined }
+        )
+      )
+    )
   })
   .map((input) => {
     const base = contractSnapshot();
@@ -122,6 +137,8 @@ export const snapshotArb: fc.Arbitrary<SnapshotV2> = fc
       sports: [...input.states],
       ...(performance !== undefined ? { performance } : { performance: undefined })
     };
+    const levels = input.startingLevels.filter((level) => level !== undefined);
+    if (levels.length > 0) (snapshot as { starting_levels?: unknown }).starting_levels = levels;
     if (snapshot.load.days_since_last_hard_session === undefined) delete (snapshot.load as { days_since_last_hard_session?: number }).days_since_last_hard_session;
     if (snapshot.performance === undefined) delete (snapshot as { performance?: unknown }).performance;
     return SnapshotSchema.parse(snapshot) as SnapshotV2;

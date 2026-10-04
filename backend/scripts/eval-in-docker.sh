@@ -34,7 +34,7 @@ if ! grep -q '^ANTHROPIC_API_KEY=.' "$ENV_FILE" 2>/dev/null; then
 fi
 
 if [ "$MODE" = "multisport" ]; then
-  echo "Das sendet je Szenario einen Gesamtplan, einen Plan der naechsten 7 Tage, einen Tagesplan und bei Feedback eine Ueberarbeitung an die Claude-API (7 Szenarien, 23 Anfragen) und kostet echtes Geld (geschaetzt rund 3 US-Dollar)." >&2
+  echo "Das sendet je Szenario einen Gesamtplan, einen Plan der naechsten 7 Tage, einen Tagesplan und bei Feedback eine Ueberarbeitung an die Claude-API (8 Szenarien, 26 Anfragen) und kostet echtes Geld (geschaetzt rund 3,50 US-Dollar)." >&2
 else
   echo "Das sendet je Szenario einen Tagesplan, einen Plan der naechsten 7 Tage und einen Gesamtplan an die Claude-API (9 Szenarien, 27 Anfragen) und kostet echtes Geld (geschaetzt rund 1,50 US-Dollar)." >&2
 fi

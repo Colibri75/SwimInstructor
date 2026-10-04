@@ -16,6 +16,7 @@ const planning: SportPlanning = {
     macroGrowthFactor: 1.1,
     amountStep: 5
   },
+  startingLevel: { factors: { regular: 1, short_break: 0.7, long_break: 0.5 }, returnGrowthFactor: 1.2 },
   typicalSpeedMetersPerSecond: 0.5,
   stepMeasures: ["duration"],
   distanceStepMeters: 100,
@@ -129,6 +130,10 @@ describe("SportRegistry", () => {
     ["krumme Einheitenzahl", { limits: { ...limits, maxSessionsPerWeek: 2.5 } }],
     ["zu viele Einheiten", { limits: { ...limits, maxSessionsPerWeek: 21 } }],
     ["unbekannte Einheit", { limitUnit: "laps" as never }],
+    ["Startniveau ueber 100 %", { startingLevel: { ...planning.startingLevel, factors: { regular: 1.2, short_break: 0.7, long_break: 0.5 } } }],
+    ["Startniveau negativ", { startingLevel: { ...planning.startingLevel, factors: { regular: 1, short_break: -0.1, long_break: 0.5 } } }],
+    ["Rueckkehr langsamer als normal", { startingLevel: { ...planning.startingLevel, returnGrowthFactor: 1.05 } }],
+    ["Rueckkehr zu schnell", { startingLevel: { ...planning.startingLevel, returnGrowthFactor: 1.6 } }],
     ["Tempo 0", { typicalSpeedMetersPerSecond: 0 }],
     ["ohne Schrittmass", { stepMeasures: [] }],
     ["fremdes Schrittmass", { stepMeasures: ["distance" as const] }],

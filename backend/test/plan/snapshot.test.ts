@@ -65,6 +65,33 @@ describe("Snapshot v2: Eingabepruefung", () => {
   });
 });
 
+describe("Snapshot v2 mit Startniveau", () => {
+  const withLevels = (): any => JSON.parse(readFileSync(path.join(__dirname, "../../../contracts/wire/snapshot-v2-starting-levels.json"), "utf8"));
+
+  it("nimmt den Vertrags-Snapshot mit Startniveau an, ohne bleibt er gueltig", () => {
+    expect(issues(withLevels())).toEqual([]);
+    expect(issues(v2())).toEqual([]);
+  });
+
+  it("lehnt eine Sportart mit zwei Angaben ab", () => {
+    const snapshot = withLevels();
+    snapshot.starting_levels[1].sport = "swim";
+    expect(issues(snapshot)).toEqual(["starting_levels: Sportart doppelt"]);
+  });
+
+  it("lehnt unbekannte Sportarten, unbekannten Trainingsstand und negative Umfaenge ab", () => {
+    const snapshot = withLevels();
+    snapshot.starting_levels.push({ ...snapshot.starting_levels[0], sport: "kayak" });
+    snapshot.starting_levels[0].status = "couch";
+    snapshot.starting_levels[0].weekly_amount = -1;
+    expect(issues(snapshot)).toEqual([
+      "starting_levels.0.weekly_amount: Too small: expected number to be >=0",
+      "starting_levels.0.status: Invalid option: expected one of \"regular\"|\"short_break\"|\"long_break\"|\"beginner\"",
+      "starting_levels.2.sport: unbekannte Sportart"
+    ]);
+  });
+});
+
 describe("Snapshot v2 mit Leistungsprofil", () => {
   const withProfile = (): any => JSON.parse(readFileSync(path.join(__dirname, "../../../contracts/wire/snapshot-v2-profile.json"), "utf8"));
 

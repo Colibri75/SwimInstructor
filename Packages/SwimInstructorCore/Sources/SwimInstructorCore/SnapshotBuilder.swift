@@ -54,6 +54,8 @@ public struct SnapshotBuilder: SnapshotBuilding {
     /// Gesetzt (nur v2): Der Snapshot bekommt Leistungswerte und Zonen.
     private let performanceRepository: PerformanceDataRepository?
     private let profileProvider: () -> PerformanceProfile
+    /// Nur v2: das selbst angegebene Startniveau; gültige Angaben gehen mit (`starting_levels`).
+    private let startingLevelsProvider: () -> [StartingLevel]
     private let calendar: Calendar
 
     public init(
@@ -69,6 +71,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.trainingGoalProvider = nil
         self.performanceRepository = nil
         self.profileProvider = { .empty }
+        self.startingLevelsProvider = { [] }
         self.calendar = calendar
     }
 
@@ -86,6 +89,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.trainingGoalProvider = nil
         self.performanceRepository = nil
         self.profileProvider = { .empty }
+        self.startingLevelsProvider = { [] }
         self.calendar = calendar
     }
 
@@ -103,6 +107,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.trainingGoalProvider = nil
         self.performanceRepository = nil
         self.profileProvider = { .empty }
+        self.startingLevelsProvider = { [] }
         self.calendar = calendar
     }
 
@@ -111,12 +116,16 @@ public struct SnapshotBuilder: SnapshotBuilding {
     ///
     /// Mit `performanceRepository` kommen Leistungswerte und Zonen dazu: bestätigte aus `profileProvider`, sonst
     /// geschätzt aus Health. Die Last rechnet dann mit Ruhe- und Maximalpuls (TRIMP).
+    ///
+    /// `startingLevelsProvider` liefert das selbst angegebene Startniveau (bei jedem Durchlauf neu); gültige Angaben
+    /// für Sportarten im Snapshot gehen mit.
     public init(
         repository: WorkoutRepository,
         vitalsRepository: DailyVitalsRepository,
         trainingGoalProvider: @escaping () -> TrainingGoal,
         performanceRepository: PerformanceDataRepository? = nil,
         profileProvider: @escaping () -> PerformanceProfile = { .empty },
+        startingLevelsProvider: @escaping () -> [StartingLevel] = { [] },
         calendar: Calendar = .current
     ) {
         self.fetchWorkouts = { try await repository.fetchWorkouts(from: $0) }
@@ -126,6 +135,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.trainingGoalProvider = trainingGoalProvider
         self.performanceRepository = performanceRepository
         self.profileProvider = profileProvider
+        self.startingLevelsProvider = startingLevelsProvider
         self.calendar = calendar
     }
 
@@ -163,6 +173,9 @@ public struct SnapshotBuilder: SnapshotBuilding {
             if let performance {
                 snapshot = snapshot.withPerformance(performance.summary(sports: snapshot.sports?.map(\.sport) ?? []))
             }
+            let sports = Set(snapshot.sports?.map(\.sport) ?? [])
+            let levels = startingLevelsProvider().filter { sports.contains($0.sport) && $0.isValid(now: now) }
+            snapshot = snapshot.withStartingLevels(levels)
         }
         let cleaned = SwimWorkoutDeduplicator.deduplicate(workouts)
             .filter { $0.startDate <= now }

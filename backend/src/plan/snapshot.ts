@@ -196,6 +196,18 @@ const PerformanceSchema = z
     });
   });
 
+/**
+ * Startniveau, das der Athlet selbst angibt (P1): Wochenumfang und laengste Einheit, die er zurzeit schafft (oder vor
+ * der Pause geschafft hat), in der Einheit der Sportart (`plan_unit`: Meter oder Minuten), dazu sein Trainingsstand.
+ */
+const StartingLevelSchema = z.object({
+  sport: sportId,
+  weekly_amount: z.number().min(0).max(1_000_000),
+  longest_session: z.number().min(0).max(1_000_000),
+  status: z.enum(["regular", "short_break", "long_break", "beginner"]),
+  reported_at: z.iso.datetime()
+});
+
 const SnapshotV1Schema = z.object({ schema_version: z.literal(1), ...v1Fields });
 
 const SnapshotV2Schema = z
@@ -205,11 +217,14 @@ const SnapshotV2Schema = z
     training_goal: TrainingGoalSchema,
     sports: z.array(SportStateSchema).max(16),
     total_load: TotalLoadSchema,
-    performance: PerformanceSchema.optional()
+    performance: PerformanceSchema.optional(),
+    starting_levels: z.array(StartingLevelSchema).max(16).optional()
   })
   .superRefine((snapshot, ctx) => {
     const ids = snapshot.sports.map((state) => state.sport);
     if (new Set(ids).size !== ids.length) ctx.addIssue({ code: "custom", path: ["sports"], message: "Sportart doppelt" });
+    const levels = (snapshot.starting_levels ?? []).map((level) => level.sport);
+    if (new Set(levels).size !== levels.length) ctx.addIssue({ code: "custom", path: ["starting_levels"], message: "Sportart doppelt" });
   });
 
 export const SnapshotSchema = z.discriminatedUnion("schema_version", [SnapshotV1Schema, SnapshotV2Schema]);
@@ -219,6 +234,7 @@ export type SnapshotV2 = z.infer<typeof SnapshotV2Schema>;
 export type TrainingGoal = SnapshotV2["training_goal"];
 export type SportState = SnapshotV2["sports"][number];
 export type Performance = NonNullable<SnapshotV2["performance"]>;
+export type StartingLevel = NonNullable<SnapshotV2["starting_levels"]>[number];
 export type SnapshotFlag = Snapshot["flags"][number];
 
 

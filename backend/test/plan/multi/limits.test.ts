@@ -1,7 +1,7 @@
-import { dayLimits, dayMinutesCap, goalDayOf, hardOn, lower, multiPhase, sportLimits, taperFactors, taperWeeks, testBlackoutReason, weeksToGoal } from "../../../src/plan/multi/limits";
+import { dayLimits, dayMinutesCap, declaredLevelText, goalDayOf, hardOn, lower, multiPhase, sportLimits, taperFactors, taperWeeks, testBlackoutReason, weeksToGoal } from "../../../src/plan/multi/limits";
 import { amountToMeters, amountToMinutes, disciplineSeconds, emphasisOf, floorAmount, formatAmount, isPlanned, performanceFor, plannedSports, raceAmount, raceSeconds, roundAmount, sportName, stateOf, trainingSpeed, unitLabel } from "../../../src/plan/multi/sports";
 import { SPORTS } from "../../../src/sports/registry";
-import { multiSnapshot, RUNNER, TODAY } from "./fixtures";
+import { multiSnapshot, RUNNER, startingLevel, TODAY } from "./fixtures";
 
 const swim = SPORTS.get("swim")!;
 const bike = SPORTS.get("bike")!;
@@ -91,6 +91,75 @@ describe("sportLimits", () => {
     expect(never).toMatchObject({ pause: true, sessionCap: 20, weeklyCap: 60 });
     expect(pause).toMatchObject({ pause: true, sessionCap: 20, weeklyCap: 60 });
     expect(active).toMatchObject({ pause: false, sessionCap: 65, weeklyCap: 205 });
+  });
+});
+
+describe("Startniveau selbst angegeben", () => {
+  // Wenig in Health aufgezeichnet (Schnitt 570 m, laengste 1175 m), seit 30 Tagen kein Schwimmen.
+  const fewRecorded = { swim: { average_weekly_meters: 570, longest_session_meters: 1175, meters_last_seven_days: 0, days_since_last_session: 30 } };
+
+  it("plant mit der Angabe statt mit Health und rechnet nach einer Pause mit 70 %", () => {
+    const limits = sportLimits(multiSnapshot({ sports: fewRecorded, startingLevels: [startingLevel("swim", 6000, 2500, "short_break")] }), swim);
+
+    expect(limits).toMatchObject({ pause: false, average: 4200, longest: 1750, recordedAverage: 570, recordedLongest: 1175 });
+    expect(limits.sessionCap).toBe(2150);
+    expect(limits.weeklyCap).toBe(5450);
+    expect(limits.declared).toMatchObject({ status: "short_break", factor: 0.7, reportedWeekly: 6000, weekly: 4200 });
+  });
+
+  it("nimmt die Angabe ganz bei regelmaessigem Training und zur Haelfte nach langer Pause", () => {
+    const regular = sportLimits(multiSnapshot({ sports: fewRecorded, startingLevels: [startingLevel("swim", 6000, 2500, "regular")] }), swim);
+    const long = sportLimits(multiSnapshot({ sports: fewRecorded, startingLevels: [startingLevel("swim", 6000, 2500, "long_break")] }), swim);
+
+    expect(regular).toMatchObject({ average: 6000, longest: 2500 });
+    expect(long).toMatchObject({ average: 3000, longest: 1250 });
+  });
+
+  it("nimmt den hoeheren Wert, wenn Health mehr zeigt als die Angabe", () => {
+    const limits = sportLimits(multiSnapshot({ startingLevels: [startingLevel("swim", 1000, 500, "regular")] }), swim);
+
+    expect(limits).toMatchObject({ average: 3350, longest: 2000, sessionCap: 2500, weeklyCap: 4350 });
+  });
+
+  it.each([
+    ["Einsteiger", startingLevel("swim", 6000, 2500, "beginner")],
+    ["abgelaufen (29 Tage alt)", startingLevel("swim", 6000, 2500, "regular", 29)],
+    ["andere Sportart", startingLevel("bike", 300, 120, "regular")]
+  ])("laesst eine Angabe ausser Acht: %s", (_why, level) => {
+    const limits = sportLimits(multiSnapshot({ sports: fewRecorded, startingLevels: [level] }), swim);
+
+    expect(limits.declared).toBeNull();
+    expect(limits).toMatchObject({ pause: true, average: 570, sessionCap: 800 });
+  });
+
+  it("ist beim Laufen vorsichtiger: nach kurzer Pause die Haelfte, nach langer Pause zaehlt die Angabe nicht", () => {
+    const paused = { run: { ...RUNNER, days_since_last_session: 30 } };
+    const short = sportLimits(multiSnapshot({ sports: paused, startingLevels: [startingLevel("run", 240, 90, "short_break")] }), run);
+    const long = sportLimits(multiSnapshot({ sports: paused, startingLevels: [startingLevel("run", 240, 90, "long_break")] }), run);
+
+    expect(short).toMatchObject({ pause: false, average: 160, longest: 60 });
+    expect(short.declared).toMatchObject({ factor: 0.5, weekly: 120, longest: 45 });
+    expect(long).toMatchObject({ pause: true, declared: null, sessionCap: 20 });
+  });
+
+  it("kappt eine Angabe auf die absoluten Grenzen des Moduls", () => {
+    const limits = sportLimits(multiSnapshot({ startingLevels: [startingLevel("swim", 900_000, 90_000, "regular")] }), swim);
+
+    expect(limits.declared).toMatchObject({ reportedLongest: 4500, reportedWeekly: 4500 * 5 });
+    expect(limits.sessionCap).toBe(4500);
+  });
+
+  it("beschreibt die Angabe in Alltagssprache, mit Anteil nur nach einer Pause", () => {
+    const paused = sportLimits(multiSnapshot({ sports: fewRecorded, startingLevels: [startingLevel("swim", 6000, 2500, "short_break")] }), swim);
+    const regular = sportLimits(multiSnapshot({ sports: fewRecorded, startingLevels: [startingLevel("swim", 6000, 2500, "regular")] }), swim);
+
+    expect(declaredLevelText(paused)).toBe(
+      "Startniveau selbst angegeben: 6000 m pro Woche, längste Einheit 2500 m, Pause von 2 bis 8 Wochen; davon gelten 70 % (4200 m pro Woche, längste 1750 m). Aufgezeichnet in Health: 570 m pro Woche, längste 1175 m."
+    );
+    expect(declaredLevelText(regular)).toBe(
+      "Startniveau selbst angegeben: 6000 m pro Woche, längste Einheit 2500 m, trainiert regelmäßig. Aufgezeichnet in Health: 570 m pro Woche, längste 1175 m."
+    );
+    expect(declaredLevelText(sportLimits(multiSnapshot(), swim))).toBe("");
   });
 });
 

@@ -124,6 +124,7 @@ const positive = (value: number) => Number.isFinite(value) && value > 0;
 
 /**
  * Planungsangaben: Grenzen ueber 0 und in sich stimmig (kleinste Einheit <= Untergrenze <= Obergrenze, Faktoren ab 1),
+ * Startniveau: Anteile von 0 bis 1, Rueckkehr nicht langsamer als die normale Steigerung und hoechstens +50 % pro Woche,
  * Schrittmasse aus den eigenen Massen, eine Testeinheit je Leistungstest und keine fuer unbekannte Tests.
  */
 function validPlanning(sport: SportDefinition): boolean {
@@ -136,6 +137,10 @@ function validPlanning(sport: SportDefinition): boolean {
   if (limits.pauseSessionCap < limits.minSession || limits.minWeeklyCap < limits.minSession) return false;
   if (!Number.isInteger(limits.maxSessionsPerWeek) || limits.maxSessionsPerWeek > 14) return false;
   if (planning.limitUnit !== "meters" && planning.limitUnit !== "minutes") return false;
+  const starting = planning.startingLevel;
+  const factors = [starting.factors.regular, starting.factors.short_break, starting.factors.long_break];
+  if (!factors.every((factor) => Number.isFinite(factor) && factor >= 0 && factor <= 1)) return false;
+  if (!(starting.returnGrowthFactor >= limits.macroGrowthFactor && starting.returnGrowthFactor <= 1.5)) return false;
   if (!positive(planning.typicalSpeedMetersPerSecond)) return false;
   if (planning.stepMeasures.length === 0 || !planning.stepMeasures.every((measure) => sport.measures.includes(measure))) return false;
   if (![planning.distanceStepMeters, planning.minStepMeters, planning.minStepSeconds].every(positive)) return false;

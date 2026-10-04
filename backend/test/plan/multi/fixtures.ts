@@ -24,6 +24,7 @@ export interface SnapshotPatch {
   /** Tage bis zum Ziel: setzt Zieltag und Tage im Gesamtziel (ab 2026-09-30). */
   daysUntilGoal?: number;
   performance?: SnapshotV2["performance"] | null;
+  startingLevels?: SnapshotV2["starting_levels"];
 }
 
 function shiftDate(iso: string, days: number): string {
@@ -53,6 +54,7 @@ export function multiSnapshot(patch: SnapshotPatch = {}): SnapshotV2 {
   };
   if (patch.performance === null) delete result.performance;
   else if (patch.performance !== undefined) result.performance = patch.performance;
+  if (patch.startingLevels !== undefined) result.starting_levels = patch.startingLevels;
   return result;
 }
 
@@ -168,4 +170,16 @@ export function asBlocks(plan: MacroWeeksRaw): MultiMacroPlanRaw {
       }))
     }))
   };
+}
+
+/** Ein selbst angegebenes Startniveau, angegeben am Tag des Snapshots (oder `daysAgo` davor). */
+export function startingLevel(
+  sport: string,
+  weekly: number,
+  longest: number,
+  status: NonNullable<SnapshotV2["starting_levels"]>[number]["status"],
+  daysAgo = 0
+): NonNullable<SnapshotV2["starting_levels"]>[number] {
+  const reported = new Date(Date.parse("2026-09-30T12:00:00Z") - daysAgo * 86_400_000).toISOString();
+  return { sport, weekly_amount: weekly, longest_session: longest, status, reported_at: reported };
 }

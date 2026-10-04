@@ -311,7 +311,11 @@ describe("Gesamtplan v2: Invarianten", () => {
               expect(own?.sessions ?? 0).toBeLessThanOrEqual(limits.maxSessionsPerWeek);
               if (amount > 0) expect((own?.sessions ?? 0) * limits.minSession).toBeLessThanOrEqual(Math.max(amount, limits.minSession));
 
-              const growth = index === 0 ? entry.firstWeekCap : floorAmount(definition, Math.max(reference, entry.floor) * entry.growthFactor);
+              // Nach einer angegebenen Pause darf es bis zum Niveau davor schneller gehen, nie darueber hinaus.
+              const base = Math.max(reference, entry.floor);
+              const back = floorAmount(definition, Math.min(base * entry.returnGrowthFactor, entry.returnTarget));
+              expect(entry.returnGrowthFactor).toBeLessThanOrEqual(1.5);
+              const growth = index === 0 ? entry.firstWeekCap : Math.max(floorAmount(definition, base * entry.growthFactor), back);
               if (week.phase === "goal_week") {
                 // Die Zielwoche enthaelt den Wettkampf selbst.
                 const race = floorAmount(definition, entry.race * MULTI_RULES.goalWeekRaceFactor);

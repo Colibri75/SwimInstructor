@@ -61,13 +61,14 @@ Eine weitere Sportart: [Neue Sportart hinzufügen](docs/neue-sportart.md) (acht 
 
 ## Betatest
 
-Mehrere Wochen echtes Training mit der App. Danach justieren wir vor allem drei Stellen, alle Startwerte aus dem
+Mehrere Wochen echtes Training mit der App. Danach justieren wir vor allem diese Stellen, alle Startwerte aus dem
 Trainingswissen:
 
 | Was | Startwert | Wo |
 |---|---|---|
 | Grenzen je Sportart, besonders Laufen | Laufeinheit höchstens 10 % länger als die längste der letzten 4 Wochen, Woche hart bei +30 %, geplant etwa +10 % | `limits` im Server-Modul, z. B. [`run.ts`](backend/src/sports/modules/run.ts); Übersicht in [`multisport-planning.md`](docs/multisport-planning.md#grenzen-je-sportart) |
 | Abstand der Leistungstests | alle 6 Wochen (einstellbar 4 bis 12); nach einer Pause oder ohne genug lange Läufe ist der erste Lauftest der lockere Einstiegstest | `MULTI_RULES.defaultTestIntervalWeeks` in [`limits.ts`](backend/src/plan/multi/limits.ts), `TestSettings.standard` in der App |
+| Selbst angegebenes Startniveau | nach 2 bis 8 Wochen Pause gelten 70 % der Angabe (Laufen 50 %), nach längerer Pause 50 % (Laufen: zählt nicht); bis zum alten Niveau +20 % pro Woche (Laufen +10 %); die Angabe gilt 28 Tage | `startingLevel` im Server-Modul, `MULTI_RULES.startingLevelValidDays`; Übersicht in [`multisport-planning.md`](docs/multisport-planning.md#selbst-angegebenes-startniveau) |
 | Sprunggrenze für neue Testwerte | weicht ein Wert um mehr als 10 % ab, warnt die App vor dem Übernehmen (eher Tipp- oder Messfehler) | `PerformanceProfileLoader.reviewThresholdPercent` |
 
 Hilfreich zum Justieren: Tage, an denen der Plan zu viel oder zu wenig war, Schmerzen oder Pausen, und Testergebnisse,
@@ -235,7 +236,7 @@ backend/                            # Node/TypeScript-Server (Proxy fuer Claude,
   src/plan/multi/                    # Plan v2 für mehrere Sportarten (T3): Grenzen, Sicherheitsschicht, Tests, Prompts
   src/sports/                        # Registry (SPORTS), Wortschatz, Leistungswerte; modules/: ein Modul je Sportart
   scenarios/                         # die 5 Snapshots aus M3 (Eingabe für npm run eval:scenarios)
-  scenarios/multisport/              # 7 Szenarien für Plan v2, recorded/: aufgezeichnete Antworten
+  scenarios/multisport/              # 8 Szenarien für Plan v2, recorded/: aufgezeichnete Antworten
   scripts/eval-scenarios.ts          # echter Lauf gegen die Claude-API zur manuellen Bewertung
   scripts/eval-multisport.ts         # Bewertung Plan v2: Claude, mit Aufzeichnung oder Wiedergabe
   test/                              # Jest + supertest
