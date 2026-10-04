@@ -211,6 +211,7 @@ struct ProfileEntryDetailView: View {
             }
         }
         .navigationTitle(entry?.definition.displayName ?? "Leistungswert")
+        .swipeClosesKeyboard()
         .navigationBarTitleDisplayMode(.inline)
     }
 

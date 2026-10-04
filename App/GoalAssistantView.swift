@@ -26,6 +26,7 @@ struct GoalAssistantView: View {
             statusSection
         }
         .navigationTitle("Mein Ziel")
+        .swipeClosesKeyboard()
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             guard !loaded else { return }
