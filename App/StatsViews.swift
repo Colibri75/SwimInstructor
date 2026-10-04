@@ -1,16 +1,26 @@
 import SwiftUI
 import SwimInstructorCore
 
-/// Die Woche in Zahlen: geschwommen gegen geplant, Einheiten.
+/// Die Woche in Zahlen: trainiert gegen geplant in Minuten, je Sportart in ihrer Einheit, Einheiten.
 struct WeekStatsRows: View {
-    let summary: WeekSummary
+    let summary: MultiSportWeekSummary
     let hasPlan: Bool
+
+    private let registry = SportRegistry.standard
 
     var body: some View {
         LabeledContent("Diese Woche") {
             Text(hasPlan
-                 ? "\(PlanFormatting.meters(summary.swumMeters)) von \(PlanFormatting.meters(summary.plannedMeters))"
-                 : PlanFormatting.meters(summary.swumMeters))
+                 ? "\(PlanV2Formatting.duration(minutes: summary.actualMinutes)) von \(PlanV2Formatting.duration(minutes: summary.plannedMinutes))"
+                 : PlanV2Formatting.duration(minutes: summary.actualMinutes))
+        }
+        ForEach(summary.sports) { total in
+            LabeledContent {
+                Text(PlanV2Formatting.comparison(planned: total.planned, actual: total.actual, unit: total.unit))
+                    .monospacedDigit()
+            } label: {
+                Label(registry.displayName(for: total.sport), systemImage: registry.symbolName(for: total.sport))
+            }
         }
         if hasPlan {
             LabeledContent("Einheiten der Woche") {

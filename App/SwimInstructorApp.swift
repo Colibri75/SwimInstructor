@@ -6,9 +6,10 @@ import SwimInstructorCore
 struct SwimInstructorApp: App {
     @StateObject private var healthKitManager: HealthKitManager
     @StateObject private var settings: BackendSettings
-    @StateObject private var loader: TodayPlanLoader
-    @StateObject private var weekLoader: WeekPlanLoader
-    @StateObject private var macroLoader: MacroPlanLoader
+    @StateObject private var loader: MultiSportTodayLoader
+    @StateObject private var weekLoader: MultiSportWeekLoader
+    @StateObject private var macroLoader: MultiSportMacroLoader
+    @StateObject private var profileLoader: PerformanceProfileLoader
     @StateObject private var planSync: PhonePlanSync
 
     init() {
@@ -16,6 +17,7 @@ struct SwimInstructorApp: App {
         let settings = BackendSettings()
         let goalStore = UserDefaultsTrainingGoalStore()
         let profileStore = UserDefaultsPerformanceProfileStore()
+        let testSettingsStore = UserDefaultsTestSettingsStore()
         let builder = SnapshotBuilder(
             repository: HealthKitWorkoutRepository(),
             vitalsRepository: HealthKitDailyVitalsRepository(),
@@ -26,51 +28,68 @@ struct SwimInstructorApp: App {
             profileProvider: { profileStore.profile() }
         )
         let ownedEquipment = UserDefaultsOwnedEquipmentStore()
-        let weekLoader = WeekPlanLoader(
-            store: FileWeekPlanStore.standard(),
+        let weekLoader = MultiSportWeekLoader(
+            store: FileWeekPlanV2Store.standard(),
             planProvider: { [weak settings] in
                 settings?.configuration.map { PlanAPIClient(configuration: $0) }
             }
         )
-        // Der Gesamtplan bis zum Zieltag, für das Ziel aus den Einstellungen.
-        let macroLoader = MacroPlanLoader(
-            store: FileMacroPlanStore.standard(),
+        // Der Gesamtplan bis zum Zieltag, für alle Sportarten des Ziels aus den Einstellungen.
+        let macroLoader = MultiSportMacroLoader(
+            store: FileMacroPlanV2Store.standard(),
             planProvider: { [weak settings] in
                 settings?.configuration.map { PlanAPIClient(configuration: $0) }
             },
-            // Bis T3 plant der Gesamtplan nur Schwimmen: Er gilt für den Schwimmteil des Ziels.
-            goal: { goalStore.goal().legacySwimGoal }
+            goal: { goalStore.goal() }
         )
         let wishStore = UserDefaultsDailyWishStore()
-        let loader = TodayPlanLoader(
+        let loader = MultiSportTodayLoader(
             authorizer: healthKitManager,
             snapshotBuilder: builder,
             planProvider: { [weak settings] in
                 settings?.configuration.map { PlanAPIClient(configuration: $0) }
             },
-            cache: FilePlanCache.standard(),
-            history: FilePlanHistory.standard(),
+            cache: FileDayPlanV2Cache.standard(),
+            history: FileDayPlanV2History.standard(),
             wishStore: wishStore,
-            // Der Tagesplan richtet sich nach der Vorgabe des Wochenplans für heute.
+            // Der Tagesplan richtet sich nach der Vorgabe der sieben Tage für heute.
             dayTarget: { [weak weekLoader] in weekLoader?.todayTarget },
             // Nur das Equipment, das der Athlet in den Einstellungen angegeben hat.
             equipment: { ownedEquipment.ownedEquipment() },
-            // Beim ersten Öffnen am Tag, nach dem Lesen von Health und vor dem Tagesplan: Gesamtplan
-            // sicherstellen und die nächsten sieben Tage neu auf Zustand, Stand und Vorwoche abstimmen.
+            // Das Training der letzten sieben Tage und von heute, mit "hart" aus Plan und Puls.
+            recentTraining: { [weak weekLoader] reading in
+                weekLoader?.recentTrainingForToday(snapshot: reading.snapshot, workouts: reading.allWorkouts) ?? []
+            },
+            testSettings: { testSettingsStore.settings() },
+            // Beim ersten Öffnen am Tag, nach dem Lesen von Health und vor dem Tagesplan: Gesamtplan sicherstellen und
+            // die nächsten sieben Tage neu abstimmen. Nach einer Überarbeitung des Gesamtplans gilt der Tag wieder als
+            // offen, damit die Tage zum neuen Gesamtplan passen.
             prepare: { [weak macroLoader, weak weekLoader] reading in
                 guard let macroLoader, let weekLoader else { return }
                 await macroLoader.ensureCurrent(snapshot: reading.snapshot)
                 let today = PlanFormatting.isoDay(Date())
-                await weekLoader.refreshDaily(wishes: wishStore.wish(for: today), stamp: macroLoader.currentGoalKey)
+                await weekLoader.refreshDaily(
+                    wishes: wishStore.wish(for: today),
+                    stamp: "\(macroLoader.currentGoalKey)|\(macroLoader.revisionStamp)"
+                )
             }
         )
         weekLoader.equipmentProvider = { ownedEquipment.ownedEquipment() }
+        weekLoader.testSettingsProvider = { testSettingsStore.settings() }
         // Die nächsten sieben Tage richten sich nach den Wochen des Gesamtplans.
         weekLoader.macroProvider = { [weak macroLoader] dates in macroLoader?.weeks(overlapping: dates) ?? [] }
-        // Der Wochenplan plant mit dem Zustand und den Einheiten, die der Heute-Bildschirm gelesen hat.
+        // Die Tage planen mit dem Zustand und den Einheiten aller Sportarten, die der Heute-Bildschirm gelesen hat.
         weekLoader.contextProvider = { [weak loader] in
-            loader?.reading.map { WeekPlanLoader.PlanningContext(snapshot: $0.snapshot, workouts: $0.workouts) }
+            loader?.reading.map { MultiSportWeekLoader.PlanningContext(snapshot: $0.snapshot, workouts: $0.allWorkouts) }
         }
+        macroLoader.testSettingsProvider = { testSettingsStore.settings() }
+
+        // Das Profil zeigt neben den bestätigten Werten die Schätzungen aus dem zuletzt gelesenen Zustand.
+        let profileLoader = PerformanceProfileLoader(store: profileStore)
+        profileLoader.estimatesProvider = { [weak loader] in
+            loader?.reading?.snapshot.performance?.performanceValues ?? []
+        }
+
         _healthKitManager = StateObject(wrappedValue: healthKitManager)
         _settings = StateObject(wrappedValue: settings)
         // Früh starten: Weckt die Watch die App im Hintergrund, muss die Sitzung schon aktiv sein.
@@ -79,6 +98,7 @@ struct SwimInstructorApp: App {
         _loader = StateObject(wrappedValue: loader)
         _weekLoader = StateObject(wrappedValue: weekLoader)
         _macroLoader = StateObject(wrappedValue: macroLoader)
+        _profileLoader = StateObject(wrappedValue: profileLoader)
         _planSync = StateObject(wrappedValue: planSync)
     }
 
@@ -90,6 +110,7 @@ struct SwimInstructorApp: App {
                 .environmentObject(loader)
                 .environmentObject(weekLoader)
                 .environmentObject(macroLoader)
+                .environmentObject(profileLoader)
         }
     }
 }

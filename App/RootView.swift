@@ -11,7 +11,7 @@ struct RootView: View {
     var body: some View {
         TabView(selection: $selection) {
             TodayView(onShowWeek: { selection = .week })
-                .tabItem { Label("Heute", systemImage: "figure.pool.swim") }
+                .tabItem { Label("Heute", systemImage: "figure.mixed.cardio") }
                 .tag(Tab.today)
             WeekView()
                 .tabItem { Label("Plan", systemImage: "calendar") }

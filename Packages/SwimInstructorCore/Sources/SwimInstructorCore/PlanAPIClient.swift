@@ -27,6 +27,9 @@ public enum PlanAPIError: Error, Equatable, LocalizedError {
     case network(String)
     /// Die Antwort passt nicht zum erwarteten Format.
     case invalidResponse(String)
+    /// Der Server kennt die Planung für mehrere Sportarten (Plan v2) noch nicht: Er wurde seit dem App-Update nicht
+    /// aktualisiert.
+    case serverOutdated
 
     public var errorDescription: String? {
         switch self {
@@ -43,6 +46,8 @@ public enum PlanAPIError: Error, Equatable, LocalizedError {
             return "Keine Verbindung zum Server: \(message)"
         case .invalidResponse:
             return "Die Antwort des Servers war unverständlich."
+        case .serverOutdated:
+            return "Der Server kennt die Planung für mehrere Sportarten noch nicht. Er muss aktualisiert werden (deploy.sh)."
         }
     }
 }
@@ -170,7 +175,7 @@ public struct PlanAPIClient: PlanProviding {
         return try await post(path: path, body: try encoder.encode(body(snapshot.version1)))
     }
 
-    private func post(path: String, body: Data) async throws -> (Data, HTTPURLResponse) {
+    func post(path: String, body: Data) async throws -> (Data, HTTPURLResponse) {
         var request = makeRequest(path: path, timeout: Self.planTimeout)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -196,7 +201,7 @@ public struct PlanAPIClient: PlanProviding {
         let equipment: [String]?
     }
 
-    private struct ErrorBody: Decodable {
+    struct ErrorBody: Decodable {
         struct Detail: Decodable {
             let path: String
             let message: String
@@ -243,7 +248,7 @@ public struct PlanAPIClient: PlanProviding {
         }
     }
 
-    private func statusError(_ status: Int) -> PlanAPIError {
+    func statusError(_ status: Int) -> PlanAPIError {
         status == 401 ? .unauthorized : .server(status: status)
     }
 }

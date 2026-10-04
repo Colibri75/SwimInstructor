@@ -4,7 +4,8 @@ import SwimInstructorCore
 import WatchConnectivity
 
 /// Schickt den Tagesplan an die Watch. Die Watch hat kein eigenes Token, das iPhone ist die einzige
-/// Stelle, die mit dem Server spricht.
+/// Stelle, die mit dem Server spricht. Bis T5 spielt die Watch nur Schwimmeinheiten ab: Sie bekommt den
+/// Tagesplan im Format v1 (`watchPlan()`), an Tagen ohne Schwimmen einen Ruhetag mit Hinweis.
 ///
 /// Jeder neue Plan landet als Application Context: WatchConnectivity hält davon nur den letzten
 /// Stand vor und liefert ihn, sobald die Watch wieder erreichbar ist. Bittet die Watch aktiv um den
@@ -12,11 +13,11 @@ import WatchConnectivity
 /// neueren; kommt einer, geht er wieder als Application Context raus.
 @MainActor
 final class PhonePlanSync: NSObject, ObservableObject {
-    private let loader: TodayPlanLoader
+    private let loader: MultiSportTodayLoader
     private let session: WCSession?
     private var subscription: AnyCancellable?
 
-    init(loader: TodayPlanLoader) {
+    init(loader: MultiSportTodayLoader) {
         self.loader = loader
         self.session = WCSession.isSupported() ? WCSession.default : nil
         super.init()
@@ -27,7 +28,7 @@ final class PhonePlanSync: NSObject, ObservableObject {
         session.delegate = self
         session.activate()
         subscription = loader.$response
-            .compactMap { $0 }
+            .compactMap { $0?.watchPlan() }
             .removeDuplicates()
             .sink { [weak self] response in self?.push(response) }
     }
@@ -47,7 +48,7 @@ final class PhonePlanSync: NSObject, ObservableObject {
     }
 
     private func answerPlanRequest(_ replyHandler: @escaping ([String: Any]) -> Void) {
-        let reply = loader.response.flatMap { try? PlanSyncCodec.context(for: $0) } ?? [:]
+        let reply = loader.response.flatMap { try? PlanSyncCodec.context(for: $0.watchPlan()) } ?? [:]
         replyHandler(reply)
         Task { await loader.refreshIfNeeded() }
     }
@@ -62,7 +63,7 @@ extension PhonePlanSync: WCSessionDelegate {
         guard activationState == .activated else { return }
         Task { @MainActor in
             if let response = self.loader.response {
-                self.push(response)
+                self.push(response.watchPlan())
             }
         }
     }
@@ -77,7 +78,7 @@ extension PhonePlanSync: WCSessionDelegate {
     nonisolated func sessionWatchStateDidChange(_ session: WCSession) {
         Task { @MainActor in
             if let response = self.loader.response {
-                self.push(response)
+                self.push(response.watchPlan())
             }
         }
     }

@@ -59,6 +59,18 @@ struct SettingsView: View {
                     .onAppear { trainingGoal = trainingGoalStore.goal() }
 
                 Section {
+                    NavigationLink {
+                        ProfileView()
+                    } label: {
+                        Label("Leistungswerte und Tests", systemImage: "gauge.with.dots.needle.67percent")
+                    }
+                } header: {
+                    Text("Leistungsprofil")
+                } footer: {
+                    Text("Danach richten sich Zonen und Tempo im Plan. Hier trägst du Werte von Hand oder nach einem Test ein und stellst ein, ob und wie oft die App Tests einplant.")
+                }
+
+                Section {
                     ForEach(EquipmentItem.allCases) { item in
                         Toggle(item.title, isOn: equipmentBinding(for: item))
                     }

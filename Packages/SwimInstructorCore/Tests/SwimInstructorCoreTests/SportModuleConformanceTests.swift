@@ -19,6 +19,8 @@ struct RowingTestModule: SportModule {
     )
     let loadFactor = 0.9
     let goalSpeedRange: ClosedRange<Double> = 0.5...7
+    let planUnit = PlanUnit.minutes
+    let typicalSpeedMetersPerSecond = 3.5
 
     /// Eigener Leistungswert, den keine echte Sportart kennt.
     static let twoKilometerTime: PerformanceMetric = "time_2000m"

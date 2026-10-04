@@ -73,6 +73,8 @@ describe("contracts/sports.json", () => {
         maxMetersPerSecond: sport.goal_speed.max_meters_per_second
       });
       expect(definition?.loadFactor).toBe(sport.load_factor);
+      expect(definition?.planning.limitUnit).toBe(sport.plan_unit);
+      expect(definition?.planning.typicalSpeedMetersPerSecond).toBe(sport.typical_speed_meters_per_second);
       expect(definition?.performanceMetrics).toEqual(sport.performance_metrics.map(metricOf));
       expect(definition?.performanceTests).toEqual(
         sport.performance_tests.map((test: any) => ({

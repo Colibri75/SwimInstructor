@@ -103,13 +103,30 @@ public struct PerformanceTest: Sendable, Equatable, Identifiable {
     public let maximalEffort: Bool
     /// Dauer der eigentlichen Testbelastung ohne Ein- und Auslaufen, in Minuten.
     public let durationMinutes: Int
+    /// Was der Athlet nach dem Test einträgt; leer: je ermitteltem Leistungswert ein Feld (`resultInputs`).
+    public let inputs: [TestInput]
+    public let evaluation: TestEvaluation
+    /// Kurzer Hinweis für die Eingabe des Ergebnisses, etwa welcher Abschnitt zählt.
+    public let resultHint: String
 
-    public init(id: String, displayName: String, produces: [PerformanceMetric], maximalEffort: Bool, durationMinutes: Int) {
+    public init(
+        id: String,
+        displayName: String,
+        produces: [PerformanceMetric],
+        maximalEffort: Bool,
+        durationMinutes: Int,
+        inputs: [TestInput] = [],
+        evaluation: TestEvaluation = .direct,
+        resultHint: String = ""
+    ) {
         self.id = id
         self.displayName = displayName
         self.produces = produces
         self.maximalEffort = maximalEffort
         self.durationMinutes = durationMinutes
+        self.inputs = inputs
+        self.evaluation = evaluation
+        self.resultHint = resultHint
     }
 
     /// Welche Herkunft das Ergebnis bekommt.
