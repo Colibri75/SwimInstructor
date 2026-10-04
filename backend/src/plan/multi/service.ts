@@ -248,7 +248,7 @@ export class MultiPlanService {
 
   private blocked(kind: string, reason: string): PlanUnavailableError {
     this.deps.logger.warn({ kind, reason }, "claude plan v2 blocked by sanity layer");
-    return new PlanUnavailableError("sanity_blocked");
+    return new PlanUnavailableError("sanity_blocked", reason);
   }
 
   private logGenerated(kind: string, meta: GeneratedPlan, adjustments: number, extra: Record<string, number>): void {

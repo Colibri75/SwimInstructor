@@ -493,10 +493,15 @@ describe("MultiPlanService.planMacro", () => {
     await expect(service.planMacro({ snapshot: multiSnapshot(), today: TODAY })).rejects.toMatchObject({ name: "PlanUnavailableError", reason: "schema_invalid" });
   });
 
-  it("wirft sanity_blocked bei einem Gesamtplan ohne Wochen", async () => {
+  it("wirft sanity_blocked bei einem Gesamtplan ohne Wochen, mit dem Grund fuer Log und Bewertung", async () => {
     const { service } = setup({ complete: jest.fn().mockResolvedValue(generated({ ...goodMacro(), blocks: [] })) });
 
-    await expect(service.planMacro({ snapshot: multiSnapshot(), today: TODAY })).rejects.toMatchObject({ name: "PlanUnavailableError", reason: "sanity_blocked" });
+    await expect(service.planMacro({ snapshot: multiSnapshot(), today: TODAY })).rejects.toMatchObject({
+      name: "PlanUnavailableError",
+      reason: "sanity_blocked",
+      detail: "Gesamtplan ohne Wochen",
+      message: "Kein Plan verfügbar (sanity_blocked: Gesamtplan ohne Wochen)"
+    });
   });
 
   it("wirft bei einem Ausfall von Claude PlanUnavailableError mit dem Grund", async () => {

@@ -28,8 +28,12 @@ export class PlanGenerationError extends Error {
 
 /** Claude scheiterte und es gibt keinen frueheren Plan, den man ausliefern koennte. */
 export class PlanUnavailableError extends Error {
-  constructor(readonly reason: FallbackReason) {
-    super(`Kein Plan verfügbar (${reason})`);
+  /** `detail`: was genau scheiterte (etwa warum die Sicherheitsschicht blockierte), nur fuer Log und Bewertung, nie fuer die App. */
+  constructor(
+    readonly reason: FallbackReason,
+    readonly detail?: string
+  ) {
+    super(`Kein Plan verfügbar (${reason}${detail === undefined ? "" : `: ${detail}`})`);
     this.name = "PlanUnavailableError";
   }
 }
