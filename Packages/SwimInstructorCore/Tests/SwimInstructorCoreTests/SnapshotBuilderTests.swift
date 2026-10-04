@@ -9,9 +9,9 @@ final class SnapshotBuilderTests: XCTestCase {
 
         _ = try await builder.build(now: TestFixtures.now)
 
-        // Tag 0 bis 55 für Workouts, Tag 0 bis 30 für Tageswerte, jeweils ab Mitternacht.
+        // Tag 0 bis 55 für Workouts und Tageswerte (Statistik bis 8 Wochen), jeweils ab Mitternacht.
         XCTAssertEqual(workouts.requestedStart, TestFixtures.date(daysAgo: 55, hour: 0))
-        XCTAssertEqual(vitals.requestedStart, TestFixtures.date(daysAgo: 30, hour: 0))
+        XCTAssertEqual(vitals.requestedStart, TestFixtures.date(daysAgo: 55, hour: 0))
     }
 
     func testSnapshotMatchesCalculatorAndWorkoutsAreCleaned() async throws {
@@ -37,6 +37,7 @@ final class SnapshotBuilderTests: XCTestCase {
         XCTAssertEqual(reading.snapshot.volume.lastSevenDaysMeters, 2500)
         XCTAssertEqual(reading.workouts.map(\.id), [recent.id, older.id])
         XCTAssertTrue(reading.vitalsAvailable)
+        XCTAssertEqual(reading.vitals, vitals, "Für die Statistik")
     }
 
     func testMissingVitalsStillProduceSnapshot() async throws {
@@ -49,6 +50,7 @@ final class SnapshotBuilderTests: XCTestCase {
         let reading = try await builder.build(now: TestFixtures.now)
 
         XCTAssertFalse(reading.vitalsAvailable)
+        XCTAssertEqual(reading.vitals, [])
         XCTAssertEqual(reading.snapshot.recovery.status, .unknown)
     }
 

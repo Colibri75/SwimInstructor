@@ -12,6 +12,7 @@ struct SwimInstructorApp: App {
     @StateObject private var profileLoader: PerformanceProfileLoader
     @StateObject private var planSync: PhonePlanSync
     @StateObject private var testResultInbox: WatchTestResultInbox
+    @StateObject private var statisticDashboard: StatisticDashboard
 
     init() {
         let healthKitManager = HealthKitManager()
@@ -104,6 +105,8 @@ struct SwimInstructorApp: App {
         _profileLoader = StateObject(wrappedValue: profileLoader)
         _planSync = StateObject(wrappedValue: planSync)
         _testResultInbox = StateObject(wrappedValue: testResultInbox)
+        // Die Kacheln der Statistik, gespeichert auf dem Gerät.
+        _statisticDashboard = StateObject(wrappedValue: StatisticDashboard(store: UserDefaultsStatisticLayoutStore()))
     }
 
     var body: some Scene {
@@ -116,6 +119,7 @@ struct SwimInstructorApp: App {
                 .environmentObject(macroLoader)
                 .environmentObject(profileLoader)
                 .environmentObject(testResultInbox)
+                .environmentObject(statisticDashboard)
         }
     }
 }

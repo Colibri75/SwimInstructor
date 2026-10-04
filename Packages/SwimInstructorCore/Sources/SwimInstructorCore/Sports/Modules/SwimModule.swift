@@ -10,6 +10,11 @@ public extension PerformanceMetric {
     static let criticalSwimPace: PerformanceMetric = "css_pace_per_100m"
 }
 
+public extension StatisticMetric {
+    /// Schwimmzüge pro 100 m: weniger Züge bei gleichem Tempo heißt mehr Strecke pro Zug.
+    static let strokesPerHundredMeters: StatisticMetric = "strokes_per_100m"
+}
+
 /// Schwimmen, im Becken und im Freiwasser.
 public struct SwimModule: SportModule {
     public init() {}
@@ -38,6 +43,20 @@ public struct SwimModule: SportModule {
         // Die Strecke kommt bahnweise: ein langes Fenster, sonst springt die Pace mit jeder Bahn.
         speedSmoothing: SpeedSmoothing(window: CurrentPaceTracker.window, staleAfter: CurrentPaceTracker.staleAfter, minimumMeters: CurrentPaceTracker.minimumMeters)
     )
+
+    public let statistics: [StatisticDefinition] = [
+        .distanceMeters,
+        .pacePerHundredMeters,
+        .duration,
+        .sessions,
+        .averageHeartRate,
+        StatisticDefinition(
+            metric: .strokesPerHundredMeters, displayName: "Züge pro 100 m", unit: "",
+            measure: .perDistance(.strokes, meters: 100), format: .integer, higherIsBetter: false
+        ),
+        .longestDistanceMeters,
+        .trainingLoad
+    ]
 
     public let performanceMetrics: [PerformanceMetricDefinition] = [
         PerformanceMetricDefinition(metric: .criticalSwimPace, displayName: "CSS-Pace", unit: "s/100m", plausibleRange: 50...300)

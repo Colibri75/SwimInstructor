@@ -51,6 +51,12 @@ public protocol SportModule: Sendable {
 
     /// Orte zur Auswahl vor dem Start und die Werte der Anzeige.
     var recording: SportRecording { get }
+
+    // MARK: Statistik (T6)
+
+    /// Die Kennzahlen dieser Sportart für die Kacheln, die wichtigste zuerst: Die ersten beiden erscheinen als
+    /// Standard-Kacheln. Ohne eigene Liste leitet der Kern sie aus den Health-Angaben ab (`SportStatistics.derived`).
+    var statistics: [StatisticDefinition] { get }
 }
 
 public extension SportModule {
@@ -67,6 +73,8 @@ public extension SportModule {
 
     // Ohne eigene Angaben zeichnet die Watch draußen mit GPS oder drinnen auf und zeigt Tempo und Strecke.
     var recording: SportRecording { .standard }
+
+    var statistics: [StatisticDefinition] { SportStatistics.derived(for: self) }
 }
 
 /// Die angemeldeten Sportarten. Prüft beim Anlegen, dass jede Sportart vollständig beschrieben ist und keine
@@ -92,6 +100,9 @@ public struct SportRegistry: Sendable {
         case invalidZoneScheme(SportID)
         /// Keine Orte für die Aufzeichnung, oder eine Kennung ungültig oder doppelt.
         case invalidRecording(SportID)
+        /// Keine Kennzahlen für die Statistik, eine ohne gültige Kennung oder Namen, doppelt oder eine, die nicht aus
+        /// den Einheiten rechnet (Tageswerte und Plan gibt es nur über alle Sportarten).
+        case invalidStatistics(SportID)
     }
 
     /// In der Reihenfolge der Anmeldung (die App zeigt sie so an).
@@ -120,6 +131,7 @@ public struct SportRegistry: Sendable {
             }
             try Self.validatePerformance(of: module)
             guard module.recording.isValid else { throw Problem.invalidRecording(module.id) }
+            guard SportStatistics.isValid(module.statistics) else { throw Problem.invalidStatistics(module.id) }
         }
         self.modules = modules
     }

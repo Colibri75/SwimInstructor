@@ -38,6 +38,11 @@ public struct RunModule: SportModule {
         speedSmoothing: SpeedSmoothing(window: 30, staleAfter: 15, minimumMeters: 20)
     )
 
+    public let statistics: [StatisticDefinition] = [
+        .distanceKilometers, .pacePerKilometer, .duration, .sessions, .averageHeartRate, .averagePower, .elevationGain,
+        .longestDistanceKilometers, .trainingLoad
+    ]
+
     public let performanceMetrics: [PerformanceMetricDefinition] = [
         .thresholdHeartRate,
         PerformanceMetricDefinition(metric: .thresholdPacePerKilometer, displayName: "Schwellentempo", unit: "s/km", plausibleRange: 150...900)

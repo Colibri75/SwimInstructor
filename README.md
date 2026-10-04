@@ -489,7 +489,7 @@ nicht `.pause`), `nil` bei fehlenden Lap-Events, SWOLF-Näherung.
 Die iPhone-App hat jetzt drei Tabs: **Heute** (Plan, wie bisher), **Dashboard** und **Verlauf**. Die Watch
 bleibt bewusst bei Tagesplan und Live-Aufzeichnung, ein verkleinertes Dashboard dort bringt im Becken nichts.
 
-- **Dashboard** (Swift Charts): Weg zum Ziel (Tage, längste Einheit gegen 3.800 m, Pace gegen Zielpace und
+- **Dashboard** (Swift Charts; Wochenumfang und Pace seit T6 als Kacheln): Weg zum Ziel (Tage, längste Einheit gegen 3.800 m, Pace gegen Zielpace und
   Trend), **Wochenumfang** der letzten 8 Kalenderwochen (Montag bis Sonntag, die laufende Woche blasser) und
   **Pace pro Einheit** mit der Zielpace als gestrichelter grüner Linie (schon ab einer Einheit). Einheiten unter 200 m und ohne Strecke
   fehlen im Pace-Diagramm, weil sie nichts über das Tempo sagen. Die Pace enthält wie überall die Pausen
@@ -811,6 +811,46 @@ Schritt bleibt sie fürs Schwimmen voll nutzbar.
       Becken wie bisher; in der Fitness-App Strecke und Karte prüfen; einen CSS-Test im Becken und einen Lauftest
       draußen machen und das Ergebnis auf dem iPhone bestätigen.
 
+### T6 – Konfigurierbare Statistik
+
+- **Kachel-Dashboard:** Der Tab "Dashboard" zeigt oben Kacheln, je zwei nebeneinander. Jede Kachel hat eine
+  Sportart (oder alle Sportarten), eine Kennzahl und einen Zeitraum, zeigt den Wert, einen kleinen Verlauf (Balken für
+  Summen, Linie für Mittelwerte) und den Vergleich mit denselben Tagen davor (grün besser, orange schlechter, grau ohne
+  Wertung, etwa beim Umfang). Darunter die Woche gegen den Plan, die Erholung und das Ziel wie bisher; Wochenumfang und
+  Pace-Diagramm des Schwimmens sind jetzt Kacheln.
+- **Bearbeiten:** Kachel lange drücken öffnet die Auswahl von Sportart, Kennzahl und Zeitraum und "Kachel entfernen".
+  Eine Kachel auf eine andere ziehen ändert die Reihenfolge. Über + kommt eine Kachel dazu (mit Vorschau), dort lassen
+  sich auch die Standard-Kacheln wiederherstellen. VoiceOver bietet "Nach vorn", "Nach hinten" und "Kachel entfernen".
+- **Kennzahlen je Sportart** stehen im Modul (`SportModule.statistics`): Schwimmen Umfang, Pace pro 100 m, Zeit,
+  Einheiten, Puls, Züge pro 100 m, längste Einheit, Trainingslast; Rad Umfang, Tempo, Zeit, Einheiten, Puls, Watt,
+  Trittfrequenz, Höhenmeter, längste Einheit, Trainingslast; Laufen wie Rad mit Pace pro km statt Tempo und ohne
+  Trittfrequenz. Eine Sportart ohne eigene Liste bekommt Kennzahlen aus ihren Health-Angaben
+  (`SportStatistics.derived`). **Über alle Sportarten:** Stunden je Sportart (mit Anteil jeder Sportart),
+  Trainingslast, Einheiten, Plan erfüllt, Ruhepuls, HRV, Schlaf.
+- **Rechnung:** Pace und Tempo sind Gesamtzeit durch Gesamtstrecke der Einheiten mit Strecke, für eine einzelne Einheit
+  also genau die Pace der Fitness-App. Puls, Watt und Trittfrequenz nach Dauer gewichtet. Ruhepuls, HRV und Schlaf sind
+  das Mittel der Tage mit Messung. "Plan erfüllt" zählt wie der Verlauf die vergangenen geplanten Trainingstage, an
+  denen trainiert wurde. Die Trainingslast ist dieselbe wie im Plan (TRIMP mit Ruhe- und Maximalpuls, sonst Minuten).
+- **Zeiträume:** diese Woche (ab Montag, Vergleich mit der Vorwoche bis zum selben Wochentag), 7 Tage, 4 Wochen, 8 Wochen
+  (ohne Vergleich). Dafür liest die App die Tageswerte jetzt wie die Einheiten 56 Tage zurück statt 31.
+- **Speicherung auf dem Gerät** (`UserDefaults`, `StatisticLayout` mit Formatversion). Nach einem Update fällt eine
+  Kennzahl, die es nicht mehr gibt, auf die erste Kennzahl der Sportart zurück, eine unbekannte Sportart auf alle
+  Sportarten, ein unbekannter Zeitraum auf 4 Wochen; eine unlesbare Kachel fällt weg. Kommt eine Sportart dazu, hängt
+  die App ihre zwei Standard-Kacheln hinten an.
+
+### T6 – Definition of Done
+
+- [x] Jede Kennzahl jedes Katalogs, auch der Test-Sportart Rudern, mit festen Daten nachgerechnet
+      (`StatisticCalculatorTests`), dazu Zeiträume, Vergleich, Verlauf und Texte (`StatisticFormattingTests`)
+- [x] Gespeicherte Anordnung übersteht ein Update: entfernte Kennzahl und Sportart fallen auf einen Standard zurück,
+      unbekannte Felder und Zeiträume stören nicht (`StatisticLayoutTests`)
+- [x] Die Test-Sportart Rudern bekommt ohne eigene Liste Kennzahlen und Standard-Kacheln, auch in einer schon
+      gespeicherten Anordnung
+- [x] iPhone-Build in der CI grün
+- [ ] **Für dich** (auf dem iPhone): Kachel lange drücken, auf "Laufen" und "Pace pro km" stellen, App beenden und neu
+      starten: Die Einstellung ist noch da, und die Zahl stimmt mit der Fitness-App (bei einem Lauf im Zeitraum genau
+      dessen Pace, bei mehreren Gesamtzeit durch Gesamtstrecke). Eine Kachel auf eine andere ziehen.
+
 ## Projektstruktur
 
 ```
@@ -825,8 +865,9 @@ App/                                # iOS-App
   DayEditSheet.swift                 # Tag anpassen: Umfang, Sportart tauschen, Einheit dazu oder weg, Tage tauschen
   MacroPlanSections.swift            # Gesamtplan je Sportart, Testtermine, Feedback mit Änderungen und Runden
   ProfileView.swift                  # Leistungsprofil: Werte, Herkunft, Verlauf, Eingabe von Hand, Testeinstellungen
-  StatsViews.swift                   # Statistik-Zeilen (Dashboard), Einheiten-Zeile aller Sportarten (Verlauf)
-  DashboardView.swift                # Woche je Sportart, Ziel, Wochenumfang, Pace-Verlauf (Swift Charts, M8)
+  StatsViews.swift                   # Woche je Sportart und Erholung (Dashboard), Einheiten-Zeile aller Sportarten (Verlauf)
+  DashboardView.swift                # Kacheln der Statistik, Woche gegen den Plan, Ziel (M8, T6)
+  StatisticTilesView.swift           # Kachel, Verlauf (Swift Charts), Auswahl per langem Drücken, Ziehen, Hinzufügen (T6)
   HistoryView.swift                  # Verlauf geplant gegen tatsächlich je Sportart
   GoalAssistantView.swift            # Ziel mit Disziplinen, Zieltag, Stunden und Schwerpunkten (T2)
   SettingsView.swift                 # Server-Adresse, Token, Verbindung testen
@@ -865,7 +906,7 @@ Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
     PlanSync.swift                   # Format der Plan-Übertragung iPhone -> Watch (M7)
     PlanProgress.swift               # Stand im Plan nach geschwommenen Metern (M7)
     LiveSwimMetrics.swift            # Live-Werte und Beckenlänge der Watch (M7)
-    TrainingStatistics.swift         # Wochenumfang und Pace je Einheit für das Dashboard (M8)
+    TrainingStatistics.swift         # Wochenumfang und Pace je Einheit beim Schwimmen (M8, seit T6 nicht mehr angezeigt)
     PlanHistory.swift                # Gespeicherte Tagespläne der letzten Wochen (M8)
     PlanAdherence.swift              # Geplant gegen geschwommen, Zusammenfassung (M8)
     WeekPlan.swift                   # Wochenplan: Tage, Vorgabe für den Tagesplan
@@ -884,7 +925,8 @@ Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
     TestResultSync.swift             # Testergebnis Watch -> iPhone, Eingang bis zur Bestätigung (T5)
     PlanV2/                          # Plan v2 für alle Sportarten (T4): Modelle, Client, Speicher, Anzeige-Texte,
                                      # Loader für Heute, sieben Tage und Gesamtplan mit Feedback, Plan gegen Ist
-    Sports/                          # Sport-Module, Registry, Leistungswerte, Zonen, Tests, Aufzeichnung (T0 bis T5)
+    Statistics/                      # Kennzahlen, Zeiträume, Rechnung, Texte und gespeicherte Kacheln (T6)
+    Sports/                          # Sport-Module, Registry, Leistungswerte, Zonen, Tests, Aufzeichnung, Kennzahlen (T0 bis T6)
   Tests/SwimInstructorCoreTests/
     HealthKitManagerTests.swift
     SwimWorkoutRepositoryTests.swift

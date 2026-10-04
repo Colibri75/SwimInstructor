@@ -8,6 +8,8 @@ public struct AthleteStateReading: Equatable, Sendable {
     public let workouts: [SwimWorkout]
     /// Die Einheiten aller Sportarten, bereinigt um Duplikate je Sportart, neueste zuerst.
     public let allWorkouts: [Workout]
+    /// Die Tageswerte (Ruhepuls, HRV, Schlaf) für die Statistik; leer, wenn sie nicht gelesen werden konnten.
+    public let vitals: [DailyVitals]
     /// `false`, wenn die Erholungswerte nicht gelesen werden konnten; der Snapshot hat dann
     /// Erholungsstatus `unknown`.
     public let vitalsAvailable: Bool
@@ -16,12 +18,14 @@ public struct AthleteStateReading: Equatable, Sendable {
         snapshot: AthleteStateSnapshot,
         workouts: [SwimWorkout],
         allWorkouts: [Workout]? = nil,
+        vitals: [DailyVitals] = [],
         vitalsAvailable: Bool
     ) {
         self.snapshot = snapshot
         self.workouts = workouts
         // Ohne eigene Angabe (ältere Aufrufer, Tests): die Schwimmeinheiten.
         self.allWorkouts = allWorkouts ?? workouts.map(Workout.init(swim:))
+        self.vitals = vitals
         self.vitalsAvailable = vitalsAvailable
     }
 }
@@ -33,11 +37,11 @@ public protocol SnapshotBuilding {
 /// Liest Workouts und Tageswerte aus Health und rechnet daraus den Snapshot (M3-Berechnung).
 ///
 /// Die Zeitfenster richten sich nach dem, was `AthleteStateCalculator` auswertet: Workouts der
-/// letzten 56 Tage (Pace-Vergleich Woche 1 bis 4 gegen 5 bis 8), Tageswerte der letzten 31 Tage
-/// (aktuell Tag 0 bis 2, Baseline Tag 3 bis 30).
+/// letzten 56 Tage (Pace-Vergleich Woche 1 bis 4 gegen 5 bis 8). Tageswerte ebenso 56 Tage: Die Erholung nutzt
+/// davon Tag 0 bis 30 (aktuell Tag 0 bis 2, Baseline Tag 3 bis 30), die Statistik bis 8 Wochen.
 public struct SnapshotBuilder: SnapshotBuilding {
     public static let workoutWindowDays = 56
-    public static let vitalsWindowDays = 31
+    public static let vitalsWindowDays = 56
 
     /// Alle Einheiten ab einem Datum, aus welchem Repository auch immer.
     private let fetchWorkouts: (Date) async throws -> [Workout]
@@ -170,6 +174,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
             snapshot: snapshot,
             workouts: cleaned,
             allWorkouts: cleanedAll,
+            vitals: vitals,
             vitalsAvailable: vitalsAvailable
         )
     }

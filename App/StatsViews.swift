@@ -30,32 +30,19 @@ struct WeekStatsRows: View {
     }
 }
 
-/// Kurzfassung des Snapshots: das, woraus der Plan entstanden ist.
-struct StateSummaryView: View {
+/// Erholung aus Ruhepuls, HRV und Schlaf, so wie sie in den Plan eingeht.
+struct RecoveryRow: View {
     let reading: AthleteStateReading
 
-    private var snapshot: AthleteStateSnapshot { reading.snapshot }
-
     var body: some View {
-        LabeledContent("Letzte 7 Tage") {
-            Text("\(PlanFormatting.meters(Int(snapshot.volume.lastSevenDaysMeters))) in \(snapshot.volume.sessionsLastSevenDays) Einheiten")
-        }
-        if let pace = snapshot.pace.recentPaceSecondsPerHundredMeters {
-            LabeledContent("Pace (4 Wochen)") {
-                Text("\(PlanFormatting.pace(pace)) /100 m, Ziel \(PlanFormatting.pace(snapshot.goal.targetPaceSecondsPerHundredMeters))")
-            }
-        }
         LabeledContent("Erholung") {
             Text(recoveryText)
-        }
-        LabeledContent("Bis zum Ziel") {
-            Text("\(snapshot.goal.daysUntilGoal) Tage")
         }
     }
 
     private var recoveryText: String {
         guard reading.vitalsAvailable else { return "keine Daten" }
-        switch snapshot.recovery.status {
+        switch reading.snapshot.recovery.status {
         case .good: return "gut"
         case .moderate: return "mäßig"
         case .poor: return "schlecht"
