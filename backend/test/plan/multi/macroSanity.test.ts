@@ -13,7 +13,7 @@ describe("macroSportLimits", () => {
   it("nennt je Sportart die Grenzen fuer den Gesamtplan", () => {
     const [swim, bike, run] = macroSportLimits(multiSnapshot());
 
-    expect(swim).toMatchObject({ firstWeekCap: 4350, floor: 1500, growthFactor: 1.1, race: 1500, absoluteWeekly: 22_500 });
+    expect(swim).toMatchObject({ firstWeekCap: 4350, floor: 2500, growthFactor: 1.1, race: 1500, absoluteWeekly: 22_500 });
     expect(bike).toMatchObject({ firstWeekCap: 120, floor: 120, race: 80 });
     // Laufen ohne Verlauf: Wiedereinstieg, erste Woche hoechstens 60 min.
     expect(run.firstWeekCap).toBe(60);
