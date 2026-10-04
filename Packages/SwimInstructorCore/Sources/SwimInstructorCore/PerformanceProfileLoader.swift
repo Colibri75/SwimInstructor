@@ -5,7 +5,7 @@ import Foundation
 @MainActor
 public final class PerformanceProfileLoader: ObservableObject {
     /// Ab dieser Änderung gegenüber dem bisherigen Wert (in Prozent) steht beim Ergebnis "bitte prüfen".
-    public static let reviewThresholdPercent = 10.0
+    nonisolated public static let reviewThresholdPercent = 10.0
 
     /// Ein Leistungswert in der Ansicht.
     public struct Entry: Identifiable, Equatable {
