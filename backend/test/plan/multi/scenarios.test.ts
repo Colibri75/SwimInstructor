@@ -59,7 +59,7 @@ function report(name: string): ScenarioReport {
 const sportsOfWeek = (item: ScenarioReport) => new Set(item.week.result?.plan.days.flatMap((day) => day.sessions.map((entry) => entry.sport)));
 
 describe("Szenarien fuer mehrere Sportarten", () => {
-  it("hat die acht Szenarien, jedes mit Aufzeichnung fuer jede Stufe", () => {
+  it("hat die neun Szenarien, jedes mit Aufzeichnung fuer jede Stufe", () => {
     expect(NAMES).toEqual([
       "01-sprint-einsteiger",
       "02-olympisch-schwimmen",
@@ -68,7 +68,8 @@ describe("Szenarien fuer mehrere Sportarten", () => {
       "05-nur-schwimmen",
       "06-laufen-nach-verletzung",
       "07-einsteiger-ohne-profil",
-      "08-schwimmen-startniveau"
+      "08-schwimmen-startniveau",
+      "09-fitness-wochenraster"
     ]);
     for (const name of NAMES) {
       const { scenario, recording } = load(name);
@@ -122,6 +123,19 @@ describe("Szenarien fuer mehrere Sportarten", () => {
     expect(item.week.result!.adjustments).toEqual([]);
   });
 
+  it("plant ein Fitnessziel ohne Zuspitzen und haelt die Woche im Wochenraster", () => {
+    const item = report("09");
+    const weeks = item.macro.result!.plan.weeks;
+    const days = item.week.result!.plan.days;
+
+    expect(new Set(weeks.map((week) => week.phase))).toEqual(new Set(["base"]));
+    expect(Math.max(...weeks.map((week) => week.total_minutes))).toBeLessThanOrEqual(285);
+    expect(days.filter((day) => day.sessions.length > 0).map((day) => day.date)).toEqual(["2026-09-30", "2026-10-01", "2026-10-03", "2026-10-04"]);
+    expect(days[1].sessions.map((entry) => entry.sport)).toEqual(["bike"]);
+    expect(days[4].sessions.map((entry) => entry.sport)).toEqual(["run"]);
+    expect(days.map((day) => day.sessions.reduce((sum, entry) => sum + entry.minutes, 0))).toEqual([40, 58, 0, 75, 47, 0, 0]);
+  });
+
   it("haelt das Laufen nach der Verletzungspause kurz und locker", () => {
     const item = report("06");
     const runs = item.week.result!.plan.days.flatMap((day) => day.sessions.filter((entry) => entry.sport === "run"));
@@ -152,7 +166,7 @@ describe("Szenarien fuer mehrere Sportarten", () => {
     expect(formatScenarioReport(report("05"))).toContain('Wunsch für heute: "Heute gern etwas mit Technik."');
     expect(summary.split("\n").filter((line) => line.startsWith("| 0"))).toHaveLength(NAMES.length * 3 + 2);
     // Synthetische Aufzeichnungen kosten nichts, echte schon: Der Betrag haengt davon ab, welche schon aufgezeichnet sind.
-    expect(summary).toMatch(/Geschätzte Kosten: \$\d+\.\d{2} \(26 Aufrufe\)\.$/);
+    expect(summary).toMatch(/Geschätzte Kosten: \$\d+\.\d{2} \(29 Aufrufe\)\.$/);
   });
 });
 

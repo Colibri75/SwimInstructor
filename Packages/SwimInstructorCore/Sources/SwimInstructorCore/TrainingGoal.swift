@@ -1,5 +1,40 @@
 import Foundation
 
+/// Die Art des Ziels (P2). Der Raw-Wert geht als `training_goal.kind` zum Server und darf nicht umbenannt werden.
+public enum GoalKind: String, Codable, Sendable, CaseIterable, Identifiable {
+    /// Ein Wettkampf mit Disziplinen, je mit Zielzeit oder "Ankommen".
+    case race
+    /// Eine Zeit über eine Strecke ohne Wettkampf, z. B. 1500 m Kraul unter 30 Minuten.
+    case time
+    /// Eine Strecke am Stück schaffen, ohne Wettkampf und ohne Zielzeit.
+    case distance
+    /// Fit werden und bleiben: keine Disziplin, kein Wettkampf, der Zieltag ist nur das Ende des Planungszeitraums.
+    case fitness
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .race: return "Wettkampf"
+        case .time: return "Zeit über eine Strecke"
+        case .distance: return "Strecke schaffen"
+        case .fitness: return "Fit werden und bleiben"
+        }
+    }
+
+    public var explanation: String {
+        switch self {
+        case .race: return "Ein Wettkampf an einem festen Tag, je Disziplin mit Zielzeit oder nur ankommen."
+        case .time: return "Eine Zeit über eine Strecke ohne Wettkampf, z. B. 1500 m Kraul unter 30 Minuten. Am Zieltag steht ein eigener Versuch."
+        case .distance: return "Eine Strecke am Stück schaffen, z. B. 3000 m schwimmen oder 10 km laufen, ohne Wettkampf."
+        case .fitness: return "Ohne Zieltag: Der Plan steigert bis zu deiner Zeit im Wochenraster und hält sie dann."
+        }
+    }
+
+    /// Ziele mit Disziplinen (alle außer Fitness).
+    public var hasDisciplines: Bool { self != .fitness }
+}
+
 /// Das Gesamtziel über alle Sportarten: welcher Wettkampf (Disziplinen mit Strecke und optional Zielzeit), wann,
 /// wie viel Zeit fürs Training bleibt und wie das Training auf die Sportarten verteilt sein soll.
 ///
@@ -35,15 +70,20 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
 
     /// Kennung der Vorlage, aus der das Ziel stammt; `nil` bei einem eigenen Ziel.
     public var template: String?
+    /// Fehlt in Zielen von vor P2: dann ein Wettkampf.
+    public var kind: GoalKind
     public var disciplines: [Discipline]
-    /// Mittag (Berlin) des Zieltags, siehe `AthleteGoal.targetDate(onDayOf:)`.
+    /// Mittag (Berlin) des Zieltags, siehe `AthleteGoal.targetDate(onDayOf:)`. Bei einem Fitnessziel das Ende des
+    /// Planungszeitraums.
     public var targetDate: Date
+    /// Seit P2 aus dem Wochenraster (`WeeklySchedule.applied(to:)`).
     public var trainingDaysPerWeek: Int
     public var weeklyHours: Double
     public var emphasis: [Emphasis]
 
     public init(
         template: String? = nil,
+        kind: GoalKind = .race,
         disciplines: [Discipline],
         targetDate: Date,
         trainingDaysPerWeek: Int,
@@ -51,11 +91,27 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
         emphasis: [Emphasis]
     ) {
         self.template = template
+        self.kind = kind
         self.disciplines = disciplines
         self.targetDate = targetDate
         self.trainingDaysPerWeek = trainingDaysPerWeek
         self.weeklyHours = weeklyHours
         self.emphasis = emphasis
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case template, kind, disciplines, targetDate, trainingDaysPerWeek, weeklyHours, emphasis
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        template = try container.decodeIfPresent(String.self, forKey: .template)
+        kind = try container.decodeIfPresent(GoalKind.self, forKey: .kind) ?? .race
+        disciplines = try container.decode([Discipline].self, forKey: .disciplines)
+        targetDate = try container.decode(Date.self, forKey: .targetDate)
+        trainingDaysPerWeek = try container.decode(Int.self, forKey: .trainingDaysPerWeek)
+        weeklyHours = try container.decode(Double.self, forKey: .weeklyHours)
+        emphasis = try container.decode([Emphasis].self, forKey: .emphasis)
     }
 
     // MARK: - Grenzen
@@ -64,6 +120,8 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
     public static let trainingDaysRange: ClosedRange<Int> = 1...7
     public static let weeklyHoursRange: ClosedRange<Double> = 1...30
     public static let maximumDisciplines = 8
+    /// So weit reicht der Planungszeitraum eines neuen Fitnessziels.
+    public static let fitnessHorizonWeeks = 26
 
     /// Der Anteil einer Sportart am Training (0, wenn sie nicht vorkommt).
     public func percent(for sport: SportID) -> Int {
@@ -77,7 +135,14 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
     /// Was am Ziel nicht passt, auf Deutsch; `nil`, wenn es gültig ist. Ohne den Zieltag: Ein gespeichertes Ziel
     /// bleibt gültig, wenn sein Tag vorbei ist (der Plan sagt dann, dass ein neues fällig ist).
     public func problem(registry: SportRegistry = .standard) -> String? {
-        guard !disciplines.isEmpty else { return "Das Ziel braucht mindestens eine Disziplin." }
+        if kind.hasDisciplines {
+            guard !disciplines.isEmpty else { return "Das Ziel braucht mindestens eine Disziplin." }
+            if kind == .time, disciplines.contains(where: { $0.targetDurationSeconds == nil }) {
+                return "Bei einer Zeit über eine Strecke braucht jede Disziplin eine Zielzeit."
+            }
+        } else {
+            guard disciplines.isEmpty else { return "Ein Fitnessziel hat keine Disziplinen." }
+        }
         guard disciplines.count <= Self.maximumDisciplines else { return "Höchstens \(Self.maximumDisciplines) Disziplinen." }
         guard Set(disciplines.map(\.sport)).count == disciplines.count else { return "Jede Sportart darf nur einmal im Ziel stehen." }
         for discipline in disciplines {
@@ -115,6 +180,47 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
     }
 
     // MARK: - Bearbeiten
+
+    /// Die Sportarten des Ziels: alle mit Schwerpunkt über 0, in der Reihenfolge der Registry.
+    public var sports: [SportID] {
+        emphasis.filter { $0.percent > 0 }.map(\.sport).sorted { order(of: $0) < order(of: $1) }
+    }
+
+    /// Wechselt die Zielart. Ein Fitnessziel verliert die Disziplinen und läuft `fitnessHorizonWeeks` Wochen ab `now`;
+    /// ein Ziel mit Disziplinen bekommt, falls es keine hat, eine für die Sportart mit dem größten Schwerpunkt.
+    /// "Strecke schaffen" hat keine Zielzeiten.
+    public func settingKind(_ newKind: GoalKind, now: Date) -> TrainingGoal {
+        var copy = self
+        copy.kind = newKind
+        copy.template = newKind == kind ? template : nil
+        if newKind.hasDisciplines {
+            if copy.disciplines.isEmpty, let sport = emphasis.max(by: { $0.percent < $1.percent })?.sport {
+                copy.disciplines = [Discipline(sport: sport, distanceMeters: 5_000)]
+            }
+            if newKind == .distance {
+                copy.disciplines = copy.disciplines.map { Discipline(sport: $0.sport, distanceMeters: $0.distanceMeters) }
+            }
+        } else {
+            copy.disciplines = []
+            if kind.hasDisciplines {
+                copy.targetDate = AthleteGoal.targetDate(onDayOf: now.addingTimeInterval(TimeInterval(Self.fitnessHorizonWeeks * 7 * 86_400)))
+            }
+        }
+        return copy
+    }
+
+    /// Nimmt eine Sportart ins Ziel (mit gleichem Anteil wie die anderen) oder heraus (mit ihrer Disziplin). Die letzte
+    /// Sportart bleibt.
+    public func settingSport(_ sport: SportID, included: Bool) -> TrainingGoal {
+        if included {
+            guard percent(for: sport) == 0 else { return self }
+            return settingEmphasis(100 / (sports.count + 1), for: sport)
+        }
+        guard percent(for: sport) > 0, sports.count > 1 else { return self }
+        var copy = settingDiscipline(nil, for: sport).settingEmphasis(0, for: sport)
+        copy.emphasis.removeAll { $0.sport == sport }
+        return copy
+    }
 
     /// Setzt den Anteil einer Sportart und verteilt den Rest auf die anderen im Verhältnis ihrer bisherigen Anteile
     /// (alle gleich, wenn sie bisher zusammen 0 hatten). Die Summe bleibt 100.

@@ -202,8 +202,13 @@ public enum PlanFormatting {
     }
 
     /// Kurzform des Gesamtziels für die Einstellungen: "Triathlon Olympisch, 04.07.2027" oder bei einem eigenen
-    /// Ziel die Disziplinen ("Laufen 10,0 km, 04.07.2027").
+    /// Ziel die Disziplinen ("Laufen 10,0 km, 04.07.2027"). Ein Fitnessziel nennt die Sportarten und das Ende des
+    /// Planungszeitraums ("Fitness: Radfahren, Laufen, bis 04.07.2027").
     public static func goalSummary(_ goal: TrainingGoal, registry: SportRegistry = .standard, calendar: Calendar = .current) -> String {
+        if goal.kind == .fitness {
+            let sports = goal.sports.map { registry.displayName(for: $0) }.joined(separator: ", ")
+            return "Fitness: \(sports), bis \(germanDate(isoDay(goal.targetDate, calendar: calendar)))"
+        }
         let what = GoalTemplate.template(id: goal.template)?.displayName
             ?? goal.disciplines.map { "\(registry.displayName(for: $0.sport)) \(distance($0.distanceMeters))" }.joined(separator: ", ")
         return "\(what), \(germanDate(isoDay(goal.targetDate, calendar: calendar)))"

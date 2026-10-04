@@ -152,7 +152,9 @@ final class ContractTests: XCTestCase {
         ]
         let v1 = AthleteStateCalculator(calendar: TestFixtures.utc)
             .snapshot(workouts: workouts.compactMap(SwimWorkout.init(workout:)), goal: goal.legacySwimGoal, now: now)
-        let v2 = MultiSportStateCalculator(calendar: TestFixtures.utc).extend(v1, workouts: workouts, goal: goal, now: now)
+        // Der Wochenraster mit Tageszeit und fester Sportart, damit alle seine Felder vorkommen.
+        let schedule = try JSONDecoder().decode(WeeklySchedule.self, from: RepoPaths.contractData("app-storage/weekly-schedule.json"))
+        let v2 = MultiSportStateCalculator(calendar: TestFixtures.utc).extend(v1, workouts: workouts, goal: goal, schedule: schedule, now: now)
 
         let isV2Part = { (path: String) in ["training_goal", "sports", "total_load"].contains { path.hasPrefix($0) } }
         let built = try JSONKeyPaths.of(AthleteStateSnapshot.jsonEncoder().encode(v2)).filter(isV2Part)
@@ -298,6 +300,28 @@ final class ContractTests: XCTestCase {
         XCTAssertEqual(goal.disciplines.map(\.sport), [.swim, .bike, .run])
         XCTAssertNil(goal.disciplines.last?.targetDurationSeconds)
         XCTAssertEqual(goal.percent(for: .bike), 35)
+    }
+
+    func testStoredWeeklyScheduleLoads() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "ContractTests-\(UUID().uuidString)"))
+        defaults.set(try RepoPaths.contractData("app-storage/weekly-schedule.json"), forKey: UserDefaultsWeeklyScheduleStore.storageKey)
+
+        let schedule = try XCTUnwrap(UserDefaultsWeeklyScheduleStore(defaults: defaults).storedSchedule())
+
+        XCTAssertEqual(schedule.trainingDays, 5)
+        XCTAssertEqual(schedule.totalMinutes, 450)
+        XCTAssertEqual(schedule.day(2)?.sport, .swim)
+        XCTAssertEqual(schedule.day(2)?.timeOfDay, .evening)
+    }
+
+    func testSnapshotV2CarriesTheWeeklyScheduleOfTheContract() throws {
+        // snapshot-v2.json trägt denselben Wochenraster wie app-storage/weekly-schedule.json, Ziel daraus 5 Tage, 7,5 h.
+        let snapshot = try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: RepoPaths.contractData("wire/snapshot-v2.json"))
+        let schedule = try JSONDecoder().decode(WeeklySchedule.self, from: RepoPaths.contractData("app-storage/weekly-schedule.json"))
+        XCTAssertEqual(snapshot.trainingGoal?.weeklySchedule, schedule.days)
+        XCTAssertEqual(snapshot.trainingGoal?.kind, .race)
+        XCTAssertEqual(snapshot.trainingGoal?.trainingDaysPerWeek, schedule.trainingDays)
+        XCTAssertEqual(snapshot.trainingGoal?.weeklyHours, Double(schedule.totalMinutes) / 60)
     }
 
     func testStoredPerformanceProfileLoads() throws {

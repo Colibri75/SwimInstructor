@@ -36,6 +36,7 @@
   "flags": [],
   "training_goal": {
     "template": "triathlon_olympic",
+    "kind": "race",
     "target_date": "2027-07-04T10:00:00Z",
     "days_until_goal": 277,
     "training_days_per_week": 5,
@@ -69,6 +70,15 @@
         "sport": "run",
         "percent": 25
       }
+    ],
+    "weekly_schedule": [
+      { "weekday": 1, "trains": false, "max_minutes": 0 },
+      { "weekday": 2, "trains": true, "time_of_day": "evening", "max_minutes": 60, "sport": "swim" },
+      { "weekday": 3, "trains": true, "time_of_day": "morning", "max_minutes": 45 },
+      { "weekday": 4, "trains": true, "time_of_day": "evening", "max_minutes": 60, "sport": "swim" },
+      { "weekday": 5, "trains": false, "max_minutes": 0 },
+      { "weekday": 6, "trains": true, "time_of_day": "morning", "max_minutes": 180 },
+      { "weekday": 7, "trains": true, "time_of_day": "morning", "max_minutes": 105 }
     ]
   },
   "sports": [

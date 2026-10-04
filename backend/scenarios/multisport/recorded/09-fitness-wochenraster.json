@@ -1,0 +1,313 @@
+{
+  "macro": {
+    "source": "claude",
+    "model": "synthetisch",
+    "recorded_at": "2026-10-04T22:00:00.000Z",
+    "usage": {
+      "inputTokens": 0,
+      "outputTokens": 0
+    },
+    "raw": {
+      "rationale": "Du willst fit werden und bleiben, ohne Wettkampf. Der Plan steigert Rad und Laufen gleichmäßig von zusammen 190 min auf etwa 270 min pro Woche und hält das dann; das passt in die 285 min deines Wochenrasters. Nach jeweils 3 Belastungswochen folgt eine leichtere Woche. Es gibt kein Zuspitzen, weil kein Wettkampf ansteht; ab und zu kommen zügige Abschnitte dazu, damit es abwechslungsreich bleibt.",
+      "blocks": [
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Grundlage auf Rad und beim Laufen",
+          "sports": [
+            {
+              "sport": "bike",
+              "start_amount": 110,
+              "end_amount": 130,
+              "deload_amount": 90,
+              "sessions": 2
+            },
+            {
+              "sport": "run",
+              "start_amount": 85,
+              "end_amount": 95,
+              "deload_amount": 65,
+              "sessions": 2
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Umfang bis zu den Wochenminuten steigern",
+          "sports": [
+            {
+              "sport": "bike",
+              "start_amount": 135,
+              "end_amount": 150,
+              "deload_amount": 105,
+              "sessions": 2
+            },
+            {
+              "sport": "run",
+              "start_amount": 100,
+              "end_amount": 120,
+              "deload_amount": 80,
+              "sessions": 2
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Halten, mit kurzen zügigen Abschnitten",
+          "sports": [
+            {
+              "sport": "bike",
+              "start_amount": 150,
+              "end_amount": 150,
+              "deload_amount": 105,
+              "sessions": 2
+            },
+            {
+              "sport": "run",
+              "start_amount": 120,
+              "end_amount": 120,
+              "deload_amount": 80,
+              "sessions": 2
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Halten, Tempowechsel beim Laufen",
+          "sports": [
+            {
+              "sport": "bike",
+              "start_amount": 150,
+              "end_amount": 150,
+              "deload_amount": 105,
+              "sessions": 2
+            },
+            {
+              "sport": "run",
+              "start_amount": 120,
+              "end_amount": 120,
+              "deload_amount": 80,
+              "sessions": 2
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Halten, lange ruhige Radeinheit",
+          "sports": [
+            {
+              "sport": "bike",
+              "start_amount": 150,
+              "end_amount": 150,
+              "deload_amount": 105,
+              "sessions": 2
+            },
+            {
+              "sport": "run",
+              "start_amount": 120,
+              "end_amount": 120,
+              "deload_amount": 80,
+              "sessions": 2
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Halten, abwechslungsreich",
+          "sports": [
+            {
+              "sport": "bike",
+              "start_amount": 150,
+              "end_amount": 150,
+              "deload_amount": 105,
+              "sessions": 2
+            },
+            {
+              "sport": "run",
+              "start_amount": 120,
+              "end_amount": 120,
+              "deload_amount": 80,
+              "sessions": 2
+            }
+          ]
+        },
+        {
+          "weeks": 3,
+          "deload_last": false,
+          "focus": "Fit bleiben",
+          "sports": [
+            {
+              "sport": "bike",
+              "start_amount": 150,
+              "end_amount": 150,
+              "deload_amount": null,
+              "sessions": 2
+            },
+            {
+              "sport": "run",
+              "start_amount": 120,
+              "end_amount": 120,
+              "deload_amount": null,
+              "sessions": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "week": {
+    "source": "claude",
+    "model": "synthetisch",
+    "recorded_at": "2026-10-04T22:00:00.000Z",
+    "usage": {
+      "inputTokens": 0,
+      "outputTokens": 0
+    },
+    "raw": {
+      "rationale": "Die Woche hält sich an deinen Wochenraster: Mittwoch ein kurzer Lauf, Donnerstag der Einstiegstest auf dem Rad, Samstag die lange Radeinheit und Sonntag der Lauftest, sonst Ruhetage. Die beiden Tests liefern die Werte für deine Zonen; der Rest bleibt locker. So steigt der Umfang von zuletzt 160 min langsam in Richtung deiner 285 Wochenminuten, passend zu deinem Ziel, fit zu werden und zu bleiben.",
+      "days": [
+        {
+          "date": "2026-09-30",
+          "focus": "Lockerer Lauf",
+          "sessions": [
+            {
+              "sport": "run",
+              "session_type": "endurance",
+              "intensity": "easy",
+              "amount": 40,
+              "focus": "Locker laufen",
+              "test_id": null
+            }
+          ]
+        },
+        {
+          "date": "2026-10-01",
+          "focus": "Einstiegstest Rad",
+          "sessions": [
+            {
+              "sport": "bike",
+              "session_type": "test",
+              "intensity": "hard",
+              "amount": 60,
+              "focus": "30-Minuten-Test",
+              "test_id": "threshold_30min"
+            }
+          ]
+        },
+        {
+          "date": "2026-10-02",
+          "focus": "Ruhetag",
+          "sessions": []
+        },
+        {
+          "date": "2026-10-03",
+          "focus": "Lange Radeinheit",
+          "sessions": [
+            {
+              "sport": "bike",
+              "session_type": "endurance",
+              "intensity": "easy",
+              "amount": 75,
+              "focus": "Lange ruhige Runde",
+              "test_id": null
+            }
+          ]
+        },
+        {
+          "date": "2026-10-04",
+          "focus": "Einstiegstest Laufen",
+          "sessions": [
+            {
+              "sport": "run",
+              "session_type": "test",
+              "intensity": "hard",
+              "amount": 50,
+              "focus": "30-Minuten-Test",
+              "test_id": "threshold_30min"
+            }
+          ]
+        },
+        {
+          "date": "2026-10-05",
+          "focus": "Ruhetag",
+          "sessions": []
+        },
+        {
+          "date": "2026-10-06",
+          "focus": "Ruhetag",
+          "sessions": []
+        }
+      ]
+    }
+  },
+  "day": {
+    "source": "claude",
+    "model": "synthetisch",
+    "recorded_at": "2026-10-04T22:00:00.000Z",
+    "usage": {
+      "inputTokens": 0,
+      "outputTokens": 0
+    },
+    "raw": {
+      "rationale": "Heute steht laut Wochenplan ein lockerer Lauf von 40 min an, passend zu deinem Wunsch draußen zu sein. Dein Wochenraster gibt morgens 45 min her, das reicht mit Ein- und Auslaufen. Locker heißt: Du kannst dich dabei unterhalten; so wächst die Grundlage für dein Ziel, fit zu werden und zu bleiben.",
+      "sessions": [
+        {
+          "sport": "run",
+          "session_type": "endurance",
+          "intensity": "easy",
+          "focus": "Locker draußen laufen",
+          "test_id": null,
+          "steps": [
+            {
+              "name": "Einlaufen",
+              "repetitions": 1,
+              "measure": "duration",
+              "distance_meters": null,
+              "duration_seconds": 600,
+              "target_type": "perceived_effort",
+              "target_value": 3,
+              "rest_seconds": 0,
+              "instructions": "Lauf ganz ruhig los und lass den Puls langsam steigen.",
+              "cue": "Locker einlaufen",
+              "equipment": []
+            },
+            {
+              "name": "Hauptteil",
+              "repetitions": 1,
+              "measure": "duration",
+              "distance_meters": null,
+              "duration_seconds": 1500,
+              "target_type": "perceived_effort",
+              "target_value": 4,
+              "rest_seconds": 0,
+              "instructions": "Lauf gleichmäßig in einem Tempo, bei dem du dich noch unterhalten kannst.",
+              "cue": "Locker, Gespräch geht",
+              "equipment": []
+            },
+            {
+              "name": "Auslaufen",
+              "repetitions": 1,
+              "measure": "duration",
+              "distance_meters": null,
+              "duration_seconds": 300,
+              "target_type": "perceived_effort",
+              "target_value": 2,
+              "rest_seconds": 0,
+              "instructions": "Werde zum Schluss noch langsamer und geh die letzten Meter.",
+              "cue": "Ruhig auslaufen",
+              "equipment": []
+            }
+          ]
+        }
+      ],
+      "coach_notes": [
+        "Draußen gern auf weichem Untergrund laufen."
+      ]
+    }
+  }
+}

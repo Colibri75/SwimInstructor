@@ -5,6 +5,7 @@ import { addDays, weekdayName } from "../week";
 import { dayLimits, DayLimitsV2, dayMinutesCap, hardOn, lower, MULTI_RULES, RANK, sportLimits, SportLimitsNow, testBlackoutReason } from "./limits";
 import { MacroWeekTargetV2, MultiWeekPlanRaw, RecentTraining, TestSettings, WeekSessionRaw } from "./schemas";
 import { amountToMeters, amountToMinutes, floorAmount, formatAmount, plannedSports, roundAmount, sportName } from "./sports";
+import { fixedSport, scheduleDay, trainingDaysPerWeek, weeklyMinutes } from "./schedule";
 import { chooseTest, TestPlan, TestRef, testRef } from "./tests";
 
 /**
@@ -14,7 +15,8 @@ import { chooseTest, TestPlan, TestRef, testRef } from "./tests";
  * Einheiten; die Grenzen fuer heute; hoechstens zwei harte Tage ueber alle Sportarten, nie hintereinander (auch nicht
  * nach einem harten Tag vor dem Plan, Tests mit Vollbelastung zaehlen als harter Tag und gehen vor); Leistungstests nur,
  * wenn sie passen, hoechstens einer je Tag und je Sportart, nie an zwei Tagen hintereinander; jeder Tag hoechstens die
- * Haelfte der Wochenstunden; nicht mehr Trainingstage als im Ziel; mindestens ein Ruhetag; hoechstens die Wochenstunden.
+ * Haelfte der Wochenstunden (mit Wochenraster: dessen Minuten); Ruhetage und feste Sportarten des Wochenrasters; nicht
+ * mehr Trainingstage als im Ziel; mindestens ein Ruhetag; hoechstens die Wochenstunden.
  */
 export interface WeekContextV2 {
   today: string;
@@ -63,8 +65,10 @@ export interface WeekLimitsV2 {
   maxHardDays: number;
   maxTrainingDays: number;
   maxMinutes: number;
-  /** Hoechstens so viele Minuten an einem Tag (heute gilt die Grenze in `today`). */
+  /** Hoechstens so viele Minuten an einem Tag ohne Wochenraster (heute gilt die Grenze in `today`). */
   maxDayMinutes: number;
+  /** Je geplantem Tag hoechstens so viele Minuten: aus dem Wochenraster, sonst `maxDayMinutes`. */
+  dayMinutes: Map<string, number>;
   /** Die Grenzen fuer heute, wenn heute zu den Tagen gehoert. */
   today: DayLimitsV2 | null;
   /** Der Tag vor dem Plan war hart: der erste Tag darf es nicht sein. */
@@ -77,9 +81,10 @@ export function weekLimitsV2(snapshot: SnapshotV2, context: WeekContextV2): Week
   return {
     sports: new Map(plannedSports(snapshot).map((sport) => [sport.id, sportLimits(snapshot, sport)])),
     maxHardDays: MULTI_RULES.maxHardDaysPerWeek,
-    maxTrainingDays: snapshot.training_goal.training_days_per_week,
-    maxMinutes: Math.round(snapshot.training_goal.weekly_hours * 60),
+    maxTrainingDays: trainingDaysPerWeek(snapshot),
+    maxMinutes: weeklyMinutes(snapshot),
     maxDayMinutes: dayMinutesCap(snapshot),
+    dayMinutes: new Map(context.dates.map((date) => [date, dayMinutesCap(snapshot, date)])),
     today: context.dates.includes(context.today) ? dayLimits(snapshot, context.today, context.recent) : null,
     hardBefore: hardOn(context.recent, addDays(first, -1)) || (first === context.today && hardDaysAgo === 1)
   };
@@ -145,10 +150,19 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
     const raw = byDate.get(date);
     const focus = raw?.focus.trim().slice(0, MULTI_RULES.maxFocusLength) ?? "";
     let sessions = (raw?.sessions ?? []).flatMap((session) => toDraft(session, week, unplanned));
-    // 2. Keine Zeit: Ruhetag.
+    // 2. Keine Zeit oder Ruhetag laut Wochenraster: Ruhetag. An einem Tag mit fester Sportart nur diese.
     if (context.unavailable.includes(date)) {
       if (sessions.length > 0) notes.push(`${label(date)}: keine Zeit, als Ruhetag gesetzt`);
       return { date, focus: "Keine Zeit", sessions: [] };
+    }
+    if (scheduleDay(snapshot, date)?.trains === false) {
+      if (sessions.length > 0) notes.push(`${label(date)}: Ruhetag laut Wochenraster`);
+      return { date, focus: "Ruhetag", sessions: [] };
+    }
+    const fixed = fixedSport(snapshot, date);
+    if (fixed !== undefined && sessions.some((draft) => draft.sport.id !== fixed)) {
+      notes.push(`${label(date)}: laut Wochenraster nur ${sportName(fixed)}, andere Sportarten gestrichen`);
+      sessions = sessions.filter((draft) => draft.sport.id === fixed);
     }
     // 3. Hoechstens zwei Einheiten am Tag, die laengsten bleiben.
     if (sessions.length > MULTI_RULES.maxSessionsPerDay) {
@@ -170,7 +184,7 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
 
   // 6. Jeder Tag hoechstens die Tagesgrenze (eine Testeinheit bleibt ganz).
   days = days.map((day) => {
-    const cap = day.date === context.today && today !== null ? today.maxMinutes : week.maxDayMinutes;
+    const cap = day.date === context.today && today !== null ? today.maxMinutes : (week.dayMinutes.get(day.date) ?? week.maxDayMinutes);
     if (dayMinutes(day) <= cap) return day;
     notes.push(`${label(day.date)}: Tagesumfang von ${Math.round(dayMinutes(day))} min auf höchstens ${cap} min gekürzt`);
     return scaleSessions([day], () => true, cap, minutesOf)[0];
@@ -381,7 +395,7 @@ function placeTests(days: DraftDay[], snapshot: SnapshotV2, context: WeekContext
           requested: draft.testId,
           settings: context.testSettings,
           maxAmount: Math.min(draft.limits.sessionCap, draft.limits.weeklyCap, dayLimitsForSport?.maxAmount ?? Infinity),
-          maxMinutes: Math.min(isToday && week.today !== null ? week.today.maxMinutes : week.maxDayMinutes, week.maxMinutes - testMinutes),
+          maxMinutes: Math.min(isToday && week.today !== null ? week.today.maxMinutes : (week.dayMinutes.get(day.date) ?? week.maxDayMinutes), week.maxMinutes - testMinutes),
           maxIntensity: dayLimitsForSport?.maxIntensity ?? (draft.limits.pause ? "easy" : "hard"),
           intensityReason: dayLimitsForSport?.intensityReasons.join(", ") ?? "Wiedereinstieg nach Pause"
         });

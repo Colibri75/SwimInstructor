@@ -1,7 +1,8 @@
 import fc from "fast-check";
 import { daysBetween, macroWeekStarts } from "../../../src/plan/macro";
 import { sanitizeDayV2 } from "../../../src/plan/multi/daySanity";
-import { dayLimits, dayMinutesCap, goalDayOf, multiPhase, MULTI_RULES, RANK, sportLimits, taperFactors, taperWeeks, testBlackoutReason, weeksToGoal } from "../../../src/plan/multi/limits";
+import { fixedSport, isFitnessGoal, scheduleDay, trainingDaysPerWeek, weeklyMinutes } from "../../../src/plan/multi/schedule";
+import { dayLimits, goalDayOf, MULTI_RULES, phaseOf, RANK, sportLimits, taperFactors, taperWeeks, testBlackoutReason, weeksToGoal } from "../../../src/plan/multi/limits";
 import { macroSportLimits, sanitizeMacroV2 } from "../../../src/plan/multi/macroSanity";
 import { floorAmount, plannedSports, stateOf } from "../../../src/plan/multi/sports";
 import { entryTest, fitsToday, lastConfirmedTest, stepsTotals } from "../../../src/plan/multi/tests";
@@ -187,7 +188,7 @@ describe("Wochenplan v2: Invarianten", () => {
           });
           if (week.hardBefore) expect(hardIndexes).not.toContain(0);
           const trainingDays = days.filter((day) => day.sessions.length > 0).length;
-          expect(trainingDays).toBeLessThanOrEqual(Math.min(snapshot.training_goal.training_days_per_week, 6));
+          expect(trainingDays).toBeLessThanOrEqual(Math.min(trainingDaysPerWeek(snapshot), 6));
           expect(result.plan.total_minutes).toBeLessThanOrEqual(week.maxMinutes + days.length);
 
           // Leistungstests.
@@ -196,11 +197,13 @@ describe("Wochenplan v2: Invarianten", () => {
           days.forEach((day, index) => {
             expect(day.sessions.length).toBeLessThanOrEqual(MULTI_RULES.maxSessionsPerDay);
             expect(day.sessions.filter((session) => session.intensity === "hard").length).toBeLessThanOrEqual(1);
-            if (unavailable.includes(day.date)) expect(day.sessions).toEqual([]);
+            if (unavailable.includes(day.date) || scheduleDay(snapshot, day.date)?.trains === false) expect(day.sessions).toEqual([]);
+            const fixed = fixedSport(snapshot, day.date);
+            if (fixed !== undefined) for (const session of day.sessions) expect(session.sport).toBe(fixed);
             const tests = day.sessions.filter((session) => session.test !== null);
             expect(tests.length).toBeLessThanOrEqual(1);
             if (tests.length > 0) testDays.push(index);
-            const cap = day.date === TODAY && week.today !== null ? week.today.maxMinutes : dayMinutesCap(snapshot);
+            const cap = day.date === TODAY && week.today !== null ? week.today.maxMinutes : (week.dayMinutes.get(day.date) ?? week.maxDayMinutes);
             const dayMinutes = day.sessions.reduce((sum, session) => sum + session.minutes, 0);
             expect(dayMinutes).toBeLessThanOrEqual(cap + day.sessions.length);
             for (const session of tests) {
@@ -274,25 +277,25 @@ describe("Gesamtplan v2: Invarianten", () => {
           const plan = result.plan;
           const taper = taperWeeks(snapshot);
           const factors = taperFactors(snapshot);
-          const goal = snapshot.training_goal;
 
           expect(plan.weeks.map((week) => week.week_start)).toEqual(weeks);
           let streak = 0;
           plan.weeks.forEach((week, index) => {
-            expect(week.phase).toBe(multiPhase(week.week_start, goalDay, TODAY, taper));
+            expect(week.phase).toBe(phaseOf(snapshot, week.week_start, TODAY));
+            if (isFitnessGoal(snapshot)) expect(["base", "maintain"]).toContain(week.phase);
             if (index === 0 || !(week.phase === "base" || week.phase === "specific")) expect(week.deload).toBe(false);
             if (week.phase === "base" || week.phase === "specific") {
               streak = week.deload ? 0 : streak + 1;
               expect(streak).toBeLessThanOrEqual(MULTI_RULES.maxLoadingWeeks);
             }
-            expect(week.total_minutes).toBeLessThanOrEqual(goal.weekly_hours * 60 + week.sports.length);
+            expect(week.total_minutes).toBeLessThanOrEqual(weeklyMinutes(snapshot) + week.sports.length);
             const withTraining = week.sports.filter((entry) => entry.amount > 0).length;
-            expect(week.sports.reduce((sum, entry) => sum + entry.sessions, 0)).toBeLessThanOrEqual(Math.max(goal.training_days_per_week * 2, withTraining));
+            expect(week.sports.reduce((sum, entry) => sum + entry.sessions, 0)).toBeLessThanOrEqual(Math.max(trainingDaysPerWeek(snapshot) * 2, withTraining));
             expect(week.tests.length).toBeLessThanOrEqual(MULTI_RULES.maxTestsPerWeek);
             for (const test of week.tests) {
               expect(["base", "specific", "maintain"]).toContain(week.phase);
               expect(settings?.offer).not.toBe(false);
-              if (week.phase !== "maintain") expect(daysBetween(addDays(week.week_start, 6), goalDay)).toBeGreaterThan(MULTI_RULES.testBlackoutDays);
+              if (week.phase !== "maintain" && !isFitnessGoal(snapshot)) expect(daysBetween(addDays(week.week_start, 6), goalDay)).toBeGreaterThan(MULTI_RULES.testBlackoutDays);
               expect(week.sports.find((entry) => entry.sport === test.sport)?.amount ?? 0).toBeGreaterThan(0);
             }
           });

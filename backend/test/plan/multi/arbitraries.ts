@@ -87,6 +87,31 @@ export const snapshotArb: fc.Arbitrary<SnapshotV2> = fc
     flags: fc.subarray(["recovery_poor", "overreaching_risk", "volume_spike"] as const),
     hardDaysAgo: fc.option(fc.integer({ min: 0, max: 10 }), { nil: undefined }),
     performance: performanceArb,
+    kind: fc.constantFrom(undefined, "race" as const, "time" as const, "distance" as const, "fitness" as const),
+    // Wochenraster (oder keiner): je Tag Training ja/nein, Minuten, Tageszeit und feste Sportart.
+    schedule: fc.option(
+      fc
+        .array(
+          fc.record({
+            trains: fc.boolean(),
+            minutes: fc.constantFrom(15, 30, 45, 60, 90, 180, 300),
+            time: fc.constantFrom(undefined, "morning" as const, "midday" as const, "evening" as const),
+            sport: fc.option(fc.constantFrom(...SPORT_IDS), { nil: undefined })
+          }),
+          { minLength: 7, maxLength: 7 }
+        )
+        .filter((days) => days.some((day) => day.trains))
+        .map((days) =>
+          days.map((day, index) => ({
+            weekday: index + 1,
+            trains: day.trains,
+            max_minutes: day.trains ? day.minutes : 0,
+            ...(day.time !== undefined ? { time_of_day: day.time } : {}),
+            ...(day.sport !== undefined ? { sport: day.sport } : {})
+          }))
+        ),
+      { nil: undefined }
+    ),
     // Selbst angegebenes Startniveau je Sportart (oder keins), auch unsinnig hoch und abgelaufen.
     startingLevels: fc.tuple(
       ...SPORT_IDS.map((sport) =>
@@ -106,7 +131,7 @@ export const snapshotArb: fc.Arbitrary<SnapshotV2> = fc
   .map((input) => {
     const base = contractSnapshot();
     const goalDay = addDays(TODAY, input.daysUntilGoal);
-    const disciplines = input.emphasis
+    const disciplines = input.kind === "fitness" ? [] : input.emphasis
       .filter((entry) => entry.percent > 0)
       .map((entry) => {
         const [min, max] = RACE_RANGE[entry.sport];
@@ -132,7 +157,9 @@ export const snapshotArb: fc.Arbitrary<SnapshotV2> = fc
         training_days_per_week: input.trainingDays,
         weekly_hours: input.weeklyHours,
         disciplines,
-        emphasis: input.emphasis
+        emphasis: input.emphasis,
+        ...(input.kind !== undefined ? { kind: input.kind } : {}),
+        ...(input.schedule !== undefined ? { weekly_schedule: input.schedule } : {})
       },
       sports: [...input.states],
       ...(performance !== undefined ? { performance } : { performance: undefined })

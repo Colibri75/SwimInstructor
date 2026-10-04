@@ -242,29 +242,37 @@ public extension AthleteStateSnapshot {
     /// Das Gesamtziel über alle Sportarten, wie es zum Server geht (ohne Freitext).
     struct TrainingGoalSummary: Codable, Equatable, Sendable {
         public let template: String?
+        /// Ab P2: Zielart (`race`, `time`, `distance`, `fitness`). Fehlt bei Apps von vor P2; der Server nimmt dann `race`.
+        public let kind: GoalKind?
         public let targetDate: Date
         public let daysUntilGoal: Int
         public let trainingDaysPerWeek: Int
         public let weeklyHours: Double
         public let disciplines: [TrainingGoal.Discipline]
         public let emphasis: [TrainingGoal.Emphasis]
+        /// Ab P2: der Wochenraster, Montag zuerst. Fehlt ohne Wochenraster.
+        public let weeklySchedule: [WeeklySchedule.Day]?
 
         public init(
             template: String?,
+            kind: GoalKind? = nil,
             targetDate: Date,
             daysUntilGoal: Int,
             trainingDaysPerWeek: Int,
             weeklyHours: Double,
             disciplines: [TrainingGoal.Discipline],
-            emphasis: [TrainingGoal.Emphasis]
+            emphasis: [TrainingGoal.Emphasis],
+            weeklySchedule: [WeeklySchedule.Day]? = nil
         ) {
             self.template = template
+            self.kind = kind
             self.targetDate = targetDate
             self.daysUntilGoal = daysUntilGoal
             self.trainingDaysPerWeek = trainingDaysPerWeek
             self.weeklyHours = weeklyHours
             self.disciplines = disciplines
             self.emphasis = emphasis
+            self.weeklySchedule = weeklySchedule
         }
     }
 

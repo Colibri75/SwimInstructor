@@ -66,10 +66,30 @@ const sportId = z.string().refine((id) => SPORTS.get(id) !== undefined, { messag
 const minutes = z.number().min(0).max(100_000);
 const load = z.number().min(0).max(1_000_000);
 
+/** Zielarten (P2): Wettkampf, Zeit ueber eine Strecke, Strecke schaffen (beide ohne Wettkampf), fit werden ohne Zieltag. */
+export const GOAL_KINDS = ["race", "time", "distance", "fitness"] as const;
+export type GoalKind = (typeof GOAL_KINDS)[number];
+
+export const TIMES_OF_DAY = ["morning", "midday", "evening"] as const;
+
+/**
+ * Der Wochenraster (P2): je Wochentag (1 = Montag bis 7 = Sonntag), ob, wann und wie lange der Athlet trainiert, auf
+ * Wunsch mit fester Sportart. Tage ohne Training sind feste Ruhetage.
+ */
+const ScheduleDaySchema = z.object({
+  weekday: z.number().int().min(1).max(7),
+  trains: z.boolean(),
+  time_of_day: z.enum(TIMES_OF_DAY).optional(),
+  max_minutes: z.number().int().min(0).max(600),
+  sport: sportId.optional()
+});
+
 const TrainingGoalSchema = z
   .object({
     /** Vorlage, aus der das Ziel stammt (z. B. "triathlon_olympic"); fehlt bei einem eigenen Ziel. */
     template: z.string().regex(/^[a-z][a-z0-9_]{1,39}$/).optional(),
+    /** Fehlt bei einer App vor P2: dann ein Wettkampf. */
+    kind: z.enum(GOAL_KINDS).optional(),
     target_date: z.iso.datetime(),
     days_until_goal: days,
     training_days_per_week: z.number().int().min(1).max(7),
@@ -82,11 +102,25 @@ const TrainingGoalSchema = z
           target_duration_seconds: z.number().min(60).max(1_000_000).optional()
         })
       )
-      .min(1)
       .max(8),
-    emphasis: z.array(z.object({ sport: sportId, percent: z.number().int().min(0).max(100) })).min(1).max(16)
+    emphasis: z.array(z.object({ sport: sportId, percent: z.number().int().min(0).max(100) })).min(1).max(16),
+    weekly_schedule: z.array(ScheduleDaySchema).length(7).optional()
   })
   .superRefine((goal, ctx) => {
+    if (goal.kind === "fitness" && goal.disciplines.length > 0) {
+      ctx.addIssue({ code: "custom", path: ["disciplines"], message: "Fitnessziel ohne Disziplinen" });
+    }
+    if (goal.kind !== "fitness" && goal.disciplines.length === 0) {
+      ctx.addIssue({ code: "custom", path: ["disciplines"], message: "Ziel ohne Disziplin" });
+    }
+    if (goal.weekly_schedule !== undefined) {
+      const weekdays = goal.weekly_schedule.map((day) => day.weekday);
+      if (new Set(weekdays).size !== weekdays.length) ctx.addIssue({ code: "custom", path: ["weekly_schedule"], message: "Wochentag doppelt" });
+      if (!goal.weekly_schedule.some((day) => day.trains)) ctx.addIssue({ code: "custom", path: ["weekly_schedule"], message: "kein Trainingstag" });
+      goal.weekly_schedule.forEach((day, index) => {
+        if (day.trains && day.max_minutes < 15) ctx.addIssue({ code: "custom", path: ["weekly_schedule", index, "max_minutes"], message: "Trainingstag unter 15 min" });
+      });
+    }
     const emphasisSports = goal.emphasis.map((entry) => entry.sport);
     if (new Set(emphasisSports).size !== emphasisSports.length) {
       ctx.addIssue({ code: "custom", path: ["emphasis"], message: "Sportart doppelt" });
@@ -232,6 +266,7 @@ export const SnapshotSchema = z.discriminatedUnion("schema_version", [SnapshotV1
 export type Snapshot = z.infer<typeof SnapshotSchema>;
 export type SnapshotV2 = z.infer<typeof SnapshotV2Schema>;
 export type TrainingGoal = SnapshotV2["training_goal"];
+export type ScheduleDay = NonNullable<TrainingGoal["weekly_schedule"]>[number];
 export type SportState = SnapshotV2["sports"][number];
 export type Performance = NonNullable<SnapshotV2["performance"]>;
 export type StartingLevel = NonNullable<SnapshotV2["starting_levels"]>[number];

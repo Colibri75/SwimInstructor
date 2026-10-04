@@ -1,0 +1,181 @@
+{
+  "description": "Fit werden und bleiben ohne Wettkampf, Rad und Laufen je zur Hälfte, mit Wochenraster: Mittwoch 45 min morgens, Donnerstag 60 min nur Rad, Samstag 120 min, Sonntag 60 min nur Laufen, sonst Ruhetage. Prüft, dass der Plan ohne Zuspitzen bis zu den Wochenminuten steigt und die Woche Ruhetage, Minuten und feste Sportarten des Rasters einhält.",
+  "today": "2026-09-30",
+  "snapshot": {
+    "schema_version": 2,
+    "generated_at": "2026-09-30T12:00:00Z",
+    "goal": {
+      "distance_meters": 1500,
+      "target_duration_seconds": 2700,
+      "target_pace_seconds_per_hundred_meters": 180,
+      "target_date": "2027-03-31T10:00:00Z",
+      "days_until_goal": 182
+    },
+    "volume": {
+      "last_seven_days_meters": 0,
+      "average_weekly_meters": 0,
+      "sessions_last_seven_days": 0,
+      "sessions_last_four_weeks": 0,
+      "longest_session_meters": 0
+    },
+    "pace": {},
+    "load": {
+      "days_since_last_workout": 1,
+      "days_since_last_hard_session": 3
+    },
+    "recovery": {
+      "status": "good",
+      "resting_heart_rate_deviation_bpm": 0,
+      "hrv_deviation_percent": 0,
+      "recent_average_sleep_hours": 7.5,
+      "warning_signals": []
+    },
+    "flags": [],
+    "training_goal": {
+      "kind": "fitness",
+      "target_date": "2027-03-31T10:00:00Z",
+      "days_until_goal": 182,
+      "training_days_per_week": 4,
+      "weekly_hours": 4.75,
+      "disciplines": [],
+      "emphasis": [
+        {
+          "sport": "bike",
+          "percent": 50
+        },
+        {
+          "sport": "run",
+          "percent": 50
+        }
+      ],
+      "weekly_schedule": [
+        {
+          "weekday": 1,
+          "trains": false,
+          "max_minutes": 0
+        },
+        {
+          "weekday": 2,
+          "trains": false,
+          "max_minutes": 0
+        },
+        {
+          "weekday": 3,
+          "trains": true,
+          "time_of_day": "morning",
+          "max_minutes": 45
+        },
+        {
+          "weekday": 4,
+          "trains": true,
+          "time_of_day": "evening",
+          "max_minutes": 60,
+          "sport": "bike"
+        },
+        {
+          "weekday": 5,
+          "trains": false,
+          "max_minutes": 0
+        },
+        {
+          "weekday": 6,
+          "trains": true,
+          "time_of_day": "morning",
+          "max_minutes": 120
+        },
+        {
+          "weekday": 7,
+          "trains": true,
+          "time_of_day": "morning",
+          "max_minutes": 60,
+          "sport": "run"
+        }
+      ]
+    },
+    "sports": [
+      {
+        "sport": "bike",
+        "sessions_last_seven_days": 2,
+        "sessions_last_four_weeks": 7,
+        "minutes_last_seven_days": 110,
+        "average_weekly_minutes": 105,
+        "meters_last_seven_days": 45000,
+        "average_weekly_meters": 42000,
+        "longest_session_meters": 36000,
+        "longest_session_minutes": 80,
+        "load_last_seven_days": 88,
+        "average_weekly_load": 84,
+        "days_since_last_session": 4
+      },
+      {
+        "sport": "run",
+        "sessions_last_seven_days": 2,
+        "sessions_last_four_weeks": 8,
+        "minutes_last_seven_days": 50,
+        "average_weekly_minutes": 85,
+        "meters_last_seven_days": 9000,
+        "average_weekly_meters": 15000,
+        "longest_session_meters": 9000,
+        "longest_session_minutes": 50,
+        "load_last_seven_days": 50,
+        "average_weekly_load": 85,
+        "days_since_last_session": 2
+      }
+    ],
+    "total_load": {
+      "minutes_last_seven_days": 160,
+      "average_weekly_minutes": 190,
+      "load_last_seven_days": 138,
+      "average_weekly_load": 169
+    },
+    "performance": {
+      "athlete": [
+        {
+          "metric": "max_heart_rate",
+          "value": 186,
+          "source": "formula",
+          "measured_at": "2026-09-30T12:00:00Z"
+        },
+        {
+          "metric": "resting_heart_rate",
+          "value": 56,
+          "source": "estimated",
+          "measured_at": "2026-09-30T12:00:00Z"
+        }
+      ],
+      "sports": [
+        {
+          "sport": "bike",
+          "values": [
+            {
+              "metric": "threshold_heart_rate",
+              "value": 162,
+              "source": "formula",
+              "measured_at": "2026-09-30T12:00:00Z"
+            }
+          ],
+          "zones": []
+        },
+        {
+          "sport": "run",
+          "values": [
+            {
+              "metric": "threshold_pace_per_km",
+              "value": 300,
+              "source": "estimated",
+              "measured_at": "2026-09-30T12:00:00Z"
+            },
+            {
+              "metric": "threshold_heart_rate",
+              "value": 166,
+              "source": "formula",
+              "measured_at": "2026-09-30T12:00:00Z"
+            }
+          ],
+          "zones": []
+        }
+      ]
+    }
+  },
+  "day_wishes": "Heute gern draußen."
+}
