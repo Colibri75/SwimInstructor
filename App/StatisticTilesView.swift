@@ -9,7 +9,6 @@ struct StatisticTilesGrid: View {
     let input: StatisticInput
 
     private let calculator = StatisticCalculator()
-    private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
     var body: some View {
         let results = calculator.results(for: dashboard.tiles, input: input)
@@ -18,7 +17,8 @@ struct StatisticTilesGrid: View {
                 .foregroundStyle(.secondary)
                 .padding()
         } else {
-            LazyVGrid(columns: columns, spacing: 12) {
+            // Eine Kachel pro Zeile: Zwei nebeneinander waren auf dem iPhone zu klein zum Lesen.
+            LazyVStack(spacing: 12) {
                 ForEach(results) { result in
                     StatisticTileView(result: result)
                         .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 14))
@@ -27,7 +27,7 @@ struct StatisticTilesGrid: View {
                         }
                         .draggable(result.tile.id.uuidString) {
                             StatisticTileView(result: result)
-                                .frame(width: 170)
+                                .frame(width: 320)
                         }
                         .dropDestination(for: String.self) { items, _ in
                             guard let id = items.first.flatMap(UUID.init(uuidString:)) else { return false }
@@ -45,15 +45,15 @@ struct StatisticTilesGrid: View {
 
 // MARK: - Kachel
 
-/// Eine Kachel: Sportart und Zeitraum, Kennzahl, Wert, Verlauf, Vergleich mit dem Zeitraum davor.
+/// Eine Kachel über die ganze Breite: Sportart und Zeitraum, Kennzahl, Wert, Verlauf, Vergleich mit dem Zeitraum davor.
 struct StatisticTileView: View {
     let result: StatisticResult
 
     private var definition: StatisticDefinition { result.definition }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 4) {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
                 Image(systemName: StatisticFormatting.symbolName(result.tile.sport))
                 Text(StatisticFormatting.sportName(result.tile.sport))
                     .lineLimit(1)
@@ -61,21 +61,21 @@ struct StatisticTileView: View {
                 Text(result.tile.period.displayName)
                     .lineLimit(1)
             }
-            .font(.caption)
+            .font(.subheadline)
             .foregroundStyle(.secondary)
 
             Text(definition.displayName)
-                .font(.subheadline.weight(.semibold))
+                .font(.headline)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
 
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(StatisticFormatting.value(result.value, format: definition.format))
-                    .font(.title2.weight(.bold))
+                    .font(.largeTitle.weight(.bold))
                     .monospacedDigit()
                 if result.value != nil && !definition.unit.isEmpty {
                     Text(definition.unit)
-                        .font(.footnote)
+                        .font(.body)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -83,7 +83,7 @@ struct StatisticTileView: View {
             .minimumScaleFactor(0.6)
 
             StatisticSparkline(result: result)
-                .frame(height: 34)
+                .frame(height: 64)
 
             if let comparison = StatisticFormatting.comparison(result) {
                 Label {
@@ -91,21 +91,20 @@ struct StatisticTileView: View {
                 } icon: {
                     Image(systemName: trendSymbol)
                 }
-                .font(.caption2)
+                .font(.subheadline)
                 .foregroundStyle(trendColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             }
             if let detail = StatisticFormatting.detail(result) {
                 Text(detail)
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
-            Spacer(minLength: 0)
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, minHeight: 172, alignment: .topLeading)
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(StatisticFormatting.accessibilityLabel(result))
