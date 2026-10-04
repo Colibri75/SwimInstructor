@@ -101,7 +101,9 @@ public enum PlanV2Formatting {
         let parts = text.trimmingCharacters(in: .whitespaces).split(separator: ":", omittingEmptySubsequences: false)
         switch parts.count {
         case 1:
-            return Double(parts[0])
+            // Nur endliche Zahlen ab 0: "-5", "nan" oder "inf" sind keine Zeit.
+            guard let seconds = Double(parts[0]), seconds.isFinite, seconds >= 0 else { return nil }
+            return seconds
         case 2:
             guard let minutes = Int(parts[0]), let seconds = Int(parts[1]), minutes >= 0, (0..<60).contains(seconds), parts[1].count == 2 else { return nil }
             return Double(minutes * 60 + seconds)

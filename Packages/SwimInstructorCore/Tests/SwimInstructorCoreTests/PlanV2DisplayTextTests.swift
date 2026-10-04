@@ -55,6 +55,13 @@ final class PlanV2DisplayTextTests: XCTestCase {
         XCTAssertEqual(PlanV2Formatting.macroVolume(three), "Schwimmen 6,0 km in 3 Einheiten")
     }
 
+    func testParseTimeRejectsNegativeAndNonFiniteNumbers() {
+        XCTAssertNil(PlanV2Formatting.parseTime("-5"))
+        XCTAssertNil(PlanV2Formatting.parseTime("nan"))
+        XCTAssertNil(PlanV2Formatting.parseTime("inf"))
+        XCTAssertEqual(PlanV2Formatting.parseTime("0"), 0)
+    }
+
     func testChangePercentHasASign() {
         XCTAssertEqual(PlanV2Formatting.changePercent(4.4), "+4 %")
         XCTAssertEqual(PlanV2Formatting.changePercent(-12.3), "−12 %")
