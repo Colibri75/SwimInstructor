@@ -186,6 +186,9 @@ public struct DayPlanV2Response: Codable, Equatable, Sendable {
     public let fallbackReason: String?
     /// Der Wunsch, mit dem der Server den Plan erzeugt hat.
     public let wishes: String?
+    /// Nur in der App, nicht vom Server: die Vorgabe der sieben Tage, mit der die App den Plan geholt hat. Ändert sich die
+    /// Vorgabe für heute (etwa der Umfang im Plan-Tab), passt der Plan nicht mehr dazu (`MultiSportTodayLoader`).
+    public var requestedTarget: DayTargetV2?
 
     public init(
         planVersion: Int = 2,

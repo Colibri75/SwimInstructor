@@ -98,6 +98,8 @@ final class PlanV2ModelTests: XCTestCase {
         XCTAssertEqual(response.generatedAt, Self.contractGeneratedAt)
         XCTAssertFalse(response.stale)
         XCTAssertEqual(response.adjustments, [])
+        // Die Vorgabe der Anfrage setzt nur die App, der Server schickt sie nicht.
+        XCTAssertNil(response.requestedTarget)
         XCTAssertNil(response.fallbackReason)
         XCTAssertEqual(response.wishes, "heute etwas Technik")
         XCTAssertTrue(response.plan.rationale.hasPrefix("Heute locker schwimmen"))
