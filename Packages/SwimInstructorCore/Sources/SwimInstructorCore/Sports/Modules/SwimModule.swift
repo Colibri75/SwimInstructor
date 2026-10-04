@@ -27,15 +27,31 @@ public struct SwimModule: SportModule {
     public let loadFactor = 1.0
     /// 10:00 bis 0:40 pro 100 m.
     public let goalSpeedRange: ClosedRange<Double> = 0.15...2.5
+    public let planUnit = PlanUnit.meters
+    /// 2:05 pro 100 m inklusive Pausen.
+    public let typicalSpeedMetersPerSecond: Double = 0.8
 
     public let performanceMetrics: [PerformanceMetricDefinition] = [
         PerformanceMetricDefinition(metric: .criticalSwimPace, displayName: "CSS-Pace", unit: "s/100m", plausibleRange: 50...300)
     ]
     public let performanceTests: [PerformanceTest] = [
         // CSS = 200 m / (Zeit 400 m − Zeit 200 m), beide voll mit Pause dazwischen.
-        PerformanceTest(id: "css_400_200", displayName: "CSS-Test 400/200 m", produces: [.criticalSwimPace], maximalEffort: true, durationMinutes: 10),
+        PerformanceTest(
+            id: "css_400_200", displayName: "CSS-Test 400/200 m", produces: [.criticalSwimPace], maximalEffort: true, durationMinutes: 10,
+            inputs: [
+                TestInput(id: "time_400m", label: "Zeit 400 m", unit: "s", range: 180...1500),
+                TestInput(id: "time_200m", label: "Zeit 200 m", unit: "s", range: 80...750)
+            ],
+            evaluation: .criticalSwimPace(longInput: "time_400m", longMeters: 400, shortInput: "time_200m", shortMeters: 200),
+            resultHint: "Trag die Zeiten der beiden Teststrecken ein. Die CSS-Pace ist die halbe Differenz pro 100 m."
+        ),
         // Zeit durch 10 ergibt die Pace pro 100 m, etwas langsamer als die CSS.
-        PerformanceTest(id: "time_trial_1000m", displayName: "1000-m-Test", produces: [.criticalSwimPace], maximalEffort: true, durationMinutes: 20)
+        PerformanceTest(
+            id: "time_trial_1000m", displayName: "1000-m-Test", produces: [.criticalSwimPace], maximalEffort: true, durationMinutes: 20,
+            inputs: [TestInput(id: "time_1000m", label: "Zeit 1000 m", unit: "s", range: 600...3000)],
+            evaluation: .pacePerHundredMeters(input: "time_1000m", meters: 1000),
+            resultHint: "Trag die Zeit für die 1000 m ein."
+        )
     ]
     public let zoneSchemes: [ZoneScheme] = [
         // Anteile der CSS-Geschwindigkeit; Zone 4 liegt um die CSS.

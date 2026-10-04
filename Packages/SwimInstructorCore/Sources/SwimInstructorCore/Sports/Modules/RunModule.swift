@@ -27,6 +27,9 @@ public struct RunModule: SportModule {
     public let loadFactor = 1.0
     /// 16:40 bis 2:23 pro km.
     public let goalSpeedRange: ClosedRange<Double> = 1...7
+    public let planUnit = PlanUnit.minutes
+    /// Knapp 6:00 pro km.
+    public let typicalSpeedMetersPerSecond: Double = 2.8
 
     public let performanceMetrics: [PerformanceMetricDefinition] = [
         .thresholdHeartRate,
@@ -36,12 +39,14 @@ public struct RunModule: SportModule {
         // Schwellenpuls und -tempo: Schnitt der letzten 20 Minuten. Nur, wenn 30 Minuten Laufen schon vertraut sind.
         PerformanceTest(
             id: "threshold_30min", displayName: "30-Minuten-Test",
-            produces: [.thresholdHeartRate, .thresholdPacePerKilometer], maximalEffort: true, durationMinutes: 30
+            produces: [.thresholdHeartRate, .thresholdPacePerKilometer], maximalEffort: true, durationMinutes: 30,
+            resultHint: "Schwellenpuls und Tempo: Schnitt der letzten 20 Minuten."
         ),
         // Für Einsteiger: locker nach Gefühl, daraus ein geschätztes Schwellentempo.
         PerformanceTest(
             id: "entry_easy_25min", displayName: "Einstiegstest locker",
-            produces: [.thresholdPacePerKilometer], maximalEffort: false, durationMinutes: 25
+            produces: [.thresholdPacePerKilometer], maximalEffort: false, durationMinutes: 25,
+            resultHint: "Das Tempo schätzt die App aus deinen Läufen; der Test selbst ändert dein Profil nicht."
         )
     ]
     public let zoneSchemes: [ZoneScheme] = [

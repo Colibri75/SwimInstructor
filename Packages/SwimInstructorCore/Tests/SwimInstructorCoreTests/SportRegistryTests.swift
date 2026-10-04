@@ -53,6 +53,21 @@ final class SportRegistryTests: XCTestCase {
         }
     }
 
+    func testTypicalSpeedMustBePositiveAndFinite() {
+        for speed in [0, -1, Double.infinity, Double.nan] {
+            XCTAssertThrowsError(try SportRegistry(modules: [StubModule(id: "yoga", typicalSpeedMetersPerSecond: speed)])) { error in
+                XCTAssertEqual(error as? SportRegistry.Problem, .invalidTypicalSpeed("yoga"), "\(speed)")
+            }
+        }
+    }
+
+    func testPlanUnitsAndSpeedsOfTheTriathlonSports() {
+        let sports = SportRegistry.standard
+        XCTAssertEqual(sports.modules.map(\.planUnit), [.meters, .minutes, .minutes])
+        XCTAssertEqual(sports.modules.map(\.typicalSpeedMetersPerSecond), [0.8, 7, 2.8])
+        XCTAssertEqual(PlanUnit.allCases.map(\.rawValue), ["meters", "minutes"])
+    }
+
     func testPlausibleGoalUsesTheModulesSpeedWindow() {
         let sports = SportRegistry.standard
         XCTAssertTrue(sports.isPlausibleGoal(sport: .swim, distanceMeters: 3800, durationSeconds: 3600))
@@ -219,6 +234,8 @@ private struct StubModule: SportModule {
     var health = SportHealthMapping(activityTypes: [.yoga], distance: nil)
     var loadFactor = 1.0
     var goalSpeedRange: ClosedRange<Double> = 0.1...1
+    var planUnit = PlanUnit.minutes
+    var typicalSpeedMetersPerSecond = 1.0
     var performanceMetrics: [PerformanceMetricDefinition] = []
     var performanceTests: [PerformanceTest] = []
     var zoneSchemes: [ZoneScheme] = []
@@ -234,4 +251,6 @@ private struct ProfilelessModule: SportModule {
     let health = SportHealthMapping(activityTypes: [.yoga], distance: nil)
     let loadFactor = 0.5
     let goalSpeedRange: ClosedRange<Double> = 0.1...1
+    let planUnit = PlanUnit.minutes
+    let typicalSpeedMetersPerSecond = 0.5
 }

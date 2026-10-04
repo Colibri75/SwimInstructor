@@ -2,20 +2,21 @@ import Charts
 import SwiftUI
 import SwimInstructorCore
 
-/// Fortschritt auf einen Blick: Weg zum Ziel, Wochenumfang und Pace-Entwicklung der letzten 8 Wochen.
+/// Fortschritt auf einen Blick: die Woche über alle Sportarten, dazu Weg zum Ziel, Wochenumfang und Pace-Entwicklung beim
+/// Schwimmen der letzten 8 Wochen (Statistik je Sportart folgt mit T6).
 struct DashboardView: View {
-    @EnvironmentObject private var loader: TodayPlanLoader
-    @EnvironmentObject private var weekLoader: WeekPlanLoader
+    @EnvironmentObject private var loader: MultiSportTodayLoader
+    @EnvironmentObject private var weekLoader: MultiSportWeekLoader
 
     private let statistics = TrainingStatistics()
-    private let weekProgress = WeekProgressCalculator()
+    private let weekProgress = MultiSportWeekProgressCalculator()
 
-    /// Stand der laufenden Woche gegen den Plan, aus Health und dem gespeicherten Wochenplan.
-    private var weekStatuses: [WeekDayStatus] {
+    /// Stand der laufenden Woche gegen den Plan, aus Health und dem gespeicherten Plan, über alle Sportarten.
+    private var weekStatuses: [MultiSportDayStatus] {
         weekProgress.statuses(
             plan: weekLoader.week(starting: weekLoader.currentWeekStart),
             weekStart: weekLoader.currentWeekStart,
-            workouts: loader.reading?.workouts ?? [],
+            workouts: loader.reading?.allWorkouts ?? [],
             now: Date()
         )
     }
@@ -25,6 +26,13 @@ struct DashboardView: View {
             List {
                 if let reading = loader.reading {
                     GoalSection(snapshot: reading.snapshot)
+                    Section {
+                        NavigationLink {
+                            ProfileView()
+                        } label: {
+                            Label("Leistungsprofil", systemImage: "gauge.with.dots.needle.67percent")
+                        }
+                    }
                     Section("Statistik") {
                         WeekStatsRows(
                             summary: weekProgress.summary(of: weekStatuses),

@@ -14,6 +14,8 @@ final class ContractTests: XCTestCase {
             let targets: [String]
             let goalSpeed: GoalSpeed
             let loadFactor: Double
+            let planUnit: String
+            let typicalSpeedMetersPerSecond: Double
             let performanceMetrics: [Metric]
             let performanceTests: [Test]
         }
@@ -99,6 +101,8 @@ final class ContractTests: XCTestCase {
             XCTAssertEqual(Set(module.targets.map(\.rawValue)), Set(sport.targets), sport.id)
             XCTAssertEqual(module.goalSpeedRange, sport.goalSpeed.minMetersPerSecond...sport.goalSpeed.maxMetersPerSecond, sport.id)
             XCTAssertEqual(module.loadFactor, sport.loadFactor, sport.id)
+            XCTAssertEqual(module.planUnit.rawValue, sport.planUnit, sport.id)
+            XCTAssertEqual(module.typicalSpeedMetersPerSecond, sport.typicalSpeedMetersPerSecond, sport.id)
             XCTAssertEqual(module.performanceMetrics.map { SportsContract.Metric($0) }, sport.performanceMetrics, sport.id)
             XCTAssertEqual(module.performanceTests.map { SportsContract.Test($0) }, sport.performanceTests, sport.id)
         }

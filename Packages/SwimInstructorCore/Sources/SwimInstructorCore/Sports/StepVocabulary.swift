@@ -22,3 +22,10 @@ public enum StepTarget: String, Codable, Sendable, CaseIterable {
     case strokeRate = "stroke_rate"
     case perceivedEffort = "perceived_effort"
 }
+
+/// In welcher Einheit der Plan den Umfang einer Sportart führt (`amount` in Plan v2): Meter beim Schwimmen, Minuten
+/// bei Rad und Laufen. Die Raw-Werte sind Teil des Vertrags mit dem Server (`contracts/sports.json`).
+public enum PlanUnit: String, Codable, Sendable, CaseIterable {
+    case meters
+    case minutes
+}

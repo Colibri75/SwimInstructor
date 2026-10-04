@@ -25,6 +25,15 @@ public protocol SportModule: Sendable {
     /// vor Tippfehlern wie "10 km in 10 Minuten". Steht auch in `contracts/sports.json`, der Server prüft dasselbe.
     var goalSpeedRange: ClosedRange<Double> { get }
 
+    // MARK: Planung (T4)
+
+    /// Einheit, in der der Plan den Umfang dieser Sportart führt. Steht auch in `contracts/sports.json`.
+    var planUnit: PlanUnit { get }
+    /// Typisches Trainingstempo in m/s inklusive Pausen. Damit rechnet die App Meter und Minuten um, wenn der Athlet eine
+    /// Einheit von Hand ändert oder die Sportart tauscht. Steht auch in `contracts/sports.json`, der Server rechnet ohne
+    /// eigenes Tempo des Athleten mit demselben Wert.
+    var typicalSpeedMetersPerSecond: Double { get }
+
     // MARK: Leistungsprofil (T2b)
 
     /// Leistungswerte dieser Sportart (z. B. CSS, Schwellenpuls). Die für alle Sportarten (Maximal-, Ruhepuls) stehen
@@ -65,6 +74,8 @@ public struct SportRegistry: Sendable {
         /// Zwei Sportarten beanspruchen dieselbe Workout-Art aus Health; die zweite wird genannt.
         case sharedActivityType(SportID)
         case invalidGoalSpeed(SportID)
+        /// Ein Trainingstempo, mit dem sich Meter und Minuten nicht umrechnen lassen.
+        case invalidTypicalSpeed(SportID)
         /// Ein Leistungswert ohne gültige Kennung, Namen, Einheit oder Bereich, doppelt oder einer für alle Sportarten.
         case invalidPerformanceMetric(SportID)
         /// Ein Test ohne gültige Kennung oder Dauer, doppelt oder mit einem Ergebnis, das die Sportart nicht kennt.
@@ -90,6 +101,9 @@ public struct SportRegistry: Sendable {
             guard module.loadFactor > 0, module.loadFactor.isFinite else { throw Problem.invalidLoadFactor(module.id) }
             guard module.goalSpeedRange.lowerBound > 0, module.goalSpeedRange.upperBound.isFinite else {
                 throw Problem.invalidGoalSpeed(module.id)
+            }
+            guard module.typicalSpeedMetersPerSecond > 0, module.typicalSpeedMetersPerSecond.isFinite else {
+                throw Problem.invalidTypicalSpeed(module.id)
             }
             for rawValue in module.health.activityTypeRawValues {
                 guard claimedActivityTypes.insert(rawValue).inserted else { throw Problem.sharedActivityType(module.id) }

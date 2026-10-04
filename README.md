@@ -737,19 +737,60 @@ Schritt bleibt sie fürs Schwimmen voll nutzbar.
       `docs/eval-runs/` danach committen, dann spielt die CI echte Antworten ab. In der App ändert sich noch nichts,
       sie nutzt Plan v2 ab T4.
 
+### T4 – Plan-Oberfläche und Feedback auf dem iPhone
+
+- **Die App plant mit Plan v2:** Heute, die nächsten sieben Tage und der Gesamtplan kommen für alle Sportarten des
+  Ziels. Ein Server ohne Plan v2 führt zur Meldung "Der Server kennt die Planung für mehrere Sportarten noch
+  nicht", statt einen Schwimmplan zu zeigen. Die Abläufe stehen als Loader im Package (`MultiSportTodayLoader`, `MultiSportWeekLoader`,
+  `MultiSportMacroLoader`, `PerformanceProfileLoader`) und sind dort getestet; die Views zeigen nur an.
+- **Heute:** oben, was die sieben Tage für heute vorsehen, darunter eine Karte je Einheit mit allen Schritten, Ziel,
+  Pause und Hilfsmitteln. Der Wunsch für heute bleibt. Bei einem Leistungstest steht "Ergebnis eintragen" auf der
+  Karte.
+- **Plan-Tab:** die Woche mit Minuten und Umfang je Sportart, Tage mit bis zu zwei Einheiten. Ein Tag lässt sich
+  anpassen: Umfang je Einheit, Sportart tauschen (der Umfang wird über die Dauer umgerechnet), Einheit dazunehmen oder
+  entfernen, Ruhetag, "keine Zeit", Tage tauschen, Verpasstes nachholen. Darunter der Gesamtplan mit Wochenstunden je
+  Sportart, allen Wochen und Testterminen, und das **Feedback zum Gesamtplan**: Text schreiben ("weniger Laufen im
+  Winter"), Claude überarbeitet ihn, die Liste der Änderungen steht darunter, frühere Runden lassen sich aufklappen.
+  Danach stimmen sich die nächsten sieben Tage einmal neu ab.
+- **Leistungsprofil** (Einstellungen oder Dashboard): Werte je Sportart mit Herkunft (Test, von dir, geschätzt),
+  Datum und Verlauf, Eingabe von Hand, dazu die Testeinstellungen (anbieten ja/nein, Abstand 4 bis 12 Wochen, bevorzugter
+  Test). Ohne bestätigten Wert plant die App in der ersten Woche einen Einstiegstest ein.
+- **Ergebnis nach einem Test:** Zeiten oder Werte eingeben (CSS aus 400 m und 200 m), die App zeigt den neuen Wert
+  neben dem bisherigen mit der Änderung in Prozent. Ab 10 % Abweichung steht "bitte prüfen". Erst "Übernehmen" schreibt
+  den Wert ins Profil.
+- **Verlauf und Dashboard:** "Plan gegen Ist" für jede Sportart (Meter beim Schwimmen, Minuten bei Rad und Laufen,
+  eine andere Sportart statt der geplanten zählt mit ihren Minuten). Die Watch bekommt bis T5 weiter nur die
+  Schwimmeinheit des Tages, an Tagen ohne Schwimmen einen Ruhetag mit Hinweis auf die Einheiten auf dem iPhone.
+
+### T4 – Definition of Done
+
+- [x] Loader-Tests für eine Feedback-Runde, den Tausch der Sportart, das Zusammenführen nach einer neuen Planung und das
+      Planen einmal am Tag
+- [x] "Plan gegen Ist" erkennt jede Sportart (auch die Test-Sportart Rudern)
+- [x] Loader-Tests für Übernehmen, Verwerfen und Eingabe von Hand im Profil
+- [x] App-Build in der CI grün
+- [ ] **Für dich** (nach `deploy.sh` mit dem Stand von T3): Im Plan-Tab Feedback geben ("weniger Laufen im Winter")
+      und sehen, wie sich der Gesamtplan ändert; einen Tag von Laufen auf Rad tauschen; im Leistungsprofil einen Wert
+      ansehen und von Hand ändern.
+
 ## Projektstruktur
 
 ```
 App/                                # iOS-App
-  SwimInstructorApp.swift            # App-Einstiegspunkt, verdrahtet Health, Einstellungen, Plan-Loader
-  PhonePlanSync.swift                # Schickt den Tagesplan an die Watch (M7)
-  RootView.swift                     # Tabs: Heute, Dashboard, Verlauf (M8)
-  TodayView.swift                    # Heute: Eintrag aus dem Plan, Einheit für heute, Wunsch
-  WeekView.swift                     # Plan: Gesamtplan, nächste 7 Tage, Status, Anpassen, Planen
+  SwimInstructorApp.swift            # App-Einstiegspunkt, verdrahtet Health, Einstellungen, Loader für Plan v2 und Profil
+  PhonePlanSync.swift                # Schickt die Schwimmeinheit des Tages an die Watch (M7, bis T5)
+  RootView.swift                     # Tabs: Heute, Plan, Dashboard, Verlauf
+  TodayView.swift                    # Heute: Eintrag aus dem Plan, eine Karte je Einheit, Wunsch
+  SessionCardView.swift              # Tagesplan v2: Kopf, Karte je Einheit mit Schritten, Test-Knopf
+  TestResultSheet.swift              # Testergebnis eintragen, Vergleich, Übernehmen oder Verwerfen (T4)
+  WeekView.swift                     # Plan: Woche je Sportart, Tage mit bis zu zwei Einheiten, Planen
+  DayEditSheet.swift                 # Tag anpassen: Umfang, Sportart tauschen, Einheit dazu oder weg, Tage tauschen
+  MacroPlanSections.swift            # Gesamtplan je Sportart, Testtermine, Feedback mit Änderungen und Runden
+  ProfileView.swift                  # Leistungsprofil: Werte, Herkunft, Verlauf, Eingabe von Hand, Testeinstellungen
   StatsViews.swift                   # Statistik-Zeilen (Dashboard), Einheiten-Zeile aller Sportarten (Verlauf)
-  DashboardView.swift                # Ziel, Wochenumfang, Pace-Verlauf (Swift Charts, M8)
-  HistoryView.swift                  # Verlauf geplant gegen tatsächlich (M8)
-  PlanCardView.swift                 # Darstellung des Tagesplans
+  DashboardView.swift                # Woche je Sportart, Ziel, Wochenumfang, Pace-Verlauf (Swift Charts, M8)
+  HistoryView.swift                  # Verlauf geplant gegen tatsächlich je Sportart
+  GoalAssistantView.swift            # Ziel mit Disziplinen, Zieltag, Stunden und Schwerpunkten (T2)
   SettingsView.swift                 # Server-Adresse, Token, Verbindung testen
   Info.plist
   SwimInstructor.entitlements        # HealthKit-Capability
@@ -794,7 +835,11 @@ Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
     WeekPlanEditor.swift             # Änderungen des Athleten, Zusammenführen nach dem Neuplanen
     WeekProgress.swift               # Status je Tag aus Health gegen den Plan
     WeekPlanStore.swift              # Wochenpläne auf dem Gerät
-    WeekPlanLoader.swift             # Ablauf des Wochen-Tabs
+    WeekPlanLoader.swift             # Ablauf des Wochen-Tabs (Plan v1, von der App seit T4 nicht mehr genutzt)
+    PerformanceProfileLoader.swift   # Leistungsprofil: Werte, Eingabe von Hand, Testergebnis nach Bestätigung (T4)
+    PlanV2/                          # Plan v2 für alle Sportarten (T4): Modelle, Client, Speicher, Anzeige-Texte,
+                                     # Loader für Heute, sieben Tage und Gesamtplan mit Feedback, Plan gegen Ist
+    Sports/                          # Sport-Module, Registry, Leistungswerte, Zonen und Tests (T0 bis T4)
   Tests/SwimInstructorCoreTests/
     HealthKitManagerTests.swift
     SwimWorkoutRepositoryTests.swift

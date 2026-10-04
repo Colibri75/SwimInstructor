@@ -14,6 +14,8 @@
       "targets": ["pace_per_100m", "heart_rate_zone", "perceived_effort"],
       "goal_speed": {"min_meters_per_second": 0.15, "max_meters_per_second": 2.5},
       "load_factor": 1,
+      "plan_unit": "meters",
+      "typical_speed_meters_per_second": 0.8,
       "performance_metrics": [
         {"id": "css_pace_per_100m", "display_name": "CSS-Pace", "unit": "s/100m", "min": 50, "max": 300}
       ],
@@ -29,6 +31,8 @@
       "targets": ["power", "heart_rate_zone", "speed", "cadence", "perceived_effort"],
       "goal_speed": {"min_meters_per_second": 2, "max_meters_per_second": 20},
       "load_factor": 0.8,
+      "plan_unit": "minutes",
+      "typical_speed_meters_per_second": 7,
       "performance_metrics": [
         {"id": "threshold_heart_rate", "display_name": "Schwellenpuls", "unit": "bpm", "min": 100, "max": 215},
         {"id": "threshold_power", "display_name": "Schwellenleistung (FTP)", "unit": "W", "min": 50, "max": 600}
@@ -44,6 +48,8 @@
       "targets": ["pace_per_km", "heart_rate_zone", "cadence", "perceived_effort"],
       "goal_speed": {"min_meters_per_second": 1, "max_meters_per_second": 7},
       "load_factor": 1,
+      "plan_unit": "minutes",
+      "typical_speed_meters_per_second": 2.8,
       "performance_metrics": [
         {"id": "threshold_heart_rate", "display_name": "Schwellenpuls", "unit": "bpm", "min": 100, "max": 215},
         {"id": "threshold_pace_per_km", "display_name": "Schwellentempo", "unit": "s/km", "min": 150, "max": 900}

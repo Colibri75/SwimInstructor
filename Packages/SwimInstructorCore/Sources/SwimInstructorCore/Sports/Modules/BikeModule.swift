@@ -28,13 +28,17 @@ public struct BikeModule: SportModule {
     public let loadFactor = 0.8
     /// 7,2 bis 72 km/h.
     public let goalSpeedRange: ClosedRange<Double> = 2...20
+    public let planUnit = PlanUnit.minutes
+    /// 25 km/h.
+    public let typicalSpeedMetersPerSecond: Double = 7
 
     public let performanceMetrics: [PerformanceMetricDefinition] = [.thresholdHeartRate, .thresholdPower]
     public let performanceTests: [PerformanceTest] = [
         // Schwellenpuls: Schnitt der letzten 20 Minuten; FTP: Schnitt der 30 Minuten, nur mit Leistungsmesser.
         PerformanceTest(
             id: "threshold_30min", displayName: "30-Minuten-Test",
-            produces: [.thresholdHeartRate, .thresholdPower], maximalEffort: true, durationMinutes: 30
+            produces: [.thresholdHeartRate, .thresholdPower], maximalEffort: true, durationMinutes: 30,
+            resultHint: "Schwellenpuls: Schnitt der letzten 20 Minuten. Leistung: Schnitt der ganzen 30 Minuten, nur mit Leistungsmesser."
         )
     ]
     public let zoneSchemes: [ZoneScheme] = [

@@ -1,32 +1,33 @@
 import SwiftUI
 import SwimInstructorCore
 
-/// Heute-Bildschirm: der Teil des Wochenplans, der heute ansteht, die Einheit für heute und ein paar
-/// allgemeine Statistiken.
+/// Heute-Bildschirm: was der Plan der nächsten sieben Tage für heute vorsieht, darunter je Einheit eine Karte mit allen
+/// Schritten, dazu der Wunsch für heute.
 struct TodayView: View {
-    @EnvironmentObject private var loader: TodayPlanLoader
-    @EnvironmentObject private var weekLoader: WeekPlanLoader
+    @EnvironmentObject private var loader: MultiSportTodayLoader
+    @EnvironmentObject private var weekLoader: MultiSportWeekLoader
     @EnvironmentObject private var settings: BackendSettings
     @Environment(\.scenePhase) private var scenePhase
     @State private var showsSettings = false
     @State private var wishDraft = ""
+    @State private var resultTest: TestResultTarget?
 
     private let onShowWeek: () -> Void
-    private let progress = WeekProgressCalculator()
+    private let progress = MultiSportWeekProgressCalculator()
 
     /// - Parameter onShowWeek: wechselt in den Tab "Plan" (für den Hinweis ohne Eintrag für heute).
     init(onShowWeek: @escaping () -> Void = {}) {
         self.onShowWeek = onShowWeek
     }
 
-    /// Stand der laufenden Woche gegen den Plan, aus Health und dem gespeicherten Wochenplan.
-    private var weekStatuses: [WeekDayStatus] {
+    /// Stand von heute gegen den Plan, aus Health und dem gespeicherten Plan der Woche.
+    private var todayStatus: MultiSportDayStatus? {
         progress.statuses(
             plan: weekLoader.week(starting: weekLoader.currentWeekStart),
             weekStart: weekLoader.currentWeekStart,
-            workouts: loader.reading?.workouts ?? [],
+            workouts: loader.reading?.allWorkouts ?? [],
             now: Date()
-        )
+        ).first { $0.date == weekLoader.todayKey }
     }
 
     var body: some View {
@@ -53,6 +54,9 @@ struct TodayView: View {
                     Task { await loader.refresh() }
                 }
             }
+            .sheet(item: $resultTest) { target in
+                TestResultSheet(sport: target.sport, testID: target.testID)
+            }
         }
         .task { await loader.refreshIfNeeded() }
         .onChange(of: scenePhase) { _, phase in
@@ -63,37 +67,34 @@ struct TodayView: View {
         }
     }
 
-    // MARK: - Heute im Wochenplan
+    // MARK: - Heute im Plan
 
-    /// Was der Wochenplan für heute vorgibt. Die Details der Einheit stehen darunter.
+    /// Was der Plan der sieben Tage für heute vorgibt. Die Einheiten mit allen Schritten stehen darunter.
     @ViewBuilder
     private var weekTodaySection: some View {
         Section {
             if let entry = weekLoader.todayEntry {
-                let state = weekStatuses.first { $0.date == weekLoader.todayKey }?.state
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 6) {
                     HStack(alignment: .firstTextBaseline) {
-                        Text(entry.isRestDay
-                             ? (entry.isUnavailable ? "Keine Zeit" : "Ruhetag")
-                             : "\(PlanFormatting.sessionType(entry.sessionType)) · \(PlanFormatting.meters(entry.targetDistanceMeters))")
+                        Text(entry.isUnavailable ? "Keine Zeit" : (entry.isRestDay ? "Ruhetag" : "Heute im Plan"))
                             .font(.headline)
                         Spacer()
-                        if let state {
-                            Text(PlanFormatting.stateText(state))
+                        if let state = todayStatus?.state {
+                            Text(PlanV2Formatting.stateText(state))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    if !entry.focus.isEmpty, !entry.isRestDay {
+                    if !entry.isUnavailable {
+                        ForEach(Array(entry.sessions.enumerated()), id: \.offset) { _, session in
+                            PlannedSessionLine(session: session)
+                        }
+                    }
+                    if !entry.focus.isEmpty, !entry.isRestDay, !entry.isUnavailable {
                         Text(entry.focus)
-                            .font(.subheadline)
+                            .font(.footnote)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
-                    }
-                    if !entry.isRestDay {
-                        Text("ca. \(entry.estimatedDurationMinutes) min · \(PlanFormatting.intensity(entry.intensity))")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
                     }
                 }
                 .padding(.vertical, 2)
@@ -104,12 +105,10 @@ struct TodayView: View {
                 }
                 .padding(.vertical, 2)
             }
-        } header: {
-            Text("Heute im Plan")
         }
     }
 
-    // MARK: - Plan
+    // MARK: - Tagesplan
 
     @ViewBuilder
     private var planSection: some View {
@@ -129,7 +128,7 @@ struct TodayView: View {
                 }
             }
             if let response = loader.response {
-                PlanCardView(response: response)
+                DayPlanHeaderView(response: response)
             } else if !loader.isLoadingPlan {
                 emptyPlanRow
             }
@@ -139,8 +138,26 @@ struct TodayView: View {
                     .foregroundStyle(.orange)
             }
         } header: {
-            Text("Deine Einheit, \(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))")
+            Text("Dein Plan, \(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))")
         }
+        // Eine Karte je Einheit, damit Schwimmen und Laufen am selben Tag getrennt lesbar bleiben.
+        if let response = loader.response {
+            ForEach(Array(response.plan.sessions.enumerated()), id: \.offset) { index, session in
+                Section {
+                    SessionCardView(session: session, onEnterResult: resultAction(for: session))
+                } header: {
+                    if response.plan.sessions.count > 1 {
+                        Text("Einheit \(index + 1) von \(response.plan.sessions.count)")
+                    }
+                }
+            }
+        }
+    }
+
+    /// Nur ein Test mit Vollbelastung hat ein Ergebnis, das ins Profil gehört.
+    private func resultAction(for session: DaySession) -> (() -> Void)? {
+        guard let test = session.test, test.maximalEffort else { return nil }
+        return { resultTest = TestResultTarget(sport: session.sport, testID: test.id) }
     }
 
     @ViewBuilder
@@ -166,7 +183,7 @@ struct TodayView: View {
     /// Freitext für heute. Er geht mit jeder Plananfrage des Tages mit und gilt morgen nicht mehr.
     private var wishSection: some View {
         Section {
-            TextField("z. B. Heute lieber Technik, die Schulter zwickt", text: $wishDraft, axis: .vertical)
+            TextField("z. B. Heute lieber Rad statt Laufen, die Wade zwickt", text: $wishDraft, axis: .vertical)
                 .lineLimit(2...5)
                 .onChange(of: wishDraft) { _, text in
                     if text.count > DailyWish.maxLength {
@@ -187,7 +204,7 @@ struct TodayView: View {
                          : "Plan mit Wunsch neu erstellen")
                 }
             }
-            .disabled(loader.isLoadingPlan || loader.isLoadingHealth || !settings.hasToken)
+            .disabled(loader.isLoading || !settings.hasToken)
         } header: {
             Text("Dein Wunsch für heute")
         } footer: {
@@ -198,5 +215,35 @@ struct TodayView: View {
             // Neuer Tag oder gespeicherter Wunsch geändert: Feld nachziehen, aber nichts Ungespeichertes überschreiben.
             if wishDraft == old { wishDraft = new }
         }
+    }
+}
+
+/// Der Test, für den das Ergebnis-Blatt offen ist.
+struct TestResultTarget: Identifiable {
+    let sport: SportID
+    let testID: String
+    var id: String { "\(sport.rawValue)|\(testID)" }
+}
+
+/// Eine geplante Einheit in einer Zeile: Symbol, Sportart, Umfang, Art und Intensität.
+struct PlannedSessionLine: View {
+    let session: WeekSession
+
+    private let registry = SportRegistry.standard
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: registry.symbolName(for: session.sport))
+                .frame(width: 22)
+                .foregroundStyle(.tint)
+                .accessibilityHidden(true)
+            Text(PlanV2Formatting.sessionTitle(sport: session.sport, amount: session.amount, unit: session.unit, registry: registry))
+                .font(.subheadline.weight(.semibold))
+            Text(session.test.map { "Test: \($0.displayName)" } ?? "\(PlanFormatting.sessionType(session.sessionType)), \(PlanFormatting.intensity(session.intensity))")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+        .accessibilityElement(children: .combine)
     }
 }

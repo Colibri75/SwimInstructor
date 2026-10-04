@@ -104,9 +104,14 @@ public struct PlanAdherenceCalculator: Sendable {
     }
 
     public func summary(of entries: [PlanAdherenceEntry]) -> PlanAdherenceSummary {
+        Self.summary(of: entries.map(\.outcome))
+    }
+
+    /// Zählt die Tage nach ihrem Ausgang; offene Tage (`pending`) zählen nicht.
+    public static func summary(of outcomes: [AdherenceOutcome]) -> PlanAdherenceSummary {
         var planned = 0, trained = 0, rest = 0, restKept = 0
-        for entry in entries {
-            switch entry.outcome {
+        for outcome in outcomes {
+            switch outcome {
             case .pending:
                 continue
             case .followed, .shorter, .longer:

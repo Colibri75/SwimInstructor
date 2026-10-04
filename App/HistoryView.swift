@@ -2,17 +2,17 @@ import Charts
 import SwiftUI
 import SwimInstructorCore
 
-/// Verlauf: Was war geplant, was hast du geschwommen? Die letzten 4 Wochen.
+/// Verlauf: Was war geplant, was hast du gemacht? Die letzten 4 Wochen, über alle Sportarten.
 struct HistoryView: View {
-    @EnvironmentObject private var loader: TodayPlanLoader
+    @EnvironmentObject private var loader: MultiSportTodayLoader
 
-    private let calculator = PlanAdherenceCalculator()
+    private let calculator = MultiSportAdherenceCalculator()
 
     var body: some View {
         NavigationStack {
             let entries = calculator.entries(
                 plans: loader.planHistory,
-                workouts: loader.reading?.workouts ?? [],
+                workouts: loader.reading?.allWorkouts ?? [],
                 now: Date()
             )
             List {
@@ -69,7 +69,7 @@ private struct SummarySection: View {
         Section("Die letzten 4 Wochen") {
             if summary.plannedTrainingDays > 0 {
                 LabeledContent("Geplante Einheiten") {
-                    Text("\(summary.trainedDays) von \(summary.plannedTrainingDays) geschwommen")
+                    Text("\(summary.trainedDays) von \(summary.plannedTrainingDays) trainiert")
                 }
             }
             if summary.restDays > 0 {
@@ -88,65 +88,60 @@ private struct SummarySection: View {
 // MARK: - Diagramm
 
 private struct ChartSection: View {
-    let entries: [PlanAdherenceEntry]
+    let entries: [MultiSportAdherenceEntry]
 
     private struct Bar: Identifiable {
         let date: Date
         let kind: String
-        let meters: Double
+        let minutes: Double
         var id: String { "\(date.timeIntervalSince1970)-\(kind)" }
     }
 
-    /// Nur Tage mit Training oder Strecke, die letzten 14 Tage (älteste links).
+    /// Geplante und trainierte Minuten über alle Sportarten, die letzten 14 Tage (älteste links).
     private var bars: [Bar] {
-        entries
+        let weekCalendar = WeekCalendar()
+        return entries
             .prefix(14)
             .reversed()
             .flatMap { entry -> [Bar] in
-                guard let date = Self.parse(entry.date) else { return [] }
+                guard let date = weekCalendar.date(from: entry.date) else { return [] }
                 return [
-                    Bar(date: date, kind: "Geplant", meters: Double(entry.plannedMeters)),
-                    Bar(date: date, kind: "Geschwommen", meters: entry.actualMeters)
+                    Bar(date: date, kind: "Geplant", minutes: entry.comparisons.reduce(0) { $0 + $1.plannedMinutes }),
+                    Bar(date: date, kind: "Trainiert", minutes: entry.comparisons.reduce(0) { $0 + $1.actualMinutes })
                 ]
             }
     }
 
     var body: some View {
         let data = bars
-        if data.contains(where: { $0.meters > 0 }) {
+        if data.contains(where: { $0.minutes > 0 }) {
             Section {
                 Chart(data) { bar in
                     BarMark(
                         x: .value("Tag", bar.date, unit: .day),
-                        y: .value("Meter", bar.meters)
+                        y: .value("Minuten", bar.minutes)
                     )
                     .foregroundStyle(by: .value("Art", bar.kind))
                     .position(by: .value("Art", bar.kind))
                 }
-                .chartForegroundStyleScale(["Geplant": Color.gray.opacity(0.5), "Geschwommen": Color.blue])
+                .chartForegroundStyleScale(["Geplant": Color.gray.opacity(0.5), "Trainiert": Color.blue])
                 .frame(height: 180)
-                .accessibilityLabel("Geplante und geschwommene Meter der letzten Tage")
+                .accessibilityLabel("Geplante und trainierte Minuten der letzten Tage")
             } header: {
-                Text("Geplant und geschwommen")
+                Text("Geplant und trainiert")
             } footer: {
-                Text("Die letzten 14 Tage mit gespeichertem Plan.")
+                Text("Minuten über alle Sportarten, die letzten 14 Tage mit gespeichertem Plan.")
             }
         }
-    }
-
-    private static func parse(_ isoDay: String) -> Date? {
-        let formatter = DateFormatter()
-        formatter.calendar = Calendar.current
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.date(from: isoDay)
     }
 }
 
 // MARK: - Zeile
 
 private struct HistoryRow: View {
-    let entry: PlanAdherenceEntry
+    let entry: MultiSportAdherenceEntry
+
+    private let registry = SportRegistry.standard
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -154,45 +149,40 @@ private struct HistoryRow: View {
                 Text(PlanFormatting.germanDate(entry.date))
                     .font(.subheadline)
                 Spacer()
-                Label(Self.title(entry.outcome), systemImage: Self.symbol(entry.outcome))
+                Label(PlanV2Formatting.outcomeText(entry.outcome), systemImage: Self.symbol(entry.outcome))
                     .font(.caption)
                     .foregroundStyle(Self.color(entry.outcome))
             }
-            Text(planned)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            if entry.workoutCount > 0 {
-                Text(swum)
+            if entry.plan.isRestDay {
+                Text("Geplant: Ruhetag")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+            ForEach(entry.comparisons) { comparison in
+                HStack(spacing: 6) {
+                    Image(systemName: registry.symbolName(for: comparison.sport))
+                        .frame(width: 18)
+                        .accessibilityHidden(true)
+                    Text(line(comparison))
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 2)
         .accessibilityElement(children: .combine)
     }
 
-    private var planned: String {
-        let type = PlanFormatting.sessionType(entry.plan.sessionType)
-        return entry.plan.isRestDay ? "Geplant: \(type)" : "Geplant: \(type), \(PlanFormatting.meters(entry.plannedMeters))"
-    }
-
-    private var swum: String {
-        let count = entry.workoutCount == 1 ? "1 Einheit" : "\(entry.workoutCount) Einheiten"
-        return entry.actualMeters > 0
-            ? "Geschwommen: \(PlanFormatting.meters(Int(entry.actualMeters))) in \(count)"
-            : "Geschwommen: \(count), ohne Streckenangabe"
-    }
-
-    private static func title(_ outcome: AdherenceOutcome) -> String {
-        switch outcome {
-        case .followed: return "umgesetzt"
-        case .shorter: return "kürzer"
-        case .longer: return "länger"
-        case .missed: return "nicht geschwommen"
-        case .restKept: return "Ruhetag eingehalten"
-        case .restBroken: return "trotz Ruhetag geschwommen"
-        case .pending: return "offen"
+    /// "Schwimmen: 1.200 m von 1.500 m", "Laufen: nicht gemacht (40 min geplant)", "Rad: 45 min, nicht geplant".
+    private func line(_ comparison: SportComparison) -> String {
+        let name = registry.displayName(for: comparison.sport)
+        if !comparison.isPlanned {
+            return "\(name): \(PlanV2Formatting.amount(comparison.actual, unit: comparison.unit)), nicht geplant"
         }
+        if comparison.workoutCount == 0 {
+            return "\(name): nicht gemacht (\(PlanV2Formatting.amount(comparison.planned, unit: comparison.unit)) geplant)"
+        }
+        return "\(name): \(PlanV2Formatting.comparison(planned: comparison.planned, actual: comparison.actual, unit: comparison.unit))"
     }
 
     private static func symbol(_ outcome: AdherenceOutcome) -> String {
