@@ -1,878 +1,262 @@
 {
   "macro": {
-    "source": "synthetic",
-    "model": "synthetisch",
-    "recorded_at": "2026-10-03T12:00:00Z",
+    "source": "claude",
+    "model": "claude-opus-5-5",
+    "recorded_at": "2026-10-04T09:27:09.995Z",
     "usage": {
-      "inputTokens": 5731,
-      "outputTokens": 2260
+      "inputTokens": 10782,
+      "outputTokens": 7809
     },
     "raw": {
-      "rationale": "Der Plan führt in 33 Wochen zum Ziel am 2027-05-16 und verteilt die Zeit nach deinen Schwerpunkten (Schwimmen 25 %, Radfahren 45 %, Laufen 30 %). Jede vierte Woche ist eine Entlastungswoche, danach steigt der Umfang um etwa 8 % pro Woche bis zu deinen 10 Stunden. Vor dem Wettkampf spitzen 2 Wochen zu.",
+      "rationale": "Bis zum Wettkampf am 16.05.2027 sind es 33 Wochen; das Ziel (1900 m in 38 min bei CSS 1:38, 90 km in 3 h bei 245 W FTP, 21,1 km in 110 min bei 4:28 Schwellentempo) ist realistisch. Weil die Wochengrenze von 600 min schon jetzt fast ausgeschöpft ist (Woche 1: 7000 m Schwimmen, 300 min Rad, 150 min Laufen, etwa 590 min), wächst nicht der Gesamtumfang, sondern die Verteilung verschiebt sich Richtung Schwerpunkte: Laufen steigt um etwa 5 % je Woche auf 180–185 min, das Rad bleibt bei 265–295 min. Am Höhepunkt in den Wochen 28 bis 30 stehen etwa 6000 m Schwimmen, 295 min Rad und 180 min Laufen (rund 595 min) mit langer Ausfahrt bis 180 min, Koppelläufen und Schwellenarbeit. Nach je zwei bis drei Belastungswochen folgt eine Entlastungswoche mit 30 % weniger Umfang. Danach folgen 2 Wochen Zuspitzen auf 75 % und 55 % sowie eine kurze Zielwoche mit höchstens 50 %.",
       "blocks": [
         {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Grundlage, Technik und Leistungstests",
           "sports": [
             {
               "sport": "swim",
               "start_amount": 7000,
               "end_amount": 7000,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 280,
-              "end_amount": 280,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 140,
-              "end_amount": 140,
-              "deload_amount": null,
+              "deload_amount": 4900,
               "sessions": 3
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
             },
             {
               "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
+              "start_amount": 300,
+              "end_amount": 290,
+              "deload_amount": 200,
+              "sessions": 3
             },
             {
               "sport": "run",
               "start_amount": 150,
-              "end_amount": 150,
-              "deload_amount": null,
+              "end_amount": 165,
+              "deload_amount": 115,
               "sessions": 3
             }
           ]
         },
         {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Laufumfang behutsam steigern, Rad locker in Zone 2",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
+              "start_amount": 7000,
+              "end_amount": 7000,
+              "deload_amount": 4900,
+              "sessions": 3
             },
             {
               "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
+              "start_amount": 280,
+              "end_amount": 275,
+              "deload_amount": 190,
+              "sessions": 3
             },
             {
               "sport": "run",
               "start_amount": 165,
-              "end_amount": 165,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": true,
-          "focus": "Entlastung",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 5250,
-              "end_amount": 5250,
-              "deload_amount": 5250,
-              "sessions": 3
-            },
-            {
-              "sport": "bike",
-              "start_amount": 190,
-              "end_amount": 190,
-              "deload_amount": 190,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 125,
-              "end_amount": 125,
+              "end_amount": 180,
               "deload_amount": 125,
               "sessions": 3
             }
           ]
         },
         {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Grundlage festigen, Tests, erste Tempoabschnitte",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
+              "start_amount": 6800,
+              "end_amount": 7200,
+              "deload_amount": 5000,
+              "sessions": 3
+            },
+            {
+              "sport": "bike",
+              "start_amount": 275,
+              "end_amount": 265,
+              "deload_amount": 185,
+              "sessions": 3
+            },
+            {
+              "sport": "run",
+              "start_amount": 175,
+              "end_amount": 185,
+              "deload_amount": 125,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Winter-Grundlage, lange lockere Einheiten",
+          "sports": [
+            {
+              "sport": "swim",
+              "start_amount": 7000,
+              "end_amount": 7000,
+              "deload_amount": 4900,
+              "sessions": 3
             },
             {
               "sport": "bike",
               "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
+              "end_amount": 275,
+              "deload_amount": 190,
+              "sessions": 3
+            },
+            {
+              "sport": "run",
+              "start_amount": 175,
+              "end_amount": 180,
+              "deload_amount": 125,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Tests, längere Ausfahrten, Tempo- und Schwellenteile",
+          "sports": [
+            {
+              "sport": "swim",
+              "start_amount": 6500,
+              "end_amount": 6500,
+              "deload_amount": 4550,
+              "sessions": 3
+            },
+            {
+              "sport": "bike",
+              "start_amount": 280,
+              "end_amount": 290,
+              "deload_amount": 200,
+              "sessions": 3
             },
             {
               "sport": "run",
               "start_amount": 175,
               "end_amount": 175,
-              "deload_amount": null,
-              "sessions": 4
+              "deload_amount": 120,
+              "sessions": 3
             }
           ]
         },
         {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
+          "weeks": 3,
           "deload_last": true,
-          "focus": "Entlastung",
+          "focus": "Grundlage abschließen, Übergang zu spezifisch",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 5250,
-              "end_amount": 5250,
-              "deload_amount": 5250,
+              "start_amount": 6500,
+              "end_amount": 6500,
+              "deload_amount": 4550,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "start_amount": 190,
-              "end_amount": 190,
-              "deload_amount": 190,
-              "sessions": 4
+              "start_amount": 280,
+              "end_amount": 290,
+              "deload_amount": 200,
+              "sessions": 3
             },
             {
               "sport": "run",
-              "start_amount": 125,
-              "end_amount": 125,
+              "start_amount": 175,
+              "end_amount": 175,
+              "deload_amount": 120,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Schwelle, Wettkampftempo, Koppeltraining, Tests",
+          "sports": [
+            {
+              "sport": "swim",
+              "start_amount": 6500,
+              "end_amount": 6000,
+              "deload_amount": 4200,
+              "sessions": 3
+            },
+            {
+              "sport": "bike",
+              "start_amount": 290,
+              "end_amount": 295,
+              "deload_amount": 205,
+              "sessions": 3
+            },
+            {
+              "sport": "run",
+              "start_amount": 175,
+              "end_amount": 180,
               "deload_amount": 125,
               "sessions": 3
             }
           ]
         },
         {
-          "weeks": 1,
+          "weeks": 3,
           "deload_last": false,
-          "focus": "Grundlage aufbauen",
+          "focus": "Höhepunkt: lange Ausfahrt, Koppelläufe, Renntempo",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": true,
-          "focus": "Entlastung",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 5250,
-              "end_amount": 5250,
-              "deload_amount": 5250,
-              "sessions": 3
-            },
-            {
-              "sport": "bike",
-              "start_amount": 190,
-              "end_amount": 190,
-              "deload_amount": 190,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 125,
-              "end_amount": 125,
-              "deload_amount": 125,
-              "sessions": 3
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": true,
-          "focus": "Entlastung",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 5250,
-              "end_amount": 5250,
-              "deload_amount": 5250,
-              "sessions": 3
-            },
-            {
-              "sport": "bike",
-              "start_amount": 190,
-              "end_amount": 190,
-              "deload_amount": 190,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 125,
-              "end_amount": 125,
-              "deload_amount": 125,
-              "sessions": 3
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": true,
-          "focus": "Entlastung",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 5250,
-              "end_amount": 5250,
-              "deload_amount": 5250,
-              "sessions": 3
-            },
-            {
-              "sport": "bike",
-              "start_amount": 190,
-              "end_amount": 190,
-              "deload_amount": 190,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 125,
-              "end_amount": 125,
-              "deload_amount": 125,
-              "sessions": 3
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": true,
-          "focus": "Entlastung",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 5250,
-              "end_amount": 5250,
-              "deload_amount": 5250,
-              "sessions": 3
-            },
-            {
-              "sport": "bike",
-              "start_amount": 190,
-              "end_amount": 190,
-              "deload_amount": 190,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 125,
-              "end_amount": 125,
-              "deload_amount": 125,
-              "sessions": 3
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": true,
-          "focus": "Entlastung",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 5250,
-              "end_amount": 5250,
-              "deload_amount": 5250,
-              "sessions": 3
-            },
-            {
-              "sport": "bike",
-              "start_amount": 190,
-              "end_amount": 190,
-              "deload_amount": 190,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 125,
-              "end_amount": 125,
-              "deload_amount": 125,
-              "sessions": 3
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 7500,
-              "end_amount": 7500,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 270,
-              "end_amount": 270,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "run",
-              "start_amount": 180,
-              "end_amount": 180,
-              "deload_amount": null,
-              "sessions": 4
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Zuspitzen, frisch werden",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 5650,
-              "end_amount": 5650,
+              "start_amount": 6000,
+              "end_amount": 6000,
               "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "start_amount": 210,
-              "end_amount": 210,
+              "start_amount": 290,
+              "end_amount": 295,
               "deload_amount": null,
-              "sessions": 4
+              "sessions": 3
+            },
+            {
+              "sport": "run",
+              "start_amount": 180,
+              "end_amount": 180,
+              "deload_amount": null,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 2,
+          "deload_last": false,
+          "focus": "Zuspitzen: weniger Umfang, Intensität halten",
+          "sports": [
+            {
+              "sport": "swim",
+              "start_amount": 4500,
+              "end_amount": 3300,
+              "deload_amount": null,
+              "sessions": 3
+            },
+            {
+              "sport": "bike",
+              "start_amount": 220,
+              "end_amount": 160,
+              "deload_amount": null,
+              "sessions": 3
             },
             {
               "sport": "run",
               "start_amount": 135,
-              "end_amount": 135,
+              "end_amount": 95,
               "deload_amount": null,
               "sessions": 3
             }
@@ -881,54 +265,26 @@
         {
           "weeks": 1,
           "deload_last": false,
-          "focus": "Zuspitzen, frisch werden",
+          "focus": "Zielwoche: kurz, frisch, kurze Tempoimpulse",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 4150,
-              "end_amount": 4150,
+              "start_amount": 2500,
+              "end_amount": 2500,
               "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "bike",
-              "start_amount": 155,
-              "end_amount": 155,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
               "start_amount": 100,
               "end_amount": 100,
               "deload_amount": null,
               "sessions": 2
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfwoche",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 3000,
-              "end_amount": 3000,
-              "deload_amount": null,
-              "sessions": 2
-            },
-            {
-              "sport": "bike",
-              "start_amount": 110,
-              "end_amount": 110,
-              "deload_amount": null,
-              "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 70,
-              "end_amount": 70,
+              "start_amount": 60,
+              "end_amount": 60,
               "deload_amount": null,
               "sessions": 2
             }
@@ -938,257 +294,307 @@
     }
   },
   "week": {
-    "source": "synthetic",
-    "model": "synthetisch",
-    "recorded_at": "2026-10-03T12:00:00Z",
+    "source": "claude",
+    "model": "claude-opus-5-5",
+    "recorded_at": "2026-10-04T09:27:42.253Z",
     "usage": {
-      "inputTokens": 5471,
-      "outputTokens": 628
+      "inputTokens": 9807,
+      "outputTokens": 3224
     },
     "raw": {
-      "rationale": "Die Woche setzt die Vorgabe des Gesamtplans für dein Ziel um: 11 Einheiten an 6 Tagen, dazu die vorgesehenen Leistungstests. Harte Tage liegen nie hintereinander.",
+      "rationale": "Die Erholung ist gut und die Belastung mit einem Verhältnis von 1,07 stabil, daher folgen nach dem harten Radtag vom Montag zwei Leistungstests: Am Donnerstag der 1000-m-Test im Wasser, am Samstag nach dem Ruhetag der 30-Minuten-Lauftest. Beide liegen an frischen Tagen und nie hintereinander. Sonst bleibt die Woche locker: Die lange Radausfahrt mit 150 min hält dein bisheriges Maximum, der lange Lauf bleibt mit 70 min unter deinen 75 min. Insgesamt sind rund 580 min geplant, verteilt nach deinen Schwerpunkten Rad 45 %, Lauf 30 % und Schwimmen 25 %.",
       "days": [
         {
           "date": "2026-09-30",
-          "focus": "Radfahren und Laufen",
+          "focus": "Lockere Grundlage Rad und Schwimmtechnik",
           "sessions": [
             {
               "sport": "bike",
               "session_type": "endurance",
               "intensity": "easy",
-              "amount": 65,
-              "focus": "Grundlage locker",
+              "amount": 60,
+              "focus": "Lockere Grundlage Zone 2, 135-180 W",
               "test_id": null
             },
             {
-              "sport": "run",
-              "session_type": "endurance",
+              "sport": "swim",
+              "session_type": "technique",
               "intensity": "easy",
-              "amount": 40,
-              "focus": "Grundlage locker",
+              "amount": 1500,
+              "focus": "Technik und lockeres Kraulen um 1:48/100 m",
               "test_id": null
             }
           ]
         },
         {
           "date": "2026-10-01",
-          "focus": "Laufen und Schwimmen",
-          "sessions": [
-            {
-              "sport": "run",
-              "session_type": "test",
-              "intensity": "hard",
-              "amount": 45,
-              "focus": "Leistungstest: 30-Minuten-Test",
-              "test_id": "threshold_30min"
-            },
-            {
-              "sport": "swim",
-              "session_type": "endurance",
-              "intensity": "easy",
-              "amount": 1600,
-              "focus": "Grundlage locker",
-              "test_id": null
-            }
-          ]
-        },
-        {
-          "date": "2026-10-02",
-          "focus": "Radfahren und Schwimmen",
-          "sessions": [
-            {
-              "sport": "bike",
-              "session_type": "endurance",
-              "intensity": "easy",
-              "amount": 65,
-              "focus": "Grundlage locker",
-              "test_id": null
-            },
-            {
-              "sport": "swim",
-              "session_type": "endurance",
-              "intensity": "easy",
-              "amount": 1600,
-              "focus": "Grundlage locker",
-              "test_id": null
-            }
-          ]
-        },
-        {
-          "date": "2026-10-03",
-          "focus": "Schwimmen und Laufen",
+          "focus": "Leistungstest Schwimmen",
           "sessions": [
             {
               "sport": "swim",
               "session_type": "test",
               "intensity": "hard",
               "amount": 1500,
-              "focus": "Leistungstest: 1000-m-Test",
+              "focus": "1000-m-Test mit Ein- und Ausschwimmen",
               "test_id": "time_trial_1000m"
-            },
+            }
+          ]
+        },
+        {
+          "date": "2026-10-02",
+          "focus": "Ruhetag",
+          "sessions": []
+        },
+        {
+          "date": "2026-10-03",
+          "focus": "Leistungstest Laufen, lockeres Schwimmen",
+          "sessions": [
             {
               "sport": "run",
-              "session_type": "endurance",
+              "session_type": "test",
+              "intensity": "hard",
+              "amount": 47,
+              "focus": "30-Minuten-Test mit Ein- und Auslaufen",
+              "test_id": "threshold_30min"
+            },
+            {
+              "sport": "swim",
+              "session_type": "recovery",
               "intensity": "easy",
-              "amount": 60,
-              "focus": "Lange Laufen-Einheit, ruhig",
+              "amount": 2000,
+              "focus": "Lockeres Ausschwimmen, saubere Technik",
               "test_id": null
             }
           ]
         },
         {
           "date": "2026-10-04",
-          "focus": "Radfahren und Schwimmen",
+          "focus": "Lange Radausfahrt",
           "sessions": [
             {
               "sport": "bike",
               "session_type": "endurance",
               "intensity": "easy",
-              "amount": 90,
-              "focus": "Lange Radfahren-Einheit, ruhig",
-              "test_id": null
-            },
-            {
-              "sport": "swim",
-              "session_type": "endurance",
-              "intensity": "easy",
-              "amount": 2300,
-              "focus": "Lange Schwimmen-Einheit, ruhig",
+              "amount": 150,
+              "focus": "Lange Grundlage Zone 2, gleichmäßig 150-180 W",
               "test_id": null
             }
           ]
         },
         {
           "date": "2026-10-05",
-          "focus": "Intervalle zügig",
+          "focus": "Langer Lauf und Schwimmausdauer",
           "sessions": [
             {
-              "sport": "bike",
-              "session_type": "intervals",
-              "intensity": "hard",
-              "amount": 65,
-              "focus": "Intervalle zügig",
+              "sport": "run",
+              "session_type": "endurance",
+              "intensity": "easy",
+              "amount": 70,
+              "focus": "Langer lockerer Lauf, Zone 2, Gespräch möglich",
+              "test_id": null
+            },
+            {
+              "sport": "swim",
+              "session_type": "endurance",
+              "intensity": "easy",
+              "amount": 2500,
+              "focus": "Grundlage um 1:48/100 m, gleichmäßiges Tempo",
               "test_id": null
             }
           ]
         },
         {
           "date": "2026-10-06",
-          "focus": "Ruhetag",
-          "sessions": []
+          "focus": "Lockeres Koppeltraining",
+          "sessions": [
+            {
+              "sport": "bike",
+              "session_type": "endurance",
+              "intensity": "easy",
+              "amount": 75,
+              "focus": "Grundlage Zone 2, danach direkt laufen",
+              "test_id": null
+            },
+            {
+              "sport": "run",
+              "session_type": "endurance",
+              "intensity": "easy",
+              "amount": 30,
+              "focus": "Lockerer Koppellauf, Zone 2",
+              "test_id": null
+            }
+          ]
         }
       ]
     }
   },
   "day": {
-    "source": "synthetic",
-    "model": "synthetisch",
-    "recorded_at": "2026-10-03T12:00:00Z",
+    "source": "claude",
+    "model": "claude-opus-5-5",
+    "recorded_at": "2026-10-04T09:28:08.251Z",
     "usage": {
-      "inputTokens": 5431,
-      "outputTokens": 593
+      "inputTokens": 10954,
+      "outputTokens": 2769
     },
     "raw": {
-      "rationale": "Heute steht Radfahren und Laufen an, wie im Wochenplan für dein Ziel vorgesehen.",
+      "rationale": "Deine Erholung ist gut und die Last liegt mit einem Verhältnis von 1,07 (555 zu 518) im stabilen Bereich. Nach dem harten Rad am 28.09. bleibt heute alles locker, wie es der Wochenplan vorsieht. Die 60 min Rad halten den Radumfang im Rahmen deiner 300 min der letzten 7 Tage. Die 1500 m Technikschwimmen passen zur Aufbauphase, 32 Wochen vor der Mitteldistanz ist dein Ziel mit dieser Grundlage realistisch.",
       "sessions": [
         {
           "sport": "bike",
           "session_type": "endurance",
           "intensity": "easy",
-          "focus": "Grundlage locker",
+          "focus": "Lockere Grundlage Zone 2, 135-180 W",
           "test_id": null,
           "steps": [
             {
-              "name": "Einwärmen",
+              "name": "Einfahren",
               "repetitions": 1,
               "measure": "duration",
               "distance_meters": null,
               "duration_seconds": 600,
-              "target_type": "perceived_effort",
-              "target_value": 3,
+              "target_type": "power",
+              "target_value": 140,
               "rest_seconds": 0,
-              "instructions": "Locker einfahren.",
-              "cue": "Locker einfahren",
+              "instructions": "Locker einrollen und die Leistung langsam auf etwa 140 W steigern.",
+              "cue": "Locker einrollen",
               "equipment": []
             },
             {
-              "name": "Grundlage",
+              "name": "Hauptteil",
               "repetitions": 1,
               "measure": "duration",
               "distance_meters": null,
-              "duration_seconds": 2700,
-              "target_type": "perceived_effort",
-              "target_value": 4,
+              "duration_seconds": 2100,
+              "target_type": "power",
+              "target_value": 165,
               "rest_seconds": 0,
-              "instructions": "Gleichmäßig, du kannst dich noch unterhalten.",
-              "cue": "Ruhig gleichmäßig",
+              "instructions": "Gleichmäßig um 165 W fahren, ein Gespräch muss jederzeit möglich sein. Regelmäßig trinken.",
+              "cue": "165 W gleichmäßig",
               "equipment": []
             },
             {
-              "name": "Ausklang",
+              "name": "Trittfrequenz",
+              "repetitions": 5,
+              "measure": "duration",
+              "distance_meters": null,
+              "duration_seconds": 60,
+              "target_type": "cadence",
+              "target_value": 100,
+              "rest_seconds": 60,
+              "instructions": "Eine Minute bei leichtem Gang mit 100 Umdrehungen pro Minute rund treten, ohne auf dem Sattel zu hüpfen. Danach eine Minute locker in normaler Trittfrequenz weiterfahren.",
+              "cue": "Rund treten 100",
+              "equipment": []
+            },
+            {
+              "name": "Ausfahren",
               "repetitions": 1,
               "measure": "duration",
               "distance_meters": null,
               "duration_seconds": 300,
-              "target_type": "perceived_effort",
-              "target_value": 2,
+              "target_type": "power",
+              "target_value": 130,
               "rest_seconds": 0,
-              "instructions": "Ganz locker ausfahren.",
-              "cue": "Locker ausfahren",
+              "instructions": "Sehr locker ausrollen und die Beine lockern.",
+              "cue": "Locker ausrollen",
               "equipment": []
             }
           ]
         },
         {
-          "sport": "run",
-          "session_type": "endurance",
+          "sport": "swim",
+          "session_type": "technique",
           "intensity": "easy",
-          "focus": "Grundlage locker",
+          "focus": "Technik und lockeres Kraulen um 1:48/100 m",
           "test_id": null,
           "steps": [
             {
-              "name": "Einwärmen",
+              "name": "Einschwimmen",
               "repetitions": 1,
-              "measure": "duration",
-              "distance_meters": null,
-              "duration_seconds": 300,
+              "measure": "distance",
+              "distance_meters": 300,
+              "duration_seconds": null,
               "target_type": "perceived_effort",
               "target_value": 3,
-              "rest_seconds": 0,
-              "instructions": "Locker einlaufen.",
-              "cue": "Locker einlaufen",
+              "rest_seconds": 30,
+              "instructions": "Locker kraulen, ruhig ausatmen und ins Wasser finden.",
+              "cue": "Locker kraulen",
               "equipment": []
             },
             {
-              "name": "Grundlage",
+              "name": "Technik Abschlag",
+              "repetitions": 4,
+              "measure": "distance",
+              "distance_meters": 50,
+              "duration_seconds": null,
+              "target_type": "perceived_effort",
+              "target_value": 3,
+              "rest_seconds": 20,
+              "instructions": "Abschlagschwimmen: Ein Arm bleibt vorne gestreckt liegen, bis der andere Arm nach dem Zug wieder vorne ankommt. Das schult eine lange Gleitphase.",
+              "cue": "Arm vorne warten",
+              "equipment": []
+            },
+            {
+              "name": "Technik Faust",
+              "repetitions": 2,
+              "measure": "distance",
+              "distance_meters": 50,
+              "duration_seconds": null,
+              "target_type": "perceived_effort",
+              "target_value": 3,
+              "rest_seconds": 20,
+              "instructions": "Faustschwimmen: Kraulen mit geschlossenen Fäusten, damit du lernst, das Wasser mit dem ganzen Unterarm zu greifen. Die letzten 10 m Hände wieder öffnen.",
+              "cue": "Unterarm spüren",
+              "equipment": []
+            },
+            {
+              "name": "Hauptteil",
+              "repetitions": 4,
+              "measure": "distance",
+              "distance_meters": 150,
+              "duration_seconds": null,
+              "target_type": "pace_per_100m",
+              "target_value": 108,
+              "rest_seconds": 20,
+              "instructions": "Gleichmäßig um 1:48 pro 100 m kraulen und die lange Gleitphase aus den Übungen mitnehmen.",
+              "cue": "1:48 gleichmäßig",
+              "equipment": []
+            },
+            {
+              "name": "Pull",
               "repetitions": 1,
-              "measure": "duration",
-              "distance_meters": null,
-              "duration_seconds": 1200,
+              "measure": "distance",
+              "distance_meters": 200,
+              "duration_seconds": null,
               "target_type": "perceived_effort",
               "target_value": 4,
-              "rest_seconds": 0,
-              "instructions": "Gleichmäßig, du kannst dich noch unterhalten.",
-              "cue": "Ruhig gleichmäßig",
-              "equipment": []
+              "rest_seconds": 20,
+              "instructions": "Mit dem Pull Buoy zwischen den Oberschenkeln nur mit den Armen kraulen und auf einen langen, sauberen Zug achten.",
+              "cue": "Lange Züge",
+              "equipment": [
+                "pull_buoy"
+              ]
             },
             {
-              "name": "Ausklang",
+              "name": "Ausschwimmen",
               "repetitions": 1,
-              "measure": "duration",
-              "distance_meters": null,
-              "duration_seconds": 300,
+              "measure": "distance",
+              "distance_meters": 100,
+              "duration_seconds": null,
               "target_type": "perceived_effort",
               "target_value": 2,
               "rest_seconds": 0,
-              "instructions": "Ganz locker auslaufen.",
-              "cue": "Locker auslaufen",
+              "instructions": "Ganz locker ausschwimmen, gern in Rückenlage oder gemischt.",
+              "cue": "Locker ausschwimmen",
               "equipment": []
             }
           ]
         }
       ],
-      "coach_notes": []
+      "coach_notes": [
+        "Beide Einheiten bleiben locker: Lieber unter 165 W bleiben als darüber.",
+        "Zwischen Rad und Schwimmen etwas essen und trinken.",
+        "Beim Schwimmen Qualität vor Tempo: Technik sauber halten, auch wenn die Pace etwas langsamer wird."
+      ]
     }
   }
 }
