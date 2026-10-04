@@ -11,6 +11,7 @@ struct SwimInstructorApp: App {
     @StateObject private var macroLoader: MultiSportMacroLoader
     @StateObject private var profileLoader: PerformanceProfileLoader
     @StateObject private var planSync: PhonePlanSync
+    @StateObject private var testResultInbox: WatchTestResultInbox
 
     init() {
         let healthKitManager = HealthKitManager()
@@ -93,13 +94,16 @@ struct SwimInstructorApp: App {
         _healthKitManager = StateObject(wrappedValue: healthKitManager)
         _settings = StateObject(wrappedValue: settings)
         // Früh starten: Weckt die Watch die App im Hintergrund, muss die Sitzung schon aktiv sein.
-        let planSync = PhonePlanSync(loader: loader)
+        // Testergebnisse der Watch warten hier, bis der Athlet sie bestätigt oder verwirft.
+        let testResultInbox = WatchTestResultInbox(store: FileWatchTestResultStore.standard())
+        let planSync = PhonePlanSync(loader: loader, inbox: testResultInbox)
         planSync.start()
         _loader = StateObject(wrappedValue: loader)
         _weekLoader = StateObject(wrappedValue: weekLoader)
         _macroLoader = StateObject(wrappedValue: macroLoader)
         _profileLoader = StateObject(wrappedValue: profileLoader)
         _planSync = StateObject(wrappedValue: planSync)
+        _testResultInbox = StateObject(wrappedValue: testResultInbox)
     }
 
     var body: some Scene {
@@ -111,6 +115,7 @@ struct SwimInstructorApp: App {
                 .environmentObject(weekLoader)
                 .environmentObject(macroLoader)
                 .environmentObject(profileLoader)
+                .environmentObject(testResultInbox)
         }
     }
 }

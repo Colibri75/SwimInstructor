@@ -360,7 +360,7 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
   der Nähe. "Vom iPhone holen" fragt aktiv nach, das iPhone antwortet sofort mit seinem Plan und
   schickt einen neueren nach. Die Watch bekommt **kein** Token und spricht nie selbst mit dem
   Server; ist der Plan nicht von heute, sagt sie das.
-- **Aufzeichnung** (`SwimWorkoutManager`): `HKWorkoutSession` als Beckenschwimmen mit der gewählten
+- **Aufzeichnung** (`SwimWorkoutManager`, seit T5 `WorkoutManager`): `HKWorkoutSession` als Beckenschwimmen mit der gewählten
   Bahnlänge (25 m, 50 m oder 10–100 m per Digital Crown, wird gemerkt), Live-Werte über den
   `HKLiveWorkoutBuilder`, Wassersperre beim Start wie in Apples Schwimm-App. Pause, Fortsetzen,
   Beenden; beim Beenden wird das Workout mit Bahnlänge in Health gespeichert.
@@ -370,7 +370,7 @@ nächsten Öffnen und der nächste Plan berücksichtigt es.
   Unter dem Namen des Abschnitts steht die Anweisung aus dem Plan ("Locker kraulen", Technikübung mit
   Erklärung), bis zu sechs Zeilen, verkleinert bei langen Texten. In der Plan-Liste vor dem Start steht sie
   in voller Länge.
-- **Satz- und Abschnittswechsel** (`SwimWorkoutManager.progress`): Der Manager hält den Stand im Plan und alle
+- **Satz- und Abschnittswechsel** (`SwimWorkoutManager.progress`, seit T5 `SessionProgress`): Der Manager hält den Stand im Plan und alle
   Ansichten lesen ihn. Ein **Satz** ist eine Wiederholung ("6 × 200 m" hat sechs Sätze); von Hand wechselt man
   **von Satz zu Satz**, erst nach dem letzten Satz beginnt der nächste Abschnitt. Drei Wege führen zum nächsten
   Satz, jeder mit einem Haptik-Impuls:
@@ -773,14 +773,52 @@ Schritt bleibt sie fürs Schwimmen voll nutzbar.
       und sehen, wie sich der Gesamtplan ändert; einen Tag von Laufen auf Rad tauschen; im Leistungsprofil einen Wert
       ansehen und von Hand ändern.
 
+### T5 – Watch für alle drei Sportarten
+
+- **Start auf der Watch:** "Heute" zeigt alle Einheiten des Tages vom iPhone (Plan v2) mit ihren Schritten, darunter
+  freies Training in jeder Sportart. Vor dem Start wählst du Sportart (vorbelegt aus dem Plan), Ort (Becken oder
+  Freiwasser, draußen oder drinnen; die Uhr merkt sich den Ort je Sportart), im Becken die Bahnlänge, und ob die Uhr
+  Ansagen vorliest. Eine andere Sportart als geplant startet ohne Plan.
+- **Aufzeichnung** (`WorkoutManager`): Workout-Art, Ort und Bahnlänge kommen aus dem Sport-Modul
+  (`SportRecording`). Draußen zeichnet die Uhr die GPS-Strecke auf, damit die Fitness-App Strecke und Karte zeigt;
+  im Wasser ist die Wassersperre an. Die Live-Seite zeigt je Sportart andere Werte: Schwimmen Pace pro 100 m, Strecke
+  und Bahnen; Laufen Pace pro km, Strecke und Leistung; Rad Tempo, Strecke, Höhenmeter und, mit Sensor, Watt und
+  Trittfrequenz.
+- **Stand im Plan** (`SessionProgress` im Package): Schritte nach Strecke, nach Zeit oder von Hand. Ein Intervall nach
+  Zeit endet genau nach seiner Dauer, die Pause zählt als Zeit herunter, die letzten Sekunden geben jede Sekunde einen
+  Impuls. Weiter und zurück wie bisher mit der Crown, der Taste oder der Tastenkombination. Die Ansagen nennen Schritt,
+  Wiederholung und Ziel ("Intervall, 2 von 6. 3:00 min · Zone 4.").
+- **Leistungstests:** Der Test läuft als Folge von Schritten mit Ansagen; jeder Testabschnitt bekommt eine Rundenmarke
+  in Health. Am Ende wertet die Uhr ihn aus (`PerformanceTest.evaluate(recording:definitions:)`): CSS aus den
+  Bahnzeiten über 400 m und 200 m (Warten am Rand und lockere Bahnen zählen nicht), Schwellenpuls und -tempo aus den
+  letzten 20 Minuten des 30-Minuten-Tests, beim Rad die Watt über die ganzen 30 Minuten. Ein Test mit Lücke im Puls
+  (über eine Minute), abgebrochen oder zu kurz, gilt nicht; die Uhr nennt den Grund. Ein gültiges Ergebnis geht ans
+  iPhone und steht dort oben auf "Heute" zur Bestätigung, mit Vergleich zum bisherigen Wert wie in T4.
+- **Übertragung:** Das iPhone schickt den Tagesplan v2 mit allen Einheiten und daneben weiter Plan v1, damit eine
+  Watch mit älterer App-Version ihre Schwimmeinheit bekommt. Testergebnisse gehen per `transferUserInfo` zurück und
+  warten, bis das iPhone erreichbar ist.
+
+### T5 – Definition of Done
+
+- [x] Fortschritts-Engine mit simulierten Zeitreihen getestet: Intervall wechselt nach 3:00, Pause zählt, zurück per
+      Crown, Strecke im Becken bahnweise (`SessionProgressTests`)
+- [x] Die bisherigen Tests der Watch-Logik (`PlanProgressTests`, `CrownRotationTrackerTests` und andere) unverändert
+      grün
+- [x] Testauswertung mit simulierten Zeitreihen: Pulslücke, abgebrochener Test, 400 und 200 m aus Bahnzeiten
+      (`RecordedTestEvaluationTests`)
+- [x] Watch-Build in der CI grün
+- [ ] **Für dich** (auf der Uhr): einen Intervalllauf draußen, eine Radeinheit mit und ohne Sensor, eine Einheit im
+      Becken wie bisher; in der Fitness-App Strecke und Karte prüfen; einen CSS-Test im Becken und einen Lauftest
+      draußen machen und das Ergebnis auf dem iPhone bestätigen.
+
 ## Projektstruktur
 
 ```
 App/                                # iOS-App
   SwimInstructorApp.swift            # App-Einstiegspunkt, verdrahtet Health, Einstellungen, Loader für Plan v2 und Profil
-  PhonePlanSync.swift                # Schickt die Schwimmeinheit des Tages an die Watch (M7, bis T5)
+  PhonePlanSync.swift                # Schickt den Tagesplan an die Watch, empfängt Testergebnisse (M7, T5)
   RootView.swift                     # Tabs: Heute, Plan, Dashboard, Verlauf
-  TodayView.swift                    # Heute: Eintrag aus dem Plan, eine Karte je Einheit, Wunsch
+  TodayView.swift                    # Heute: Testergebnis der Watch, Eintrag aus dem Plan, Karte je Einheit, Wunsch
   SessionCardView.swift              # Tagesplan v2: Kopf, Karte je Einheit mit Schritten, Test-Knopf
   TestResultSheet.swift              # Testergebnis eintragen, Vergleich, Übernehmen oder Verwerfen (T4)
   WeekView.swift                     # Plan: Woche je Sportart, Tage mit bis zu zwei Einheiten, Planen
@@ -796,10 +834,12 @@ App/                                # iOS-App
   SwimInstructor.entitlements        # HealthKit-Capability
 WatchApp/                           # watchOS Companion-App
   SwimInstructorWatchApp.swift       # App-Einstiegspunkt, wechselt zwischen Plan, Einheit, Zusammenfassung
-  WatchTodayView.swift               # Start, Beckenlänge, Tagesplan (M7)
-  WatchWorkoutView.swift             # Laufende Einheit und Zusammenfassung (M7)
-  WatchPlanStore.swift               # Empfängt und speichert den Plan vom iPhone (M7)
-  SwimWorkoutManager.swift           # HKWorkoutSession + Live-Werte, speichert in Health (M7)
+  WatchTodayView.swift               # Einheiten des Tages, freies Training, Start mit Sportart, Ort, Bahnlänge (T5)
+  WatchWorkoutView.swift             # Laufende Einheit und Zusammenfassung mit Testergebnis (T5)
+  WatchPlanStore.swift               # Plan vom iPhone, Testergebnisse ans iPhone (M7, T5)
+  WorkoutManager.swift               # HKWorkoutSession für jede Sportart, Stand im Plan, Testauswertung (T5)
+  RouteRecorder.swift                # GPS-Strecke und Höhenmeter draußen (T5)
+  Announcer.swift                    # Ansagen der Schritte (T5)
   Info.plist                         # inkl. WKCompanionAppBundleIdentifier, Hintergrundmodus Workout
   SwimInstructorWatch.entitlements   # HealthKit-Capability
 Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
@@ -837,9 +877,14 @@ Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
     WeekPlanStore.swift              # Wochenpläne auf dem Gerät
     WeekPlanLoader.swift             # Ablauf des Wochen-Tabs (Plan v1, von der App seit T4 nicht mehr genutzt)
     PerformanceProfileLoader.swift   # Leistungsprofil: Werte, Eingabe von Hand, Testergebnis nach Bestätigung (T4)
+    SessionProgress.swift            # Stand in der Einheit nach Strecke, Zeit oder von Hand (T5)
+    ProgressFormatting.swift         # Texte und Ansagen zum Stand in der Einheit (T5)
+    LiveWorkoutMetrics.swift         # Live-Werte jeder Sportart, aktuelle Geschwindigkeit, Höhenmeter (T5)
+    WorkoutRecording.swift           # Messreihen der Watch für die Testauswertung (T5)
+    TestResultSync.swift             # Testergebnis Watch -> iPhone, Eingang bis zur Bestätigung (T5)
     PlanV2/                          # Plan v2 für alle Sportarten (T4): Modelle, Client, Speicher, Anzeige-Texte,
                                      # Loader für Heute, sieben Tage und Gesamtplan mit Feedback, Plan gegen Ist
-    Sports/                          # Sport-Module, Registry, Leistungswerte, Zonen und Tests (T0 bis T4)
+    Sports/                          # Sport-Module, Registry, Leistungswerte, Zonen, Tests, Aufzeichnung (T0 bis T5)
   Tests/SwimInstructorCoreTests/
     HealthKitManagerTests.swift
     SwimWorkoutRepositoryTests.swift

@@ -1,98 +1,82 @@
 import SwiftUI
 import SwimInstructorCore
 
-/// Startbildschirm der Watch: Einheit starten und der Tagesplan vom iPhone.
+/// Startbildschirm der Watch: die Einheiten des Tages vom iPhone und freies Training in jeder Sportart.
 struct WatchTodayView: View {
     @EnvironmentObject private var healthKitManager: HealthKitManager
     @EnvironmentObject private var planStore: WatchPlanStore
-    @EnvironmentObject private var workoutManager: SwimWorkoutManager
-    @AppStorage("poolLengthMeters") private var poolLengthMeters = PoolLength.defaultMeters
+
+    private let registry = SportRegistry.standard
 
     var body: some View {
         NavigationStack {
             List {
-                startSection
-                planSection
+                planSections
+                Section {
+                    ForEach(registry.ids, id: \.self) { sport in
+                        NavigationLink {
+                            WatchStartView(sport: sport, session: nil)
+                        } label: {
+                            Label(registry.displayName(for: sport), systemImage: registry.symbolName(for: sport))
+                        }
+                    }
+                } header: {
+                    Text("Freies Training")
+                }
                 if !healthKitManager.isAuthorized {
                     Section {
                         Button("Health-Zugriff erlauben") {
                             Task { try? await healthKitManager.requestAuthorization() }
                         }
                     } footer: {
-                        Text("Nötig, um Bahnen und Züge aufzuzeichnen.")
+                        Text("Nötig, um Strecke, Puls und Bahnen aufzuzeichnen.")
                     }
                 }
             }
             .navigationTitle("Heute")
         }
-        // Einmal vorab fragen, damit der Health-Dialog nicht erst am Beckenrand erscheint.
+        // Einmal vorab fragen, damit der Health-Dialog nicht erst am Start erscheint.
         .task { try? await healthKitManager.requestAuthorization() }
-    }
-
-    // MARK: - Start
-
-    private var startSection: some View {
-        Section {
-            Button {
-                workoutManager.beginCountdown(poolLengthMeters: poolLengthMeters, plan: planStore.response?.plan)
-            } label: {
-                Label("Schwimmen", systemImage: "figure.pool.swim")
-                    .font(.headline)
-            }
-            .tint(.blue)
-
-            NavigationLink {
-                PoolLengthView(meters: $poolLengthMeters)
-            } label: {
-                LabeledContent("Becken", value: "\(poolLengthMeters) m")
-            }
-
-            if let error = workoutManager.errorMessage {
-                Text(error)
-                    .font(.footnote)
-                    .foregroundStyle(.red)
-            }
-        }
     }
 
     // MARK: - Plan
 
     @ViewBuilder
-    private var planSection: some View {
+    private var planSections: some View {
         if let response = planStore.response {
             let plan = response.plan
-            Section {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(PlanFormatting.sessionType(plan.sessionType))
-                        .font(.headline)
-                    if !plan.isRestDay {
-                        Text("\(PlanFormatting.meters(plan.totalDistanceMeters)) · \(plan.estimatedDurationMinutes) min · \(PlanFormatting.intensity(plan.intensity))")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                if let notice = PlanFormatting.sourceNotice(response) ?? PlanFormatting.dayNotice(response, now: .now) {
+            if let notice = PlanV2Formatting.sourceNotice(response) ?? PlanV2Formatting.dayNotice(response, now: .now) {
+                Section {
                     Text(notice)
                         .font(.footnote)
                         .foregroundStyle(.orange)
                 }
-                if !plan.equipmentNeeded.isEmpty {
-                    Label("Mitnehmen: \(PlanFormatting.equipment(plan.equipmentNeeded))", systemImage: "backpack")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.cyan)
-                        .fixedSize(horizontal: false, vertical: true)
+            }
+            if plan.isRestDay {
+                Section {
+                    Text("Ruhetag")
+                        .font(.headline)
+                    if !plan.rationale.isEmpty {
+                        Text(plan.rationale)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    refreshButton
+                } header: {
+                    Text("Plan")
                 }
-                ForEach(Array(plan.sets.enumerated()), id: \.offset) { _, set in
-                    WatchPlanSetRow(set: set)
+            } else {
+                ForEach(Array(plan.sessions.enumerated()), id: \.offset) { _, session in
+                    sessionSection(session)
                 }
-                ForEach(plan.coachNotes, id: \.self) { note in
-                    Text(note)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                Section {
+                    ForEach(plan.coachNotes, id: \.self) { note in
+                        Text(note)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    refreshButton
                 }
-                refreshButton
-            } header: {
-                Text("Plan")
             }
         } else {
             Section {
@@ -103,6 +87,34 @@ struct WatchTodayView: View {
             } header: {
                 Text("Plan")
             }
+        }
+    }
+
+    private func sessionSection(_ session: DaySession) -> some View {
+        Section {
+            NavigationLink {
+                WatchStartView(sport: session.sport, session: session)
+            } label: {
+                Label(session.test.map { "Test starten: \($0.displayName)" } ?? "Starten", systemImage: registry.symbolName(for: session.sport))
+                    .font(.headline)
+            }
+            .tint(.green)
+            if !session.focus.isEmpty {
+                Text(session.focus)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            if !session.equipmentNeeded.isEmpty {
+                Label("Mitnehmen: \(PlanFormatting.equipment(session.equipmentNeeded))", systemImage: "backpack")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.cyan)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            ForEach(Array(session.steps.enumerated()), id: \.offset) { _, step in
+                WatchStepRow(step: step)
+            }
+        } header: {
+            Text("\(PlanV2Formatting.sessionTitle(sport: session.sport, amount: session.amount, unit: session.unit)) · \(PlanFormatting.intensity(session.intensity))")
         }
     }
 
@@ -121,30 +133,31 @@ struct WatchTodayView: View {
     }
 }
 
-struct WatchPlanSetRow: View {
-    let set: PlanSet
+/// Ein Schritt im Plan: Name, Umfang, Ziel und Pause, Hilfsmittel, Anleitung.
+struct WatchStepRow: View {
+    let step: PlanStep
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(set.name)
+            Text(step.name)
                 .font(.footnote.weight(.semibold))
-            Text(PlanFormatting.setVolume(set))
+            Text(PlanV2Formatting.stepVolume(step))
                 .font(.body.monospacedDigit())
-            let details = PlanFormatting.setDetails(set)
+            let details = PlanV2Formatting.stepDetails(step)
             if !details.isEmpty {
                 Text(details)
                     .font(.footnote.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
-            if !set.equipment.isEmpty {
-                Label(PlanFormatting.equipment(set.equipment), systemImage: "backpack")
+            if !step.equipment.isEmpty {
+                Label(PlanFormatting.equipment(step.equipment), systemImage: "backpack")
                     .font(.footnote)
                     .foregroundStyle(.cyan)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            if !set.instructions.isEmpty {
-                // Was genau zu tun ist (locker, Technikübung, ...), in voller Länge: Die Liste scrollt.
-                Text(set.instructions)
+            if !step.instructions.isEmpty {
+                // Was genau zu tun ist, in voller Länge: Die Liste scrollt.
+                Text(step.instructions)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -153,7 +166,112 @@ struct WatchPlanSetRow: View {
     }
 }
 
-/// Beckenlänge wählen: 25 m und 50 m direkt, alles andere mit der Digital Crown.
+/// Vor dem Start: Sportart (vorbelegt aus dem Plan), Ort, Bahnlänge im Becken und Ansagen. Der Ort je Sportart bleibt
+/// für das nächste Mal gespeichert.
+struct WatchStartView: View {
+    /// Die geplante Einheit, `nil` bei freiem Training.
+    let session: DaySession?
+
+    @EnvironmentObject private var workoutManager: WorkoutManager
+    @State private var sport: SportID
+    @State private var locationID: String
+    @AppStorage("poolLengthMeters") private var poolLengthMeters = PoolLength.defaultMeters
+    @AppStorage("announcements") private var announces = true
+
+    private let registry = SportRegistry.standard
+
+    init(sport: SportID, session: DaySession?) {
+        self.session = session
+        _sport = State(initialValue: sport)
+        _locationID = State(initialValue: Self.savedLocation(for: sport))
+    }
+
+    private var module: (any SportModule)? { registry.module(for: sport) }
+
+    private var location: RecordingLocation? { module?.recording.location(id: locationID) }
+
+    /// Die Einheit gilt nur für ihre Sportart; mit einer anderen startet ein Training ohne Plan.
+    private var plannedSession: DaySession? {
+        guard let session, session.sport == sport else { return nil }
+        return session
+    }
+
+    var body: some View {
+        List {
+            Section {
+                Button(action: start) {
+                    Label("Los", systemImage: "play.fill")
+                        .font(.headline)
+                }
+                .tint(.green)
+                if let error = workoutManager.errorMessage {
+                    Text(error)
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                }
+            } footer: {
+                if let plannedSession {
+                    Text(PlanV2Formatting.sessionTitle(sport: plannedSession.sport, amount: plannedSession.amount, unit: plannedSession.unit))
+                } else if session != nil {
+                    Text("Andere Sportart als geplant: Training ohne Plan.")
+                }
+            }
+            Section {
+                Picker("Sportart", selection: $sport) {
+                    ForEach(registry.ids, id: \.self) { id in
+                        Label(registry.displayName(for: id), systemImage: registry.symbolName(for: id))
+                            .tag(id)
+                    }
+                }
+                if let module, module.recording.locations.count > 1 {
+                    Picker("Ort", selection: $locationID) {
+                        ForEach(module.recording.locations) { location in
+                            Label(location.displayName, systemImage: location.symbolName)
+                                .tag(location.id)
+                        }
+                    }
+                }
+                if location?.usesLapLength == true {
+                    NavigationLink {
+                        PoolLengthView(meters: $poolLengthMeters)
+                    } label: {
+                        LabeledContent("Becken", value: "\(poolLengthMeters) m")
+                    }
+                }
+                Toggle("Ansagen", isOn: $announces)
+            }
+        }
+        .navigationTitle(registry.displayName(for: sport))
+        .onChange(of: sport) { _, newSport in
+            locationID = Self.savedLocation(for: newSport)
+        }
+    }
+
+    private func start() {
+        guard let location else { return }
+        UserDefaults.standard.set(location.id, forKey: Self.locationKey(sport))
+        workoutManager.beginCountdown(WorkoutStart(
+            sport: sport,
+            locationID: location.id,
+            lapLengthMeters: poolLengthMeters,
+            session: plannedSession,
+            announces: announces
+        ))
+    }
+
+    private static func locationKey(_ sport: SportID) -> String {
+        "location.\(sport.rawValue)"
+    }
+
+    /// Der zuletzt gewählte Ort dieser Sportart, sonst der erste des Moduls.
+    private static func savedLocation(for sport: SportID) -> String {
+        let locations = SportRegistry.standard.module(for: sport)?.recording.locations ?? []
+        let saved = UserDefaults.standard.string(forKey: locationKey(sport))
+        return locations.first { $0.id == saved }?.id ?? locations.first?.id ?? ""
+    }
+}
+
+/// Bahnlänge wählen: 25 m und 50 m direkt, alles andere mit der Digital Crown.
 struct PoolLengthView: View {
     @Binding var meters: Int
     @Environment(\.dismiss) private var dismiss
@@ -187,5 +305,5 @@ struct PoolLengthView: View {
     WatchTodayView()
         .environmentObject(HealthKitManager())
         .environmentObject(WatchPlanStore())
-        .environmentObject(SwimWorkoutManager())
+        .environmentObject(WorkoutManager())
 }

@@ -172,6 +172,12 @@ public enum PlanV2Formatting {
         return "±0 %"
     }
 
+    /// Hinweis auf der Watch, wenn der gezeigte Plan nicht von heute ist, sonst `nil`. Wie `PlanFormatting.dayNotice`.
+    public static func dayNotice(_ response: DayPlanV2Response, now: Date, calendar: Calendar = .current) -> String? {
+        guard response.date != PlanFormatting.isoDay(now, calendar: calendar) else { return nil }
+        return "Plan vom \(PlanFormatting.germanDate(response.date)). Öffne die iPhone-App für den Plan von heute."
+    }
+
     /// Hinweis, wenn der Tagesplan nicht frisch von Claude kommt, sonst `nil`. Wie `PlanFormatting.sourceNotice`.
     public static func sourceNotice(_ response: DayPlanV2Response) -> String? {
         guard response.source == .fallback else { return nil }

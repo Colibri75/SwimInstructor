@@ -31,6 +31,13 @@ public struct RunModule: SportModule {
     /// Knapp 6:00 pro km.
     public let typicalSpeedMetersPerSecond: Double = 2.8
 
+    public let recording = SportRecording(
+        locations: [.outdoor, .indoor],
+        primaryField: .pacePerKilometer,
+        secondaryFields: [.distanceKilometers, .power],
+        speedSmoothing: SpeedSmoothing(window: 30, staleAfter: 15, minimumMeters: 20)
+    )
+
     public let performanceMetrics: [PerformanceMetricDefinition] = [
         .thresholdHeartRate,
         PerformanceMetricDefinition(metric: .thresholdPacePerKilometer, displayName: "Schwellentempo", unit: "s/km", plausibleRange: 150...900)
@@ -40,7 +47,11 @@ public struct RunModule: SportModule {
         PerformanceTest(
             id: "threshold_30min", displayName: "30-Minuten-Test",
             produces: [.thresholdHeartRate, .thresholdPacePerKilometer], maximalEffort: true, durationMinutes: 30,
-            resultHint: "Schwellenpuls und Tempo: Schnitt der letzten 20 Minuten."
+            resultHint: "Schwellenpuls und Tempo: Schnitt der letzten 20 Minuten.",
+            recorded: [
+                .average(input: PerformanceMetric.thresholdHeartRate.rawValue, signal: .heartRate, lastSeconds: 20 * 60),
+                .average(input: PerformanceMetric.thresholdPacePerKilometer.rawValue, signal: .pacePerKilometer, lastSeconds: 20 * 60)
+            ]
         ),
         // Für Einsteiger: locker nach Gefühl, daraus ein geschätztes Schwellentempo.
         PerformanceTest(

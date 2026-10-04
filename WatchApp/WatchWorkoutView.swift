@@ -3,7 +3,7 @@ import SwimInstructorCore
 
 /// Laufende Einheit: Werte, Stand im Plan, Steuerung. Seitlich wischen wie in Apples Workout-App.
 struct WatchWorkoutView: View {
-    @EnvironmentObject private var workoutManager: SwimWorkoutManager
+    @EnvironmentObject private var workoutManager: WorkoutManager
     @State private var page = 1
 
     var body: some View {
@@ -23,11 +23,11 @@ struct WatchWorkoutView: View {
     }
 }
 
-/// Crown-Steuerung für den Wechsel von Satz zu Satz. Sitzt an jeder Seite, die sie braucht, und nicht am
-/// Seiten-Container: Die Crown geht an die Ansicht mit dem Fokus, und den bekommt nur die Seite, die
-/// gerade sichtbar ist (`isActive`).
+/// Crown-Steuerung für den Wechsel von Schritt zu Schritt. Sitzt an jeder Seite, die sie braucht, und nicht am
+/// Seiten-Container: Die Crown geht an die Ansicht mit dem Fokus, und den bekommt nur die Seite, die gerade sichtbar ist
+/// (`isActive`).
 private struct CrownSectionControl: ViewModifier {
-    @EnvironmentObject private var workoutManager: SwimWorkoutManager
+    @EnvironmentObject private var workoutManager: WorkoutManager
     let isActive: Bool
     @State private var crown = 0.0
     @FocusState private var focused: Bool
@@ -45,83 +45,95 @@ private struct CrownSectionControl: ViewModifier {
     }
 }
 
-/// Der laufende Abschnitt des Plans: Name, Equipment, Stand und was zu tun ist. Gemeinsam für die
-/// Startseite (kompakt) und die Plan-Seite.
-private struct SectionBlock: View {
-    @EnvironmentObject private var workoutManager: SwimWorkoutManager
+/// Der laufende Schritt des Plans: Name, Hilfsmittel, Stand und was zu tun ist; in der Pause, was danach kommt. Gemeinsam
+/// für die Werte-Seite (kompakt) und die Plan-Seite.
+private struct StepBlock: View {
+    @EnvironmentObject private var workoutManager: WorkoutManager
+    let status: ProgressStatus
     let compact: Bool
 
     var body: some View {
-        switch workoutManager.progress {
-        case nil, .noSets?:
-            Text("Kein Plan für heute")
+        switch status {
+        case .noUnits:
+            Text(ProgressFormatting.remaining(status))
                 .font(.footnote)
                 .foregroundStyle(.secondary)
-        case let .inProgress(position)?:
-            inProgress(position)
-        case let .completed(extraMeters)?:
-            Label("Plan geschafft", systemImage: "checkmark.circle.fill")
+        case .completed:
+            Label(ProgressFormatting.remaining(status), systemImage: "checkmark.circle.fill")
                 .font(.footnote)
                 .foregroundStyle(.green)
-            if extraMeters > 0 {
-                Text("+ \(PlanFormatting.meters(extraMeters))")
-                    .font(.caption2)
+        case let .rest(_, next, _):
+            VStack(alignment: .leading, spacing: 1) {
+                Label(ProgressFormatting.remaining(status), systemImage: "timer")
+                    .font(.system(size: compact ? 20 : 24, weight: .semibold, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.green)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                if let next {
+                    Text("Danach: \(next.step.name)")
+                        .font(.footnote.weight(.semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Text(ProgressFormatting.cue(next))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(compact ? 1 : 3)
+                        .minimumScaleFactor(0.7)
+                }
             }
+        case let .work(unit, _, _):
+            work(unit)
         }
     }
 
-    private func inProgress(_ position: PlanPosition) -> some View {
+    private func work(_ unit: ProgressUnit) -> some View {
         VStack(alignment: .leading, spacing: 1) {
-            Text("\(position.setIndex + 1)/\(workoutManager.planSets.count) \(position.set.name)")
+            Text(ProgressFormatting.stepTitle(unit, stepCount: workoutManager.progress.stepCount))
                 .font(compact ? .footnote.weight(.semibold) : .headline)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
-            if !position.set.equipment.isEmpty {
-                Label(PlanFormatting.equipment(position.set.equipment), systemImage: "backpack")
+            if !unit.step.equipment.isEmpty {
+                Label(PlanFormatting.equipment(unit.step.equipment), systemImage: "backpack")
                     .font(.caption)
                     .foregroundStyle(.cyan)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
-            Text("\(PlanFormatting.repetition(position)) · \(PlanFormatting.remaining(position))")
+            Text(ProgressFormatting.line(status))
                 .font(compact ? .caption.monospacedDigit() : .footnote.monospacedDigit())
                 .foregroundStyle(.blue)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
-            if !compact {
-                let details = PlanFormatting.setDetails(position.set)
+            if compact {
+                // Unterwegs zählen wenige Worte: der Kurztext, eine Zeile.
+                Text(ProgressFormatting.cue(unit))
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            } else {
+                let details = PlanV2Formatting.stepDetails(unit.step)
                 if !details.isEmpty {
                     Text(details)
                         .font(.footnote.monospacedDigit())
                         .foregroundStyle(.secondary)
                 }
-            }
-            if compact {
-                // Im Wasser zählen wenige Worte: die Kurzbeschreibung, eine Zeile.
-                let cue = PlanFormatting.shortCue(position.set)
-                if !cue.isEmpty {
-                    Text(cue)
-                        .font(.footnote.weight(.medium))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
+                if !unit.step.instructions.isEmpty {
+                    // Plan-Seite: die ganze Anleitung.
+                    Text(unit.step.instructions)
+                        .font(.footnote)
+                        .foregroundStyle(Color.primary)
+                        .lineLimit(10)
+                        .minimumScaleFactor(0.8)
                 }
-            } else if !position.set.instructions.isEmpty {
-                // Plan-Seite: die ganze Übung.
-                Text(position.set.instructions)
-                    .font(.footnote)
-                    .foregroundStyle(Color.primary)
-                    .lineLimit(10)
-                    .minimumScaleFactor(0.8)
             }
         }
     }
 }
 
-/// Kontrollzeile für Wassersperre, Crown und letzte Eingabe. Zeigt auch, wo es hakt, falls eine
-/// Eingabe nicht ankommt.
+/// Kontrollzeile für Wassersperre, Crown und letzte Eingabe. Zeigt auch, wo es hakt, falls eine Eingabe nicht ankommt.
 private struct ControlStatusLine: View {
-    @EnvironmentObject private var workoutManager: SwimWorkoutManager
+    @EnvironmentObject private var workoutManager: WorkoutManager
 
     var body: some View {
         VStack(alignment: .leading, spacing: 1) {
@@ -131,10 +143,10 @@ private struct ControlStatusLine: View {
             }
             Label(
                 workoutManager.lastGestureNote,
-                systemImage: workoutManager.isWaterLocked ? "lock.fill" : "lock.open.fill"
+                systemImage: workoutManager.usesWaterLock ? (workoutManager.isWaterLocked ? "lock.fill" : "lock.open.fill") : "digitalcrown.horizontal.arrow.clockwise"
             )
             .font(.system(size: 11))
-            .foregroundStyle(workoutManager.isWaterLocked ? Color.secondary : Color.yellow)
+            .foregroundStyle(workoutManager.usesWaterLock && !workoutManager.isWaterLocked ? Color.yellow : Color.secondary)
             .lineLimit(1)
             .minimumScaleFactor(0.6)
         }
@@ -142,15 +154,17 @@ private struct ControlStatusLine: View {
 }
 
 private struct WorkoutMetricsView: View {
-    @EnvironmentObject private var workoutManager: SwimWorkoutManager
+    @EnvironmentObject private var workoutManager: WorkoutManager
     let isCurrentPage: Bool
 
-    private var metrics: LiveSwimMetrics { workoutManager.metrics }
+    private var metrics: LiveWorkoutMetrics { workoutManager.metrics }
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
+            let status = workoutManager.status(at: context.date)
+            let profile = workoutManager.recordingProfile
             VStack(alignment: .leading, spacing: 2) {
-                // Zeit und Puls sind das, was man im Becken liest: groß, der Plan darunter kleiner.
+                // Zeit, Puls und Tempo liest man unterwegs: groß, der Plan darunter kleiner.
                 Text(PlanFormatting.elapsed(workoutManager.elapsedTime(at: context.date)))
                     .font(.system(size: 40, weight: .semibold, design: .rounded).monospacedDigit())
                     .foregroundStyle(workoutManager.phase == .paused ? Color.orange : Color.yellow)
@@ -165,33 +179,23 @@ private struct WorkoutMetricsView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                     Spacer(minLength: 2)
-                    Text(workoutManager.currentPace.map { PlanFormatting.pace($0) } ?? "--")
+                    Text(LiveFieldFormatting.value(profile.primaryField, metrics: metrics) ?? "--")
                         .font(.system(size: 30, weight: .semibold, design: .rounded).monospacedDigit())
                         .foregroundStyle(.cyan)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
-                    Text("/100")
+                    Text(LiveFieldFormatting.unit(profile.primaryField))
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                 }
-                if let rest = workoutManager.restRemaining {
-                    // Pause nach dem Wechsel zum nächsten Satz.
-                    Label("Pause \(PlanFormatting.elapsed(TimeInterval(rest)))", systemImage: "timer")
-                        .font(.system(size: 20, weight: .semibold, design: .rounded).monospacedDigit())
-                        .foregroundStyle(.green)
+                StepBlock(status: status, compact: true)
+                Spacer(minLength: 0)
+                let secondary = profile.secondaryFields.compactMap { LiveFieldFormatting.text($0, metrics: metrics) }
+                if !secondary.isEmpty {
+                    Text(secondary.joined(separator: " · "))
+                        .font(.caption2.monospacedDigit())
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
-                }
-                SectionBlock(compact: true)
-                Spacer(minLength: 0)
-                if workoutManager.restRemaining == nil {
-                    HStack(spacing: 6) {
-                        Text(PlanFormatting.meters(Int(metrics.distanceMeters)))
-                        Text("\(metrics.laps) Bahnen")
-                    }
-                    .font(.caption2.monospacedDigit())
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
                 }
                 ControlStatusLine()
             }
@@ -201,34 +205,41 @@ private struct WorkoutMetricsView: View {
     }
 }
 
-/// Wo im Tagesplan man steht, mit allen Angaben zum Abschnitt.
+/// Wo im Plan man steht, mit allen Angaben zum Schritt.
 private struct WorkoutPlanView: View {
-    @EnvironmentObject private var workoutManager: SwimWorkoutManager
+    @EnvironmentObject private var workoutManager: WorkoutManager
     let isCurrentPage: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            SectionBlock(compact: false)
-            Spacer(minLength: 0)
-            Button {
-                workoutManager.advanceSection()
-            } label: {
-                Text("Nächster Satz")
-                    .font(.caption2.weight(.semibold))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(Capsule().fill(Color.blue.opacity(0.4)))
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            VStack(alignment: .leading, spacing: 4) {
+                StepBlock(status: workoutManager.status(at: context.date), compact: false)
+                Spacer(minLength: 0)
+                HStack(spacing: 6) {
+                    capsuleButton("Zurück") { workoutManager.moveSection(.previous, source: "Taste") }
+                    capsuleButton("Weiter") { workoutManager.advanceSection() }
+                }
+                ControlStatusLine()
             }
-            .buttonStyle(.plain)
-            ControlStatusLine()
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .modifier(CrownSectionControl(isActive: isCurrentPage))
+    }
+
+    private func capsuleButton(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.caption2.weight(.semibold))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(Capsule().fill(Color.blue.opacity(0.4)))
+        }
+        .buttonStyle(.plain)
     }
 }
 
 private struct WorkoutControlsView: View {
-    @EnvironmentObject private var workoutManager: SwimWorkoutManager
+    @EnvironmentObject private var workoutManager: WorkoutManager
 
     var body: some View {
         VStack(spacing: 8) {
@@ -264,7 +275,7 @@ private struct WorkoutControlsView: View {
                 Button {
                     workoutManager.advanceSection()
                 } label: {
-                    Label("Nächster Satz", systemImage: "forward.end.fill")
+                    Label("Nächster Schritt", systemImage: "forward.end.fill")
                         .font(.footnote)
                 }
                 ControlStatusLine()
@@ -278,12 +289,12 @@ private struct WorkoutControlsView: View {
     }
 }
 
-/// Nach dem Beenden: die wichtigsten Werte und ob das Workout in Health gelandet ist.
+/// Nach dem Beenden: die wichtigsten Werte, das Testergebnis und ob das Workout in Health gelandet ist.
 struct WatchSummaryView: View {
-    @EnvironmentObject private var workoutManager: SwimWorkoutManager
+    @EnvironmentObject private var workoutManager: WorkoutManager
     let saved: Bool
 
-    private var metrics: LiveSwimMetrics { workoutManager.metrics }
+    private var metrics: LiveWorkoutMetrics { workoutManager.metrics }
 
     var body: some View {
         ScrollView {
@@ -291,13 +302,21 @@ struct WatchSummaryView: View {
                 Text("Geschafft")
                     .font(.headline)
                 LabeledContent("Zeit", value: PlanFormatting.elapsed(metrics.elapsed))
-                LabeledContent("Strecke", value: PlanFormatting.meters(Int(metrics.distanceMeters)))
-                LabeledContent("Bahnen", value: "\(metrics.laps)")
-                if let pace = metrics.averagePaceSecondsPer100m {
-                    LabeledContent("Pace", value: "\(PlanFormatting.pace(pace)) /100 m")
+                if metrics.distanceMeters > 0 {
+                    LabeledContent("Strecke", value: PlanFormatting.distance(metrics.distanceMeters))
                 }
-                if let strokes = metrics.strokesPerLap {
-                    LabeledContent("Züge/Bahn", value: "\(Int(strokes.rounded()))")
+                if let average = LiveFieldFormatting.average(workoutManager.recordingProfile.primaryField, metrics: metrics) {
+                    LabeledContent("Schnitt", value: average)
+                }
+                if metrics.laps > 0 {
+                    LabeledContent("Bahnen", value: "\(metrics.laps)")
+                }
+                if let gain = LiveFieldFormatting.text(.elevationGain, metrics: metrics) {
+                    LabeledContent("Bergauf", value: gain)
+                }
+                if let result = workoutManager.testResult {
+                    TestResultBlock(result: result, definitions: workoutManager.module?.performanceMetrics ?? [])
+                        .padding(.top, 4)
                 }
                 Text(saved ? "In Health gespeichert. Das iPhone berücksichtigt die Einheit beim nächsten Plan." : (workoutManager.errorMessage ?? "Nicht in Health gespeichert."))
                     .font(.footnote)
@@ -312,12 +331,39 @@ struct WatchSummaryView: View {
     }
 }
 
-/// Countdown vor dem Training: 30 Sekunden, um ins Wasser zu kommen. Die letzten drei Sekunden geben
-/// Impulse, am Ende startet die Aufzeichnung von selbst.
+/// Ergebnis eines Leistungstests: die neuen Werte oder warum der Test nicht zählt.
+private struct TestResultBlock: View {
+    let result: RecordedTestResult
+    let definitions: [PerformanceMetricDefinition]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(result.isValid ? "Testergebnis" : "Test nicht gewertet")
+                .font(.headline)
+                .foregroundStyle(result.isValid ? Color.green : Color.orange)
+            ForEach(definitions.filter { result.values[$0.metric] != nil }, id: \.metric) { definition in
+                LabeledContent(definition.displayName, value: PlanV2Formatting.performanceValue(result.values[definition.metric] ?? 0, unit: definition.unit))
+            }
+            ForEach(result.problems, id: \.self) { problem in
+                Text(problem)
+                    .font(.footnote)
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if result.isValid {
+                Text("Auf dem iPhone bestätigen: Erst dann gilt der neue Wert.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+/// Countdown vor dem Training: 30 Sekunden, um ins Wasser oder aufs Rad zu kommen. Die letzten drei Sekunden geben Impulse,
+/// am Ende startet die Aufzeichnung von selbst.
 struct WatchCountdownView: View {
-    @EnvironmentObject private var workoutManager: SwimWorkoutManager
-    @EnvironmentObject private var planStore: WatchPlanStore
-    @AppStorage("poolLengthMeters") private var poolLengthMeters = PoolLength.defaultMeters
+    @EnvironmentObject private var workoutManager: WorkoutManager
 
     var body: some View {
         VStack(spacing: 6) {
@@ -336,7 +382,7 @@ struct WatchCountdownView: View {
                 }
                 .tint(.red)
                 Button {
-                    workoutManager.skipCountdown(poolLengthMeters: poolLengthMeters, plan: planStore.response?.plan)
+                    workoutManager.skipCountdown()
                 } label: {
                     Image(systemName: "play.fill")
                 }
@@ -345,4 +391,3 @@ struct WatchCountdownView: View {
         }
     }
 }
-
