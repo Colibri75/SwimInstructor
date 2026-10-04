@@ -263,4 +263,12 @@ final class SportModuleConformanceTests: XCTestCase {
         XCTAssertTrue(RowingTestModule().targets.contains(.strokeRate))
         XCTAssertFalse(SportRegistry.standard.modules.contains { $0.targets.contains(.strokeRate) })
     }
+
+    func testEveryModuleHasStatisticsFromItsOwnWorkouts() {
+        for module in allModules {
+            XCTAssertTrue(SportStatistics.isValid(module.statistics), "\(module.id)")
+            XCTAssertGreaterThanOrEqual(module.statistics.count, 2, "\(module.id): zwei Standard-Kacheln")
+            XCTAssertTrue(module.statistics.contains { $0.metric == .duration }, "\(module.id): Stunden je Sportart brauchen die Zeit")
+        }
+    }
 }

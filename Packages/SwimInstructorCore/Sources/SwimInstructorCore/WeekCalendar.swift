@@ -25,10 +25,14 @@ public struct WeekCalendar: Sendable {
 
     /// Der Montag der Woche, in der `date` liegt.
     public func weekStart(containing date: Date) -> String {
+        key(for: weekStartDate(containing: date))
+    }
+
+    /// Mitternacht am Montag der Woche, in der `date` liegt.
+    public func weekStartDate(containing date: Date) -> Date {
         let weekday = calendar.component(.weekday, from: date)
         let offset = (weekday + 5) % 7
-        let start = calendar.date(byAdding: .day, value: -offset, to: calendar.startOfDay(for: date)) ?? date
-        return key(for: start)
+        return calendar.date(byAdding: .day, value: -offset, to: calendar.startOfDay(for: date)) ?? date
     }
 
     /// Die sieben Tage ab dem Montag; leer bei einem ungültigen Datum.

@@ -39,6 +39,11 @@ public struct BikeModule: SportModule {
         speedSmoothing: SpeedSmoothing(window: 15, staleAfter: 10, minimumMeters: 30)
     )
 
+    public let statistics: [StatisticDefinition] = [
+        .distanceKilometers, .speed, .duration, .sessions, .averageHeartRate, .averagePower, .averageCadence, .elevationGain,
+        .longestDistanceKilometers, .trainingLoad
+    ]
+
     public let performanceMetrics: [PerformanceMetricDefinition] = [.thresholdHeartRate, .thresholdPower]
     public let performanceTests: [PerformanceTest] = [
         // Schwellenpuls: Schnitt der letzten 20 Minuten; FTP: Schnitt der 30 Minuten, nur mit Leistungsmesser.
