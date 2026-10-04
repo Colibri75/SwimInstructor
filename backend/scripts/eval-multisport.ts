@@ -19,6 +19,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { planTimeouts } from "../src/config";
 import { ClaudePlanGenerator, StructuredGenerator } from "../src/plan/generator";
 import {
   formatScenarioReport,
@@ -49,10 +50,13 @@ function claude(): { generator: StructuredGenerator; label: string } {
   const model = process.env.PLAN_MODEL ?? "claude-opus-5-5";
   const effort = (process.env.PLAN_EFFORT ?? "high") as Effort;
   if (!EFFORTS.includes(effort)) fail(`PLAN_EFFORT ungültig: ${effort} (erlaubt: ${EFFORTS.join(", ")})`);
+  const timeouts = planTimeouts();
   const generator = new ClaudePlanGenerator(new Anthropic({ apiKey }), {
     model,
     effort,
-    timeoutMs: 85_000,
+    // Dieselben Zeitlimits wie der Server (gleiche Env-Datei): Was hier zu lange dauert, scheitert dort auch.
+    timeoutMs: timeouts.claudeTimeoutMs,
+    macroTimeoutMs: timeouts.claudeMacroTimeoutMs,
     serverFallback: process.env.PLAN_SERVER_FALLBACK !== "false"
   });
   return { generator, label: `Claude (${model}, Effort ${effort})` };

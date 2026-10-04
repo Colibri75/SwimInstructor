@@ -97,6 +97,10 @@ docker logs --tail 30 caddy                                        # Zertifikat 
 Nimm bei `--config` den `Destination`-Pfad aus dem Inspect. Meldet die Prüfung einen Fehler,
 lädst du nicht neu, dann läuft alles unverändert weiter.
 
+Ändert sich der Block in `Caddyfile.example` später (zuletzt `response_header_timeout` von 90 s auf
+240 s, weil ein Gesamtplan länger dauert), übernimmst du die Änderung genauso: Caddyfile auf dem Server
+anpassen, prüfen, neu laden.
+
 ## 5. Prüfen (das ist die Definition of Done von M4)
 
 Von deinem Rechner aus, nicht vom Server:

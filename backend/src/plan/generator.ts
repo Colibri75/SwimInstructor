@@ -47,12 +47,20 @@ export interface MacroGenerator {
  * (src/plan/multi/) baut Prompts und Schemas selbst und braucht vom Generator nur das.
  */
 export interface StructuredGenerator {
-  complete(system: string, user: string, schema: z.ZodType): Promise<GeneratedPlan>;
+  complete(system: string, user: string, schema: z.ZodType, options?: CallOptions): Promise<GeneratedPlan>;
+}
+
+export interface CallOptions {
+  /** Gesamtplan oder Ueberarbeitung: bekommt das laengere Zeitlimit (`ClaudeOptions.macroTimeoutMs`). */
+  macro?: boolean;
 }
 
 export interface ClaudeOptions {
   model: string;
+  /** Zeitlimit fuer Tages- und Wochenplaene. */
   timeoutMs: number;
+  /** Zeitlimit fuer Gesamtplaene und ihre Ueberarbeitung: Sie sind groesser und brauchen bei Effort high deutlich laenger. */
+  macroTimeoutMs: number;
   effort: "low" | "medium" | "high" | "xhigh" | "max";
   /** Server-seitiger Fallback, wenn Claudes Sicherheitsklassifikatoren eine Anfrage ablehnen. */
   serverFallback: boolean;
@@ -67,23 +75,23 @@ export class ClaudePlanGenerator implements PlanGenerator, WeekGenerator, MacroG
   ) {}
 
   async generate({ snapshot, date, wishes, dayTarget, equipment }: Parameters<PlanGenerator["generate"]>[0]): Promise<GeneratedPlan> {
-    return this.call(SYSTEM_PROMPT, buildUserMessage(snapshot, date, wishes, dayTarget, equipment), TrainingPlanSchema);
+    return this.call(SYSTEM_PROMPT, buildUserMessage(snapshot, date, wishes, dayTarget, equipment), TrainingPlanSchema, this.options.timeoutMs);
   }
 
   async generateWeek({ snapshot, context, wishes, equipment, macroWeeks }: Parameters<WeekGenerator["generateWeek"]>[0]): Promise<GeneratedPlan> {
-    return this.call(WEEK_SYSTEM_PROMPT, buildWeekUserMessage(snapshot, context, wishes, undefined, equipment, macroWeeks), WeekPlanSchema);
+    return this.call(WEEK_SYSTEM_PROMPT, buildWeekUserMessage(snapshot, context, wishes, undefined, equipment, macroWeeks), WeekPlanSchema, this.options.timeoutMs);
   }
 
   async generateMacro({ snapshot, context }: Parameters<MacroGenerator["generateMacro"]>[0]): Promise<GeneratedPlan> {
-    return this.call(MACRO_SYSTEM_PROMPT, buildMacroUserMessage(snapshot, context), MacroPlanSchema);
+    return this.call(MACRO_SYSTEM_PROMPT, buildMacroUserMessage(snapshot, context), MacroPlanSchema, this.options.macroTimeoutMs);
   }
 
-  async complete(system: string, user: string, schema: z.ZodType): Promise<GeneratedPlan> {
-    return this.call(system, user, schema);
+  async complete(system: string, user: string, schema: z.ZodType, options: CallOptions = {}): Promise<GeneratedPlan> {
+    return this.call(system, user, schema, options.macro === true ? this.options.macroTimeoutMs : this.options.timeoutMs);
   }
 
   /** Ein Aufruf mit strukturierter Ausgabe nach `schema`; Fehler werden als PlanGenerationError klassifiziert. */
-  private async call(system: string, user: string, schema: z.ZodType): Promise<GeneratedPlan> {
+  private async call(system: string, user: string, schema: z.ZodType, timeoutMs: number): Promise<GeneratedPlan> {
     let response;
     try {
       response = await this.client.beta.messages.create(
@@ -99,9 +107,9 @@ export class ClaudePlanGenerator implements PlanGenerator, WeekGenerator, MacroG
           messages: [{ role: "user", content: user }]
         },
         // Keine SDK-Wiederholungen: Eine Wiederholung nach Timeout wuerde doppelt kosten und die
-        // Gesamtzeit ueber das Zeitlimit des Reverse-Proxys (90 s) treiben. Der Service faellt stattdessen
-        // auf den letzten gueltigen Plan zurueck, die App kann es erneut versuchen.
-        { timeout: this.options.timeoutMs, maxRetries: 0 }
+        // Gesamtzeit ueber das Zeitlimit des Reverse-Proxys (240 s) und der App treiben. Der Service faellt
+        // stattdessen auf den letzten gueltigen Plan zurueck, die App kann es erneut versuchen.
+        { timeout: timeoutMs, maxRetries: 0 }
       );
     } catch (error) {
       throw classify(error);

@@ -3,7 +3,7 @@ import { Logger } from "pino";
 import { z } from "zod";
 import { GenerationBudget } from "../budget";
 import { FallbackReason, PlanGenerationError, PlanUnavailableError } from "../errors";
-import { GeneratedPlan, StructuredGenerator } from "../generator";
+import { CallOptions, GeneratedPlan, StructuredGenerator } from "../generator";
 import { macroWeekStarts } from "../macro";
 import { localDate } from "../service";
 import { SnapshotV2 } from "../snapshot";
@@ -188,7 +188,7 @@ export class MultiPlanService {
 
   async planMacro(input: { snapshot: SnapshotV2; today: string; testSettings?: TestSettings }): Promise<MacroResultV2> {
     const context = macroContext(input.snapshot, input.today, input.testSettings);
-    const generated = await this.generate("macro", MULTI_MACRO_SYSTEM_PROMPT, buildMacroUserMessageV2(input.snapshot, context), MultiMacroPlanSchema);
+    const generated = await this.generate("macro", MULTI_MACRO_SYSTEM_PROMPT, buildMacroUserMessageV2(input.snapshot, context), MultiMacroPlanSchema, { macro: true });
     const weeks = expandMacroBlocks(generated.data.blocks, context.weeks);
     const sanitized = sanitizeMacroV2({ rationale: generated.data.rationale, weeks }, input.snapshot, context);
     if (sanitized.blocked !== null) throw this.blocked("macro", sanitized.blocked);
@@ -203,7 +203,8 @@ export class MultiPlanService {
       "revise",
       MULTI_REVISE_SYSTEM_PROMPT,
       buildReviseUserMessage({ snapshot: input.snapshot, context, plan: input.plan, feedback, history: input.history }),
-      MacroRevisionSchema
+      MacroRevisionSchema,
+      { macro: true }
     );
     const weeks = expandMacroBlocks(generated.data.blocks, context.weeks);
     const sanitized = sanitizeMacroV2({ rationale: generated.data.rationale, weeks }, input.snapshot, context);
@@ -217,14 +218,20 @@ export class MultiPlanService {
   }
 
   /** Ein Claude-Aufruf mit Budget und Schema-Pruefung; jeder Ausfall wird `PlanUnavailableError` mit Grund. */
-  private async generate<S extends z.ZodType>(kind: string, system: string, user: string, schema: S): Promise<{ data: z.infer<S>; meta: GeneratedPlan }> {
+  private async generate<S extends z.ZodType>(
+    kind: string,
+    system: string,
+    user: string,
+    schema: S,
+    options: CallOptions = {}
+  ): Promise<{ data: z.infer<S>; meta: GeneratedPlan }> {
     const { generator, budget, logger } = this.deps;
     if (generator === null) throw new PlanUnavailableError("not_configured");
     if (!budget.tryConsume()) throw new PlanUnavailableError("budget_exceeded");
     const started = Date.now();
     let meta: GeneratedPlan;
     try {
-      meta = await generator.complete(system, user, schema);
+      meta = await generator.complete(system, user, schema, options);
     } catch (error) {
       const reason = error instanceof PlanGenerationError ? error.reason : "unknown";
       const level = reason === "auth" || reason === "bad_request" || reason === "unknown" ? "error" : "warn";

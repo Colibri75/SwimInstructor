@@ -36,6 +36,7 @@ const generator =
         model: config.claudeModel,
         effort: config.claudeEffort,
         timeoutMs: config.claudeTimeoutMs,
+        macroTimeoutMs: config.claudeMacroTimeoutMs,
         serverFallback: config.claudeServerFallback
       });
 

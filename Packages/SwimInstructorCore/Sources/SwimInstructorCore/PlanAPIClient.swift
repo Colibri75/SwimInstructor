@@ -105,9 +105,12 @@ public extension PlanProviding {
 
 /// Spricht mit dem Backend aus M4/M5: `POST /v1/plan/today` und `GET /v1/status`.
 public struct PlanAPIClient: PlanProviding {
-    /// Der Server wartet bis zu 75 s auf Claude, Caddy bricht nach 90 s ab. Etwas darüber, damit
-    /// die App nicht vor dem Server aufgibt.
+    /// Tages- und Wochenplan: Der Server wartet bis zu 75 s auf Claude (höchstens 85 s). Etwas darüber,
+    /// damit die App nicht vor dem Server aufgibt.
     public static let planTimeout: TimeInterval = 95
+    /// Gesamtplan und seine Überarbeitung brauchen deutlich länger: Der Server wartet bis zu 180 s
+    /// (höchstens 230 s), Caddy bricht nach 240 s ab. Etwas darüber, damit die Meldung des Servers ankommt.
+    public static let macroTimeout: TimeInterval = 245
     public static let statusTimeout: TimeInterval = 15
 
     public let configuration: BackendConfiguration
@@ -162,21 +165,22 @@ public struct PlanAPIClient: PlanProviding {
     func postSnapshot<Body: Encodable>(
         path: String,
         snapshot: AthleteStateSnapshot,
+        timeout: TimeInterval = PlanAPIClient.planTimeout,
         body: (AthleteStateSnapshot) -> Body
     ) async throws -> (Data, HTTPURLResponse) {
         let encoder = AthleteStateSnapshot.jsonEncoder()
-        let (data, response) = try await post(path: path, body: try encoder.encode(body(snapshot)))
+        let (data, response) = try await post(path: path, body: try encoder.encode(body(snapshot)), timeout: timeout)
         guard response.statusCode == 400,
               snapshot.schemaVersion > AthleteStateSnapshot.currentSchemaVersion,
               let error = try? JSONDecoder().decode(ErrorBody.self, from: data),
               error.details?.contains(where: { $0.path == "snapshot.schema_version" }) == true else {
             return (data, response)
         }
-        return try await post(path: path, body: try encoder.encode(body(snapshot.version1)))
+        return try await post(path: path, body: try encoder.encode(body(snapshot.version1)), timeout: timeout)
     }
 
-    func post(path: String, body: Data) async throws -> (Data, HTTPURLResponse) {
-        var request = makeRequest(path: path, timeout: Self.planTimeout)
+    func post(path: String, body: Data, timeout: TimeInterval = PlanAPIClient.planTimeout) async throws -> (Data, HTTPURLResponse) {
+        var request = makeRequest(path: path, timeout: timeout)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = body
@@ -383,7 +387,7 @@ public protocol MacroPlanProviding: Sendable {
 
 extension PlanAPIClient: MacroPlanProviding {
     public func fetchMacroPlan(_ macroRequest: MacroPlanRequest) async throws -> MacroPlanResponse {
-        let (data, response) = try await postSnapshot(path: "v1/plan/macro", snapshot: macroRequest.snapshot) { snapshot in
+        let (data, response) = try await postSnapshot(path: "v1/plan/macro", snapshot: macroRequest.snapshot, timeout: Self.macroTimeout) { snapshot in
             MacroRequestBody(snapshot: snapshot, today: macroRequest.today)
         }
         switch response.statusCode {

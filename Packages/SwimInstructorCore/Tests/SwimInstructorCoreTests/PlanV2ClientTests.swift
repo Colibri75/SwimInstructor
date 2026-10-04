@@ -257,7 +257,7 @@ final class PlanV2ClientTests: XCTestCase {
         let sent = try XCTUnwrap(transport.requests.first)
         XCTAssertEqual(sent.url?.absoluteString, "https://example.test/v1/plan/macro")
         XCTAssertEqual(sent.httpMethod, "POST")
-        XCTAssertEqual(sent.timeoutInterval, PlanAPIClient.planTimeout)
+        XCTAssertEqual(sent.timeoutInterval, PlanAPIClient.macroTimeout)
         let body = try Self.body(sent)
         XCTAssertEqual(Set(body.keys), ["plan_version", "snapshot", "today", "test_settings"])
         XCTAssertEqual(body["plan_version"] as? Int, 2)
@@ -295,6 +295,7 @@ final class PlanV2ClientTests: XCTestCase {
         XCTAssertEqual(response.feedback, "Mehr Laufen bitte, dafür weniger Schwimmen.")
         let sent = try XCTUnwrap(transport.requests.first)
         XCTAssertEqual(sent.url?.absoluteString, "https://example.test/v1/plan/macro/revise")
+        XCTAssertEqual(sent.timeoutInterval, PlanAPIClient.macroTimeout)
         XCTAssertEqual(sent.httpMethod, "POST")
         XCTAssertEqual(sent.value(forHTTPHeaderField: "Authorization"), "Bearer geheim")
 

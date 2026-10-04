@@ -297,7 +297,7 @@ final class PlanAPIClientTests: XCTestCase {
         XCTAssertEqual(sent.url?.absoluteString, "https://example.test/v1/plan/macro")
         XCTAssertEqual(sent.httpMethod, "POST")
         XCTAssertEqual(sent.value(forHTTPHeaderField: "Authorization"), "Bearer geheim")
-        XCTAssertEqual(sent.timeoutInterval, PlanAPIClient.planTimeout)
+        XCTAssertEqual(sent.timeoutInterval, PlanAPIClient.macroTimeout)
         let body = try XCTUnwrap(JSONSerialization.jsonObject(with: try XCTUnwrap(sent.httpBody)) as? [String: Any])
         XCTAssertEqual(body["today"] as? String, "2026-09-30")
         XCTAssertNotNil(body["snapshot"] as? [String: Any])

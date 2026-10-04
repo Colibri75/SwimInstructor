@@ -3,7 +3,7 @@ import { z } from "zod";
 import { GenerationBudget } from "../budget";
 import { EvalCheck } from "../evaluation";
 import { PlanGenerationError, PlanUnavailableError } from "../errors";
-import { GeneratedPlan, StructuredGenerator } from "../generator";
+import { CallOptions, GeneratedPlan, StructuredGenerator } from "../generator";
 import { mondayOf } from "../macro";
 import { estimateCostUsd, SESSION_TYPE_LABEL } from "../report";
 import { SnapshotSchema, SnapshotV2 } from "../snapshot";
@@ -90,8 +90,8 @@ export class RecordingGenerator implements StructuredGenerator {
     private readonly now: () => Date = () => new Date()
   ) {}
 
-  async complete(system: string, user: string, schema: z.ZodType): Promise<GeneratedPlan> {
-    const result = await this.inner.complete(system, user, schema);
+  async complete(system: string, user: string, schema: z.ZodType, options?: CallOptions): Promise<GeneratedPlan> {
+    const result = await this.inner.complete(system, user, schema, options);
     this.recording[kindOf(system)] = { source: "claude", model: result.model, recorded_at: this.now().toISOString(), usage: result.usage, raw: result.raw };
     return result;
   }
@@ -113,11 +113,11 @@ class MeteredGenerator implements StructuredGenerator {
 
   constructor(private readonly inner: StructuredGenerator) {}
 
-  async complete(system: string, user: string, schema: z.ZodType): Promise<GeneratedPlan> {
+  async complete(system: string, user: string, schema: z.ZodType, options?: CallOptions): Promise<GeneratedPlan> {
     const started = Date.now();
     let result: GeneratedPlan;
     try {
-      result = await this.inner.complete(system, user, schema);
+      result = await this.inner.complete(system, user, schema, options);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.calls.push({ kind: kindOf(system), model: "-", usage: { inputTokens: 0, outputTokens: 0 }, seconds: (Date.now() - started) / 1000, costUsd: null, error: message });

@@ -71,6 +71,7 @@ const generator = (timeoutMs = 5_000, url = baseURL) =>
   new ClaudePlanGenerator(new Anthropic({ apiKey: "test-key", baseURL: url }), {
     model: "claude-opus-5-5",
     timeoutMs,
+    macroTimeoutMs: timeoutMs,
     effort: "medium",
     serverFallback: true
   });

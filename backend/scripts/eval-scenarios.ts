@@ -20,6 +20,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { planTimeouts } from "../src/config";
 import { checkDayPlanAgainstGoal, checkMacroPlanAgainstGoal, checkWeekPlanAgainstGoal, EvalCheck, formatChecks } from "../src/plan/evaluation";
 import { ClaudePlanGenerator } from "../src/plan/generator";
 import { assessGoal } from "../src/plan/goal";
@@ -81,10 +82,13 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  const timeouts = planTimeouts();
   const generator = new ClaudePlanGenerator(new Anthropic({ apiKey }), {
     model,
     effort,
-    timeoutMs: 85_000,
+    // Dieselben Zeitlimits wie der Server (gleiche Env-Datei): Was hier zu lange dauert, scheitert dort auch.
+    timeoutMs: timeouts.claudeTimeoutMs,
+    macroTimeoutMs: timeouts.claudeMacroTimeoutMs,
     serverFallback: process.env.PLAN_SERVER_FALLBACK !== "false"
   });
 
