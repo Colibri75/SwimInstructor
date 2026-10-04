@@ -12,7 +12,10 @@ export interface Config {
   anthropicApiKey: string | undefined;
   claudeModel: string;
   claudeEffort: Effort;
+  /** Zeitlimit fuer Tages- und Wochenplaene. */
   claudeTimeoutMs: number;
+  /** Zeitlimit fuer Gesamtplaene und ihre Ueberarbeitung. */
+  claudeMacroTimeoutMs: number;
   /** Server-seitiger Fallback bei Ablehnung durch Claudes Sicherheitsklassifikatoren. */
   claudeServerFallback: boolean;
   /** Verzeichnis fuer den letzten gueltigen Plan (im Container das Volume /data). */
@@ -48,13 +51,29 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     anthropicApiKey: env.ANTHROPIC_API_KEY?.trim() || undefined,
     claudeModel: env.PLAN_MODEL?.trim() || "claude-opus-5-5",
     claudeEffort: parseEffort(env.PLAN_EFFORT),
-    // 75 s: bleibt unter dem 90-s-Limit des Reverse-Proxys (siehe deploy/Caddyfile.example).
-    claudeTimeoutMs: parseInteger("PLAN_TIMEOUT_MS", env.PLAN_TIMEOUT_MS, 75_000, 1_000, 85_000),
+    ...planTimeouts(env),
     claudeServerFallback: parseBoolean("PLAN_SERVER_FALLBACK", env.PLAN_SERVER_FALLBACK, true),
     dataDir: env.DATA_DIR?.trim() || "./data",
     planTimezone: parseTimezone(env.PLAN_TIMEZONE),
     maxGenerationsPerHour: parseInteger("PLAN_MAX_GENERATIONS_PER_HOUR", env.PLAN_MAX_GENERATIONS_PER_HOUR, 5, 1, 1_000),
     maxGenerationsPerDay: parseInteger("PLAN_MAX_GENERATIONS_PER_DAY", env.PLAN_MAX_GENERATIONS_PER_DAY, 20, 1, 10_000)
+  };
+}
+
+/**
+ * Zeitlimits fuer die Claude-Aufrufe. Eigene Funktion, weil die Bewertungsskripte mit derselben Env-Datei laufen
+ * wie der Server und dieselben Grenzen brauchen, aber nicht die ganze Konfiguration (API_TOKEN).
+ *
+ * Der Server muss vor dem Reverse-Proxy (240 s, deploy/Caddyfile.example) und vor der App aufgeben (95 s fuer
+ * Tag und Woche, 245 s fuer den Gesamtplan, PlanAPIClient), sonst kommt statt seiner Antwort nur ein Abbruch an.
+ */
+export function planTimeouts(env: NodeJS.ProcessEnv = process.env): { claudeTimeoutMs: number; claudeMacroTimeoutMs: number } {
+  return {
+    // Tag und Woche: 75 s reichen gut (ein Aufruf braucht rund 30 s), hoechstens 85 s wegen der 95 s der App.
+    claudeTimeoutMs: parseInteger("PLAN_TIMEOUT_MS", env.PLAN_TIMEOUT_MS, 75_000, 1_000, 85_000),
+    // Gesamtplan und Ueberarbeitung: bei drei Sportarten und Effort high oft ueber 80 s, daher 180 s,
+    // hoechstens 230 s wegen der 240 s des Reverse-Proxys.
+    claudeMacroTimeoutMs: parseInteger("PLAN_MACRO_TIMEOUT_MS", env.PLAN_MACRO_TIMEOUT_MS, 180_000, 1_000, 230_000)
   };
 }
 

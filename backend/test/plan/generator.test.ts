@@ -1,14 +1,16 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { ClaudeOptions, ClaudePlanGenerator } from "../../src/plan/generator";
 import { PlanGenerationError } from "../../src/plan/errors";
-import { MULTI_DAY_SYSTEM_PROMPT } from "../../src/plan/multi/prompts";
+import { MACRO_SYSTEM_PROMPT } from "../../src/plan/macroPrompt";
+import { MULTI_DAY_SYSTEM_PROMPT, MULTI_MACRO_SYSTEM_PROMPT } from "../../src/plan/multi/prompts";
 import { MultiDayPlanSchema } from "../../src/plan/multi/schemas";
 import { SYSTEM_PROMPT } from "../../src/plan/prompt";
 import { buildWeekUserMessage, WEEK_SYSTEM_PROMPT } from "../../src/plan/weekPrompt";
 import { context, goodWeek } from "./weekFixtures";
 import { goodPlan, snapshot } from "./fixtures";
+import { goodMacro, macroContext } from "./macroFixtures";
 
-const options: ClaudeOptions = { model: "claude-opus-5-5", timeoutMs: 75_000, effort: "medium", serverFallback: true };
+const options: ClaudeOptions = { model: "claude-opus-5-5", timeoutMs: 75_000, macroTimeoutMs: 180_000, effort: "medium", serverFallback: true };
 const input = { snapshot: snapshot(), date: "2026-09-30" };
 
 function response(overrides: Record<string, unknown> = {}) {
@@ -183,6 +185,19 @@ describe("ClaudePlanGenerator: Wochenplan", () => {
   });
 });
 
+describe("ClaudePlanGenerator: Gesamtplan", () => {
+  it("sendet den Gesamtplan-Prompt mit dem laengeren Zeitlimit", async () => {
+    const create = jest.fn().mockResolvedValue(response({ content: [{ type: "text", text: JSON.stringify(goodMacro()) }] }));
+
+    const result = await generatorWith(create).generateMacro({ snapshot: snapshot(), context: macroContext() });
+
+    const [body, requestOptions] = create.mock.calls[0];
+    expect(body.system).toBe(MACRO_SYSTEM_PROMPT);
+    expect(requestOptions).toEqual({ timeout: 180_000, maxRetries: 0 });
+    expect(result.raw).toEqual(goodMacro());
+  });
+});
+
 describe("ClaudePlanGenerator: Tagesvorgabe", () => {
   it("nimmt die Vorgabe des Wochenplans in die Nutzernachricht auf", async () => {
     const create = jest.fn().mockResolvedValue(response());
@@ -211,6 +226,16 @@ describe("ClaudePlanGenerator: freie Anfrage (Plan v2)", () => {
     expect(body.output_config.format.schema.properties.sets).toBeUndefined();
     expect(requestOptions).toEqual({ timeout: 75_000, maxRetries: 0 });
     expect(result).toEqual({ raw, model: "claude-opus-5-5", usage: { inputTokens: 1800, outputTokens: 2500 } });
+  });
+
+  it("gibt Gesamtplan und Ueberarbeitung das laengere Zeitlimit", async () => {
+    const create = jest.fn().mockResolvedValue(response({ content: [{ type: "text", text: JSON.stringify(raw) }] }));
+
+    await generatorWith(create).complete(MULTI_MACRO_SYSTEM_PROMPT, "x", MultiDayPlanSchema, { macro: true });
+    await generatorWith(create).complete(MULTI_DAY_SYSTEM_PROMPT, "x", MultiDayPlanSchema, {});
+
+    expect(create.mock.calls[0][1]).toEqual({ timeout: 180_000, maxRetries: 0 });
+    expect(create.mock.calls[1][1]).toEqual({ timeout: 75_000, maxRetries: 0 });
   });
 
   it("klassifiziert Fehler wie beim Tagesplan", async () => {

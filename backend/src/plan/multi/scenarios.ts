@@ -3,7 +3,7 @@ import { z } from "zod";
 import { GenerationBudget } from "../budget";
 import { EvalCheck } from "../evaluation";
 import { PlanGenerationError, PlanUnavailableError } from "../errors";
-import { GeneratedPlan, StructuredGenerator } from "../generator";
+import { CallOptions, GeneratedPlan, StructuredGenerator } from "../generator";
 import { mondayOf } from "../macro";
 import { estimateCostUsd, SESSION_TYPE_LABEL } from "../report";
 import { SnapshotSchema, SnapshotV2 } from "../snapshot";
@@ -90,8 +90,8 @@ export class RecordingGenerator implements StructuredGenerator {
     private readonly now: () => Date = () => new Date()
   ) {}
 
-  async complete(system: string, user: string, schema: z.ZodType): Promise<GeneratedPlan> {
-    const result = await this.inner.complete(system, user, schema);
+  async complete(system: string, user: string, schema: z.ZodType, options?: CallOptions): Promise<GeneratedPlan> {
+    const result = await this.inner.complete(system, user, schema, options);
     this.recording[kindOf(system)] = { source: "claude", model: result.model, recorded_at: this.now().toISOString(), usage: result.usage, raw: result.raw };
     return result;
   }
@@ -113,11 +113,11 @@ class MeteredGenerator implements StructuredGenerator {
 
   constructor(private readonly inner: StructuredGenerator) {}
 
-  async complete(system: string, user: string, schema: z.ZodType): Promise<GeneratedPlan> {
+  async complete(system: string, user: string, schema: z.ZodType, options?: CallOptions): Promise<GeneratedPlan> {
     const started = Date.now();
     let result: GeneratedPlan;
     try {
-      result = await this.inner.complete(system, user, schema);
+      result = await this.inner.complete(system, user, schema, options);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.calls.push({ kind: kindOf(system), model: "-", usage: { inputTokens: 0, outputTokens: 0 }, seconds: (Date.now() - started) / 1000, costUsd: null, error: message });
@@ -206,6 +206,8 @@ export function dayTargetFrom(plan: WeekPlanV2, today: string): DayTargetV2 | un
 export interface StepReport<T> {
   result?: T;
   error?: string;
+  /** Was genau scheiterte, etwa warum die Sicherheitsschicht blockierte. */
+  detail?: string;
   checks: EvalCheck[];
 }
 
@@ -224,7 +226,7 @@ async function step<T>(work: () => Promise<T>, checks: (result: T) => EvalCheck[
     const result = await work();
     return { result, checks: checks(result) };
   } catch (error) {
-    if (error instanceof PlanUnavailableError) return { error: error.reason, checks: [] };
+    if (error instanceof PlanUnavailableError) return { error: error.reason, ...(error.detail === undefined ? {} : { detail: error.detail }), checks: [] };
     throw error;
   }
 }
@@ -359,6 +361,11 @@ function callLine(calls: readonly CallInfo[], kind: CallKind): string[] {
   return [`Modell \`${call.model}\`, ${call.usage.inputTokens} Token ein, ${call.usage.outputTokens} Token aus, ${call.seconds.toFixed(1)} s, ca. ${call.costUsd === null ? "?" : `$${call.costUsd.toFixed(3)}`}`, ""];
 }
 
+/** Der Ausfallgrund einer Stufe, mit Einzelheit, wenn es eine gibt (etwa warum die Sicherheitsschicht blockierte). */
+function failure(step: StepReport<unknown>): string {
+  return step.detail === undefined ? (step.error ?? "") : `${step.error} (${step.detail})`;
+}
+
 /** Eine Zeile je Stufe fuer die Konsole: "ok" oder der Grund, bei einem Fehler von Claude mit Meldung und Dauer. */
 export function stepSummary(report: ScenarioReport): string {
   const steps: [CallKind, StepReport<unknown> | undefined][] = [
@@ -372,7 +379,7 @@ export function stepSummary(report: ScenarioReport): string {
     .map(([kind, step]) => {
       if (step.error === undefined) return "ok";
       const call = report.calls.find((entry) => entry.kind === kind && entry.error !== undefined);
-      return call === undefined ? step.error : `${step.error} (${call.error}, nach ${call.seconds.toFixed(0)} s)`;
+      return call === undefined ? failure(step) : `${step.error} (${call.error}, nach ${call.seconds.toFixed(0)} s)`;
     })
     .join(", ");
 }
@@ -393,7 +400,7 @@ export function formatScenarioReport(report: ScenarioReport): string {
   if (report.macro.result !== undefined) {
     lines.push(report.macro.result.plan.rationale, "", ...formatMacroPlanV2(report.macro.result.plan), "", ...adjustmentsBlock(report.macro.result.adjustments));
   } else {
-    lines.push(`**Kein Gesamtplan:** ${report.macro.error}`, "");
+    lines.push(`**Kein Gesamtplan:** ${failure(report.macro)}`, "");
   }
   lines.push("Prüfungen:", "", formatChecks(report.macro.checks), "", ...callLine(calls, "macro"));
 
@@ -401,7 +408,7 @@ export function formatScenarioReport(report: ScenarioReport): string {
   if (report.week.result !== undefined) {
     lines.push(report.week.result.plan.rationale, "", ...formatWeekPlanV2(report.week.result.plan), "", ...adjustmentsBlock(report.week.result.adjustments));
   } else {
-    lines.push(`**Kein Wochenplan:** ${report.week.error}`, "");
+    lines.push(`**Kein Wochenplan:** ${failure(report.week)}`, "");
   }
   lines.push("Prüfungen:", "", formatChecks(report.week.checks), "", ...callLine(calls, "week"));
 
@@ -410,7 +417,7 @@ export function formatScenarioReport(report: ScenarioReport): string {
     lines.push(report.day.result.plan.rationale, "", ...formatDayPlanV2(report.day.result.plan), ...adjustmentsBlock(report.day.result.adjustments));
     if (report.day.result.plan.coach_notes.length > 0) lines.push(...report.day.result.plan.coach_notes.map((note) => `> ${note}`), "");
   } else {
-    lines.push(`**Kein Tagesplan:** ${report.day.error}`, "");
+    lines.push(`**Kein Tagesplan:** ${failure(report.day)}`, "");
   }
   lines.push("Prüfungen:", "", formatChecks(report.day.checks), "", ...callLine(calls, "day"));
 
@@ -419,7 +426,7 @@ export function formatScenarioReport(report: ScenarioReport): string {
     if (report.revise.result !== undefined) {
       lines.push("Änderungen laut Claude:", "", ...report.revise.result.changes.map((change) => `- ${change}`), "", ...formatMacroPlanV2(report.revise.result.plan), "", ...adjustmentsBlock(report.revise.result.adjustments));
     } else {
-      lines.push(`**Keine Überarbeitung:** ${report.revise.error}`, "");
+      lines.push(`**Keine Überarbeitung:** ${failure(report.revise)}`, "");
     }
     lines.push("Prüfungen:", "", formatChecks(report.revise.checks), "", ...callLine(calls, "revise"));
   }

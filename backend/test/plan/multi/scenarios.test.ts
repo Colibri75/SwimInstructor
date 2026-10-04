@@ -135,11 +135,12 @@ describe("Szenarien fuer mehrere Sportarten", () => {
     const summary = formatSummary(all);
 
     expect(text).toMatch(/^## 02-olympisch-schwimmen\n/);
-    for (const heading of ["### Gesamtplan", "### Die nächsten sieben Tage", "### Heute", "### Feedback zum Gesamtplan", "Prüfungen:", "Modell `synthetisch`"]) expect(text).toContain(heading);
+    for (const heading of ["### Gesamtplan", "### Die nächsten sieben Tage", "### Heute", "### Feedback zum Gesamtplan", "Prüfungen:", "Modell `"]) expect(text).toContain(heading);
     expect(formatScenarioReport(report("01"))).toContain('Wunsch für die Woche: "Unter der Woche');
     expect(formatScenarioReport(report("05"))).toContain('Wunsch für heute: "Heute gern etwas mit Technik."');
     expect(summary.split("\n").filter((line) => line.startsWith("| 0"))).toHaveLength(NAMES.length * 3 + 2);
-    expect(summary).toMatch(/Geschätzte Kosten: \$0\.00 \(23 Aufrufe\)\.$/);
+    // Synthetische Aufzeichnungen kosten nichts, echte schon: Der Betrag haengt davon ab, welche schon aufgezeichnet sind.
+    expect(summary).toMatch(/Geschätzte Kosten: \$\d+\.\d{2} \(23 Aufrufe\)\.$/);
   });
 });
 
@@ -178,6 +179,22 @@ describe("Durchlauf und Generatoren", () => {
     expect(formatScenarioReport(revised)).toMatch(/Aufruf fehlgeschlagen nach \d+\.\d s: kaputt/);
     expect(stepSummary(revised)).toMatch(/^ok, ok, ok, unknown \(kaputt, nach \d+ s\)$/);
     expect(stepSummary(item)).toBe("unknown (keine Aufzeichnung für macro, nach 0 s), unknown (keine Aufzeichnung für week, nach 0 s), unknown (keine Aufzeichnung für day, nach 0 s)");
+  });
+
+  it("zeigt bei einem blockierten Gesamtplan, warum die Sicherheitsschicht blockierte", async () => {
+    const { scenario, recording } = load("02-olympisch-schwimmen");
+    const blocking: StructuredGenerator = {
+      complete: async (system) => {
+        const raw = recording[kindOf(system)]!.raw;
+        return { raw: kindOf(system) === "macro" ? { ...(raw as object), blocks: [] } : raw, model: "m", usage: { inputTokens: 1, outputTokens: 1 } };
+      }
+    };
+    const item = await runScenario("02", scenario, blocking);
+
+    expect(item.macro).toMatchObject({ error: "sanity_blocked", detail: "Gesamtplan ohne Wochen" });
+    expect(formatScenarioReport(item)).toContain("**Kein Gesamtplan:** sanity_blocked (Gesamtplan ohne Wochen)");
+    expect(formatSummary([item])).toContain("| 02 | Gesamt | sanity_blocked | 0 | 0/0 |");
+    expect(stepSummary(item)).toBe("sanity_blocked (Gesamtplan ohne Wochen), ok, ok");
   });
 
   it("haelt beim Aufzeichnen jede Antwort mit Quelle, Modell und Zeit fest", async () => {

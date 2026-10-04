@@ -1,4 +1,4 @@
-import { loadConfig } from "../src/config";
+import { loadConfig, planTimeouts } from "../src/config";
 
 const validToken = "a".repeat(40);
 
@@ -53,7 +53,7 @@ describe("loadConfig", () => {
 });
 
 describe("loadConfig: Claude und Plan", () => {
-  it("nutzt Standardwerte: Opus 5.5, Effort high, 75 s Zeitlimit, Server-Fallback an", () => {
+  it("nutzt Standardwerte: Opus 5.5, Effort high, 75 s Zeitlimit (180 s fuer den Gesamtplan), Server-Fallback an", () => {
     const config = loadConfig({ API_TOKEN: validToken });
 
     expect(config).toMatchObject({
@@ -61,6 +61,7 @@ describe("loadConfig: Claude und Plan", () => {
       claudeModel: "claude-opus-5-5",
       claudeEffort: "high",
       claudeTimeoutMs: 75_000,
+      claudeMacroTimeoutMs: 180_000,
       claudeServerFallback: true,
       dataDir: "./data",
       planTimezone: "Europe/Berlin",
@@ -81,6 +82,7 @@ describe("loadConfig: Claude und Plan", () => {
       PLAN_MODEL: "claude-sonnet-5-5",
       PLAN_EFFORT: "high",
       PLAN_TIMEOUT_MS: "60000",
+      PLAN_MACRO_TIMEOUT_MS: "200000",
       PLAN_SERVER_FALLBACK: "false",
       DATA_DIR: "/data",
       PLAN_TIMEZONE: "America/New_York",
@@ -93,6 +95,7 @@ describe("loadConfig: Claude und Plan", () => {
       claudeModel: "claude-sonnet-5-5",
       claudeEffort: "high",
       claudeTimeoutMs: 60_000,
+      claudeMacroTimeoutMs: 200_000,
       claudeServerFallback: false,
       dataDir: "/data",
       planTimezone: "America/New_York",
@@ -106,12 +109,19 @@ describe("loadConfig: Claude und Plan", () => {
     ["PLAN_TIMEOUT_MS", "abc"],
     ["PLAN_TIMEOUT_MS", "500"],
     ["PLAN_TIMEOUT_MS", "120000"],
+    ["PLAN_MACRO_TIMEOUT_MS", "abc"],
+    ["PLAN_MACRO_TIMEOUT_MS", "240000"],
     ["PLAN_SERVER_FALLBACK", "vielleicht"],
     ["PLAN_TIMEZONE", "Mars/Olympus"],
     ["PLAN_MAX_GENERATIONS_PER_HOUR", "0"],
     ["PLAN_MAX_GENERATIONS_PER_DAY", "1.5"]
   ])("verweigert den Start bei ungueltigem %s=%s", (name, value) => {
     expect(() => loadConfig({ API_TOKEN: validToken, [name]: value })).toThrow(name);
+  });
+
+  it("liefert die Zeitlimits auch ohne die restliche Konfiguration (fuer die Bewertungsskripte)", () => {
+    expect(planTimeouts({})).toEqual({ claudeTimeoutMs: 75_000, claudeMacroTimeoutMs: 180_000 });
+    expect(planTimeouts({ PLAN_TIMEOUT_MS: "80000", PLAN_MACRO_TIMEOUT_MS: "230000" })).toEqual({ claudeTimeoutMs: 80_000, claudeMacroTimeoutMs: 230_000 });
   });
 
   it("akzeptiert 1 und 0 als Wahrheitswerte", () => {

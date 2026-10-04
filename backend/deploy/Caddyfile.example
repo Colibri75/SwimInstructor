@@ -23,9 +23,10 @@ swiminstructor.kellner.v6.rocks {
 	}
 
 	reverse_proxy 127.0.0.1:3100 {
-		# Claude-Aufrufe (ab M5) koennen laenger dauern.
+		# Claude-Aufrufe koennen dauern: ein Gesamtplan bis zu 180 s (PLAN_MACRO_TIMEOUT_MS, hoechstens 230 s).
+		# Etwas darueber, damit die Fehlermeldung des Servers ankommt statt eines Abbruchs.
 		transport http {
-			response_header_timeout 90s
+			response_header_timeout 240s
 		}
 	}
 }

@@ -107,9 +107,10 @@ describe("MultiPlanService.planDay: frischer Plan", () => {
     const result = await service.planDay({ snapshot: multiSnapshot(), wishes: '  Schulter schonen, "bitte"  ' });
 
     expect(complete).toHaveBeenCalledTimes(1);
-    const [system, user, schema] = complete.mock.calls[0];
+    const [system, user, schema, options] = complete.mock.calls[0];
     expect(system).toBe(MULTI_DAY_SYSTEM_PROMPT);
     expect(schema).toBe(MultiDayPlanSchema);
+    expect(options).toEqual({});
     expect(user).toContain("Erstelle die Einheiten für heute, Mittwoch, 2026-09-30.");
     expect(user).toContain(JSON.stringify('Schulter schonen, "bitte"'));
     expect(result.wishes).toBe('Schulter schonen, "bitte"');
@@ -374,9 +375,10 @@ describe("MultiPlanService.planWeek", () => {
 
     const result = await service.planWeek(weekInput({ wishes: "  Am Wochenende lieber Rad  " }));
 
-    const [system, user, schema] = complete.mock.calls[0];
+    const [system, user, schema, options] = complete.mock.calls[0];
     expect(system).toBe(MULTI_WEEK_SYSTEM_PROMPT);
     expect(schema).toBe(MultiWeekPlanSchema);
+    expect(options).toEqual({});
     expect(user).toContain("Plane die nächsten sieben Tage. Heute ist Mittwoch, 2026-09-30.");
     expect(user).toContain(JSON.stringify("Am Wochenende lieber Rad"));
     expect(result.wishes).toBe("Am Wochenende lieber Rad");
@@ -456,8 +458,10 @@ describe("MultiPlanService.planMacro", () => {
     expect(result.plan.weeks.flatMap((week) => week.tests).length).toBeGreaterThan(0);
     expect(Array.isArray(result.adjustments)).toBe(true);
 
-    const [system, user, schema] = complete.mock.calls[0];
+    const [system, user, schema, options] = complete.mock.calls[0];
     expect(system).toBe(MULTI_MACRO_SYSTEM_PROMPT);
+    // Der Gesamtplan bekommt das laengere Zeitlimit.
+    expect(options).toEqual({ macro: true });
     expect(schema).toBe(MultiMacroPlanSchema);
     expect(user).toContain(`Erstelle den Gesamtplan bis zum Zieltag ${GOAL_DAY}. Heute ist ${TODAY}.`);
   });
@@ -489,10 +493,15 @@ describe("MultiPlanService.planMacro", () => {
     await expect(service.planMacro({ snapshot: multiSnapshot(), today: TODAY })).rejects.toMatchObject({ name: "PlanUnavailableError", reason: "schema_invalid" });
   });
 
-  it("wirft sanity_blocked bei einem Gesamtplan ohne Wochen", async () => {
+  it("wirft sanity_blocked bei einem Gesamtplan ohne Wochen, mit dem Grund fuer Log und Bewertung", async () => {
     const { service } = setup({ complete: jest.fn().mockResolvedValue(generated({ ...goodMacro(), blocks: [] })) });
 
-    await expect(service.planMacro({ snapshot: multiSnapshot(), today: TODAY })).rejects.toMatchObject({ name: "PlanUnavailableError", reason: "sanity_blocked" });
+    await expect(service.planMacro({ snapshot: multiSnapshot(), today: TODAY })).rejects.toMatchObject({
+      name: "PlanUnavailableError",
+      reason: "sanity_blocked",
+      detail: "Gesamtplan ohne Wochen",
+      message: "Kein Plan verfügbar (sanity_blocked: Gesamtplan ohne Wochen)"
+    });
   });
 
   it("wirft bei einem Ausfall von Claude PlanUnavailableError mit dem Grund", async () => {
@@ -537,8 +546,9 @@ describe("MultiPlanService.reviseMacro", () => {
     expect(result.plan.weeks).toHaveLength(40);
     expect(result.plan.weeks[0].phase).toBe("base");
 
-    const [system, user, schema] = complete.mock.calls[0];
+    const [system, user, schema, options] = complete.mock.calls[0];
     expect(system).toBe(MULTI_REVISE_SYSTEM_PROMPT);
+    expect(options).toEqual({ macro: true });
     expect(schema).toBe(MacroRevisionSchema);
     expect(user).toContain(JSON.stringify("Bitte mehr Schwimmen im Winter"));
     expect(user).toContain(`Feedback ${JSON.stringify("Weniger Laufen")}; Änderungen: ${JSON.stringify("Laufen reduziert")}`);

@@ -290,7 +290,7 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
     }
 
     public func fetchMacroPlanV2(_ request: MacroPlanV2Request) async throws -> MacroPlanV2Response {
-        try await postV2(path: "v1/plan/macro", body: MacroBody(
+        try await postV2(path: "v1/plan/macro", timeout: Self.macroTimeout, body: MacroBody(
             planVersion: Self.planVersion, snapshot: request.snapshot, today: request.today, testSettings: request.testSettings
         ))
     }
@@ -304,7 +304,7 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
                 changes: round.changes.prefix(8).map { String($0.prefix(300)) }
             )
         }
-        return try await postV2(path: "v1/plan/macro/revise", body: ReviseBody(
+        return try await postV2(path: "v1/plan/macro/revise", timeout: Self.macroTimeout, body: ReviseBody(
             planVersion: Self.planVersion,
             snapshot: request.snapshot,
             today: request.today,
@@ -318,8 +318,12 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
     /// Schickt eine Anfrage von Plan v2. Anders als v1 ohne Rückfall auf Snapshot v1: Plan v2 braucht Snapshot v2. Ein
     /// Server ohne Plan v2 antwortet mit einem Plan v1 (ohne `plan_version`) oder kennt den Pfad nicht (404); beides
     /// heißt "Server aktualisieren".
-    func postV2<Body: Encodable, Response: Decodable>(path: String, body: Body) async throws -> Response {
-        let (data, response) = try await post(path: path, body: try AthleteStateSnapshot.jsonEncoder().encode(body))
+    func postV2<Body: Encodable, Response: Decodable>(
+        path: String,
+        timeout: TimeInterval = PlanAPIClient.planTimeout,
+        body: Body
+    ) async throws -> Response {
+        let (data, response) = try await post(path: path, body: try AthleteStateSnapshot.jsonEncoder().encode(body), timeout: timeout)
         switch response.statusCode {
         case 200:
             guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {

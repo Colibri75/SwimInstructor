@@ -16,6 +16,7 @@ export const testConfig: Config = {
   claudeModel: "claude-opus-5-5",
   claudeEffort: "medium",
   claudeTimeoutMs: 75_000,
+  claudeMacroTimeoutMs: 180_000,
   claudeServerFallback: true,
   dataDir: "./data",
   planTimezone: "Europe/Berlin",

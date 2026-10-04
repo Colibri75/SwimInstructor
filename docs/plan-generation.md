@@ -190,7 +190,7 @@ Fehlerantworten: `400 invalid_request` (mit `details` je fehlerhaftem Feld), `40
 
 | Wert | Bedeutung |
 |---|---|
-| `unreachable` / `timeout` | Claude war nicht erreichbar oder zu langsam (Zeitlimit 75 s) |
+| `unreachable` / `timeout` | Claude war nicht erreichbar oder zu langsam (Zeitlimit 75 s, beim Gesamtplan 180 s) |
 | `rate_limited` / `upstream_error` | Claude meldete Limit (429) oder Serverfehler (5xx, 529) |
 | `refusal` | Claudes Sicherheitsklassifikatoren haben abgelehnt (und auch der Server-Fallback) |
 | `truncated` / `empty_response` / `invalid_json` / `schema_invalid` | Antwort unbrauchbar |
@@ -289,7 +289,8 @@ den letzten Plan, den Snapshot selbst nicht.
 | `ANTHROPIC_API_KEY` | (leer) | Ohne Key startet der Server trotzdem, der Plan-Endpunkt liefert dann nur Cache und Fallback |
 | `PLAN_MODEL` | `claude-opus-5-5` | Modell für die Pläne |
 | `PLAN_EFFORT` | `high` | Denktiefe: `low`, `medium`, `high`, `xhigh`, `max` |
-| `PLAN_TIMEOUT_MS` | `75000` | Zeitlimit pro Aufruf (1.000 bis 85.000, bleibt unter dem 90-s-Limit von Caddy) |
+| `PLAN_TIMEOUT_MS` | `75000` | Zeitlimit für Tages- und Wochenpläne (1.000 bis 85.000, bleibt unter den 95 s der App) |
+| `PLAN_MACRO_TIMEOUT_MS` | `180000` | Zeitlimit für Gesamtplan und Überarbeitung (1.000 bis 230.000, bleibt unter den 240 s von Caddy und den 245 s der App) |
 | `PLAN_SERVER_FALLBACK` | `true` | Bei Ablehnung durch Claudes Sicherheitsklassifikatoren automatisch ein anderes Modell versuchen |
 | `DATA_DIR` | `./data` (im Container `/data`) | Hier liegt der letzte Plan |
 | `PLAN_TIMEZONE` | `Europe/Berlin` | Zeitzone für "heute" |
