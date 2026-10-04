@@ -219,7 +219,8 @@ struct IntensityBadge: View {
         Section {
             SessionCardView(
                 session: DaySession(
-                    sport: SportID(rawValue: "swim"),
+                    // Die erste Sportart der Registry; feste Kennungen stehen nur in den Modulen.
+                    sport: SportRegistry.standard.ids[0],
                     sessionType: .test,
                     intensity: .hard,
                     focus: "CSS bestimmen",
