@@ -72,7 +72,8 @@ final class StatisticDetailTests: XCTestCase {
         let breakdown = calculator.breakdown(of: adherence, at: try point(adherence, daysAgo: 1), input: StatisticData.input)
 
         XCTAssertEqual(breakdown.planDays.map(\.date), ["2026-09-29"])
-        XCTAssertEqual(breakdown.planDays.first?.outcome, .followed)
+        // Geplant war Schwimmen, dazu kam ungeplant Rudern: länger als geplant, wie im Verlauf.
+        XCTAssertEqual(breakdown.planDays.first?.outcome, .longer)
         XCTAssertTrue(breakdown.workouts.isEmpty)
     }
 
