@@ -45,8 +45,8 @@ Wochen im Snapshot.
 
 | | Schwimmen | Rad | Laufen |
 |---|---|---|---|
-| Einheit höchstens | längste × 1,25, mindestens 1000 m, höchstens 4500 m | längste × 1,25, mindestens 60 min, höchstens 360 min | längste × 1,1, mindestens 30 min, höchstens 210 min |
-| Woche höchstens | Schnitt × 1,3, mindestens 1500 m | Schnitt × 1,3, mindestens 120 min | Schnitt × 1,3, mindestens 60 min (geplant wird mit etwa +10 %) |
+| Einheit höchstens | längste × 1,25, mindestens 1500 m, höchstens 4500 m | längste × 1,25, mindestens 60 min, höchstens 360 min | längste × 1,1, mindestens 30 min, höchstens 210 min |
+| Woche höchstens | Schnitt × 1,3, mindestens 2500 m | Schnitt × 1,3, mindestens 120 min | Schnitt × 1,3, mindestens 60 min (geplant wird mit etwa +10 %) |
 | Wiedereinstieg (über 14 Tage Pause) | 800 m je Einheit, nur locker | 45 min je Einheit, nur locker | 20 min je Einheit, nur locker |
 | kürzeste Einheit | 400 m | 20 min | 15 min |
 | Einheiten pro Woche | 5 | 4 | 4 |
@@ -55,6 +55,9 @@ Wochen im Snapshot.
 Laufen hat die strengsten Grenzen: Eine Einheit höchstens 10 % länger als die längste der letzten vier Wochen
 (Frandsen et al. 2025), die Woche hart bei +30 % (Nielsen et al. 2014), der Prompt verlangt etwa +10 %. ACWR ist keine
 Sperre, nur Information für Claude.
+
+Beim Schwimmen liegen die Untergrenzen seit dem Betatest höher als im früheren Schwimmplan (1500 statt 1000 m je
+Einheit, 2500 statt 1500 m in 7 Tagen): Mit wenig Schwimmverlauf blieben sonst oft nur wenige hundert Meter am Tag.
 
 ## Übergreifende Regeln
 

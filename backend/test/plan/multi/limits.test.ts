@@ -80,7 +80,7 @@ describe("sportLimits", () => {
 
   it("haelt die Einheit unter der absoluten Grenze und nie unter der kleinsten Grenze", () => {
     expect(sportLimits(multiSnapshot({ sports: { swim: { longest_session_meters: 9000 } } }), swim).sessionCap).toBe(4500);
-    expect(sportLimits(multiSnapshot({ sports: { swim: { longest_session_meters: 100, average_weekly_meters: 0 } } }), swim)).toMatchObject({ sessionCap: 1000, weeklyCap: 1500 });
+    expect(sportLimits(multiSnapshot({ sports: { swim: { longest_session_meters: 100, average_weekly_meters: 0 } } }), swim)).toMatchObject({ sessionCap: 1500, weeklyCap: 2500 });
   });
 
   it("laesst nach einer Pause oder ohne Verlauf nur kurz und wenig zu", () => {

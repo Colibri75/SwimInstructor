@@ -84,14 +84,15 @@ export const swim: SportDefinition = {
     { id: "time_trial_1000m", displayName: "1000-m-Test", produces: [CSS_PACE.id], maximalEffort: true, durationMinutes: 20 }
   ],
   planning: {
-    // Die Grenzen des bisherigen Schwimmplans (src/plan/sanity.ts, DEFAULT_LIMITS), in Metern.
+    // Die Grenzen des bisherigen Schwimmplans (src/plan/sanity.ts, DEFAULT_LIMITS), in Metern. Die Untergrenzen je
+    // Einheit und Woche sind seit dem Betatest hoeher (dort 1000 und 1500 m), sonst blieb mit wenig Verlauf zu wenig.
     limitUnit: "meters",
     limits: {
       sessionGrowthFactor: 1.25,
-      minSessionCap: 1000,
+      minSessionCap: 1500,
       absoluteMaxSession: 4500,
       weeklyGrowthFactor: 1.3,
-      minWeeklyCap: 1500,
+      minWeeklyCap: 2500,
       minSession: 400,
       pauseSessionCap: 800,
       pauseAfterDays: 14,
