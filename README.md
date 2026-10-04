@@ -17,7 +17,6 @@ Actions, Fastlane und TestFlight, ein eigener Mac ist nicht nötig ([CI/CD-Setup
 | Schwimmen | `swim` | Meter | Pace pro 100 m, Pulszone, gefühlte Anstrengung | CSS-Test 400/200 m, 1000-m-Test | Becken (mit Bahnlänge), Freiwasser | [`SwimModule.swift`](Packages/SwimInstructorCore/Sources/SwimInstructorCore/Sports/Modules/SwimModule.swift) / [`swim.ts`](backend/src/sports/modules/swim.ts) |
 | Radfahren | `bike` | Minuten | Watt, Pulszone, Tempo, Trittfrequenz, gefühlte Anstrengung | 30-Minuten-Test | draußen (GPS), drinnen | [`BikeModule.swift`](Packages/SwimInstructorCore/Sources/SwimInstructorCore/Sports/Modules/BikeModule.swift) / [`bike.ts`](backend/src/sports/modules/bike.ts) |
 | Laufen | `run` | Minuten | Pace pro km, Pulszone, Schrittfrequenz, gefühlte Anstrengung | 30-Minuten-Test, Einstiegstest locker | draußen (GPS), drinnen | [`RunModule.swift`](Packages/SwimInstructorCore/Sources/SwimInstructorCore/Sports/Modules/RunModule.swift) / [`run.ts`](backend/src/sports/modules/run.ts) |
-| Rudern | `rowing` | Minuten | Schlagzahl, Pulszone, gefühlte Anstrengung | 2000-m-Test | drinnen, draußen (GPS) | [`RowingModule.swift`](Packages/SwimInstructorCore/Sources/SwimInstructorCore/Sports/Modules/RowingModule.swift) / [`rowing.ts`](backend/src/sports/modules/rowing.ts) |
 
 Eine weitere Sportart: [Neue Sportart hinzufügen](docs/neue-sportart.md) (acht Dateien, nichts sonst).
 
