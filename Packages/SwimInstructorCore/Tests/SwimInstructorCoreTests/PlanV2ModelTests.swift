@@ -724,22 +724,28 @@ final class PlanV2ModelTests: XCTestCase {
         let goal = Self.goal(targetDate: targetDate)
         let key = goal.planKey(calendar: TestFixtures.utc)
 
-        XCTAssertEqual(key, "swim:1500:1800,bike:40000:-,run:10000:2999|2026-11-08|5|7.5|swim:30,bike:40,run:30")
+        XCTAssertEqual(key, "race|swim:1500:1800,bike:40000:-,run:10000:2999|2026-11-08|swim:30,bike:40,run:30")
 
         // Die Vorlage gehört nicht dazu.
         var withoutTemplate = goal
         withoutTemplate.template = nil
         XCTAssertEqual(withoutTemplate.planKey(calendar: TestFixtures.utc), key)
 
+        // Trainingstage und Stunden auch nicht: Sie kommen aus dem Wochenraster und gelten ohne neuen Gesamtplan.
+        var otherDays = goal
+        otherDays.trainingDaysPerWeek = 6
+        var otherHours = goal
+        otherHours.weeklyHours = 8
+        XCTAssertEqual(otherDays.planKey(calendar: TestFixtures.utc), key)
+        XCTAssertEqual(otherHours.planKey(calendar: TestFixtures.utc), key)
+
         // Jede Planungsgröße ändert den Schlüssel.
         var otherDistance = goal
         otherDistance.disciplines[2].distanceMeters = 21100
         var otherTime = goal
         otherTime.disciplines[0].targetDurationSeconds = nil
-        var otherDays = goal
-        otherDays.trainingDaysPerWeek = 6
-        var otherHours = goal
-        otherHours.weeklyHours = 8
+        var otherKind = goal
+        otherKind.kind = .time
         var otherEmphasis = goal
         otherEmphasis.emphasis = [
             TrainingGoal.Emphasis(sport: .swim, percent: 20),
@@ -747,11 +753,11 @@ final class PlanV2ModelTests: XCTestCase {
             TrainingGoal.Emphasis(sport: .run, percent: 30)
         ]
         let otherDay = Self.goal(targetDate: targetDate.addingTimeInterval(7 * 86_400))
-        let changed: [TrainingGoal] = [otherDistance, otherTime, otherDays, otherHours, otherEmphasis, otherDay]
+        let changed: [TrainingGoal] = [otherDistance, otherTime, otherKind, otherEmphasis, otherDay]
         for other in changed {
             XCTAssertNotEqual(other.planKey(calendar: TestFixtures.utc), key)
         }
-        XCTAssertEqual(otherTime.planKey(calendar: TestFixtures.utc), "swim:1500:-,bike:40000:-,run:10000:2999|2026-11-08|5|7.5|swim:30,bike:40,run:30")
+        XCTAssertEqual(otherTime.planKey(calendar: TestFixtures.utc), "race|swim:1500:-,bike:40000:-,run:10000:2999|2026-11-08|swim:30,bike:40,run:30")
     }
 
     func testPlanKeyUsesTheCalendarForTheTargetDay() throws {

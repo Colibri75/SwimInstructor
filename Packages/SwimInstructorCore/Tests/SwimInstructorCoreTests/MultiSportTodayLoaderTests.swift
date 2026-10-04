@@ -122,6 +122,19 @@ final class MultiSportTodayLoaderTests: XCTestCase {
         )
     }
 
+    func testReadHealthOnlyReadsTheState() async throws {
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        var prepared = 0
+        let loader = makeLoader(prepare: { _ in prepared += 1 }, provider: provider)
+
+        await loader.readHealth()
+
+        XCTAssertNotNil(loader.reading)
+        XCTAssertEqual(provider.calls, 0)
+        XCTAssertEqual(prepared, 0)
+        XCTAssertFalse(loader.isLoading)
+    }
+
     // MARK: - Plan holen
 
     func testFetchesAndCachesAPlanWhenNoneIsThereForToday() async throws {

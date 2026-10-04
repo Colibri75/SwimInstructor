@@ -5,6 +5,7 @@ import { Intensity } from "../plan";
 import { SnapshotV2 } from "../snapshot";
 import { addDays } from "../week";
 import { goalDayOf, MULTI_RULES, SportLimitsNow, sportLimits } from "./limits";
+import { isFitnessGoal } from "./schedule";
 import { TestSettings } from "./schemas";
 import { emphasisOf, formatAmount, isConfirmed, plannedSports, stateOf } from "./sports";
 
@@ -159,6 +160,7 @@ export function scheduleMacroTests(snapshot: SnapshotV2, weeks: readonly TestWee
   if (settings?.offer === false) return result;
   const interval = (settings?.interval_weeks ?? MULTI_RULES.defaultTestIntervalWeeks) * 7;
   const goalDay = goalDayOf(snapshot);
+  const fitness = isFitnessGoal(snapshot);
   const sports = plannedSports(snapshot)
     .filter((sport) => sport.performanceTests.length > 0)
     .sort((a, b) => emphasisOf(snapshot, b.id) - emphasisOf(snapshot, a.id));
@@ -167,7 +169,7 @@ export function scheduleMacroTests(snapshot: SnapshotV2, weeks: readonly TestWee
     const allowed = (week: TestWeek): boolean => {
       const end = addDays(week.week_start, 6);
       const phaseOk = week.phase === "base" || week.phase === "specific" || week.phase === "maintain";
-      const beforeBlackout = week.phase === "maintain" || daysBetween(end, goalDay) > MULTI_RULES.testBlackoutDays;
+      const beforeBlackout = week.phase === "maintain" || fitness || daysBetween(end, goalDay) > MULTI_RULES.testBlackoutDays;
       return (
         phaseOk &&
         beforeBlackout &&

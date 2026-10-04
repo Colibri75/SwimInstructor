@@ -21,6 +21,7 @@ struct SwimInstructorApp: App {
         let profileStore = UserDefaultsPerformanceProfileStore()
         let testSettingsStore = UserDefaultsTestSettingsStore()
         let startingLevelStore = UserDefaultsStartingLevelStore()
+        let scheduleStore = UserDefaultsWeeklyScheduleStore()
         let builder = SnapshotBuilder(
             repository: HealthKitWorkoutRepository(),
             vitalsRepository: HealthKitDailyVitalsRepository(),
@@ -30,7 +31,9 @@ struct SwimInstructorApp: App {
             performanceRepository: HealthKitPerformanceDataRepository(),
             profileProvider: { profileStore.profile() },
             // Selbst angegebenes Startniveau, nur solange es gilt (SnapshotBuilder filtert).
-            startingLevelsProvider: { startingLevelStore.levels() }
+            startingLevelsProvider: { startingLevelStore.levels() },
+            // Der Wochenraster, ohne gespeicherten einer aus Trainingstagen und Stunden des Ziels.
+            weeklyScheduleProvider: { scheduleStore.schedule(for: goalStore.goal()) }
         )
         let ownedEquipment = UserDefaultsOwnedEquipmentStore()
         let weekLoader = MultiSportWeekLoader(

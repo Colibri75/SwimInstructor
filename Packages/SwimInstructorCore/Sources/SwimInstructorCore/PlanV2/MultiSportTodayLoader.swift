@@ -106,6 +106,21 @@ public final class MultiSportTodayLoader: ObservableObject {
         await load(force: true, regenerate: true)
     }
 
+    /// Nur Health lesen (mit Erlaubnis), ohne Gesamtplan, sieben Tage und Tagesplan: für die Einrichtung, die beim
+    /// Startniveau zeigt, was Health weiß, bevor es ein Ziel und einen Plan gibt.
+    public func readHealth() async {
+        guard !isLoading else { return }
+        isLoadingHealth = true
+        do {
+            try await authorizer?.requestAuthorization()
+            reading = try await snapshotBuilder.build(now: now())
+            healthError = nil
+        } catch {
+            healthError = error.localizedDescription
+        }
+        isLoadingHealth = false
+    }
+
     /// Speichert den Wunsch für heute. Er wirkt beim nächsten Plan, ändert aber den angezeigten nicht.
     public func setWish(_ text: String) {
         wishStore?.setWish(text, for: todayKey)

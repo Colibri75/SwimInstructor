@@ -14,8 +14,16 @@ public struct MultiSportStateCalculator: Sendable {
         self.loadCalculator = loadCalculator ?? TrainingLoadCalculator(registry: registry)
     }
 
-    /// Der v1-Snapshot erweitert um Gesamtziel, Werte je Sportart und Gesamtlast (Schema v2).
-    public func extend(_ snapshot: AthleteStateSnapshot, workouts: [Workout], goal: TrainingGoal, now: Date) -> AthleteStateSnapshot {
+    /// Der v1-Snapshot erweitert um Gesamtziel, Werte je Sportart und Gesamtlast (Schema v2). Mit `schedule` gehen der
+    /// Wochenraster mit und Trainingstage und Stunden aus ihm (`WeeklySchedule.applied(to:)`).
+    public func extend(
+        _ snapshot: AthleteStateSnapshot,
+        workouts: [Workout],
+        goal: TrainingGoal,
+        schedule: WeeklySchedule? = nil,
+        now: Date
+    ) -> AthleteStateSnapshot {
+        let goal = schedule.map { $0.applied(to: goal) } ?? goal
         let dated = WorkoutDeduplicator.deduplicate(workouts)
             .filter { $0.startDate <= now && registry.module(for: $0.sport) != nil }
             .map { Dated(workout: $0, day: dayDistance(from: $0.startDate, to: now)) }
@@ -32,12 +40,14 @@ public struct MultiSportStateCalculator: Sendable {
         return snapshot.withMultiSport(
             trainingGoal: AthleteStateSnapshot.TrainingGoalSummary(
                 template: goal.template,
+                kind: goal.kind,
                 targetDate: goal.targetDate,
                 daysUntilGoal: max(0, dayDistance(from: now, to: goal.targetDate)),
                 trainingDaysPerWeek: goal.trainingDaysPerWeek,
                 weeklyHours: goal.weeklyHours,
                 disciplines: goal.disciplines,
-                emphasis: goal.emphasis
+                emphasis: goal.emphasis,
+                weeklySchedule: schedule?.days
             ),
             sports: sports,
             totalLoad: totalLoad(sessions: dated)

@@ -56,6 +56,8 @@ public struct SnapshotBuilder: SnapshotBuilding {
     private let profileProvider: () -> PerformanceProfile
     /// Nur v2: das selbst angegebene Startniveau; gültige Angaben gehen mit (`starting_levels`).
     private let startingLevelsProvider: () -> [StartingLevel]
+    /// Der Wochenraster (P2), bei jedem Durchlauf neu; `nil` ohne Wochenraster.
+    private let weeklyScheduleProvider: () -> WeeklySchedule?
     private let calendar: Calendar
 
     public init(
@@ -72,6 +74,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.performanceRepository = nil
         self.profileProvider = { .empty }
         self.startingLevelsProvider = { [] }
+        self.weeklyScheduleProvider = { nil }
         self.calendar = calendar
     }
 
@@ -90,6 +93,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.performanceRepository = nil
         self.profileProvider = { .empty }
         self.startingLevelsProvider = { [] }
+        self.weeklyScheduleProvider = { nil }
         self.calendar = calendar
     }
 
@@ -108,6 +112,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.performanceRepository = nil
         self.profileProvider = { .empty }
         self.startingLevelsProvider = { [] }
+        self.weeklyScheduleProvider = { nil }
         self.calendar = calendar
     }
 
@@ -118,7 +123,8 @@ public struct SnapshotBuilder: SnapshotBuilding {
     /// geschätzt aus Health. Die Last rechnet dann mit Ruhe- und Maximalpuls (TRIMP).
     ///
     /// `startingLevelsProvider` liefert das selbst angegebene Startniveau (bei jedem Durchlauf neu); gültige Angaben
-    /// für Sportarten im Snapshot gehen mit.
+    /// für Sportarten im Snapshot gehen mit. `weeklyScheduleProvider` liefert den Wochenraster; er geht mit und
+    /// bestimmt Trainingstage und Stunden des Ziels.
     public init(
         repository: WorkoutRepository,
         vitalsRepository: DailyVitalsRepository,
@@ -126,6 +132,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         performanceRepository: PerformanceDataRepository? = nil,
         profileProvider: @escaping () -> PerformanceProfile = { .empty },
         startingLevelsProvider: @escaping () -> [StartingLevel] = { [] },
+        weeklyScheduleProvider: @escaping () -> WeeklySchedule? = { nil },
         calendar: Calendar = .current
     ) {
         self.fetchWorkouts = { try await repository.fetchWorkouts(from: $0) }
@@ -136,6 +143,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.performanceRepository = performanceRepository
         self.profileProvider = profileProvider
         self.startingLevelsProvider = startingLevelsProvider
+        self.weeklyScheduleProvider = weeklyScheduleProvider
         self.calendar = calendar
     }
 
@@ -169,7 +177,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
                 maximumHeartRate: performance?.value(.maxHeartRate)?.value
             )
             snapshot = MultiSportStateCalculator(calendar: calendar, loadCalculator: loadCalculator)
-                .extend(snapshot, workouts: allWorkouts, goal: trainingGoal, now: now)
+                .extend(snapshot, workouts: allWorkouts, goal: trainingGoal, schedule: weeklyScheduleProvider(), now: now)
             if let performance {
                 snapshot = snapshot.withPerformance(performance.summary(sports: snapshot.sports?.map(\.sport) ?? []))
             }

@@ -236,7 +236,7 @@ backend/                            # Node/TypeScript-Server (Proxy fuer Claude,
   src/plan/multi/                    # Plan v2 für mehrere Sportarten (T3): Grenzen, Sicherheitsschicht, Tests, Prompts
   src/sports/                        # Registry (SPORTS), Wortschatz, Leistungswerte; modules/: ein Modul je Sportart
   scenarios/                         # die 5 Snapshots aus M3 (Eingabe für npm run eval:scenarios)
-  scenarios/multisport/              # 8 Szenarien für Plan v2, recorded/: aufgezeichnete Antworten
+  scenarios/multisport/              # 9 Szenarien für Plan v2, recorded/: aufgezeichnete Antworten
   scripts/eval-scenarios.ts          # echter Lauf gegen die Claude-API zur manuellen Bewertung
   scripts/eval-multisport.ts         # Bewertung Plan v2: Claude, mit Aufzeichnung oder Wiedergabe
   test/                              # Jest + supertest

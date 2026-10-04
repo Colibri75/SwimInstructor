@@ -22,6 +22,8 @@ struct SettingsView: View {
     private let trainingGoalStore = UserDefaultsTrainingGoalStore()
     @State private var startingLevels: [StartingLevel] = []
     private let startingLevelStore = UserDefaultsStartingLevelStore()
+    @State private var scheduleSummary = ""
+    private let scheduleStore = UserDefaultsWeeklyScheduleStore()
 
     init(onSave: @escaping () -> Void = {}) {
         self.onSave = onSave
@@ -59,6 +61,9 @@ struct SettingsView: View {
                 goalSection
                     // Auch beim Zurückkommen aus dem Ziel-Assistenten neu lesen.
                     .onAppear { trainingGoal = trainingGoalStore.goal() }
+
+                scheduleSection
+                    .onAppear { scheduleSummary = scheduleStore.schedule(for: trainingGoalStore.goal()).summary }
 
                 startingLevelSection
                     .onAppear { startingLevels = startingLevelStore.levels() }
@@ -132,6 +137,20 @@ struct SettingsView: View {
             Text("Mein Ziel")
         } footer: {
             Text("Der Plan arbeitet auf dieses Ziel hin. Es bleibt gespeichert, bis du es änderst.")
+        }
+    }
+
+    // MARK: - Wochenraster
+
+    private var scheduleSection: some View {
+        Section {
+            NavigationLink {
+                WeeklyScheduleView(store: scheduleStore, goalStore: trainingGoalStore)
+            } label: {
+                LabeledContent("Wochenraster", value: scheduleSummary)
+            }
+        } footer: {
+            Text("An welchen Tagen du trainierst, wann und wie lange höchstens. Gilt ab der nächsten Abstimmung der sieben Tage.")
         }
     }
 

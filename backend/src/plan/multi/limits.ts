@@ -4,7 +4,8 @@ import { Intensity } from "../plan";
 import { SnapshotV2 } from "../snapshot";
 import { addDays } from "../week";
 import { RecentTraining } from "./schemas";
-import { floorAmount, formatAmount, plannedSports, raceAmount, raceSeconds, stateAmounts, stateOf, trainingSpeed } from "./sports";
+import { fixedSport, isFitnessGoal, scheduleDay, weeklyMinutes } from "./schedule";
+import { floorAmount, formatAmount, plannedSports, raceAmount, raceSeconds, sportName, stateAmounts, stateOf, trainingSpeed } from "./sports";
 
 /**
  * Die Grenzen der Planung fuer mehrere Sportarten, aus dem Snapshot berechnet. Dieselben Zahlen gehen an Claude
@@ -201,9 +202,14 @@ export interface SportDayLimits {
   reducedForRecovery: boolean;
 }
 
-/** Hoechstens so viele Minuten an einem Tag: die Haelfte der Wochenstunden, mindestens 45 Minuten. */
-export function dayMinutesCap(snapshot: SnapshotV2): number {
-  return Math.round(Math.max(snapshot.training_goal.weekly_hours * 60 * MULTI_RULES.dayShareOfWeeklyHours, MULTI_RULES.minDayMinutesCap));
+/**
+ * Hoechstens so viele Minuten an einem Tag: an einem Trainingstag des Wochenrasters dessen Minuten, sonst die Haelfte
+ * der Wochenstunden, mindestens 45 Minuten.
+ */
+export function dayMinutesCap(snapshot: SnapshotV2, date?: string): number {
+  const scheduled = date !== undefined ? scheduleDay(snapshot, date) : undefined;
+  if (scheduled !== undefined && scheduled.trains) return scheduled.max_minutes;
+  return Math.round(Math.max(weeklyMinutes(snapshot) * MULTI_RULES.dayShareOfWeeklyHours, MULTI_RULES.minDayMinutesCap));
 }
 
 /** Die Grenzen fuer heute ueber alle Sportarten. */
@@ -225,7 +231,12 @@ export function hardOn(recent: readonly RecentTraining[], date: string): boolean
 }
 
 export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly RecentTraining[] = []): DayLimitsV2 {
-  const restReason = snapshot.flags.includes("overreaching_risk") ? "Erholungswerte schlecht bei hoher Belastung (Übertrainingsrisiko)" : null;
+  const restReason = snapshot.flags.includes("overreaching_risk")
+    ? "Erholungswerte schlecht bei hoher Belastung (Übertrainingsrisiko)"
+    : scheduleDay(snapshot, today)?.trains === false
+      ? "Ruhetag laut Wochenraster"
+      : null;
+  const fixed = fixedSport(snapshot, today);
   const poor = snapshot.flags.includes("recovery_poor") || snapshot.recovery.status === "poor";
 
   let maxIntensity = "hard" as Intensity;
@@ -257,7 +268,9 @@ export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly 
       reasons.push("Wiedereinstieg nach Pause");
     }
     const blockedReason =
-      maxAmount < sport.planning.limits.minSession
+      fixed !== undefined && fixed !== sport.id
+        ? `laut Wochenraster heute nur ${sportName(fixed)}`
+        : maxAmount < sport.planning.limits.minSession
         ? limits.weeklyCap - limits.lastSeven < sport.planning.limits.minSession
           ? "Wochenumfang ausgeschöpft"
           : "zu wenig sicherer Umfang"
@@ -274,13 +287,14 @@ export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly 
     });
   }
 
-  const maxMinutes = Math.round(dayMinutesCap(snapshot) * (poor ? MULTI_RULES.recoveryPoorFactor : 1));
+  const maxMinutes = Math.round(dayMinutesCap(snapshot, today) * (poor ? MULTI_RULES.recoveryPoorFactor : 1));
   const testBlockedReason = restReason ?? testBlackoutReason(snapshot, today);
   return { restReason, maxIntensity, intensityReasons, maxMinutes, sports, testBlockedReason };
 }
 
 /** Kein Leistungstest in den letzten 14 Tagen vor dem Ziel (der Tag selbst zaehlt mit). */
 export function testBlackoutReason(snapshot: SnapshotV2, date: string): string | null {
+  if (isFitnessGoal(snapshot)) return null;
   const goalDay = goalDayOf(snapshot);
   if (goalDay < snapshot.generated_at.slice(0, 10)) return null;
   const days = daysBetween(date, goalDay);
@@ -289,8 +303,9 @@ export function testBlackoutReason(snapshot: SnapshotV2, date: string): string |
 
 // --- Phasen bis zum Ziel ---
 
-/** Wochen Zuspitzen: 2 bei einem Wettkampf ab etwa 4 Stunden, sonst 1. */
+/** Wochen Zuspitzen: 2 bei einem Wettkampf ab etwa 4 Stunden, sonst 1; keine bei einem Fitnessziel. */
 export function taperWeeks(snapshot: SnapshotV2): number {
+  if (isFitnessGoal(snapshot)) return 0;
   return raceSeconds(snapshot) >= MULTI_RULES.longRaceSeconds ? MULTI_RULES.taperFactorsLong.length : MULTI_RULES.taperFactorsShort.length;
 }
 
@@ -311,6 +326,17 @@ export function multiPhase(weekStart: string, goalDay: string, today: string, ta
   if (weeks <= taper) return "taper";
   if (weeks <= taper + MULTI_RULES.specificWeeks) return "specific";
   return "base";
+}
+
+/**
+ * Phase einer Woche fuer das Ziel des Snapshots. Ein Fitnessziel hat kein Zuspitzen und keine Zielwoche: Bis zum Ende
+ * des Planungszeitraums ist jede Woche Aufbau (mit dem Ziel, den Wochenumfang des Wochenrasters zu erreichen und zu
+ * halten), danach erhaltend.
+ */
+export function phaseOf(snapshot: SnapshotV2, weekStart: string, today: string): MacroPhase {
+  const goalDay = goalDayOf(snapshot);
+  if (isFitnessGoal(snapshot)) return goalDay < today ? "maintain" : "base";
+  return multiPhase(weekStart, goalDay, today, taperWeeks(snapshot));
 }
 
 export function goalDayOf(snapshot: SnapshotV2): string {

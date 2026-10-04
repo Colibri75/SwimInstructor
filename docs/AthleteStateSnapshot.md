@@ -129,6 +129,13 @@ schickt v2, sobald ein Gesamtziel eingestellt ist (immer, seit T2). Vollständig
   `disciplines` (Sportart, `distance_meters`, optional `target_duration_seconds`) und `emphasis` (Sportart, `percent`,
   zusammen genau 100; jede Disziplin braucht mehr als 0 %). Das Zieltempo jeder Disziplin muss im Fenster
   `goal_speed` des Sport-Moduls liegen (`contracts/sports.json`).
+  Seit P2 dazu `kind` (Zielart: `race` Wettkampf, `time` Zeit über eine Strecke, `distance` Strecke schaffen, `fitness`
+  fit werden und bleiben; fehlt bei älteren Apps und heißt dann `race`) und `weekly_schedule` (Wochenraster, genau 7
+  Tage: `weekday` 1 = Montag bis 7 = Sonntag, `trains`, optional `time_of_day` `morning`/`midday`/`evening`,
+  `max_minutes` 0 bis 600, an Trainingstagen mindestens 15, optional `sport` als feste Sportart). Ein Fitnessziel hat
+  keine Disziplinen, jede andere Zielart mindestens eine; bei `fitness` ist `target_date` das Ende des
+  Planungszeitraums. `training_days_per_week` und `weekly_hours` rechnet die App aus dem Wochenraster; der Server
+  nimmt, wenn vorhanden, den Wochenraster.
 - `sports`: je Sportart mit Training in den letzten 4 Wochen oder mit Schwerpunkt/Disziplin: Einheiten, Minuten
   und Meter der letzten 7 Tage, Wochenschnitt der letzten 4 Wochen, längste Einheit (Meter und Minuten), Last
   (`TrainingLoadCalculator`: TRIMP mit Puls, sonst Minuten, mal Faktor des Moduls) und Tage seit der letzten Einheit.

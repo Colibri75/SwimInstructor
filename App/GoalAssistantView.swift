@@ -1,25 +1,45 @@
 import SwiftUI
 import SwimInstructorCore
 
-/// Ziel-Assistent: Vorlage wählen (Triathlon-Distanzen, Lauf, Schwimmen, Rad) oder alles selbst einstellen.
-/// Disziplinen mit Strecke und Zielzeit, Zieltag, Trainingstage, Stunden pro Woche und der Schwerpunkt je Sportart.
-/// Ein gültiges Ziel wird sofort gespeichert.
+/// Ziel-Assistent: Zielart wählen (Wettkampf, Zeit, Strecke, Fitness), beim Wettkampf auf Wunsch eine Vorlage
+/// (Triathlon-Distanzen, Lauf, Schwimmen, Rad), dann Disziplinen mit Strecke und Zielzeit, Zieltag und der
+/// Schwerpunkt je Sportart. Die Trainingszeit kommt aus dem Wochenraster. Ein gültiges Ziel wird sofort gespeichert.
 struct GoalAssistantView: View {
     private let store: TrainingGoalStoring
+    private let scheduleStore: WeeklyScheduleStoring
+    /// In der Einrichtung ist der Wochenraster ein eigener Schritt.
+    private let showsSchedule: Bool
+    private let isValid: Binding<Bool>?
     private let sports = SportRegistry.standard
 
     @State private var goal = TrainingGoal.default
     @State private var loaded = false
+    @State private var scheduleSummary = ""
 
-    init(store: TrainingGoalStoring = UserDefaultsTrainingGoalStore()) {
+    init(
+        store: TrainingGoalStoring = UserDefaultsTrainingGoalStore(),
+        scheduleStore: WeeklyScheduleStoring = UserDefaultsWeeklyScheduleStore(),
+        showsSchedule: Bool = true,
+        isValid: Binding<Bool>? = nil
+    ) {
         self.store = store
+        self.scheduleStore = scheduleStore
+        self.showsSchedule = showsSchedule
+        self.isValid = isValid
     }
 
     var body: some View {
         Form {
-            templateSection
-            ForEach(sports.ids, id: \.self) { sport in
-                disciplineSection(sport)
+            kindSection
+            if goal.kind == .race {
+                templateSection
+            }
+            if goal.kind.hasDisciplines {
+                ForEach(sports.ids, id: \.self) { sport in
+                    disciplineSection(sport)
+                }
+            } else {
+                sportsSection
             }
             emphasisSection
             trainingSection
@@ -29,14 +49,61 @@ struct GoalAssistantView: View {
         .swipeClosesKeyboard()
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
+            // Auch nach der Rückkehr aus dem Wochenraster.
+            scheduleSummary = scheduleStore.schedule(for: store.goal()).summary
             guard !loaded else { return }
             goal = store.goal()
             loaded = true
+            isValid?.wrappedValue = goal.problem(now: Date()) == nil
         }
         .onChange(of: goal) { _, newGoal in
             guard loaded else { return }
             store.setGoal(newGoal, now: Date())
+            isValid?.wrappedValue = newGoal.problem(now: Date()) == nil
         }
+    }
+
+    // MARK: - Zielart
+
+    private var kindSection: some View {
+        Section {
+            Picker("Zielart", selection: kindBinding) {
+                ForEach(GoalKind.allCases) { kind in
+                    Text(kind.title).tag(kind)
+                }
+            }
+        } footer: {
+            Text(goal.kind.explanation)
+        }
+    }
+
+    private var kindBinding: Binding<GoalKind> {
+        Binding(
+            get: { goal.kind },
+            set: { goal = goal.settingKind($0, now: Date()) }
+        )
+    }
+
+    /// Beim Fitnessziel: welche Sportarten zum Training gehören.
+    private var sportsSection: some View {
+        Section {
+            ForEach(sports.ids, id: \.self) { sport in
+                Toggle(isOn: sportBinding(sport)) {
+                    Label(sports.displayName(for: sport), systemImage: sports.symbolName(for: sport))
+                }
+            }
+        } header: {
+            Text("Sportarten")
+        } footer: {
+            Text("Mindestens eine Sportart bleibt.")
+        }
+    }
+
+    private func sportBinding(_ sport: SportID) -> Binding<Bool> {
+        Binding(
+            get: { goal.percent(for: sport) > 0 },
+            set: { goal = goal.settingSport(sport, included: $0) }
+        )
     }
 
     // MARK: - Vorlage
@@ -83,7 +150,9 @@ struct GoalAssistantView: View {
                         Text("km")
                     }
                 }
-                Toggle("Zielzeit", isOn: hasTimeBinding(sport))
+                if goal.kind != .distance {
+                    Toggle("Zielzeit", isOn: hasTimeBinding(sport))
+                }
                 if discipline.targetDurationSeconds != nil {
                     LabeledContent("Zeit") {
                         HStack {
@@ -177,14 +246,30 @@ struct GoalAssistantView: View {
     }
 
     private var trainingSection: some View {
-        Section("Zieltag und Training") {
-            DatePicker("Zieltag", selection: targetDayBinding, in: Date()..., displayedComponents: .date)
-            Stepper(value: $goal.trainingDaysPerWeek, in: TrainingGoal.trainingDaysRange) {
-                LabeledContent("Trainingstage", value: "\(goal.trainingDaysPerWeek) pro Woche")
+        Section {
+            DatePicker(dateTitle, selection: targetDayBinding, in: Date()..., displayedComponents: .date)
+            if showsSchedule {
+                NavigationLink {
+                    WeeklyScheduleView(store: scheduleStore, goalStore: store)
+                } label: {
+                    LabeledContent("Wochenraster", value: scheduleSummary)
+                }
             }
-            Stepper(value: $goal.weeklyHours, in: TrainingGoal.weeklyHoursRange, step: 0.5) {
-                LabeledContent("Trainingszeit", value: "\(goal.weeklyHours.formatted(.number.precision(.fractionLength(0...1)))) h pro Woche")
+        } header: {
+            Text(goal.kind == .fitness ? "Zeitraum und Training" : "Zieltag und Training")
+        } footer: {
+            if goal.kind == .fitness {
+                Text("Bis zu diesem Tag plant die App. Danach legst du einfach einen neuen Zeitraum fest.")
             }
+        }
+    }
+
+    private var dateTitle: String {
+        switch goal.kind {
+        case .race: return "Wettkampftag"
+        case .time: return "Tag des Versuchs"
+        case .distance: return "Zieltag"
+        case .fitness: return "Planen bis"
         }
     }
 
@@ -203,15 +288,13 @@ struct GoalAssistantView: View {
                 Text("\(problem) Noch nicht gespeichert.")
                     .foregroundStyle(.red)
             } else {
-                Text("Gespeichert. Der nächste Plan richtet sich danach (auf Heute nach unten ziehen, im Tab Plan neu planen).")
+                Text("Gespeichert. Der nächste Plan richtet sich danach.")
                     .foregroundStyle(.secondary)
             }
             Button("Auf das Standardziel zurücksetzen (3,8 km Schwimmen)") {
                 store.resetGoal()
                 goal = store.goal()
             }
-        } footer: {
-            Text("Bis zum nächsten großen Update plant der Server nur Schwimmen. Rad und Laufen gehen schon als Belastung in den Plan ein.")
         }
         .font(.footnote)
     }

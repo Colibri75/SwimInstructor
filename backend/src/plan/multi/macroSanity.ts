@@ -2,7 +2,8 @@ import { LimitUnit } from "../../sports/types";
 import { MacroPhase } from "../macro";
 import { SnapshotV2 } from "../snapshot";
 import { addDays } from "../week";
-import { multiPhase, MULTI_RULES, sportLimits, SportLimitsNow, taperFactors, taperWeeks, weeksToGoal } from "./limits";
+import { MULTI_RULES, phaseOf, sportLimits, SportLimitsNow, taperFactors, taperWeeks, weeksToGoal } from "./limits";
+import { trainingDaysPerWeek, weeklyMinutes } from "./schedule";
 import { MacroBlockRaw, MacroWeekRawV2, MacroWeeksRaw, TestSettings } from "./schemas";
 import { amountToMeters, amountToMinutes, floorAmount, formatAmount, plannedSports, raceAmount, roundAmount, sportName } from "./sports";
 import { scheduleMacroTests, ScheduledTest } from "./tests";
@@ -148,9 +149,8 @@ export function sanitizeMacroV2(input: MacroWeeksRaw, snapshot: SnapshotV2, cont
 
   const taper = taperWeeks(snapshot);
   const factors = taperFactors(snapshot);
-  const goal = snapshot.training_goal;
-  const weeklyMinutesCap = goal.weekly_hours * 60;
-  const maxSessions = goal.training_days_per_week * MULTI_RULES.maxSessionsPerDay;
+  const weeklyMinutesCap = weeklyMinutes(snapshot);
+  const maxSessions = trainingDaysPerWeek(snapshot) * MULTI_RULES.maxSessionsPerDay;
 
   const reference = new Map<string, number>(sportLimitsList.map((entry) => [entry.limits.sport.id, entry.limits.average]));
   const peak = new Map<string, number>();
@@ -160,7 +160,7 @@ export function sanitizeMacroV2(input: MacroWeeksRaw, snapshot: SnapshotV2, cont
   let loadingStreak = 0;
 
   context.weeks.forEach((weekStart, index) => {
-    const phase = multiPhase(weekStart, context.goalDay, context.today, taper);
+    const phase = phaseOf(snapshot, weekStart, context.today);
     const toGoal = weeksToGoal(weekStart, context.goalDay);
     const previous = weeks[index - 1];
     const found = byWeek.get(weekStart);

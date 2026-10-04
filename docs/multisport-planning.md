@@ -91,6 +91,36 @@ abgerundet), die Woche bis 5450 m. Ohne Angabe wären es 800 m je Einheit (Wiede
 Beim Schwimmen liegen die Untergrenzen seit dem Betatest höher als im früheren Schwimmplan (1500 statt 1000 m je
 Einheit, 2500 statt 1500 m in 7 Tagen): Mit wenig Schwimmverlauf blieben sonst oft nur wenige hundert Meter am Tag.
 
+## Zielarten und Wochenraster (P2)
+
+Das Ziel hat eine Art (`training_goal.kind`): Wettkampf, Zeit über eine Strecke, Strecke schaffen oder fit werden und
+bleiben. Zeit und Strecke planen wie ein Wettkampf, nur steht am Zieltag ein eigener Versuch statt eines Rennens. Ein
+Fitnessziel hat keine Disziplinen, kein Zuspitzen und keine Zielwoche: Jede Woche bis zum Ende des Planungszeitraums
+ist Aufbau, der Umfang steigt bis zu den Wochenminuten und bleibt dann; Tests sind bis zum Ende erlaubt
+(`phaseOf`, `taperWeeks`, `testBlackoutReason` in `limits.ts`).
+
+Der Wochenraster (`training_goal.weekly_schedule`, `schedule.ts`) legt je Wochentag fest, ob, wann und wie lange
+trainiert wird, auf Wunsch mit fester Sportart. Er ersetzt Trainingstage und Wochenstunden des Ziels:
+
+| Regel | Tag | Sieben Tage | Gesamtplan |
+|---|---|---|---|
+| Tag ohne Training | Pflicht-Ruhetag ("Ruhetag laut Wochenraster") | Einheiten gestrichen | – |
+| Minuten des Tages | Tagesgrenze (bei schlechter Erholung die Hälfte) | Tagesgrenze je Tag | – |
+| Feste Sportart | andere Sportarten heute gesperrt | andere Sportarten gestrichen | – |
+| Summe | – | höchstens die Summe pro Woche | höchstens die Summe pro Woche |
+| Trainingstage | – | höchstens die Tage mit Training | Einheiten höchstens zwei je Trainingstag |
+
+Eine feste Sportart ohne Schwerpunkt zählt nicht. Passt die feste Sportart wegen ihrer Grenzen nicht, wird die Einheit
+kürzer oder fällt aus; eine andere Sportart kommt dafür nicht. Ohne Wochenraster (App vor P2) gelten Trainingstage und
+Wochenstunden des Ziels wie bisher.
+
+In der App liegt der Wochenraster getrennt vom Ziel (`WeeklySchedule`, Einstellungen → Wochenraster). Ohne gespeicherten
+Wochenraster rechnet die App einen aus Trainingstagen und Stunden des Ziels. Trainingstage und Stunden im Snapshot kommen
+aus dem Wochenraster, damit ältere Server dasselbe sehen. Der Gesamtplan hängt nur an Zielart, Disziplinen, Zieltag und
+Schwerpunkten (`TrainingGoal.planKey`); eine Änderung am Wochenraster gilt ab der nächsten Abstimmung der sieben Tage.
+Beim ersten Start führt die App durch Ziel, Wochenraster und Startniveau (`OnboardingView`), erst danach entsteht der
+Gesamtplan. Wer die App schon nutzt, sieht die Einrichtung nach dem Update einmal, vorausgefüllt mit dem gespeicherten Ziel.
+
 ## Übergreifende Regeln
 
 **Tag:** höchstens zwei Einheiten, höchstens eine harte. Ein Tag hat höchstens die Hälfte der Wochenstunden des
@@ -174,8 +204,8 @@ scripts/eval-in-docker.sh multisport                      # auf dem Server, nimm
 Die Aufzeichnungen liegen in `backend/scenarios/multisport/recorded/`. Bis zum ersten echten Lauf sind sie
 synthetisch (von Hand nach Regeln gebaut, Modell `synthetisch`); sie zeigen den Ablauf und die Sicherheitsschicht,
 nicht Claudes Qualität. `test/plan/multi/scenarios.test.ts` spielt sie in der CI ab. Ein Lauf mit Claude kostet für
-alle acht Szenarien 26 Anfragen. Szenario 08 ist noch synthetisch (Modell `synthetisch`), bis es einmal mit Claude
-aufgenommen ist (`EVAL_ONLY=08`). Nur ein Szenario, in dem jede Stufe klappt, ersetzt seine Aufzeichnung; schlägt ein
+alle neun Szenarien 29 Anfragen. Die Szenarien 08 und 09 sind noch synthetisch (Modell `synthetisch`), bis sie einmal
+mit Claude aufgenommen sind (`EVAL_ONLY=08,09`). Nur ein Szenario, in dem jede Stufe klappt, ersetzt seine Aufzeichnung; schlägt ein
 Aufruf fehl, zeigt die Konsole die Meldung und die Dauer.
 
 ## Eine Sportart dazunehmen

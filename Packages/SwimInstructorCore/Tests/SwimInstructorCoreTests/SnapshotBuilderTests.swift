@@ -133,6 +133,29 @@ final class SnapshotBuilderTests: XCTestCase {
         XCTAssertEqual(reading.snapshot.goal.distanceMeters, 1500)
     }
 
+    func testWeeklyScheduleGoesWithTheGoalAndSetsDaysAndHours() async throws {
+        let goal = GoalTemplate.template(id: "triathlon_olympic")!
+            .goal(targetDate: AthleteGoal.default.targetDate, trainingDaysPerWeek: 5, weeklyHours: 7)
+        let schedule = WeeklySchedule(trainingDaysPerWeek: 3, weeklyHours: 4.5)
+            .setting(.init(weekday: 2, trains: true, timeOfDay: .evening, maxMinutes: 90, sport: .swim))
+        let builder = SnapshotBuilder(
+            repository: FakeAllSportsRepository(workouts: []),
+            vitalsRepository: FakeVitalsRepository(),
+            trainingGoalProvider: { goal },
+            weeklyScheduleProvider: { schedule },
+            calendar: TestFixtures.utc
+        )
+
+        let reading = try await builder.build(now: TestFixtures.now)
+        let summary = try XCTUnwrap(reading.snapshot.trainingGoal)
+
+        XCTAssertEqual(summary.kind, .race)
+        XCTAssertEqual(summary.weeklySchedule, schedule.days)
+        XCTAssertEqual(summary.trainingDaysPerWeek, 3)
+        XCTAssertEqual(summary.weeklyHours, 4.5)
+        XCTAssertEqual(summary.weeklySchedule?[1].sport, .swim)
+    }
+
     // MARK: - Leistungsprofil (T2b)
 
     private func profileBuilder(

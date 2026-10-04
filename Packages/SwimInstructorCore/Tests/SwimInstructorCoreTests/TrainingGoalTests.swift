@@ -145,4 +145,71 @@ final class TrainingGoalTests: XCTestCase {
         let custom = olympic().settingDiscipline(nil, for: .swim)
         XCTAssertEqual(PlanFormatting.goalSummary(custom, calendar: TestFixtures.utc), "Radfahren 40,0 km, Laufen 10,0 km, 28.01.2027")
     }
+    // MARK: - Zielarten (P2)
+
+    func testGoalsFromBeforeP2DecodeAsRace() throws {
+        let goal = try JSONDecoder().decode(TrainingGoal.self, from: RepoPaths.contractData("app-storage/training-goal.json"))
+        XCTAssertEqual(goal.kind, .race)
+        let fitness = olympic().settingKind(.fitness, now: now)
+        XCTAssertEqual(try JSONDecoder().decode(TrainingGoal.self, from: JSONEncoder().encode(fitness)), fitness)
+    }
+
+    func testFitnessGoalHasNoDisciplinesAndAHorizon() throws {
+        let fitness = olympic().settingKind(.fitness, now: now)
+        XCTAssertEqual(fitness.kind, .fitness)
+        XCTAssertTrue(fitness.disciplines.isEmpty)
+        XCTAssertNil(fitness.template)
+        XCTAssertEqual(fitness.sports, [.swim, .bike, .run])
+        XCTAssertEqual(fitness.targetDate, AthleteGoal.targetDate(onDayOf: now.addingTimeInterval(26 * 7 * 86_400)))
+        XCTAssertNil(fitness.problem(now: now, calendar: TestFixtures.utc))
+
+        var withDiscipline = fitness
+        withDiscipline.disciplines = [.init(sport: .run, distanceMeters: 5000)]
+        XCTAssertEqual(withDiscipline.problem(), "Ein Fitnessziel hat keine Disziplinen.")
+
+        // Zurück zu einer Zielart mit Disziplin: eine für die Sportart mit dem größten Schwerpunkt.
+        let back = fitness.settingKind(.distance, now: now)
+        XCTAssertEqual(back.kind, .distance)
+        XCTAssertEqual(back.disciplines.map(\.sport), [.bike])
+        XCTAssertEqual(back.targetDate, fitness.targetDate)
+        XCTAssertNil(back.problem())
+    }
+
+    func testTimeGoalNeedsTimesAndDistanceGoalDropsThem() {
+        // Die Vorlage hat keine Zielzeiten.
+        let time = olympic().settingKind(.time, now: now)
+        XCTAssertEqual(time.problem(), "Bei einer Zeit über eine Strecke braucht jede Disziplin eine Zielzeit.")
+        let timed = time
+            .settingDiscipline(.init(sport: .swim, distanceMeters: 1_500, targetDurationSeconds: 1800), for: .swim)
+            .settingDiscipline(.init(sport: .bike, distanceMeters: 40_000, targetDurationSeconds: 4800), for: .bike)
+        XCTAssertNotNil(timed.problem())
+        XCTAssertNil(timed.settingDiscipline(.init(sport: .run, distanceMeters: 10_000, targetDurationSeconds: 3000), for: .run).problem())
+
+        let distance = olympic().settingKind(.distance, now: now)
+        XCTAssertTrue(distance.disciplines.allSatisfy { $0.targetDurationSeconds == nil })
+        XCTAssertEqual(distance.disciplines.map(\.distanceMeters), olympic().disciplines.map(\.distanceMeters))
+        XCTAssertNil(distance.problem())
+    }
+
+    func testSettingSportKeepsOneAndSumsTo100() {
+        let fitness = olympic().settingKind(.fitness, now: now)
+        let noSwim = fitness.settingSport(.swim, included: false)
+        XCTAssertEqual(noSwim.sports, [.bike, .run])
+        XCTAssertEqual(noSwim.emphasis.reduce(0) { $0 + $1.percent }, 100)
+        let onlyRun = noSwim.settingSport(.bike, included: false)
+        XCTAssertEqual(onlyRun.sports, [.run])
+        XCTAssertEqual(onlyRun.settingSport(.run, included: false), onlyRun, "Die letzte Sportart bleibt")
+        let again = onlyRun.settingSport(.swim, included: true)
+        XCTAssertEqual(again.sports, [.swim, .run])
+        XCTAssertEqual(again.emphasis.reduce(0) { $0 + $1.percent }, 100)
+        XCTAssertNil(again.problem())
+        // Mit Disziplin verliert die Sportart auch die Disziplin.
+        XCTAssertNil(olympic().settingSport(.bike, included: false).discipline(for: .bike))
+    }
+
+    func testFitnessSummary() {
+        let fitness = olympic().settingKind(.fitness, now: now).settingSport(.swim, included: false)
+        let day = PlanFormatting.germanDate(PlanFormatting.isoDay(fitness.targetDate, calendar: TestFixtures.utc))
+        XCTAssertEqual(PlanFormatting.goalSummary(fitness, calendar: TestFixtures.utc), "Fitness: Radfahren, Laufen, bis \(day)")
+    }
 }

@@ -7,11 +7,11 @@ private enum MacroLoaderV2Data {
     static let goalDate: Date = TestFixtures.utc.date(from: DateComponents(year: 2026, month: 11, day: 8, hour: 12)) ?? TestFixtures.now
 
     /// Sprint-Triathlon: 750 m Schwimmen in 20 Minuten, 20 km Rad, 5 km Laufen.
-    static func sprint(weeklyHours: Double = 6, trainingDays: Int = 5) -> TrainingGoal {
+    static func sprint(weeklyHours: Double = 6, trainingDays: Int = 5, swimSeconds: TimeInterval = 1_200) -> TrainingGoal {
         TrainingGoal(
             template: nil,
             disciplines: [
-                TrainingGoal.Discipline(sport: .swim, distanceMeters: 750, targetDurationSeconds: 1_200),
+                TrainingGoal.Discipline(sport: .swim, distanceMeters: 750, targetDurationSeconds: swimSeconds),
                 TrainingGoal.Discipline(sport: .bike, distanceMeters: 20_000),
                 TrainingGoal.Discipline(sport: .run, distanceMeters: 5_000)
             ],
@@ -163,8 +163,12 @@ final class MultiSportMacroLoaderTests: XCTestCase {
         let loader = makeLoader(store: MemoryStore(plan), provider: nil, goal: { goal })
         XCTAssertTrue(loader.isCurrent)
 
-        // Mehr Stunden pro Woche: ein anderes Ziel, der Plan passt nicht mehr.
-        goal = MacroLoaderV2Data.sprint(weeklyHours: 8)
+        // Mehr Stunden pro Woche kommen aus dem Wochenraster: Der Plan bleibt.
+        goal = MacroLoaderV2Data.sprint(weeklyHours: 8, trainingDays: 4)
+        XCTAssertTrue(loader.isCurrent)
+
+        // Eine andere Zielzeit: ein anderes Ziel, der Plan passt nicht mehr.
+        goal = MacroLoaderV2Data.sprint(swimSeconds: 1_100)
         XCTAssertNotEqual(loader.currentGoalKey, plan.goalKey)
         XCTAssertFalse(loader.isCurrent)
 
@@ -261,7 +265,7 @@ final class MultiSportMacroLoaderTests: XCTestCase {
         XCTAssertNil(loader.plan)
 
         // Ein neues Ziel am selben Tag bekommt einen eigenen Versuch.
-        goal = MacroLoaderV2Data.sprint(trainingDays: 4)
+        goal = MacroLoaderV2Data.sprint(swimSeconds: 1_150)
         await loader.ensureCurrent(snapshot: TestFixtures.snapshot)
 
         XCTAssertEqual(provider.macroRequests.count, 2)
@@ -289,7 +293,7 @@ final class MultiSportMacroLoaderTests: XCTestCase {
         await loader.ensureCurrent(snapshot: TestFixtures.snapshot)
         XCTAssertTrue(provider.macroRequests.isEmpty)
 
-        goal = MacroLoaderV2Data.sprint(weeklyHours: 8)
+        goal = MacroLoaderV2Data.sprint(swimSeconds: 1_100)
         XCTAssertFalse(loader.isCurrent)
         await loader.ensureCurrent(snapshot: TestFixtures.snapshot)
 
