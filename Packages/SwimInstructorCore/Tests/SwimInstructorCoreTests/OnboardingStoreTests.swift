@@ -22,13 +22,14 @@ final class OnboardingStoreTests: XCTestCase {
         XCTAssertTrue(UserDefaultsOnboardingStore(defaults: defaults).isCompleted)
     }
 
-    func testExistingUsersSkipTheSetup() throws {
-        let withGoal = try defaults()
-        withGoal.set(try RepoPaths.contractData("app-storage/training-goal.json"), forKey: UserDefaultsTrainingGoalStore.storageKey)
-        XCTAssertTrue(UserDefaultsOnboardingStore(defaults: withGoal).isCompleted)
-
-        let withSwimGoal = try defaults()
-        withSwimGoal.set(try RepoPaths.contractData("app-storage/goal-swim-v1.json"), forKey: UserDefaultsGoalStore.storageKey)
-        XCTAssertTrue(UserDefaultsOnboardingStore(defaults: withSwimGoal).isCompleted)
+    func testExistingUsersSeeTheSetupOnceWithTheirGoal() throws {
+        let defaults = try defaults()
+        defaults.set(try RepoPaths.contractData("app-storage/training-goal.json"), forKey: UserDefaultsTrainingGoalStore.storageKey)
+        let store = UserDefaultsOnboardingStore(defaults: defaults)
+        XCTAssertFalse(store.isCompleted)
+        // Vorausgefüllt: Der Assistent liest das gespeicherte Ziel.
+        XCTAssertEqual(UserDefaultsTrainingGoalStore(defaults: defaults).goal().template, "triathlon_olympic")
+        store.complete()
+        XCTAssertTrue(store.isCompleted)
     }
 }

@@ -119,7 +119,7 @@ Wochenraster rechnet die App einen aus Trainingstagen und Stunden des Ziels. Tra
 aus dem Wochenraster, damit ältere Server dasselbe sehen. Der Gesamtplan hängt nur an Zielart, Disziplinen, Zieltag und
 Schwerpunkten (`TrainingGoal.planKey`); eine Änderung am Wochenraster gilt ab der nächsten Abstimmung der sieben Tage.
 Beim ersten Start führt die App durch Ziel, Wochenraster und Startniveau (`OnboardingView`), erst danach entsteht der
-Gesamtplan. Wer schon ein Ziel gespeichert hat, sieht die Einrichtung nicht.
+Gesamtplan. Wer die App schon nutzt, sieht die Einrichtung nach dem Update einmal, vorausgefüllt mit dem gespeicherten Ziel.
 
 ## Übergreifende Regeln
 
