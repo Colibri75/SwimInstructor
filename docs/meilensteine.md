@@ -721,7 +721,7 @@ Schritt bleibt sie fürs Schwimmen voll nutzbar.
 
 ### T6 – Konfigurierbare Statistik
 
-- **Kachel-Dashboard:** Der Tab "Dashboard" zeigt oben Kacheln, je zwei nebeneinander. Jede Kachel hat eine
+- **Kachel-Dashboard:** Der Tab "Dashboard" zeigt oben Kacheln, eine pro Zeile (anfangs zwei nebeneinander, das war zu klein). Jede Kachel hat eine
   Sportart (oder alle Sportarten), eine Kennzahl und einen Zeitraum, zeigt den Wert, einen kleinen Verlauf (Balken für
   Summen, Linie für Mittelwerte) und den Vergleich mit denselben Tagen davor (grün besser, orange schlechter, grau ohne
   Wertung, etwa beim Umfang). Darunter die Woche gegen den Plan, die Erholung und das Ziel wie bisher; Wochenumfang und

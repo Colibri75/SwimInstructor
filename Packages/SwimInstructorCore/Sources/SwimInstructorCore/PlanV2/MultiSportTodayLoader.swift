@@ -89,14 +89,21 @@ public final class MultiSportTodayLoader: ObservableObject {
         return response.date == todayKey && response.source != .fallback
     }
 
-    /// Beim Öffnen: Health immer neu lesen (kostet nichts), den Plan nur holen, wenn noch keiner von heute da ist.
+    /// Passt der angezeigte Plan zur Vorgabe der sieben Tage für heute? Nach einer Änderung am heutigen Tag im Plan-Tab
+    /// (Umfang, Sportart, Ruhetag) oder einer neuen Planung der sieben Tage nicht mehr.
+    public var matchesTodayTarget: Bool {
+        response?.requestedTarget == dayTarget()
+    }
+
+    /// Beim Öffnen: Health immer neu lesen (kostet nichts), den Plan nur holen, wenn keiner von heute da ist oder sich die
+    /// Vorgabe für heute geändert hat.
     public func refreshIfNeeded() async {
-        await load(fetchPlan: !hasFreshPlanForToday, regenerate: false)
+        await load(force: false, regenerate: false)
     }
 
     /// Ziehen zum Aktualisieren: Health lesen und in jedem Fall einen neuen Plan von Claude holen.
     public func refresh() async {
-        await load(fetchPlan: true, regenerate: true)
+        await load(force: true, regenerate: true)
     }
 
     /// Speichert den Wunsch für heute. Er wirkt beim nächsten Plan, ändert aber den angezeigten nicht.
@@ -111,7 +118,7 @@ public final class MultiSportTodayLoader: ObservableObject {
         await refresh()
     }
 
-    private func load(fetchPlan: Bool, regenerate: Bool) async {
+    private func load(force: Bool, regenerate: Bool) async {
         guard !isLoading else { return }
 
         isLoadingHealth = true
@@ -131,7 +138,8 @@ public final class MultiSportTodayLoader: ObservableObject {
             isPreparing = false
         }
 
-        guard fetchPlan, let reading else { return }
+        // Erst nach der Vorbereitung entscheiden: Sie kann die Vorgabe für heute geändert haben.
+        guard force || !hasFreshPlanForToday || !matchesTodayTarget, let reading else { return }
         guard let provider = planProvider() else {
             needsConfiguration = true
             return
@@ -142,18 +150,20 @@ public final class MultiSportTodayLoader: ObservableObject {
         let todaysWish = wishStore?.wish(for: todayKey)
         wish = todaysWish ?? ""
 
+        let target = dayTarget()
         isLoadingPlan = true
         defer { isLoadingPlan = false }
         do {
-            let fresh = try await provider.fetchDayPlanV2(DayPlanV2Request(
+            var fresh = try await provider.fetchDayPlanV2(DayPlanV2Request(
                 snapshot: reading.snapshot,
                 regenerate: regenerate,
                 wishes: todaysWish,
-                dayPlan: dayTarget(),
+                dayPlan: target,
                 equipment: equipment(),
                 recentTraining: recentTraining(reading),
                 testSettings: testSettings()
             ))
+            fresh.requestedTarget = target
             response = fresh
             planError = nil
             // Speichern ist Komfort; scheitert es, ist der Plan trotzdem da.

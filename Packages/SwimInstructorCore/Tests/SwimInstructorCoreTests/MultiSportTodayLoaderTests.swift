@@ -253,6 +253,76 @@ final class MultiSportTodayLoaderTests: XCTestCase {
         XCTAssertEqual(provider.requests.map(\.dayPlan?.focus), ["Laufen", nil])
     }
 
+    // MARK: - Vorgabe für heute
+
+    private static func swimTarget(_ meters: Double) -> DayTargetV2 {
+        DayTargetV2(focus: "Schwimmen", sessions: [
+            DayTargetV2.Session(sport: .swim, sessionType: .endurance, intensity: .easy, amount: meters, focus: "Locker")
+        ])
+    }
+
+    func testAChangedTargetForTodayFetchesANewPlanOnOpen() async throws {
+        var target = Self.swimTarget(1_500)
+        let cache = MemoryCache()
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        let loader = makeLoader(cache: cache, dayTarget: { target }, provider: provider)
+
+        await loader.refreshIfNeeded()
+        await loader.refreshIfNeeded()
+        XCTAssertEqual(provider.calls, 1)
+        XCTAssertEqual(cache.stored?.requestedTarget, target)
+        XCTAssertTrue(loader.matchesTodayTarget)
+
+        // Im Plan-Tab: heute 2000 statt 1500 m Schwimmen.
+        target = Self.swimTarget(2_000)
+        XCTAssertFalse(loader.matchesTodayTarget)
+        await loader.refreshIfNeeded()
+
+        XCTAssertEqual(provider.calls, 2)
+        // Kein "neu würfeln": Mit der neuen Vorgabe erzeugt der Server ohnehin einen neuen Plan.
+        XCTAssertEqual(provider.newPlanCalls, 0)
+        XCTAssertEqual(provider.requests.last?.dayPlan, Self.swimTarget(2_000))
+        XCTAssertEqual(loader.response?.requestedTarget, Self.swimTarget(2_000))
+        XCTAssertEqual(cache.stored?.requestedTarget, Self.swimTarget(2_000))
+        XCTAssertTrue(loader.matchesTodayTarget)
+
+        await loader.refreshIfNeeded()
+        XCTAssertEqual(provider.calls, 2)
+    }
+
+    func testATargetChangedWhilePreparingIsFollowedRightAway() async throws {
+        var target: DayTargetV2? = Self.swimTarget(1_500)
+        var cached = TodayLoaderV2Data.response()
+        cached.requestedTarget = target
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        let loader = makeLoader(
+            cache: MemoryCache(cached),
+            dayTarget: { target },
+            // Die sieben Tage werden neu geplant, heute ist jetzt Rad dran.
+            prepare: { _ in target = DayTargetV2(focus: "Rad", sessions: [
+                DayTargetV2.Session(sport: .bike, sessionType: .endurance, intensity: .easy, amount: 60, focus: "Locker")
+            ]) },
+            provider: provider
+        )
+
+        XCTAssertTrue(loader.matchesTodayTarget)
+        await loader.refreshIfNeeded()
+
+        XCTAssertEqual(provider.calls, 1)
+        XCTAssertEqual(provider.requests.first?.dayPlan?.focus, "Rad")
+    }
+
+    func testACachedPlanWithoutTargetIsFetchedAgainWhenTheWeekHasOne() async throws {
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        let loader = makeLoader(cache: MemoryCache(TodayLoaderV2Data.response()), dayTarget: { Self.swimTarget(1_500) }, provider: provider)
+
+        XCTAssertTrue(loader.hasFreshPlanForToday)
+        XCTAssertFalse(loader.matchesTodayTarget)
+        await loader.refreshIfNeeded()
+
+        XCTAssertEqual(provider.calls, 1)
+    }
+
     // MARK: - Vorbereiten
 
     func testThePlanIsPreparedWithTheFreshReadingBeforeTheDayPlanIsFetched() async throws {

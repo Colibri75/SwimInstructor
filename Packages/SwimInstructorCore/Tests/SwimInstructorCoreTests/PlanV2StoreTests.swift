@@ -112,10 +112,15 @@ final class PlanV2StoreTests: XCTestCase {
 
         XCTAssertEqual(FileDayPlanV2Cache(fileURL: url).load(), response)
 
-        let newer = Self.response(date: "2026-10-01")
+        var newer = Self.response(date: "2026-10-01")
+        // Die Vorgabe, mit der die App den Plan geholt hat, bleibt erhalten.
+        newer.requestedTarget = DayTargetV2(focus: "Schwimmen", sessions: [
+            DayTargetV2.Session(sport: .swim, sessionType: .endurance, intensity: .easy, amount: 2_000, focus: "Locker")
+        ])
         try FileDayPlanV2Cache(fileURL: url).save(newer)
 
         XCTAssertEqual(FileDayPlanV2Cache(fileURL: url).load(), newer)
+        XCTAssertEqual(FileDayPlanV2Cache(fileURL: url).load()?.requestedTarget?.sessions.first?.amount, 2_000)
     }
 
     func testDayCacheWithCorruptFileHasNoPlan() throws {
