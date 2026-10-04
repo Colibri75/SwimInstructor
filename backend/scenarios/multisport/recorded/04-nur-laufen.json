@@ -1,136 +1,52 @@
 {
   "macro": {
-    "source": "synthetic",
-    "model": "synthetisch",
-    "recorded_at": "2026-10-03T12:00:00Z",
+    "source": "claude",
+    "model": "claude-opus-5-5",
+    "recorded_at": "2026-10-04T09:28:33.331Z",
     "usage": {
-      "inputTokens": 4442,
-      "outputTokens": 506
+      "inputTokens": 8787,
+      "outputTokens": 2354
     },
     "raw": {
-      "rationale": "Der Plan führt in 11 Wochen zum Ziel am 2026-12-13 und verteilt die Zeit nach deinen Schwerpunkten (Laufen 100 %). Jede vierte Woche ist eine Entlastungswoche, danach steigt der Umfang um etwa 8 % pro Woche bis zu deinen 4 Stunden. Vor dem Wettkampf spitzt eine Woche zu.",
+      "rationale": "Bis zum 10-km-Lauf am 13.12. bleiben 11 Wochen. Der Laufumfang steigt von jetzt 120 min (Schnitt 115 min) um weniger als 10 % pro Woche auf den Höhepunkt von 190 min in der Woche ab 23.11., mit Entlastungswochen bei 100 und 115 min. Die längste Einheit steigt dabei von 55 min nur schrittweise, rund 80 % bleiben locker, und es gibt höchstens eine harte Laufeinheit pro Woche. Die beiden 30-Minuten-Tests (Woche 1 und in der Entlastungswoche ab 09.11.) ersetzen je eine harte Einheit und legen die Zonen fest. 50 min entsprechen 5:00 pro km und damit dem geschätzten Schwellentempo; das ist ehrgeizig, aber machbar, wenn der erste Test diesen Wert bestätigt.",
       "blocks": [
         {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "run",
-              "start_amount": 115,
-              "end_amount": 115,
-              "deload_amount": null,
-              "sessions": 3
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "run",
-              "start_amount": 125,
-              "end_amount": 125,
-              "deload_amount": null,
-              "sessions": 3
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "run",
-              "start_amount": 135,
-              "end_amount": 135,
-              "deload_amount": null,
-              "sessions": 3
-            }
-          ]
-        },
-        {
-          "weeks": 1,
+          "weeks": 4,
           "deload_last": true,
-          "focus": "Entlastung",
+          "focus": "Grundlage, Schwellentest, erste Tempoläufe",
           "sports": [
             {
               "sport": "run",
-              "start_amount": 100,
-              "end_amount": 100,
+              "start_amount": 126,
+              "end_amount": 150,
               "deload_amount": 100,
-              "sessions": 2
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "run",
-              "start_amount": 145,
-              "end_amount": 145,
-              "deload_amount": null,
-              "sessions": 3
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "run",
-              "start_amount": 155,
-              "end_amount": 155,
-              "deload_amount": null,
-              "sessions": 3
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "run",
-              "start_amount": 170,
-              "end_amount": 170,
-              "deload_amount": null,
               "sessions": 4
             }
           ]
         },
         {
-          "weeks": 1,
+          "weeks": 3,
           "deload_last": true,
-          "focus": "Entlastung",
+          "focus": "Schwellenintervalle, langer Lauf, Test in Entlastung",
           "sports": [
             {
               "sport": "run",
-              "start_amount": 130,
-              "end_amount": 130,
-              "deload_amount": 130,
-              "sessions": 3
+              "start_amount": 160,
+              "end_amount": 172,
+              "deload_amount": 115,
+              "sessions": 4
             }
           ]
         },
         {
-          "weeks": 1,
+          "weeks": 2,
           "deload_last": false,
-          "focus": "Wettkampfnah",
+          "focus": "Wettkampftempo 5:00/km, Höhepunkt des Umfangs",
           "sports": [
             {
               "sport": "run",
               "start_amount": 180,
-              "end_amount": 180,
+              "end_amount": 190,
               "deload_amount": null,
               "sessions": 4
             }
@@ -139,28 +55,28 @@
         {
           "weeks": 1,
           "deload_last": false,
-          "focus": "Zuspitzen, frisch werden",
+          "focus": "Zuspitzen: weniger Umfang, kurze Tempoabschnitte",
           "sports": [
             {
               "sport": "run",
               "start_amount": 110,
               "end_amount": 110,
               "deload_amount": null,
-              "sessions": 2
+              "sessions": 4
             }
           ]
         },
         {
           "weeks": 1,
           "deload_last": false,
-          "focus": "Wettkampfwoche",
+          "focus": "Zielwoche: locker, kurze Steigerungen, frisch",
           "sports": [
             {
               "sport": "run",
-              "start_amount": 75,
-              "end_amount": 75,
+              "start_amount": 70,
+              "end_amount": 70,
               "deload_amount": null,
-              "sessions": 2
+              "sessions": 3
             }
           ]
         }
@@ -168,59 +84,50 @@
     }
   },
   "week": {
-    "source": "synthetic",
-    "model": "synthetisch",
-    "recorded_at": "2026-10-03T12:00:00Z",
+    "source": "claude",
+    "model": "claude-opus-5-5",
+    "recorded_at": "2026-10-04T09:29:02.867Z",
     "usage": {
-      "inputTokens": 4333,
-      "outputTokens": 311
+      "inputTokens": 8107,
+      "outputTokens": 2843
     },
     "raw": {
-      "rationale": "Die Woche setzt die Vorgabe des Gesamtplans für dein Ziel um: 3 Einheiten an 4 Tagen, dazu die vorgesehenen Leistungstests. Harte Tage liegen nie hintereinander.",
+      "rationale": "Mit guter Erholung, einer Belastungsquote von 1,04 und 120 min Laufen in den letzten 7 Tagen steht der 30-Minuten-Schwellentest (47 min) am Donnerstag nach einem Ruhetag auf frischen Beinen. Danach folgt nur lockere Grundlage: 38 min am Samstag bringen die Woche auf etwa 125 min, der Dienstag eröffnet mit 50 min locker die neue Woche, insgesamt 135 von erlaubten 145 min. Das Ziel 10 km in 50 min verlangt etwa 5:00 pro km, also genau dein geschätztes Schwellentempo. Es ist ehrgeizig, und erst der Test zeigt, ob es realistisch ist.",
       "days": [
         {
           "date": "2026-09-30",
-          "focus": "Grundlage locker",
-          "sessions": [
-            {
-              "sport": "run",
-              "session_type": "endurance",
-              "intensity": "easy",
-              "amount": 35,
-              "focus": "Grundlage locker",
-              "test_id": null
-            }
-          ]
+          "focus": "Ruhetag vor dem Test",
+          "sessions": []
         },
         {
           "date": "2026-10-01",
-          "focus": "Leistungstest: 30-Minuten-Test",
+          "focus": "Schwellentest Laufen",
           "sessions": [
             {
               "sport": "run",
               "session_type": "test",
               "intensity": "hard",
-              "amount": 45,
-              "focus": "Leistungstest: 30-Minuten-Test",
+              "amount": 47,
+              "focus": "30-min-Test gleichmäßig, mit Ein- und Auslaufen",
               "test_id": "threshold_30min"
             }
           ]
         },
         {
           "date": "2026-10-02",
-          "focus": "Ruhetag",
+          "focus": "Ruhetag nach dem Test",
           "sessions": []
         },
         {
           "date": "2026-10-03",
-          "focus": "Lange Laufen-Einheit, ruhig",
+          "focus": "Lockere Grundlage",
           "sessions": [
             {
               "sport": "run",
               "session_type": "endurance",
               "intensity": "easy",
-              "amount": 50,
-              "focus": "Lange Laufen-Einheit, ruhig",
+              "amount": 38,
+              "focus": "Locker in Zone 2, Gespräch möglich",
               "test_id": null
             }
           ]
@@ -237,73 +144,37 @@
         },
         {
           "date": "2026-10-06",
-          "focus": "Ruhetag",
-          "sessions": []
+          "focus": "Grundlagenlauf",
+          "sessions": [
+            {
+              "sport": "run",
+              "session_type": "endurance",
+              "intensity": "easy",
+              "amount": 50,
+              "focus": "Ruhiger Dauerlauf Zone 2, am Ende 4 kurze Steigerungen",
+              "test_id": null
+            }
+          ]
         }
       ]
     }
   },
   "day": {
-    "source": "synthetic",
-    "model": "synthetisch",
-    "recorded_at": "2026-10-03T12:00:00Z",
+    "source": "claude",
+    "model": "claude-opus-5-5",
+    "recorded_at": "2026-10-04T09:29:09.286Z",
     "usage": {
-      "inputTokens": 4357,
-      "outputTokens": 312
+      "inputTokens": 9298,
+      "outputTokens": 406
     },
     "raw": {
-      "rationale": "Heute steht Laufen an, wie im Wochenplan für dein Ziel vorgesehen.",
-      "sessions": [
-        {
-          "sport": "run",
-          "session_type": "endurance",
-          "intensity": "easy",
-          "focus": "Grundlage locker",
-          "test_id": null,
-          "steps": [
-            {
-              "name": "Einwärmen",
-              "repetitions": 1,
-              "measure": "duration",
-              "distance_meters": null,
-              "duration_seconds": 300,
-              "target_type": "perceived_effort",
-              "target_value": 3,
-              "rest_seconds": 0,
-              "instructions": "Locker einlaufen.",
-              "cue": "Locker einlaufen",
-              "equipment": []
-            },
-            {
-              "name": "Grundlage",
-              "repetitions": 1,
-              "measure": "duration",
-              "distance_meters": null,
-              "duration_seconds": 900,
-              "target_type": "perceived_effort",
-              "target_value": 4,
-              "rest_seconds": 0,
-              "instructions": "Gleichmäßig, du kannst dich noch unterhalten.",
-              "cue": "Ruhig gleichmäßig",
-              "equipment": []
-            },
-            {
-              "name": "Ausklang",
-              "repetitions": 1,
-              "measure": "duration",
-              "distance_meters": null,
-              "duration_seconds": 300,
-              "target_type": "perceived_effort",
-              "target_value": 2,
-              "rest_seconds": 0,
-              "instructions": "Ganz locker auslaufen.",
-              "cue": "Locker auslaufen",
-              "equipment": []
-            }
-          ]
-        }
-      ],
-      "coach_notes": []
+      "rationale": "Der Wochenplan sieht heute einen Ruhetag vor, und den halten wir ein: Mit 3 Laufeinheiten und 120 Minuten in den letzten 7 Tagen liegst du bereits knapp über deinem Wochenschnitt von 115 Minuten (Verhältnis 1,04). Gestern bist du 40 Minuten gelaufen, am Sonntag hart, deshalb tut ein freier Tag deiner Grundlage gut. In der Aufbauphase mit noch 74 Tagen bis zu den 10 km in 50 Minuten zählt beständiges, verletzungsfreies Training mehr als zusätzliche Minuten.",
+      "sessions": [],
+      "coach_notes": [
+        "Heute komplett frei. Lockeres Gehen oder leichtes Dehnen ist in Ordnung, aber kein Training.",
+        "Achte auf ausreichend Schlaf; deine 7,5 Stunden im Schnitt sind eine gute Basis.",
+        "Dein Schwellentempo von 5:00 pro km ist nur geschätzt. Ein Test in den kommenden Wochen würde die Steuerung genauer machen."
+      ]
     }
   }
 }
