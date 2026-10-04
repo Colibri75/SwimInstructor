@@ -25,8 +25,12 @@ struct SwimInstructorApp: App {
         let builder = SnapshotBuilder(
             repository: HealthKitWorkoutRepository(),
             vitalsRepository: HealthKitDailyVitalsRepository(),
-            // Das Gesamtziel aus den Einstellungen, bei jedem Durchlauf neu gelesen (Snapshot v2).
-            trainingGoalProvider: { goalStore.goal() },
+            // Das Gesamtziel aus den Einstellungen, bei jedem Durchlauf neu gelesen (Snapshot v2). Ein vorgemerktes Ziel
+            // wird davor übernommen, sobald die Sperre vorbei ist, damit Snapshot und Gesamtplan zum selben Ziel gehören.
+            trainingGoalProvider: {
+                goalStore.applyPendingIfDue(now: Date())
+                return goalStore.goal()
+            },
             // Leistungswerte und Zonen: bestätigte aus dem Profil, sonst aus Health geschätzt.
             performanceRepository: HealthKitPerformanceDataRepository(),
             profileProvider: { profileStore.profile() },
@@ -48,7 +52,9 @@ struct SwimInstructorApp: App {
             planProvider: { [weak settings] in
                 settings?.configuration.map { PlanAPIClient(configuration: $0) }
             },
-            goal: { goalStore.goal() }
+            goal: { goalStore.goal() },
+            // Ein Gesamtplan gehört zu einer Zielversion: Eine Feinjustierung lässt ihn stehen (P3).
+            goalVersion: { goalStore.goalVersion }
         )
         let wishStore = UserDefaultsDailyWishStore()
         let loader = MultiSportTodayLoader(

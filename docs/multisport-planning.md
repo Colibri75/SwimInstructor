@@ -121,6 +121,21 @@ Schwerpunkten (`TrainingGoal.planKey`); eine Änderung am Wochenraster gilt ab d
 Beim ersten Start führt die App durch Ziel, Wochenraster und Startniveau (`OnboardingView`), erst danach entsteht der
 Gesamtplan. Wer die App schon nutzt, sieht die Einrichtung nach dem Update einmal, vorausgefüllt mit dem gespeicherten Ziel.
 
+## Ziel ändern mit Entwurf (P3)
+
+In den Einstellungen ist das Ziel ein Entwurf; erst "Übernehmen" ändert es. Vorher zeigt die App, was mit dem
+Gesamtplan passiert (`TrainingGoal.change(to:)`):
+
+| Art | Beispiele | Wirkung |
+|---|---|---|
+| Feinjustierung | Zielzeit, Ankommen statt Zielzeit, Schwerpunkte, Begleitsport, Zieltag um höchstens 14 Tage | sofort übernommen, Gesamtplan bleibt, fließt in die nächste Fortschreibung |
+| Neues Ziel | Zielart, Zieldisziplin dazu oder weg, Strecke, Zieltag um mehr als 14 Tage | neue Zielversion, neuer Gesamtplan; die laufende Woche des alten bleibt |
+
+Ein neues Ziel geht höchstens alle 7 Tage (`UserDefaultsTrainingGoalStore.lockDays`), außer der Zieltag ist vorbei. In
+der Sperre lässt sich der Entwurf vormerken; die App übernimmt ihn beim ersten Lesen des Zustands nach dem Ende der
+Sperre. Der Gesamtplan gehört zu einer Zielversion (`goal-vN`) statt zu `planKey`; ein Plan von vor P3 bekommt die
+Version, solange er zu `planKey` passt. Die Einrichtung beim ersten Start speichert direkt und sperrt nichts.
+
 ## Übergreifende Regeln
 
 **Tag:** höchstens zwei Einheiten, höchstens eine harte. Ein Tag hat höchstens die Hälfte der Wochenstunden des

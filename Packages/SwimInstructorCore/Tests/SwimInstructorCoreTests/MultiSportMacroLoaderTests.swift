@@ -129,12 +129,14 @@ final class MultiSportMacroLoaderTests: XCTestCase {
         store: MemoryStore = MemoryStore(),
         provider: FakeProvider?,
         goal: @escaping @MainActor () -> TrainingGoal = { MacroLoaderV2Data.sprint() },
+        goalVersion: (@MainActor () -> Int)? = nil,
         marker: MemoryMarker = MemoryMarker()
     ) -> MultiSportMacroLoader {
         MultiSportMacroLoader(
             store: store,
             planProvider: { provider },
             goal: goal,
+            goalVersion: goalVersion,
             attemptMarker: marker,
             now: { TestFixtures.now },
             calendar: TestFixtures.utc
@@ -351,6 +353,67 @@ final class MultiSportMacroLoaderTests: XCTestCase {
     }
 
     // MARK: - Feedback
+
+    // MARK: - Zielversion (P3)
+
+    func testWithAGoalVersionFineTuningKeepsThePlanAndANewVersionReplansIt() async throws {
+        var goal = MacroLoaderV2Data.sprint()
+        var version = 3
+        let provider = try makeProvider()
+        let plan = try MacroLoaderV2Data.storedPlan(goalKey: "goal-v3")
+        let loader = makeLoader(store: MemoryStore(plan), provider: provider, goal: { goal }, goalVersion: { version })
+        XCTAssertEqual(loader.currentGoalKey, "goal-v3")
+        XCTAssertTrue(loader.isCurrent)
+
+        // Feinjustierung: andere Zielzeit, gleiche Version.
+        goal = MacroLoaderV2Data.sprint(swimSeconds: 1_100)
+        XCTAssertTrue(loader.isCurrent)
+        await loader.ensureCurrent(snapshot: TestFixtures.snapshot)
+        XCTAssertTrue(provider.macroRequests.isEmpty)
+
+        version = 4
+        XCTAssertFalse(loader.isCurrent)
+        await loader.ensureCurrent(snapshot: TestFixtures.snapshot)
+        XCTAssertEqual(provider.macroRequests.count, 1)
+        XCTAssertEqual(loader.plan?.goalKey, "goal-v4")
+    }
+
+    func testAPlanFromBeforeTheGoalVersionMovesOverWhenItMatches() async throws {
+        let store = MemoryStore(try MacroLoaderV2Data.storedPlan())
+        let provider = try makeProvider()
+        var goal = MacroLoaderV2Data.sprint()
+        let loader = makeLoader(store: store, provider: provider, goal: { goal }, goalVersion: { 1 })
+        XCTAssertTrue(loader.isCurrent)
+
+        await loader.ensureCurrent(snapshot: TestFixtures.snapshot)
+
+        XCTAssertTrue(provider.macroRequests.isEmpty)
+        XCTAssertEqual(store.stored?.goalKey, "goal-v1")
+        // Danach ändert eine Feinjustierung nichts mehr.
+        goal = MacroLoaderV2Data.sprint(swimSeconds: 1_100)
+        XCTAssertTrue(loader.isCurrent)
+    }
+
+    func testANewPlanKeepsTheRunningWeekOfTheOldOne() async throws {
+        let old = try MacroLoaderV2Data.storedPlan(goalKey: "goal-v1")
+        let original = try XCTUnwrap(old.week(starting: "2026-09-28"))
+        let running = MacroWeekV2(
+            weekStart: original.weekStart, phase: original.phase, deload: original.deload, focus: "Alte laufende Woche",
+            totalMinutes: original.totalMinutes, load: original.load, sports: original.sports, tests: original.tests
+        )
+        var withRunning = old
+        withRunning.weeks = [running] + old.weeks.dropFirst()
+        let provider = try makeProvider()
+        let loader = makeLoader(store: MemoryStore(withRunning), provider: provider, goalVersion: { 2 })
+
+        await loader.ensureCurrent(snapshot: TestFixtures.snapshot)
+
+        XCTAssertEqual(provider.macroRequests.count, 1)
+        XCTAssertEqual(loader.plan?.goalKey, "goal-v2")
+        XCTAssertEqual(loader.plan?.week(starting: "2026-09-28")?.focus, "Alte laufende Woche")
+        XCTAssertEqual(loader.plan?.weeks.count, 6)
+        XCTAssertEqual(loader.plan?.week(starting: "2026-10-05"), try MacroLoaderV2Data.macroResponse().plan.weeks.first { $0.weekStart == "2026-10-05" })
+    }
 
     func testRevisingSendsThePlanWithItsEarlierRoundsAndAppendsTheNewRound() async throws {
         // Gespeichert unter einem älteren Schlüssel: Die Überarbeitung behält den Schlüssel des Plans.
