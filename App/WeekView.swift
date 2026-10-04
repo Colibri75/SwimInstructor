@@ -37,6 +37,7 @@ struct WeekView: View {
                 MacroPlanSections()
             }
             .navigationTitle("Plan")
+            .swipeClosesKeyboard()
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Button {
@@ -141,6 +142,7 @@ struct WeekView: View {
         Section {
             TextField("Wunsch für die nächsten Tage (optional)", text: $wish, axis: .vertical)
                 .lineLimit(1...4)
+                .returnClosesKeyboard(text: $wish)
                 .onChange(of: wish) { _, text in
                     if text.count > DailyWish.maxLength {
                         wish = String(text.prefix(DailyWish.maxLength))

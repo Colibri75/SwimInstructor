@@ -61,6 +61,7 @@ struct TestResultSheet: View {
                 }
             }
             .navigationTitle(test?.displayName ?? "Testergebnis")
+            .swipeClosesKeyboard()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

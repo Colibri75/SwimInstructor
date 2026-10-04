@@ -113,6 +113,11 @@ Je Plan ein fester System-Prompt (Tag, Woche, Gesamtplan, Überarbeitung), gebau
 Die Nutzernachricht bringt Snapshot, Grenzen, Vorgaben und Testangebote; Wünsche und Feedback stehen dort nur als
 JSON-String und ändern nie eine Grenze.
 
+Jede Tagesgrenze steht mit ihrer Rechnung in der Nutzernachricht (je Einheit, 7-Tage-Grenze und was davon schon
+trainiert ist, Kürzung wegen schlechter Erholung). Liegt die Vorgabe des Wochenplans über der Grenze oder geht eine
+Sportart heute nicht, soll Claude das in der Begründung in einfachen Worten sagen. Begründung und Hinweise liest der
+Athlet: Der System-Prompt verbietet darin Feldnamen wie `acute_chronic_ratio`.
+
 ## Bewertung
 
 Sieben Szenarien in `backend/scenarios/multisport/` (Sprint-Einsteiger, Olympisch mit Schwerpunkt Schwimmen, 70.3,

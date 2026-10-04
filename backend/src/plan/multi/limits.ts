@@ -112,6 +112,12 @@ export interface SportDayLimits {
   maxAmount: number;
   maxIntensity: Intensity;
   intensityReasons: string[];
+  /** Woraus `maxAmount` entsteht, damit Claude die Grenze in der Begruendung erklaeren kann. */
+  sessionCap: number;
+  weeklyCap: number;
+  lastSeven: number;
+  /** Wegen schlechter Erholung gekuerzt. */
+  reducedForRecovery: boolean;
 }
 
 /** Hoechstens so viele Minuten an einem Tag: die Haelfte der Wochenstunden, mindestens 45 Minuten. */
@@ -175,7 +181,16 @@ export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly 
           ? "Wochenumfang ausgeschöpft"
           : "zu wenig sicherer Umfang"
         : null;
-    sports.set(sport.id, { blockedReason, maxAmount, maxIntensity: sportMax, intensityReasons: reasons });
+    sports.set(sport.id, {
+      blockedReason,
+      maxAmount,
+      maxIntensity: sportMax,
+      intensityReasons: reasons,
+      sessionCap: limits.sessionCap,
+      weeklyCap: limits.weeklyCap,
+      lastSeven: limits.lastSeven,
+      reducedForRecovery: poor
+    });
   }
 
   const maxMinutes = Math.round(dayMinutesCap(snapshot) * (poor ? MULTI_RULES.recoveryPoorFactor : 1));

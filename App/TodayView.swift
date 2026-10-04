@@ -40,6 +40,7 @@ struct TodayView: View {
                 wishSection
             }
             .navigationTitle("Heute")
+            .swipeClosesKeyboard()
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -207,6 +208,7 @@ struct TodayView: View {
         Section {
             TextField("z. B. Heute lieber Rad statt Laufen, die Wade zwickt", text: $wishDraft, axis: .vertical)
                 .lineLimit(2...5)
+                .returnClosesKeyboard(text: $wishDraft)
                 .onChange(of: wishDraft) { _, text in
                     if text.count > DailyWish.maxLength {
                         wishDraft = String(text.prefix(DailyWish.maxLength))

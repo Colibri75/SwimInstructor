@@ -73,6 +73,7 @@ struct MacroPlanSections: View {
         Section {
             TextField("z. B. Weniger Laufen im Winter, dafür mehr Rad", text: $feedback, axis: .vertical)
                 .lineLimit(2...6)
+                .returnClosesKeyboard(text: $feedback)
                 .onChange(of: feedback) { _, text in
                     if text.count > MacroRevisionRequest.maxFeedbackLength {
                         feedback = String(text.prefix(MacroRevisionRequest.maxFeedbackLength))
