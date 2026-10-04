@@ -35,4 +35,13 @@ final class HealthKitManagerTests: XCTestCase {
         XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .heartRate)!))
         XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!))
     }
+
+    func testWorkoutShareTypesCoverRouteRunningAndCycling() {
+        let types = HealthKitManager.workoutShareTypes
+
+        XCTAssertEqual(types, SportRegistry.standard.workoutShareTypes)
+        XCTAssertTrue(types.contains(HKSeriesType.workoutRoute()))
+        XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .distanceCycling)!))
+        XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning)!))
+    }
 }

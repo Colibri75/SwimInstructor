@@ -18,6 +18,40 @@ public struct WatchTestResult: Codable, Equatable, Sendable, Identifiable {
         self.entries = entries
         self.measuredAt = measuredAt
     }
+
+    // Die Coder der App wandeln Schlüssel in snake_case und zurück, auch die eines Wörterbuchs: Aus "time_400m" würde beim
+    // Lesen "time400m", aus "test_id" "testId". Darum die Eingaben als Liste und `testID` mit passendem Schlüssel.
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case sport
+        case testID = "testId"
+        case entries
+        case measuredAt
+    }
+
+    private struct Entry: Codable {
+        let input: String
+        let value: Double
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        sport = try container.decode(SportID.self, forKey: .sport)
+        testID = try container.decode(String.self, forKey: .testID)
+        let list = try container.decode([Entry].self, forKey: .entries)
+        entries = Dictionary(list.map { ($0.input, $0.value) }, uniquingKeysWith: { _, last in last })
+        measuredAt = try container.decode(Date.self, forKey: .measuredAt)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(sport, forKey: .sport)
+        try container.encode(testID, forKey: .testID)
+        try container.encode(entries.sorted { $0.key < $1.key }.map { Entry(input: $0.key, value: $0.value) }, forKey: .entries)
+        try container.encode(measuredAt, forKey: .measuredAt)
+    }
 }
 
 /// Format, in dem die Watch ein Testergebnis per `transferUserInfo` ans iPhone schickt. Die Übertragung wartet, bis das

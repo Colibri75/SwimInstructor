@@ -39,6 +39,55 @@ final class PlanSyncCodecTests: XCTestCase {
         XCTAssertNil(PlanSyncCodec.response(from: context))
     }
 
+    // MARK: - Tagesplan v2 (ab T5)
+
+    private func dayPlan() throws -> DayPlanV2Response {
+        try PlanResponse.jsonDecoder().decode(DayPlanV2Response.self, from: RepoPaths.contractData("wire/plan-v2-today-response.json"))
+    }
+
+    func testDayPlanV2RoundTripKeepsAllSessions() throws {
+        let original = try dayPlan()
+        XCTAssertEqual(original.plan.sessions.map(\.sport), [.swim, .bike])
+
+        let context = try PlanSyncCodec.context(for: original)
+
+        XCTAssertEqual(PlanSyncCodec.dayPlan(from: context), original)
+        XCTAssertTrue(PropertyListSerialization.propertyList(context, isValidFor: .binary))
+    }
+
+    func testDayPlanV2ContextStillCarriesPlanV1ForOlderWatches() throws {
+        let original = try dayPlan()
+
+        let context = try PlanSyncCodec.context(for: original)
+
+        XCTAssertEqual(PlanSyncCodec.response(from: context), original.watchPlan())
+    }
+
+    func testPlanV1FromAnOlderPhoneBecomesADayPlan() throws {
+        let legacy = TestFixtures.response()
+
+        let dayPlan = PlanSyncCodec.dayPlan(from: try PlanSyncCodec.context(for: legacy))
+
+        XCTAssertEqual(dayPlan, DayPlanV2Response(legacy: legacy))
+        XCTAssertEqual(dayPlan?.plan.sessions.map(\.sport), [.swim])
+    }
+
+    func testBrokenPlanV2FallsBackToPlanV1() throws {
+        let original = try dayPlan()
+        var context = try PlanSyncCodec.context(for: original)
+        context["plan_v2"] = Data("kaputt".utf8)
+
+        XCTAssertEqual(PlanSyncCodec.dayPlan(from: context), DayPlanV2Response(legacy: original.watchPlan()))
+    }
+
+    func testDayPlanIgnoresEmptyOrNewerContexts() throws {
+        XCTAssertNil(PlanSyncCodec.dayPlan(from: [:]))
+
+        var newer = try PlanSyncCodec.context(for: try dayPlan())
+        newer["version"] = 2
+        XCTAssertNil(PlanSyncCodec.dayPlan(from: newer))
+    }
+
     func testPlanRequestIsRecognized() {
         XCTAssertTrue(PlanSyncCodec.isPlanRequest(PlanSyncCodec.planRequest))
         XCTAssertFalse(PlanSyncCodec.isPlanRequest([:]))

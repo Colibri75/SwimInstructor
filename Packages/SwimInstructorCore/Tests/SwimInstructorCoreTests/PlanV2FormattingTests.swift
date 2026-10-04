@@ -212,6 +212,17 @@ final class PlanV2FormattingTests: XCTestCase {
         )
     }
 
+    func testDayNoticeOnlyForAPlanFromAnotherDay() {
+        let today = Self.dayResponse(source: .claude, stale: false, reason: nil, date: "2026-09-30")
+        let yesterday = Self.dayResponse(source: .claude, stale: false, reason: nil, date: "2026-09-29")
+
+        XCTAssertNil(PlanV2Formatting.dayNotice(today, now: TestFixtures.now, calendar: TestFixtures.utc))
+        XCTAssertEqual(
+            PlanV2Formatting.dayNotice(yesterday, now: TestFixtures.now, calendar: TestFixtures.utc),
+            "Plan vom 29.09.2026. Öffne die iPhone-App für den Plan von heute."
+        )
+    }
+
     func testNoticeMatchesThePlanV1Wording() {
         // Dieselben Sätze wie in Plan v1, damit die Anzeige beim Umstieg gleich bleibt.
         let legacy = TestFixtures.response(date: "2026-09-29", source: .fallback, stale: true)
