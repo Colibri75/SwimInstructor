@@ -1,535 +1,178 @@
 {
   "macro": {
-    "source": "synthetic",
-    "model": "synthetisch",
-    "recorded_at": "2026-10-03T12:00:00Z",
+    "source": "claude",
+    "model": "claude-opus-5-5",
+    "recorded_at": "2026-10-04T10:43:42.428Z",
     "usage": {
-      "inputTokens": 4847,
-      "outputTokens": 1376
+      "inputTokens": 9491,
+      "outputTokens": 3731
     },
     "raw": {
-      "rationale": "Der Plan führt in 25 Wochen zum Ziel am 2027-03-21 und verteilt die Zeit nach deinen Schwerpunkten (Radfahren 40 %, Laufen 60 %). Jede vierte Woche ist eine Entlastungswoche, danach steigt der Umfang um etwa 8 % pro Woche bis zu deinen 5 Stunden. Vor dem Wettkampf spitzt eine Woche zu.",
+      "rationale": "Bis zur Zielwoche sind es 24 Wochen, geplant als sechs Aufbauabschnitte, eine Woche Zuspitzen und die Zielwoche, jeweils mit Entlastungswochen nach spätestens drei Belastungswochen. Nach 45 Tagen Laufpause steigst du locker mit 55 min Laufen in 3 Einheiten ein und steigerst um höchstens etwa 8 bis 9 % pro Woche bis zum Höhepunkt von 180 min. Das Rad startet bei 140 min (jetzt 110 min Schnitt) und trägt anfangs die Ausdauer bis 190 min. Später gibt es Zeit an das Laufen ab und liegt am Höhepunkt bei 120 min, insgesamt also bei 300 min. Mit einem getesteten Schwellentempo von 5:15/km sind 2:00 h für 21,1 km realistisch, sofern der Laufaufbau verletzungsfrei gelingt. Im Wochenplan dürfen dafür nur die Long Runs schrittweise in Richtung 90 bis 100 min wachsen.",
       "blocks": [
         {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 110,
-              "end_amount": 110,
-              "deload_amount": null,
-              "sessions": 2
-            },
-            {
-              "sport": "run",
-              "start_amount": 30,
-              "end_amount": 30,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 30,
-              "end_amount": 30,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 35,
-              "end_amount": 35,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
+          "weeks": 4,
           "deload_last": true,
-          "focus": "Entlastung",
+          "focus": "Lauf-Wiedereinstieg locker, Rad-Grundlage Zone 2",
           "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 85,
-              "end_amount": 85,
-              "deload_amount": 85,
-              "sessions": 2
-            },
-            {
-              "sport": "run",
-              "start_amount": 25,
-              "end_amount": 25,
-              "deload_amount": 25,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 40,
-              "end_amount": 40,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 40,
-              "end_amount": 40,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 45,
-              "end_amount": 45,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": true,
-          "focus": "Entlastung",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 85,
-              "end_amount": 85,
-              "deload_amount": 85,
-              "sessions": 2
-            },
-            {
-              "sport": "run",
-              "start_amount": 35,
-              "end_amount": 35,
-              "deload_amount": 35,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 50,
-              "end_amount": 50,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 50,
-              "end_amount": 50,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
             {
               "sport": "run",
               "start_amount": 55,
-              "end_amount": 55,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": true,
-          "focus": "Entlastung",
-          "sports": [
+              "end_amount": 66,
+              "deload_amount": 46,
+              "sessions": 3
+            },
             {
               "sport": "bike",
-              "start_amount": 85,
-              "end_amount": 85,
-              "deload_amount": 85,
+              "start_amount": 140,
+              "end_amount": 160,
+              "deload_amount": 112,
               "sessions": 2
-            },
-            {
-              "sport": "run",
-              "start_amount": 40,
-              "end_amount": 40,
-              "deload_amount": 40,
-              "sessions": 1
             }
           ]
         },
         {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Grundlage aufbauen, Laufumfang behutsam steigern",
           "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 60,
-              "end_amount": 60,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 65,
-              "end_amount": 65,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
             {
               "sport": "run",
               "start_amount": 70,
-              "end_amount": 70,
-              "deload_amount": null,
-              "sessions": 2
+              "end_amount": 82,
+              "deload_amount": 57,
+              "sessions": 3
+            },
+            {
+              "sport": "bike",
+              "start_amount": 165,
+              "end_amount": 180,
+              "deload_amount": 125,
+              "sessions": 3
             }
           ]
         },
         {
-          "weeks": 1,
+          "weeks": 4,
           "deload_last": true,
-          "focus": "Entlastung",
+          "focus": "Grundlage, längerer Lauf, Rad trägt Ausdauer",
           "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 85,
-              "end_amount": 85,
-              "deload_amount": 85,
-              "sessions": 2
-            },
             {
               "sport": "run",
-              "start_amount": 55,
-              "end_amount": 55,
-              "deload_amount": 55,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
+              "start_amount": 88,
+              "end_amount": 104,
+              "deload_amount": 72,
+              "sessions": 4
+            },
             {
               "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
+              "start_amount": 180,
+              "end_amount": 190,
+              "deload_amount": 130,
               "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 75,
-              "end_amount": 75,
-              "deload_amount": null,
-              "sessions": 2
             }
           ]
         },
         {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 80,
-              "end_amount": 80,
-              "deload_amount": null,
-              "sessions": 2
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 90,
-              "end_amount": 90,
-              "deload_amount": null,
-              "sessions": 2
-            }
-          ]
-        },
-        {
-          "weeks": 1,
+          "weeks": 4,
           "deload_last": true,
-          "focus": "Entlastung",
+          "focus": "Grundlage plus erste Tempoläufe, Long Run wächst",
           "sports": [
             {
-              "sport": "bike",
-              "start_amount": 85,
-              "end_amount": 85,
-              "deload_amount": 85,
-              "sessions": 2
+              "sport": "run",
+              "start_amount": 112,
+              "end_amount": 130,
+              "deload_amount": 90,
+              "sessions": 4
             },
             {
+              "sport": "bike",
+              "start_amount": 170,
+              "end_amount": 170,
+              "deload_amount": 115,
+              "sessions": 2
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Schwellenläufe und Halbmarathon-Tempo",
+          "sports": [
+            {
               "sport": "run",
-              "start_amount": 65,
-              "end_amount": 65,
-              "deload_amount": 65,
-              "sessions": 1
+              "start_amount": 138,
+              "end_amount": 158,
+              "deload_amount": 110,
+              "sessions": 4
+            },
+            {
+              "sport": "bike",
+              "start_amount": 150,
+              "end_amount": 140,
+              "deload_amount": 95,
+              "sessions": 2
+            }
+          ]
+        },
+        {
+          "weeks": 3,
+          "deload_last": false,
+          "focus": "Höhepunkt: langer Lauf, Wettkampftempo-Abschnitte",
+          "sports": [
+            {
+              "sport": "run",
+              "start_amount": 166,
+              "end_amount": 180,
+              "deload_amount": null,
+              "sessions": 4
+            },
+            {
+              "sport": "bike",
+              "start_amount": 130,
+              "end_amount": 120,
+              "deload_amount": null,
+              "sessions": 2
             }
           ]
         },
         {
           "weeks": 1,
           "deload_last": false,
-          "focus": "Wettkampfnah",
+          "focus": "Zuspitzen: weniger Umfang, kurze Tempoabschnitte",
           "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 95,
-              "end_amount": 95,
-              "deload_amount": null,
-              "sessions": 2
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
             {
               "sport": "run",
               "start_amount": 105,
               "end_amount": 105,
               "deload_amount": null,
-              "sessions": 2
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
               "sessions": 3
             },
-            {
-              "sport": "run",
-              "start_amount": 110,
-              "end_amount": 110,
-              "deload_amount": null,
-              "sessions": 2
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Zuspitzen, frisch werden",
-          "sports": [
             {
               "sport": "bike",
               "start_amount": 70,
               "end_amount": 70,
               "deload_amount": null,
               "sessions": 2
-            },
-            {
-              "sport": "run",
-              "start_amount": 65,
-              "end_amount": 65,
-              "deload_amount": null,
-              "sessions": 1
             }
           ]
         },
         {
           "weeks": 1,
           "deload_last": false,
-          "focus": "Wettkampfwoche",
+          "focus": "Zielwoche: frisch bleiben, Halbmarathon am Sonntag",
           "sports": [
             {
-              "sport": "bike",
-              "start_amount": 50,
-              "end_amount": 50,
+              "sport": "run",
+              "start_amount": 80,
+              "end_amount": 80,
               "deload_amount": null,
-              "sessions": 1
+              "sessions": 3
             },
             {
-              "sport": "run",
-              "start_amount": 45,
-              "end_amount": 45,
+              "sport": "bike",
+              "start_amount": 40,
+              "end_amount": 40,
               "deload_amount": null,
               "sessions": 1
             }
@@ -539,72 +182,90 @@
     }
   },
   "week": {
-    "source": "synthetic",
-    "model": "synthetisch",
-    "recorded_at": "2026-10-03T12:00:00Z",
+    "source": "claude",
+    "model": "claude-opus-5-5",
+    "recorded_at": "2026-10-04T10:44:08.183Z",
     "usage": {
-      "inputTokens": 4600,
-      "outputTokens": 313
+      "inputTokens": 8532,
+      "outputTokens": 2581
     },
     "raw": {
-      "rationale": "Die Woche setzt die Vorgabe des Gesamtplans für dein Ziel um: 3 Einheiten an 5 Tagen, dazu die vorgesehenen Leistungstests. Harte Tage liegen nie hintereinander.",
+      "rationale": "Nach 45 Tagen Laufpause steigst du knieschonend mit drei flachen, lockeren Läufen von 15 bis 20 min (zusammen 55 min) ein, wie gewünscht ohne Intervalle. Bleibt das Knie empfindlich oder schmerzt es, lass es bitte ärztlich abklären. Der Rad-Schwellentest liegt am Freitag nach einem Ruhetag, am Sonntag folgen 80 min lockere Grundlage in Zone 2. Mehr Laufumfang erlauben die Grenzen beim Wiedereinstieg noch nicht, die 2:00 h im März sind bei stabilem Knie mit deinem Schwellentempo von 5:15/km aber realistisch.",
       "days": [
         {
           "date": "2026-09-30",
-          "focus": "Grundlage locker",
+          "focus": "Lauf-Wiedereinstieg locker",
           "sessions": [
             {
               "sport": "run",
-              "session_type": "endurance",
+              "session_type": "recovery",
               "intensity": "easy",
-              "amount": 30,
-              "focus": "Grundlage locker",
+              "amount": 15,
+              "focus": "Flach und locker, Gehpausen erlaubt",
               "test_id": null
             }
           ]
         },
         {
           "date": "2026-10-01",
-          "focus": "Leistungstest: 30-Minuten-Test",
+          "focus": "Ruhetag vor dem Test",
+          "sessions": []
+        },
+        {
+          "date": "2026-10-02",
+          "focus": "Rad-Leistungstest",
           "sessions": [
             {
               "sport": "bike",
               "session_type": "test",
               "intensity": "hard",
-              "amount": 60,
-              "focus": "Leistungstest: 30-Minuten-Test",
+              "amount": 58,
+              "focus": "30-min-Test zur Bestimmung der Schwelle",
               "test_id": "threshold_30min"
             }
           ]
         },
         {
-          "date": "2026-10-02",
-          "focus": "Ruhetag",
-          "sessions": []
-        },
-        {
           "date": "2026-10-03",
-          "focus": "Ruhetag",
-          "sessions": []
+          "focus": "Lockerer Lauf nach dem Test",
+          "sessions": [
+            {
+              "sport": "run",
+              "session_type": "endurance",
+              "intensity": "easy",
+              "amount": 20,
+              "focus": "Flach, Gesprächstempo, Gehpausen erlaubt",
+              "test_id": null
+            }
+          ]
         },
         {
           "date": "2026-10-04",
-          "focus": "Lange Radfahren-Einheit, ruhig",
+          "focus": "Rad-Grundlage",
           "sessions": [
             {
               "sport": "bike",
               "session_type": "endurance",
               "intensity": "easy",
-              "amount": 70,
-              "focus": "Lange Radfahren-Einheit, ruhig",
+              "amount": 80,
+              "focus": "Lange Ausfahrt Zone 2, gleichmäßig",
               "test_id": null
             }
           ]
         },
         {
           "date": "2026-10-05",
-          "focus": "Ruhetag",
-          "sessions": []
+          "focus": "Lockerer Lauf",
+          "sessions": [
+            {
+              "sport": "run",
+              "session_type": "endurance",
+              "intensity": "easy",
+              "amount": 20,
+              "focus": "Flach und locker, Knie beobachten",
+              "test_id": null
+            }
+          ]
         },
         {
           "date": "2026-10-06",
@@ -615,606 +276,258 @@
     }
   },
   "day": {
-    "source": "synthetic",
-    "model": "synthetisch",
-    "recorded_at": "2026-10-03T12:00:00Z",
+    "source": "claude",
+    "model": "claude-opus-5-5",
+    "recorded_at": "2026-10-04T10:44:27.461Z",
     "usage": {
-      "inputTokens": 4534,
-      "outputTokens": 312
+      "inputTokens": 9609,
+      "outputTokens": 1738
     },
     "raw": {
-      "rationale": "Heute steht Laufen an, wie im Wochenplan für dein Ziel vorgesehen.",
+      "rationale": "Nach 45 Tagen ohne Lauf und 0 min längster Laufeinheit in den letzten 4 Wochen steigst du heute mit 17 min im Lauf-Geh-Wechsel locker wieder ein, wie im Wochenplan vorgesehen. Die Gesamtlast ist mit einem Verhältnis von 1,09 stabil, die Erholung ist gut, und die 120 Radminuten der letzten 7 Tage geben dir eine solide Grundlage. Für die 21,1 km in 2 h 00 min bleiben 24 Wochen Aufbau. Bei deinem getesteten Schwellentempo von 5:15 pro km ist das Ziel realistisch, wenn der Laufumfang geduldig um etwa 10 % pro Woche wächst.",
       "sessions": [
         {
           "sport": "run",
-          "session_type": "endurance",
+          "session_type": "recovery",
           "intensity": "easy",
-          "focus": "Grundlage locker",
+          "focus": "Wiedereinstieg: flach, locker, mit Gehpausen",
           "test_id": null,
           "steps": [
             {
-              "name": "Einwärmen",
+              "name": "Einlaufen (Gehen)",
               "repetitions": 1,
               "measure": "duration",
               "distance_meters": null,
-              "duration_seconds": 300,
-              "target_type": "perceived_effort",
-              "target_value": 3,
-              "rest_seconds": 0,
-              "instructions": "Locker einlaufen.",
-              "cue": "Locker einlaufen",
-              "equipment": []
-            },
-            {
-              "name": "Grundlage",
-              "repetitions": 1,
-              "measure": "duration",
-              "distance_meters": null,
-              "duration_seconds": 600,
-              "target_type": "perceived_effort",
-              "target_value": 4,
-              "rest_seconds": 0,
-              "instructions": "Gleichmäßig, du kannst dich noch unterhalten.",
-              "cue": "Ruhig gleichmäßig",
-              "equipment": []
-            },
-            {
-              "name": "Ausklang",
-              "repetitions": 1,
-              "measure": "duration",
-              "distance_meters": null,
-              "duration_seconds": 300,
+              "duration_seconds": 180,
               "target_type": "perceived_effort",
               "target_value": 2,
               "rest_seconds": 0,
-              "instructions": "Ganz locker auslaufen.",
-              "cue": "Locker auslaufen",
+              "instructions": "Geh 3 Minuten zügig auf flachem Untergrund, damit sich Muskeln und Gelenke an die Bewegung gewöhnen.",
+              "cue": "Zügig gehen",
+              "equipment": []
+            },
+            {
+              "name": "Hauptteil Laufen mit Gehpausen",
+              "repetitions": 4,
+              "measure": "duration",
+              "distance_meters": null,
+              "duration_seconds": 120,
+              "target_type": "perceived_effort",
+              "target_value": 3,
+              "rest_seconds": 60,
+              "instructions": "Lauf jeweils 2 Minuten so locker, dass du dich problemlos unterhalten kannst, mit kurzen, leichten Schritten. Nach jedem Laufabschnitt gehst du 1 Minute.",
+              "cue": "Locker, Gespräch möglich",
+              "equipment": []
+            },
+            {
+              "name": "Auslaufen (Gehen)",
+              "repetitions": 1,
+              "measure": "duration",
+              "distance_meters": null,
+              "duration_seconds": 120,
+              "target_type": "perceived_effort",
+              "target_value": 2,
+              "rest_seconds": 0,
+              "instructions": "Geh 2 Minuten ruhig aus und lass den Atem zur Ruhe kommen.",
+              "cue": "Ruhig ausgehen",
               "equipment": []
             }
           ]
         }
       ],
-      "coach_notes": []
+      "coach_notes": [
+        "Lauf lieber zu langsam als zu schnell: Nach 45 Tagen Pause müssen sich Sehnen und Knochen erst wieder an die Stoßbelastung gewöhnen.",
+        "Wenn du während des Laufens oder am Tag danach Schmerzen spürst, sag es im Feedback, dann wechseln wir aufs Rad.",
+        "Trink nach der Einheit etwas und dehne locker Waden und Oberschenkel."
+      ]
     }
   },
   "revise": {
-    "source": "synthetic",
-    "model": "synthetisch",
-    "recorded_at": "2026-10-03T12:00:00Z",
+    "source": "claude",
+    "model": "claude-opus-5-5",
+    "recorded_at": "2026-10-04T10:46:10.216Z",
     "usage": {
-      "inputTokens": 6124,
-      "outputTokens": 1371
+      "inputTokens": 12432,
+      "outputTokens": 10038
     },
     "raw": {
-      "rationale": "Der Plan bleibt auf dein Ziel ausgerichtet und nimmt dein Feedback auf: In den ersten sechs Wochen 30 % mehr Rad, laufen dort um ein fünftel weniger.",
+      "rationale": "Wie gewünscht trägt das Rad in den ersten Wochen mehr Ausdauer, während das Laufen kürzer und mit Gehpausen startet, damit sich das Knie an die Belastung gewöhnen kann. In der ersten Woche liegt das Rad bereits an der Grenze von 140 min, deshalb steigt es erst ab der zweiten Woche über den bisherigen Plan. Der Laufumfang wächst danach in Schritten von höchstens 10 Prozent. Weil er niedriger startet, erreicht er im Höhepunkt 170 statt 180 min, das Rad gleicht das aus. Die 2:00 h sind bei deinem Schwellentempo von 5:15 pro km realistisch, wenn das Knie mitspielt; bei anhaltenden Knieschmerzen lass das bitte ärztlich abklären, bevor du den Laufumfang weiter steigerst.",
       "changes": [
-        "In den ersten sechs Wochen 30 % mehr Rad",
-        "Laufen dort um ein Fünftel weniger",
-        "Ab Woche sieben wie bisher"
+        "Laufen startet mit 45 statt 55 min und bleibt bis Mitte Dezember 10 bis 15 min pro Woche unter dem bisherigen Plan.",
+        "In den Wochen 1 bis 4 gibt es nur zwei kurze, lockere Läufe mit Gehpausen statt drei.",
+        "Mehr Rad in Woche 1 ist nicht möglich, weil 140 min die Grenze sind; ab Woche 2 steigt das Rad auf bis zu 210 statt 190 min.",
+        "Das Rad hat in den Wochen 1 bis 4 und 13 bis 20 drei statt zwei Einheiten, damit die längeren Umfänge verteilt sind.",
+        "In den Wochen 9 bis 12 sind es drei statt vier Läufe, vier Läufe kommen erst ab Woche 13.",
+        "Der Laufhöhepunkt liegt wegen des vorsichtigeren Starts bei 170 statt 180 min.",
+        "Das Rad liegt im Höhepunkt mit 150 bis 130 min etwas höher als bisher, damit der Gesamtumfang erhalten bleibt.",
+        "Den Lauftest in der Woche ab 16.11. machst du nur mit beschwerdefreiem Knie, sonst läufst du stattdessen locker."
       ],
       "blocks": [
         {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 145,
-              "end_amount": 145,
-              "deload_amount": null,
-              "sessions": 2
-            },
-            {
-              "sport": "run",
-              "start_amount": 25,
-              "end_amount": 25,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 155,
-              "end_amount": 155,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 25,
-              "end_amount": 25,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 155,
-              "end_amount": 155,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 30,
-              "end_amount": 30,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
+          "weeks": 4,
           "deload_last": true,
-          "focus": "Entlastung",
+          "focus": "Knie schonen: kurze Läufe mit Gehpausen, Rad Zone 2",
           "sports": [
             {
               "sport": "bike",
-              "start_amount": 105,
-              "end_amount": 105,
-              "deload_amount": 105,
-              "sessions": 2
-            },
-            {
-              "sport": "run",
-              "start_amount": 15,
-              "end_amount": 15,
-              "deload_amount": 15,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 155,
-              "end_amount": 155,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 30,
-              "end_amount": 30,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 155,
-              "end_amount": 155,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 30,
-              "end_amount": 30,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
+              "start_amount": 140,
+              "end_amount": 168,
+              "deload_amount": 115,
               "sessions": 3
             },
             {
               "sport": "run",
               "start_amount": 45,
-              "end_amount": 45,
-              "deload_amount": null,
-              "sessions": 1
+              "end_amount": 53,
+              "deload_amount": 37,
+              "sessions": 2
             }
           ]
         },
         {
-          "weeks": 1,
+          "weeks": 4,
           "deload_last": true,
-          "focus": "Entlastung",
+          "focus": "Rad-Grundlage ausbauen, Laufen behutsam steigern",
           "sports": [
             {
               "sport": "bike",
-              "start_amount": 80,
-              "end_amount": 80,
-              "deload_amount": 80,
+              "start_amount": 180,
+              "end_amount": 200,
+              "deload_amount": 139,
+              "sessions": 3
+            },
+            {
+              "sport": "run",
+              "start_amount": 58,
+              "end_amount": 68,
+              "deload_amount": 47,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Grundlage, Rad trägt Ausdauer, Lauf wächst langsam",
+          "sports": [
+            {
+              "sport": "bike",
+              "start_amount": 200,
+              "end_amount": 210,
+              "deload_amount": 145,
+              "sessions": 3
+            },
+            {
+              "sport": "run",
+              "start_amount": 74,
+              "end_amount": 86,
+              "deload_amount": 60,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Grundlage, längerer Lauf, erste lockere Steigerungen",
+          "sports": [
+            {
+              "sport": "bike",
+              "start_amount": 200,
+              "end_amount": 190,
+              "deload_amount": 132,
+              "sessions": 3
+            },
+            {
+              "sport": "run",
+              "start_amount": 94,
+              "end_amount": 110,
+              "deload_amount": 76,
+              "sessions": 4
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Schwellenläufe und Halbmarathon-Tempo",
+          "sports": [
+            {
+              "sport": "bike",
+              "start_amount": 175,
+              "end_amount": 160,
+              "deload_amount": 111,
+              "sessions": 3
+            },
+            {
+              "sport": "run",
+              "start_amount": 120,
+              "end_amount": 140,
+              "deload_amount": 97,
+              "sessions": 4
+            }
+          ]
+        },
+        {
+          "weeks": 3,
+          "deload_last": false,
+          "focus": "Höhepunkt: langer Lauf, Wettkampftempo-Abschnitte",
+          "sports": [
+            {
+              "sport": "bike",
+              "start_amount": 150,
+              "end_amount": 130,
+              "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 30,
-              "end_amount": 30,
-              "deload_amount": 30,
-              "sessions": 1
+              "start_amount": 150,
+              "end_amount": 170,
+              "deload_amount": null,
+              "sessions": 4
             }
           ]
         },
         {
           "weeks": 1,
           "deload_last": false,
-          "focus": "Grundlage aufbauen",
+          "focus": "Zuspitzen: weniger Umfang, kurze Tempoabschnitte",
           "sports": [
             {
               "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 50,
-              "end_amount": 50,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 50,
-              "end_amount": 50,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 55,
-              "end_amount": 55,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": true,
-          "focus": "Entlastung",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 80,
-              "end_amount": 80,
-              "deload_amount": 80,
-              "sessions": 2
-            },
-            {
-              "sport": "run",
-              "start_amount": 35,
-              "end_amount": 35,
-              "deload_amount": 35,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 60,
-              "end_amount": 60,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 65,
-              "end_amount": 65,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Grundlage aufbauen",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
               "start_amount": 70,
               "end_amount": 70,
               "deload_amount": null,
               "sessions": 2
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": true,
-          "focus": "Entlastung",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 80,
-              "end_amount": 80,
-              "deload_amount": 80,
-              "sessions": 2
-            },
-            {
-              "sport": "run",
-              "start_amount": 45,
-              "end_amount": 45,
-              "deload_amount": 45,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 75,
-              "end_amount": 75,
-              "deload_amount": null,
-              "sessions": 2
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 80,
-              "end_amount": 80,
-              "deload_amount": null,
-              "sessions": 2
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 85,
-              "end_amount": 85,
-              "deload_amount": null,
-              "sessions": 2
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": true,
-          "focus": "Entlastung",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 80,
-              "end_amount": 80,
-              "deload_amount": 80,
-              "sessions": 2
-            },
-            {
-              "sport": "run",
-              "start_amount": 55,
-              "end_amount": 55,
-              "deload_amount": 55,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 90,
-              "end_amount": 90,
-              "deload_amount": null,
-              "sessions": 2
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 95,
-              "end_amount": 95,
-              "deload_amount": null,
-              "sessions": 2
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfnah",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 120,
-              "end_amount": 120,
-              "deload_amount": null,
-              "sessions": 3
             },
             {
               "sport": "run",
               "start_amount": 100,
               "end_amount": 100,
               "deload_amount": null,
-              "sessions": 2
+              "sessions": 3
             }
           ]
         },
         {
           "weeks": 1,
           "deload_last": false,
-          "focus": "Zuspitzen, frisch werden",
+          "focus": "Zielwoche: frisch bleiben, Halbmarathon am Sonntag",
           "sports": [
             {
               "sport": "bike",
-              "start_amount": 70,
-              "end_amount": 70,
-              "deload_amount": null,
-              "sessions": 2
-            },
-            {
-              "sport": "run",
-              "start_amount": 60,
-              "end_amount": 60,
-              "deload_amount": null,
-              "sessions": 1
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Wettkampfwoche",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 50,
-              "end_amount": 50,
+              "start_amount": 40,
+              "end_amount": 40,
               "deload_amount": null,
               "sessions": 1
             },
             {
               "sport": "run",
-              "start_amount": 45,
-              "end_amount": 45,
+              "start_amount": 80,
+              "end_amount": 80,
               "deload_amount": null,
-              "sessions": 1
+              "sessions": 3
             }
           ]
         }
