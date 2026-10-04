@@ -361,12 +361,12 @@ function callLine(calls: readonly CallInfo[], kind: CallKind): string[] {
   return [`Modell \`${call.model}\`, ${call.usage.inputTokens} Token ein, ${call.usage.outputTokens} Token aus, ${call.seconds.toFixed(1)} s, ca. ${call.costUsd === null ? "?" : `$${call.costUsd.toFixed(3)}`}`, ""];
 }
 
-/** Eine Zeile je Stufe fuer die Konsole: "ok" oder der Grund, bei einem Fehler von Claude mit Meldung und Dauer. */
 /** Der Ausfallgrund einer Stufe, mit Einzelheit, wenn es eine gibt (etwa warum die Sicherheitsschicht blockierte). */
 function failure(step: StepReport<unknown>): string {
   return step.detail === undefined ? (step.error ?? "") : `${step.error} (${step.detail})`;
 }
 
+/** Eine Zeile je Stufe fuer die Konsole: "ok" oder der Grund, bei einem Fehler von Claude mit Meldung und Dauer. */
 export function stepSummary(report: ScenarioReport): string {
   const steps: [CallKind, StepReport<unknown> | undefined][] = [
     ["macro", report.macro],
