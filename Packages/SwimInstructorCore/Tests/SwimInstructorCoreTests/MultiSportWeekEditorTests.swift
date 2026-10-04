@@ -493,8 +493,8 @@ final class MultiSportWeekEditorTests: XCTestCase {
         XCTAssertEqual(day.sessions.first?.amount, 30)
         XCTAssertEqual(day.sessions.first?.distanceMeters, 6300)
         XCTAssertEqual(day.focus, "Rudern locker")
-        // Die Standard-Registry kennt Rudern nicht.
-        XCTAssertEqual(MultiSportWeekEditor.addSession(base, date: "2026-10-01", sport: "rowing"), base)
+        // Eine Sportart, die die Standard-Registry nicht kennt, ändert nichts.
+        XCTAssertEqual(MultiSportWeekEditor.addSession(base, date: "2026-10-01", sport: "kayak"), base)
     }
 
     // MARK: - Sportart tauschen

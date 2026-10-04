@@ -143,7 +143,7 @@ export const stepArb: fc.Arbitrary<StepRaw> = fc.record({
   equipment: fc.subarray(["pull_buoy", "paddles", "fins", "snorkel", "kickboard", "ankle_band", "laser_sword"])
 });
 
-const sportArb = fc.constantFrom(...SPORT_IDS, "rowing");
+const sportArb = fc.constantFrom(...SPORT_IDS, "kayak");
 
 const testIdArb = (sport: string) =>
   fc.option(fc.constantFrom(...(SPORTS.get(sport)?.performanceTests.map((test) => test.id) ?? []), "unknown_test"), { nil: null });

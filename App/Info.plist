@@ -9,7 +9,7 @@
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundleDisplayName</key>
-	<string>SwimInstructor</string>
+	<string>$(APP_DISPLAY_NAME)</string>
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -23,9 +23,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSHealthShareUsageDescription</key>
-	<string>SwimInstructor liest deine Schwimm-Workouts und Vitaldaten aus Health, um dir einen tagesaktuellen Trainingsplan zu erstellen.</string>
+	<string>$(APP_DISPLAY_NAME) liest deine Trainings und Vitaldaten aus Health, um dir einen tagesaktuellen Trainingsplan zu erstellen.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>SwimInstructor kann zukünftig Trainingsergebnisse in Health speichern.</string>
+	<string>$(APP_DISPLAY_NAME) speichert deine Trainings in Health.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UIApplicationSceneManifest</key>

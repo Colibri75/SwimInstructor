@@ -374,8 +374,13 @@ final class TestEvaluationTests: XCTestCase {
         ]
         for module in SportRegistry.standard.modules {
             let defs = module.performanceMetrics
+            // Werte, die ein Test direkt ergibt, ohne Eintrag oben: die Mitte ihres plausiblen Bereichs.
+            var values = typical
+            for definition in defs where values[definition.metric.rawValue] == nil {
+                values[definition.metric.rawValue] = (definition.plausibleRange.lowerBound + definition.plausibleRange.upperBound) / 2
+            }
             for test in module.performanceTests {
-                let result = test.evaluate(typical, definitions: defs)
+                let result = test.evaluate(values, definitions: defs)
                 XCTAssertEqual(Set(result.keys), Set(test.produces), "\(module.id) \(test.id)")
                 for (metric, value) in result {
                     let found: PerformanceMetricDefinition? = defs.first(where: { (item: PerformanceMetricDefinition) -> Bool in item.metric == metric })

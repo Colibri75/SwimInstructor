@@ -48,12 +48,12 @@ describe("sanitizeWeekV2", () => {
   });
 
   it("setzt Tage ohne Zeit als Ruhetag und entfernt Sportarten ohne Schwerpunkt", () => {
-    const raw = weekPlan([[weekSession("swim", 1000)], [weekSession("rowing", 30)], [weekSession("run", 0)], [weekSession("swim", 1000, { session_type: "rest" })]]);
+    const raw = weekPlan([[weekSession("swim", 1000)], [weekSession("kayak", 30)], [weekSession("run", 0)], [weekSession("swim", 1000, { session_type: "rest" })]]);
     const result = sanitizeWeekV2(raw, multiSnapshot(rested), context({ unavailable: ["2026-09-30"] }));
 
     expect(result.plan.days[0]).toEqual({ date: "2026-09-30", focus: "Keine Zeit", sessions: [] });
     expect(result.plan.days.slice(1, 4).every((day) => day.sessions.length === 0)).toBe(true);
-    expect(result.adjustments).toEqual(["Mittwoch, 30.09.: keine Zeit, als Ruhetag gesetzt", "Einheiten von Sportarten ohne Schwerpunkt entfernt (rowing)"]);
+    expect(result.adjustments).toEqual(["Mittwoch, 30.09.: keine Zeit, als Ruhetag gesetzt", "Einheiten von Sportarten ohne Schwerpunkt entfernt (kayak)"]);
   });
 
   it("kuerzt auf zwei Einheiten am Tag und hebt zu kleine Einheiten an oder streicht sie", () => {

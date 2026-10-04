@@ -80,7 +80,7 @@ struct WatchTodayView: View {
             }
         } else {
             Section {
-                Text("Noch kein Plan. Öffne SwimInstructor auf dem iPhone.")
+                Text("Noch kein Plan. Öffne die App auf dem iPhone.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                 refreshButton

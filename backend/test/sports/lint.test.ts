@@ -1,14 +1,15 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
+import { SPORTS } from "../../src/sports/registry";
 
 /**
  * Sorgt dafuer, dass ausserhalb von src/sports/ niemand nach einer bestimmten Sportart verzweigt. Sonst waere
  * eine neue Sportart wieder eine Aenderung quer durch den Code statt einer neuen Definition. Gegenstueck in
- * Swift: SportLintTests.
+ * Swift: SportLintTests. Geprueft werden die Kennungen aller angemeldeten Sportarten.
  */
 const SRC = path.join(__dirname, "../../src");
 const ALLOWED = path.join(SRC, "sports") + path.sep;
-const FORBIDDEN = /["'`](swim|bike|run)["'`]/;
+const FORBIDDEN = new RegExp(`["'\`](${SPORTS.ids.join("|")})["'\`]`);
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {

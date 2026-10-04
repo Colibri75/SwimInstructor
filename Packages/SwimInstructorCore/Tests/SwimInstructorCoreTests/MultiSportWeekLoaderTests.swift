@@ -345,7 +345,7 @@ final class MultiSportWeekLoaderTests: XCTestCase {
             WeekLoaderV2Data.workout(.swim, daysAgo: 7, hour: 8, minutes: 30, meters: 1_200),       // 23.09., erster Tag
             WeekLoaderV2Data.workout(.run, daysAgo: 3, hour: 8, minutes: 50, meters: 8_000),        // 27.09., ohne Plan
             WeekLoaderV2Data.workout(.bike, daysAgo: 2, hour: 9, minutes: 60, meters: 25_000),      // Radtest geplant
-            WeekLoaderV2Data.workout(SportID(rawValue: "rowing"), daysAgo: 2, hour: 12, minutes: 40), // unbekannte Sportart
+            WeekLoaderV2Data.workout(SportID(rawValue: "kayak"), daysAgo: 2, hour: 12, minutes: 40), // unbekannte Sportart
             WeekLoaderV2Data.workout(.run, daysAgo: 1, hour: 7, minutes: 32, meters: 5_200),        // harte Intervalle geplant
             WeekLoaderV2Data.workout(.swim, daysAgo: 1, hour: 18, minutes: 41, meters: 2_050),      // locker geplant
             WeekLoaderV2Data.workout(.swim, daysAgo: 0, hour: 8, minutes: 30, meters: 1_500)        // heute, gehört nicht dazu
@@ -613,7 +613,7 @@ final class MultiSportWeekLoaderTests: XCTestCase {
         // Schon Laufen, keine solche Einheit, unbekannte Sportart: nichts ändert sich.
         loader.changeSport("2026-10-02", session: 0, to: .run)
         loader.changeSport("2026-10-02", session: 5, to: .bike)
-        loader.changeSport("2026-10-02", session: 0, to: SportID(rawValue: "rowing"))
+        loader.changeSport("2026-10-02", session: 0, to: SportID(rawValue: "kayak"))
         XCTAssertEqual(filled.saves, 0)
         XCTAssertEqual(loader.weeks, [WeekLoaderV2Data.currentWeek()])
     }

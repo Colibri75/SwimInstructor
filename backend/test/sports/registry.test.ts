@@ -55,8 +55,9 @@ function problemOf(sports: SportDefinition[]): string | undefined {
 }
 
 describe("SportRegistry", () => {
-  it("kennt Schwimmen, Rad und Laufen in dieser Reihenfolge", () => {
-    expect(SPORTS.ids).toEqual(["swim", "bike", "run"]);
+  it("kennt Schwimmen, Rad und Laufen in dieser Reihenfolge, weitere Sportarten dahinter", () => {
+    // Die ganze Liste prueft contracts.test.ts gegen contracts/sports.json.
+    expect(SPORTS.ids.slice(0, 3)).toEqual(["swim", "bike", "run"]);
     expect(SPORTS.get("run")?.displayName).toBe("Laufen");
     expect(SPORTS.get("kayak")).toBeUndefined();
   });

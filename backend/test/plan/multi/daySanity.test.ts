@@ -42,11 +42,11 @@ describe("sanitizeDayV2", () => {
 
   it("entfernt Sportarten ohne Schwerpunkt, Ruhe-Einheiten und Einheiten ohne Schritte", () => {
     const snapshot = multiSnapshot({ ...rested, goal: { disciplines: [{ sport: "swim", distance_meters: 1500 }], emphasis: [{ sport: "swim", percent: 100 }] } });
-    const raw = dayPlan([session("run"), session("rowing"), swimSession([400], { session_type: "rest" }), swimSession([], {}), swimSession([400, 400])]);
+    const raw = dayPlan([session("run"), session("kayak"), swimSession([400], { session_type: "rest" }), swimSession([], {}), swimSession([400, 400])]);
     const result = sanitizeDayV2(raw, snapshot, { date: TODAY });
 
     expect(result.plan.sessions.map((item) => item.sport)).toEqual(["swim"]);
-    expect(result.adjustments).toEqual(["Schwimmen: Einheit ohne Schritte entfernt", "Einheiten von Sportarten ohne Schwerpunkt entfernt (Laufen, rowing)"]);
+    expect(result.adjustments).toEqual(["Schwimmen: Einheit ohne Schritte entfernt", "Einheiten von Sportarten ohne Schwerpunkt entfernt (Laufen, kayak)"]);
   });
 
   it("nimmt eine Einheit mit Ruhe-Intensitaet als Ruhe und setzt einen fehlenden Schwerpunkt", () => {

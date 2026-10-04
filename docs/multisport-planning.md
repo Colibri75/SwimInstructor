@@ -140,4 +140,4 @@ Aufruf fehl, zeigt die Konsole die Meldung und die Dauer.
 
 Ein neues Modul mit `planning` (Grenzen, Einheit, Tempo, Schrittregeln, Testschritte, `promptRules`) reicht. Grenzen,
 Prompts, Sicherheitsschicht und Bewertung lesen alles aus der Registry; die Test-Sportart Rudern läuft in den Tests
-durch dieselben Prüfungen.
+durch dieselben Prüfungen. Alle Schritte für App und Server: [Neue Sportart hinzufügen](neue-sportart.md).
