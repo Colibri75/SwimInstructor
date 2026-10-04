@@ -193,7 +193,7 @@ final class RecordedTestEvaluationTests: XCTestCase {
     }
 
     func testThousandMetersInAFiftyMeterPool() throws {
-        let steps = [swim("Einschwimmen", 400, effort: 3), swim("Test 1000 m", 1000, effort: 10), swim("Ausschwimmen", 200, effort: 2)]
+        let steps = [Self.swim("Einschwimmen", 400, effort: 3), Self.swim("Test 1000 m", 1000, effort: 10), Self.swim("Ausschwimmen", 200, effort: 2)]
         let swum = laps(8, from: 0, each: 40) + laps(20, from: 350, each: 40) + laps(4, from: 1150, each: 50)
 
         let recording = pool(swum, lapLength: 50, steps: steps)
