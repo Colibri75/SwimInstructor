@@ -8,6 +8,9 @@ import Foundation
 /// App-Targets, weil es WatchConnectivity auf dem Mac (`swift test`) nicht gibt.
 public enum PlanSyncCodec {
     static let planKey = "plan"
+    /// Der Tagesplan v2 mit allen Einheiten des Tages (ab T5). Daneben steht weiter der Plan v1 unter `plan`, damit eine
+    /// Watch mit älterer App-Version weiter ihre Schwimmeinheit bekommt.
+    static let planV2Key = "plan_v2"
     static let versionKey = "version"
     static let requestKey = "request"
     /// Hebt sich das Format einmal inkompatibel, ignoriert eine alte Watch neue Pläne, statt abzustürzen.
@@ -26,6 +29,25 @@ public enum PlanSyncCodec {
             planKey: try PlanResponse.jsonEncoder().encode(response),
             versionKey: formatVersion
         ]
+    }
+
+    /// Tagesplan v2 als Application Context bzw. Antwort auf `planRequest`: v2 mit allen Einheiten, dazu v1 für ältere
+    /// Watch-Apps.
+    public static func context(for response: DayPlanV2Response) throws -> [String: Any] {
+        var context = try Self.context(for: response.watchPlan())
+        context[planV2Key] = try PlanResponse.jsonEncoder().encode(response)
+        return context
+    }
+
+    /// Der Tagesplan v2 aus dem Context; von einem iPhone mit älterer App-Version der umgewandelte Plan v1. `nil` bei
+    /// leerem, fremdem oder kaputtem Inhalt.
+    public static func dayPlan(from context: [String: Any]) -> DayPlanV2Response? {
+        guard context[versionKey] as? Int == formatVersion else { return nil }
+        if let data = context[planV2Key] as? Data,
+           let response = try? PlanResponse.jsonDecoder().decode(DayPlanV2Response.self, from: data) {
+            return response
+        }
+        return Self.response(from: context).map(DayPlanV2Response.init(legacy:))
     }
 
     /// `nil` bei leerem, fremdem oder kaputtem Inhalt: dann bleibt der bisherige Plan stehen.

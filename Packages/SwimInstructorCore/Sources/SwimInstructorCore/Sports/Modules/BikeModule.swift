@@ -32,13 +32,24 @@ public struct BikeModule: SportModule {
     /// 25 km/h.
     public let typicalSpeedMetersPerSecond: Double = 7
 
+    public let recording = SportRecording(
+        locations: [.outdoor, .indoor],
+        primaryField: .speed,
+        secondaryFields: [.distanceKilometers, .elevationGain, .power, .cadence],
+        speedSmoothing: SpeedSmoothing(window: 15, staleAfter: 10, minimumMeters: 30)
+    )
+
     public let performanceMetrics: [PerformanceMetricDefinition] = [.thresholdHeartRate, .thresholdPower]
     public let performanceTests: [PerformanceTest] = [
         // Schwellenpuls: Schnitt der letzten 20 Minuten; FTP: Schnitt der 30 Minuten, nur mit Leistungsmesser.
         PerformanceTest(
             id: "threshold_30min", displayName: "30-Minuten-Test",
             produces: [.thresholdHeartRate, .thresholdPower], maximalEffort: true, durationMinutes: 30,
-            resultHint: "Schwellenpuls: Schnitt der letzten 20 Minuten. Leistung: Schnitt der ganzen 30 Minuten, nur mit Leistungsmesser."
+            resultHint: "Schwellenpuls: Schnitt der letzten 20 Minuten. Leistung: Schnitt der ganzen 30 Minuten, nur mit Leistungsmesser.",
+            recorded: [
+                .average(input: PerformanceMetric.thresholdHeartRate.rawValue, signal: .heartRate, lastSeconds: 20 * 60),
+                .average(input: PerformanceMetric.thresholdPower.rawValue, signal: .power, lastSeconds: nil)
+            ]
         )
     ]
     public let zoneSchemes: [ZoneScheme] = [

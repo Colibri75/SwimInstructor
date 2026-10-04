@@ -31,6 +31,14 @@ public struct SwimModule: SportModule {
     /// 2:05 pro 100 m inklusive Pausen.
     public let typicalSpeedMetersPerSecond: Double = 0.8
 
+    public let recording = SportRecording(
+        locations: [.pool, .openWater],
+        primaryField: .pacePerHundredMeters,
+        secondaryFields: [.distanceMeters, .laps],
+        // Die Strecke kommt bahnweise: ein langes Fenster, sonst springt die Pace mit jeder Bahn.
+        speedSmoothing: SpeedSmoothing(window: CurrentPaceTracker.window, staleAfter: CurrentPaceTracker.staleAfter, minimumMeters: CurrentPaceTracker.minimumMeters)
+    )
+
     public let performanceMetrics: [PerformanceMetricDefinition] = [
         PerformanceMetricDefinition(metric: .criticalSwimPace, displayName: "CSS-Pace", unit: "s/100m", plausibleRange: 50...300)
     ]
@@ -43,14 +51,16 @@ public struct SwimModule: SportModule {
                 TestInput(id: "time_200m", label: "Zeit 200 m", unit: "s", range: 80...750)
             ],
             evaluation: .criticalSwimPace(longInput: "time_400m", longMeters: 400, shortInput: "time_200m", shortMeters: 200),
-            resultHint: "Trag die Zeiten der beiden Teststrecken ein. Die CSS-Pace ist die halbe Differenz pro 100 m."
+            resultHint: "Trag die Zeiten der beiden Teststrecken ein. Die CSS-Pace ist die halbe Differenz pro 100 m.",
+            recorded: [.segmentTime(input: "time_400m", meters: 400), .segmentTime(input: "time_200m", meters: 200)]
         ),
         // Zeit durch 10 ergibt die Pace pro 100 m, etwas langsamer als die CSS.
         PerformanceTest(
             id: "time_trial_1000m", displayName: "1000-m-Test", produces: [.criticalSwimPace], maximalEffort: true, durationMinutes: 20,
             inputs: [TestInput(id: "time_1000m", label: "Zeit 1000 m", unit: "s", range: 600...3000)],
             evaluation: .pacePerHundredMeters(input: "time_1000m", meters: 1000),
-            resultHint: "Trag die Zeit für die 1000 m ein."
+            resultHint: "Trag die Zeit für die 1000 m ein.",
+            recorded: [.segmentTime(input: "time_1000m", meters: 1000)]
         )
     ]
     public let zoneSchemes: [ZoneScheme] = [

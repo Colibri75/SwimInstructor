@@ -1,7 +1,7 @@
 import Foundation
 
 // Brücke zwischen Plan v1 (nur Schwimmen) und Plan v2. Sie steht unter Sports/, weil nur hier feste Sportarten stehen
-// dürfen: Ein Plan v1 ist immer Schwimmen, und die Watch spielt bis T5 nur Schwimmeinheiten ab.
+// dürfen: Ein Plan v1 ist immer Schwimmen, und Watch-Apps vor T5 spielen nur Schwimmeinheiten ab.
 
 public extension DayPlanV2Response {
     /// Ein Tagesplan aus der Zeit vor Plan v2 als Plan v2 mit einer Schwimmeinheit, damit Verlauf und "Plan gegen Ist"
@@ -47,8 +47,8 @@ public extension DayPlanV2Response {
         )
     }
 
-    /// Der Tagesplan für die Watch im Format v1: die Schwimmeinheit des Tages. Ohne Schwimmen ist der Tag für die Watch
-    /// ein Ruhetag; die Begründung sagt, was stattdessen ansteht.
+    /// Der Tagesplan im Format v1 für Watch-Apps vor T5: die Schwimmeinheit des Tages. Ohne Schwimmen ist der Tag für sie
+    /// ein Ruhetag; die Begründung sagt, was stattdessen ansteht. Neuere Watch-Apps lesen den Plan v2 daneben.
     func watchPlan(registry: SportRegistry = .standard) -> PlanResponse {
         PlanResponse(
             source: source,

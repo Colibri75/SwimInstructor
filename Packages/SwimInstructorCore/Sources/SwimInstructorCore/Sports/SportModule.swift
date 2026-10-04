@@ -46,6 +46,11 @@ public protocol SportModule: Sendable {
     /// Startwerte ohne Test aus den Einheiten dieser Sportart und den schon bekannten Werten. Bestätigte Werte gehen
     /// später immer vor, die Schätzung muss sie nicht beachten.
     func estimatePerformance(_ context: PerformanceEstimationContext) -> [PerformanceEstimate]
+
+    // MARK: Aufzeichnung auf der Watch (T5)
+
+    /// Orte zur Auswahl vor dem Start und die Werte der Anzeige.
+    var recording: SportRecording { get }
 }
 
 public extension SportModule {
@@ -59,6 +64,9 @@ public extension SportModule {
     var performanceTests: [PerformanceTest] { [] }
     var zoneSchemes: [ZoneScheme] { [] }
     func estimatePerformance(_ context: PerformanceEstimationContext) -> [PerformanceEstimate] { [] }
+
+    // Ohne eigene Angaben zeichnet die Watch draußen mit GPS oder drinnen auf und zeigt Tempo und Strecke.
+    var recording: SportRecording { .standard }
 }
 
 /// Die angemeldeten Sportarten. Prüft beim Anlegen, dass jede Sportart vollständig beschrieben ist und keine
@@ -82,6 +90,8 @@ public struct SportRegistry: Sendable {
         case invalidPerformanceTest(SportID)
         /// Zonen für ein fremdes Ziel, aus einem unbekannten Grundwert oder mit ungültigen Grenzen.
         case invalidZoneScheme(SportID)
+        /// Keine Orte für die Aufzeichnung, oder eine Kennung ungültig oder doppelt.
+        case invalidRecording(SportID)
     }
 
     /// In der Reihenfolge der Anmeldung (die App zeigt sie so an).
@@ -109,6 +119,7 @@ public struct SportRegistry: Sendable {
                 guard claimedActivityTypes.insert(rawValue).inserted else { throw Problem.sharedActivityType(module.id) }
             }
             try Self.validatePerformance(of: module)
+            guard module.recording.isValid else { throw Problem.invalidRecording(module.id) }
         }
         self.modules = modules
     }

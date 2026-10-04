@@ -40,15 +40,9 @@ public final class HealthKitManager: ObservableObject, HealthDataAuthorizing {
         HKObjectType.characteristicType(forIdentifier: .dateOfBirth)!
     ]
 
-    /// Was die Watch beim Aufzeichnen einer Einheit in Health schreibt (Workout, Strecke, Züge,
-    /// Puls, Energie). Das iPhone schreibt nichts.
-    public nonisolated static let workoutShareTypes: Set<HKSampleType> = [
-        HKObjectType.workoutType(),
-        HKObjectType.quantityType(forIdentifier: .distanceSwimming)!,
-        HKObjectType.quantityType(forIdentifier: .swimmingStrokeCount)!,
-        HKObjectType.quantityType(forIdentifier: .heartRate)!,
-        HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!
-    ]
+    /// Was die Watch beim Aufzeichnen einer Einheit in Health schreibt: Workout, GPS-Strecke, Puls, Energie und die
+    /// Messwerte aller Sportarten (Strecke, Züge, Watt ...). Das iPhone schreibt nichts.
+    public nonisolated static let workoutShareTypes: Set<HKSampleType> = SportRegistry.standard.workoutShareTypes
 
     /// - Parameter shareTypes: zusätzlich zu schreibende Typen; die werden auch gelesen, damit die
     ///   Watch ihre Live-Werte (z. B. Energie) anzeigen darf.

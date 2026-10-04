@@ -108,6 +108,8 @@ public struct PerformanceTest: Sendable, Equatable, Identifiable {
     public let evaluation: TestEvaluation
     /// Kurzer Hinweis für die Eingabe des Ergebnisses, etwa welcher Abschnitt zählt.
     public let resultHint: String
+    /// Wie die Watch die Eingaben aus der Aufzeichnung gewinnt; leer: Das Ergebnis trägt der Athlet selbst ein.
+    public let recorded: [RecordedMeasurement]
 
     public init(
         id: String,
@@ -117,7 +119,8 @@ public struct PerformanceTest: Sendable, Equatable, Identifiable {
         durationMinutes: Int,
         inputs: [TestInput] = [],
         evaluation: TestEvaluation = .direct,
-        resultHint: String = ""
+        resultHint: String = "",
+        recorded: [RecordedMeasurement] = []
     ) {
         self.id = id
         self.displayName = displayName
@@ -127,6 +130,7 @@ public struct PerformanceTest: Sendable, Equatable, Identifiable {
         self.inputs = inputs
         self.evaluation = evaluation
         self.resultHint = resultHint
+        self.recorded = recorded
     }
 
     /// Welche Herkunft das Ergebnis bekommt.

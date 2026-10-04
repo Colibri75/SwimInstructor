@@ -7,6 +7,7 @@ struct TodayView: View {
     @EnvironmentObject private var loader: MultiSportTodayLoader
     @EnvironmentObject private var weekLoader: MultiSportWeekLoader
     @EnvironmentObject private var settings: BackendSettings
+    @EnvironmentObject private var testResultInbox: WatchTestResultInbox
     @Environment(\.scenePhase) private var scenePhase
     @State private var showsSettings = false
     @State private var wishDraft = ""
@@ -33,6 +34,7 @@ struct TodayView: View {
     var body: some View {
         NavigationStack {
             List {
+                watchResultSection
                 weekTodaySection
                 planSection
                 wishSection
@@ -55,7 +57,7 @@ struct TodayView: View {
                 }
             }
             .sheet(item: $resultTest) { target in
-                TestResultSheet(sport: target.sport, testID: target.testID)
+                TestResultSheet(sport: target.sport, testID: target.testID, watchResult: target.watchResult)
             }
         }
         .task { await loader.refreshIfNeeded() }
@@ -154,6 +156,26 @@ struct TodayView: View {
         }
     }
 
+    /// Ein Testergebnis von der Watch, das auf Bestätigung wartet.
+    @ViewBuilder
+    private var watchResultSection: some View {
+        if let result = testResultInbox.next {
+            let registry = SportRegistry.standard
+            let test = registry.module(for: result.sport)?.performanceTests.first { $0.id == result.testID }
+            Section {
+                Button {
+                    resultTest = TestResultTarget(sport: result.sport, testID: result.testID, watchResult: result)
+                } label: {
+                    Label("\(test?.displayName ?? "Test") vom \(result.measuredAt.formatted(date: .abbreviated, time: .omitted)) ansehen", systemImage: "applewatch")
+                }
+            } header: {
+                Text("Testergebnis von der Watch")
+            } footer: {
+                Text("Erst nach deiner Bestätigung richten sich Zonen und Tempo im Plan nach dem neuen Wert.")
+            }
+        }
+    }
+
     /// Nur ein Test mit Vollbelastung hat ein Ergebnis, das ins Profil gehört.
     private func resultAction(for session: DaySession) -> (() -> Void)? {
         guard let test = session.test, test.maximalEffort else { return nil }
@@ -222,7 +244,10 @@ struct TodayView: View {
 struct TestResultTarget: Identifiable {
     let sport: SportID
     let testID: String
-    var id: String { "\(sport.rawValue)|\(testID)" }
+    /// Das Ergebnis von der Watch, `nil` beim Eintragen von Hand.
+    var watchResult: WatchTestResult?
+
+    var id: String { "\(sport.rawValue)|\(testID)|\(watchResult?.id.uuidString ?? "-")" }
 }
 
 /// Eine geplante Einheit in einer Zeile: Symbol, Sportart, Umfang, Art und Intensität.

@@ -25,9 +25,11 @@
 	<key>WKCompanionAppBundleIdentifier</key>
 	<string>com.kellner.SwimInstructor</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>SwimInstructor liest deine Schwimm-Workouts und Vitaldaten aus Health, um dir direkt an der Uhr deinen Trainingsplan zu zeigen.</string>
+	<string>SwimInstructor liest deine Workouts und Vitaldaten aus Health, um dir direkt an der Uhr deinen Trainingsplan zu zeigen.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>SwimInstructor speichert deine Schwimmeinheiten mit Bahnen, Zügen und Puls in Health.</string>
+	<string>SwimInstructor speichert deine Einheiten mit Strecke, Karte, Bahnen und Puls in Health.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>SwimInstructor zeichnet draußen deine Strecke per GPS auf, für Pace, Höhenmeter und die Karte in Health.</string>
 	<key>WKBackgroundModes</key>
 	<array>
 		<string>workout-processing</string>
