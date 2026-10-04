@@ -58,6 +58,23 @@
         {"id": "threshold_30min", "display_name": "30-Minuten-Test", "produces": ["threshold_heart_rate", "threshold_pace_per_km"], "maximal_effort": true, "duration_minutes": 30},
         {"id": "entry_easy_25min", "display_name": "Einstiegstest locker", "produces": ["threshold_pace_per_km"], "maximal_effort": false, "duration_minutes": 25}
       ]
+    },
+    {
+      "id": "rowing",
+      "display_name": "Rudern",
+      "measures": ["duration", "distance"],
+      "targets": ["stroke_rate", "heart_rate_zone", "perceived_effort"],
+      "goal_speed": {"min_meters_per_second": 2, "max_meters_per_second": 7},
+      "load_factor": 0.9,
+      "plan_unit": "minutes",
+      "typical_speed_meters_per_second": 3.5,
+      "performance_metrics": [
+        {"id": "threshold_heart_rate", "display_name": "Schwellenpuls", "unit": "bpm", "min": 100, "max": 215},
+        {"id": "time_2000m", "display_name": "2000-m-Zeit", "unit": "s", "min": 330, "max": 1200}
+      ],
+      "performance_tests": [
+        {"id": "time_trial_2000m", "display_name": "2000-m-Test", "produces": ["time_2000m", "threshold_heart_rate"], "maximal_effort": true, "duration_minutes": 8}
+      ]
     }
   ]
 }

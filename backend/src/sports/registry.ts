@@ -1,4 +1,5 @@
 import { bike } from "./modules/bike";
+import { rowing } from "./modules/rowing";
 import { run } from "./modules/run";
 import { swim } from "./modules/swim";
 import { ATHLETE_METRICS, PerformanceMetricDefinition } from "./performance";
@@ -150,4 +151,4 @@ function validPlanning(sport: SportDefinition): boolean {
 export const LEGACY_SPORT_ID = swim.id;
 
 /** Die Sportarten des Servers. Die Tests pruefen, dass sie zu contracts/sports.json passen. */
-export const SPORTS = new SportRegistry([swim, bike, run]);
+export const SPORTS = new SportRegistry([swim, bike, run, rowing]);
