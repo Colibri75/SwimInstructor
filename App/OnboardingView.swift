@@ -50,7 +50,7 @@ struct OnboardingView: View {
 
     private var welcome: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Willkommen bei TriCoach")
+            Text("Willkommen bei Peaksmith")
                 .font(.largeTitle.bold())
             Text("In drei Schritten zu deinem Plan: Ziel festlegen, deine Trainingstage eintragen und angeben, wo du gerade stehst. Danach rechnet die App den Gesamtplan bis zu deinem Ziel.")
             Text("Zuerst fragt die App nach Apple Health. Daraus liest sie dein bisheriges Training, damit der Plan dort anfängt, wo du stehst.")

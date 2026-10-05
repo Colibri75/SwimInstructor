@@ -761,7 +761,7 @@ Schritt bleibt sie fürs Schwimmen voll nutzbar.
 
 ### T7 – Name, Doku und Betatest
 
-- **Anzeigename "TriCoach"** unter dem Symbol auf iPhone und Watch und in den Health-Hinweisen. Er steht einmal in
+- **Anzeigename "TriCoach"** (seit 05.10.2026 "Peaksmith" mit neuem Icon: Berg, Schmiedehammer und Funken) unter dem Symbol auf iPhone und Watch und in den Health-Hinweisen. Er steht einmal in
   `project.yml` (`APP_DISPLAY_NAME`), beide `Info.plist` lesen ihn von dort. Bundle-IDs, Targets, Repo, TestFlight-
   Eintrag, Health-Freigaben und gespeicherte Daten bleiben bei SwimInstructor.
 - **README nach Sport-Modulen:** Tabelle der Sportarten, was ein Modul festlegt und was der Kern für alle macht. Die
