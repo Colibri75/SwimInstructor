@@ -83,4 +83,15 @@ final class WeeklyScheduleTests: XCTestCase {
         XCTAssertFalse(store.setSchedule(broken))
         XCTAssertEqual(store.storedSchedule(), schedule)
     }
+
+    func testDayOnADateUsesItsWeekday() {
+        let schedule = WeeklySchedule(trainingDaysPerWeek: 3, weeklyHours: 5)
+        let calendar = WeekCalendar(calendar: TestFixtures.utc)
+        // 06.10.2026 ist ein Dienstag, 11.10.2026 ein Sonntag.
+        XCTAssertEqual(schedule.day(on: "2026-10-06", weekCalendar: calendar)?.weekday, 2)
+        XCTAssertEqual(schedule.day(on: "2026-10-06", weekCalendar: calendar)?.trains, true)
+        XCTAssertEqual(schedule.day(on: "2026-10-11", weekCalendar: calendar)?.weekday, 7)
+        XCTAssertEqual(schedule.day(on: "2026-10-11", weekCalendar: calendar)?.trains, false)
+        XCTAssertNil(schedule.day(on: "kein Datum", weekCalendar: calendar))
+    }
 }

@@ -82,6 +82,11 @@ public struct WeeklySchedule: Codable, Equatable, Sendable {
         days.first { $0.weekday == weekday }
     }
 
+    /// Der Tag des Rasters für das Datum `key` (`yyyy-MM-dd`).
+    public func day(on key: String, weekCalendar: WeekCalendar = WeekCalendar()) -> Day? {
+        weekCalendar.weekdayNumber(key).flatMap { day($0) }
+    }
+
     /// Ersetzt einen Tag; an einem Ruhetag gibt es keine Minuten, keine Tageszeit und keine Sportart.
     public func setting(_ day: Day) -> WeeklySchedule {
         var copy = self

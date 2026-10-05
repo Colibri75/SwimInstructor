@@ -98,6 +98,8 @@ struct SwimInstructorApp: App {
         weekLoader.testSettingsProvider = { testSettingsStore.settings() }
         // Die nächsten sieben Tage richten sich nach den Wochen des Gesamtplans.
         weekLoader.macroProvider = { [weak macroLoader] dates in macroLoader?.weeks(overlapping: dates) ?? [] }
+        // Im Plan-Tab lässt sich bis zur letzten Woche des Gesamtplans vorblättern.
+        weekLoader.lastWeekStartProvider = { [weak macroLoader] in macroLoader?.plan?.weeks.last?.weekStart }
         // Die Tage planen mit dem Zustand und den Einheiten aller Sportarten, die der Heute-Bildschirm gelesen hat.
         weekLoader.contextProvider = { [weak loader] in
             loader?.reading.map { MultiSportWeekLoader.PlanningContext(snapshot: $0.snapshot, workouts: $0.allWorkouts) }

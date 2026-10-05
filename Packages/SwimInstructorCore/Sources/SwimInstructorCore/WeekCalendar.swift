@@ -50,6 +50,12 @@ public struct WeekCalendar: Sendable {
         return self.key(for: shifted)
     }
 
+    /// Der Wochentag, 1 = Montag bis 7 = Sonntag (wie im Wochenraster); `nil` bei einem ungültigen Datum.
+    public func weekdayNumber(_ key: String) -> Int? {
+        guard let date = date(from: key) else { return nil }
+        return (calendar.component(.weekday, from: date) + 5) % 7 + 1
+    }
+
     public func weekdayShort(_ key: String) -> String {
         guard let date = date(from: key) else { return key }
         return Self.shortNames[calendar.component(.weekday, from: date) - 1]
