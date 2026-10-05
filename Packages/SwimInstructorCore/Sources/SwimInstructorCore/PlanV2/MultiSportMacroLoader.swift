@@ -18,6 +18,7 @@ public final class MultiSportMacroLoader: ObservableObject {
     private let store: MacroPlanV2Storing
     private let planProvider: @MainActor () -> MacroPlanV2Providing?
     private let goal: @MainActor () -> TrainingGoal
+    private let goalVersion: (@MainActor () -> Int)?
     private let attemptMarker: DailyRefreshMarking
     private let now: () -> Date
     private let calendar: Calendar
@@ -26,10 +27,13 @@ public final class MultiSportMacroLoader: ObservableObject {
     /// - Parameters:
     ///   - planProvider: liefert den API-Client zur aktuellen Konfiguration, `nil` ohne Token.
     ///   - goal: das Ziel aus den Einstellungen, bei jedem Zugriff neu gelesen.
+    ///   - goalVersion: die Zielversion (P3). Mit ihr gehört ein Gesamtplan zu einer Version statt zu `planKey`, und eine
+    ///     Feinjustierung des Ziels lässt ihn stehen.
     public init(
         store: MacroPlanV2Storing,
         planProvider: @escaping @MainActor () -> MacroPlanV2Providing?,
         goal: @escaping @MainActor () -> TrainingGoal,
+        goalVersion: (@MainActor () -> Int)? = nil,
         attemptMarker: DailyRefreshMarking = UserDefaultsDailyRefreshMarker(key: "plan.lastMacroAttemptV2"),
         now: @escaping () -> Date = { Date() },
         calendar: Calendar = .current
@@ -37,6 +41,7 @@ public final class MultiSportMacroLoader: ObservableObject {
         self.store = store
         self.planProvider = planProvider
         self.goal = goal
+        self.goalVersion = goalVersion
         self.attemptMarker = attemptMarker
         self.now = now
         self.calendar = calendar
@@ -50,12 +55,20 @@ public final class MultiSportMacroLoader: ObservableObject {
 
     public var currentWeekStart: String { weekCalendar.weekStart(containing: now()) }
 
-    public var currentGoalKey: String { goal().planKey(calendar: calendar) }
+    public var currentGoalKey: String {
+        guard let goalVersion else { return goal().planKey(calendar: calendar) }
+        return "goal-v\(goalVersion())"
+    }
 
     /// Gilt der gespeicherte Gesamtplan noch? Er muss zum eingestellten Ziel gehören und die laufende Woche enthalten.
+    /// Ein Plan von vor der Zielversion zählt, solange er zu `planKey` des Ziels passt.
     public var isCurrent: Bool {
         guard let plan else { return false }
-        return plan.goalKey == currentGoalKey && plan.week(starting: currentWeekStart) != nil
+        return belongsToGoal(plan) && plan.week(starting: currentWeekStart) != nil
+    }
+
+    private func belongsToGoal(_ plan: MacroPlanV2) -> Bool {
+        plan.goalKey == currentGoalKey || (goalVersion != nil && plan.goalKey == goal().planKey(calendar: calendar))
     }
 
     /// Die laufende Woche des Gesamtplans.
@@ -99,6 +112,12 @@ public final class MultiSportMacroLoader: ObservableObject {
     /// Holt den Gesamtplan, wenn er fehlt, zu einem anderen Ziel gehört oder abgelaufen ist, aber höchstens einmal am
     /// Tag je Ziel (ein Fehlschlag soll nicht bei jedem Öffnen einen Claude-Aufruf kosten).
     public func ensureCurrent(snapshot: AthleteStateSnapshot) async {
+        // Umzug auf die Zielversion: Ein Plan zu `planKey` bekommt die Version, damit eine spätere Feinjustierung ihn
+        // nicht ungültig macht.
+        if var current = plan, current.goalKey != currentGoalKey, belongsToGoal(current) {
+            current.goalKey = currentGoalKey
+            store(current)
+        }
         guard !isCurrent else { return }
         let marker = "\(todayKey)|\(currentGoalKey)"
         guard attemptMarker.lastDay() != marker else { return }
@@ -106,8 +125,9 @@ public final class MultiSportMacroLoader: ObservableObject {
         await regenerate(snapshot: snapshot)
     }
 
-    /// Berechnet den Gesamtplan neu (Knopf in der App). Die Feedback-Runden beginnen von vorn. Scheitert es, bleibt der
-    /// bisherige stehen.
+    /// Berechnet den Gesamtplan neu. Die Feedback-Runden beginnen von vorn. Die laufende Woche des bisherigen Plans
+    /// bleibt, damit die nächsten sieben Tage nicht unter dem Athleten wegrutschen. Scheitert es, bleibt der bisherige
+    /// stehen.
     @discardableResult
     public func regenerate(snapshot: AthleteStateSnapshot) async -> Bool {
         guard !isLoading, !isRevising else { return false }
@@ -123,7 +143,7 @@ public final class MultiSportMacroLoader: ObservableObject {
             let response = try await provider.fetchMacroPlanV2(
                 MacroPlanV2Request(snapshot: snapshot, today: todayKey, testSettings: testSettingsProvider())
             )
-            store(response.macroPlan(goalKey: currentGoalKey))
+            store(keepingCurrentWeek(response.macroPlan(goalKey: currentGoalKey)))
             error = nil
             return true
         } catch {
@@ -176,6 +196,14 @@ public final class MultiSportMacroLoader: ObservableObject {
             self.error = error.localizedDescription
             return false
         }
+    }
+
+    /// Der neue Plan mit der laufenden Woche des bisherigen, falls es sie gibt.
+    private func keepingCurrentWeek(_ fresh: MacroPlanV2) -> MacroPlanV2 {
+        guard let week = plan?.week(starting: currentWeekStart) else { return fresh }
+        var merged = fresh
+        merged.weeks = (fresh.weeks.filter { $0.weekStart != week.weekStart } + [week]).sorted { $0.weekStart < $1.weekStart }
+        return merged
     }
 
     private func store(_ fresh: MacroPlanV2) {

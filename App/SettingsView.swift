@@ -133,10 +133,13 @@ struct SettingsView: View {
             } label: {
                 LabeledContent("Ziel", value: PlanFormatting.goalSummary(trainingGoal))
             }
+            if let pending = trainingGoalStore.pendingGoal() {
+                LabeledContent("Vorgemerkt", value: PlanFormatting.goalSummary(pending))
+            }
         } header: {
             Text("Mein Ziel")
         } footer: {
-            Text("Der Plan arbeitet auf dieses Ziel hin. Es bleibt gespeichert, bis du es änderst.")
+            Text("Der Plan arbeitet auf dieses Ziel hin. Änderungen sind ein Entwurf, bis du sie übernimmst; ein neues Ziel geht höchstens alle 7 Tage.")
         }
     }
 

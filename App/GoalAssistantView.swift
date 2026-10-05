@@ -3,30 +3,44 @@ import SwimInstructorCore
 
 /// Ziel-Assistent: Zielart wählen (Wettkampf, Zeit, Strecke, Fitness), beim Wettkampf auf Wunsch eine Vorlage
 /// (Triathlon-Distanzen, Lauf, Schwimmen, Rad), dann Disziplinen mit Strecke und Zielzeit, Zieltag und der
-/// Schwerpunkt je Sportart. Die Trainingszeit kommt aus dem Wochenraster. Ein gültiges Ziel wird sofort gespeichert.
+/// Schwerpunkt je Sportart. Die Trainingszeit kommt aus dem Wochenraster.
+///
+/// In der Einrichtung wird ein gültiges Ziel sofort gespeichert. In den Einstellungen ist es ein Entwurf (P3): Die
+/// Ansicht zeigt, was mit dem Gesamtplan passiert, und erst "Übernehmen" ändert das Ziel. Ein neues Ziel geht höchstens
+/// alle 7 Tage; in der Sperre lässt es sich vormerken und wird an ihrem Ende übernommen.
 struct GoalAssistantView: View {
+    enum Mode {
+        case onboarding, settings
+    }
+
+    @EnvironmentObject private var todayLoader: MultiSportTodayLoader
+
     private let store: TrainingGoalStoring
     private let scheduleStore: WeeklyScheduleStoring
-    /// In der Einrichtung ist der Wochenraster ein eigener Schritt.
-    private let showsSchedule: Bool
+    private let mode: Mode
     private let isValid: Binding<Bool>?
     private let sports = SportRegistry.standard
 
     @State private var goal = TrainingGoal.default
     @State private var loaded = false
     @State private var scheduleSummary = ""
+    @State private var pending: TrainingGoal?
+    @State private var message: String?
 
     init(
         store: TrainingGoalStoring = UserDefaultsTrainingGoalStore(),
         scheduleStore: WeeklyScheduleStoring = UserDefaultsWeeklyScheduleStore(),
-        showsSchedule: Bool = true,
+        mode: Mode = .settings,
         isValid: Binding<Bool>? = nil
     ) {
         self.store = store
         self.scheduleStore = scheduleStore
-        self.showsSchedule = showsSchedule
+        self.mode = mode
         self.isValid = isValid
     }
+
+    /// In der Einrichtung ist der Wochenraster ein eigener Schritt.
+    private var showsSchedule: Bool { mode == .settings }
 
     var body: some View {
         Form {
@@ -43,7 +57,11 @@ struct GoalAssistantView: View {
             }
             emphasisSection
             trainingSection
-            statusSection
+            if mode == .settings {
+                applySection
+            } else {
+                statusSection
+            }
         }
         .navigationTitle("Mein Ziel")
         .swipeClosesKeyboard()
@@ -53,12 +71,16 @@ struct GoalAssistantView: View {
             scheduleSummary = scheduleStore.schedule(for: store.goal()).summary
             guard !loaded else { return }
             goal = store.goal()
+            pending = store.pendingGoal()
             loaded = true
             isValid?.wrappedValue = goal.problem(now: Date()) == nil
         }
         .onChange(of: goal) { _, newGoal in
             guard loaded else { return }
-            store.setGoal(newGoal, now: Date())
+            message = nil
+            if mode == .onboarding {
+                store.setGoal(newGoal, now: Date())
+            }
             isValid?.wrappedValue = newGoal.problem(now: Date()) == nil
         }
     }
@@ -282,20 +304,93 @@ struct GoalAssistantView: View {
 
     // MARK: - Status
 
+    /// Einrichtung: gespeichert oder was fehlt.
     private var statusSection: some View {
         Section {
             if let problem = goal.problem(now: Date()) {
                 Text("\(problem) Noch nicht gespeichert.")
                     .foregroundStyle(.red)
             } else {
-                Text("Gespeichert. Der nächste Plan richtet sich danach.")
+                Text("Gespeichert.")
                     .foregroundStyle(.secondary)
-            }
-            Button("Auf das Standardziel zurücksetzen (3,8 km Schwimmen)") {
-                store.resetGoal()
-                goal = store.goal()
             }
         }
         .font(.footnote)
+    }
+
+    // MARK: - Übernehmen (Einstellungen)
+
+    private var applySection: some View {
+        let now = Date()
+        let change = store.goal().change(to: goal)
+        let lockedUntil = change == .newGoal ? store.lockedUntil(now: now) : nil
+        return Section {
+            if let problem = goal.problem(now: now) {
+                Text(problem)
+                    .foregroundStyle(.red)
+            } else {
+                switch change {
+                case .none:
+                    Text("Keine Änderung am Plan.")
+                        .foregroundStyle(.secondary)
+                case .fineTuning:
+                    Text("Feinjustierung: Der Gesamtplan bleibt. Die Änderung fließt in die nächste Fortschreibung, spätestens in zwei Wochen; die laufende Woche bleibt.")
+                    Button("Übernehmen") { apply(now: now) }
+                case .newGoal:
+                    if let lockedUntil {
+                        Text("Neues Ziel: Es gibt einen neuen Gesamtplan. Das letzte neue Ziel ist keine 7 Tage her, deshalb geht es erst ab \(Self.day(lockedUntil)).")
+                        Button("Vormerken bis \(Self.day(lockedUntil))") {
+                            store.setPendingGoal(goal)
+                            pending = goal
+                            message = "Vorgemerkt. Am \(Self.day(lockedUntil)) wird es übernommen und der neue Gesamtplan erstellt."
+                        }
+                    } else {
+                        Text("Neues Ziel: Die App erstellt einen neuen Gesamtplan vom aktuellen Stand aus; die laufende Woche bleibt. Danach ist 7 Tage lang kein weiteres neues Ziel möglich.")
+                        Button("Übernehmen") { apply(now: now) }
+                    }
+                }
+            }
+            if change != .none {
+                Button("Entwurf verwerfen", role: .destructive) {
+                    goal = store.goal()
+                }
+            }
+            if let pending {
+                LabeledContent("Vorgemerkt", value: PlanFormatting.goalSummary(pending))
+                Button("Vorgemerktes Ziel verwerfen", role: .destructive) {
+                    store.setPendingGoal(nil)
+                    self.pending = nil
+                }
+            }
+            if let message {
+                Text(message)
+                    .foregroundStyle(.green)
+            }
+        } header: {
+            Text("Übernehmen")
+        }
+        .font(.footnote)
+    }
+
+    private func apply(now: Date) {
+        switch store.apply(goal, now: now) {
+        case .unchanged:
+            message = nil
+        case .fineTuned:
+            message = "Übernommen. Der Gesamtplan bleibt, die nächste Fortschreibung rechnet damit."
+            pending = store.pendingGoal()
+        case .newGoal:
+            message = "Übernommen. Der neue Gesamtplan entsteht jetzt im Hintergrund."
+            pending = store.pendingGoal()
+            Task { await todayLoader.refreshIfNeeded() }
+        case .locked(let until):
+            message = "Gesperrt bis \(Self.day(until))."
+        case .invalid(let problem):
+            message = problem
+        }
+    }
+
+    private static func day(_ date: Date) -> String {
+        date.formatted(.dateTime.day().month(.wide))
     }
 }

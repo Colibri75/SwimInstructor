@@ -38,7 +38,7 @@ struct OnboardingView: View {
         case .welcome:
             welcome
         case .goal:
-            GoalAssistantView(showsSchedule: false, isValid: $goalIsValid)
+            GoalAssistantView(mode: .onboarding, isValid: $goalIsValid)
         case .schedule:
             WeeklyScheduleView()
         case .startingLevel:
