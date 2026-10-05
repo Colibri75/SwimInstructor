@@ -161,7 +161,7 @@ private struct ActualWeekRow: View {
                 } label: {
                     if macroLoader.isLoading {
                         HStack(spacing: 12) {
-                            ProgressView()
+                            ForgeAnimation()
                             Text("Dein Coach plant bis zum Ziel …")
                         }
                     } else {
@@ -196,7 +196,7 @@ private struct ActualWeekRow: View {
         return Section {
             if macroLoader.isReviewing {
                 HStack(spacing: 12) {
-                    ProgressView()
+                    ForgeAnimation()
                     Text("Dein Coach schreibt den Gesamtplan fort …")
                 }
             }
@@ -278,7 +278,7 @@ private struct ActualWeekRow: View {
             } label: {
                 if macroLoader.isRevising {
                     HStack(spacing: 12) {
-                        ProgressView()
+                        ForgeAnimation()
                         Text("Dein Coach überarbeitet den Gesamtplan …")
                     }
                 } else {

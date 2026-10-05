@@ -104,14 +104,14 @@ struct TodayView: View {
         Section {
             if loader.isPreparing {
                 HStack(spacing: 12) {
-                    ProgressView()
+                    ForgeAnimation()
                     Text("Dein Coach passt deinen Plan für die nächsten Tage an …")
                         .foregroundStyle(.secondary)
                 }
             }
             if loader.isLoadingPlan {
                 HStack(spacing: 12) {
-                    ProgressView()
+                    ForgeAnimation()
                     Text("Dein Coach schreibt deinen Plan …")
                         .foregroundStyle(.secondary)
                 }
@@ -207,7 +207,10 @@ struct TodayView: View {
                 Task { await loader.replan(withWish: wishDraft) }
             } label: {
                 if loader.isLoadingPlan {
-                    Text("Dein Coach schreibt …")
+                    HStack(spacing: 12) {
+                        ForgeAnimation()
+                        Text("Dein Coach schreibt …")
+                    }
                 } else {
                     Text(wishDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                          ? "Plan ohne Wunsch neu erstellen"
