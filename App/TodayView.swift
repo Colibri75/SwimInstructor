@@ -112,22 +112,27 @@ struct TodayView: View {
 
     // MARK: - Tagesplan
 
+    /// Groß und mittig: Das Planen dauert bis zu einer Minute, die Schmiede zeigt, dass gearbeitet wird.
+    private func forgeRow(_ text: String) -> some View {
+        VStack(spacing: 10) {
+            ForgeAnimation(size: 72)
+            Text(text)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+    }
+
     @ViewBuilder
     private var planSection: some View {
         Section {
             if loader.isPreparing {
-                HStack(spacing: 12) {
-                    ForgeAnimation()
-                    Text("Dein Coach passt deinen Plan für die nächsten Tage an …")
-                        .foregroundStyle(.secondary)
-                }
+                forgeRow("Dein Coach passt deinen Plan für die nächsten Tage an …")
             }
             if loader.isLoadingPlan {
-                HStack(spacing: 12) {
-                    ForgeAnimation()
-                    Text("Dein Coach schreibt deinen Plan …")
-                        .foregroundStyle(.secondary)
-                }
+                forgeRow("Dein Coach schreibt deinen Plan …")
             }
             if let response = loader.response {
                 DayPlanHeaderView(response: response)
