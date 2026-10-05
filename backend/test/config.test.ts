@@ -139,3 +139,42 @@ describe("loadConfig: Claude und Plan", () => {
   });
 });
 
+
+describe("loadConfig: Nutzer-Budget und Alarme", () => {
+  it("hat ein Gesamtbudget fuer den Server und ohne Webhook keine Alarme", () => {
+    const config = loadConfig({ API_TOKEN: validToken });
+
+    expect(config.maxGenerationsTotalPerHour).toBe(15);
+    expect(config.maxGenerationsTotalPerDay).toBe(60);
+    expect(config.alerts).toBeUndefined();
+  });
+
+  it("liest die Alarme mit Standardschwellen und erkennt ntfy an der Adresse", () => {
+    const config = loadConfig({ API_TOKEN: validToken, ALERT_WEBHOOK_URL: "https://ntfy.sh/geheim", PLAN_MAX_GENERATIONS_TOTAL_PER_DAY: "100" });
+
+    expect(config.maxGenerationsTotalPerDay).toBe(100);
+    expect(config.alerts).toEqual({ webhookUrl: "https://ntfy.sh/geheim", format: "ntfy", dailyCostUsd: 5, failuresPerHour: 3, failureRate: 0.5 });
+  });
+
+  it("uebernimmt Format und Schwellen", () => {
+    const config = loadConfig({
+      API_TOKEN: validToken,
+      ALERT_WEBHOOK_URL: "https://hooks.slack.com/services/x",
+      ALERT_WEBHOOK_FORMAT: "slack",
+      ALERT_DAILY_COST_USD: "2.5",
+      ALERT_FAILURES_PER_HOUR: "5",
+      ALERT_FAILURE_RATE: "0.8"
+    });
+
+    expect(config.alerts).toEqual({ webhookUrl: "https://hooks.slack.com/services/x", format: "slack", dailyCostUsd: 2.5, failuresPerHour: 5, failureRate: 0.8 });
+    expect(loadConfig({ API_TOKEN: validToken, ALERT_WEBHOOK_URL: "https://example.test/hook" }).alerts?.format).toBe("json");
+  });
+
+  it("verweigert unsinnige Alarm-Einstellungen", () => {
+    expect(() => loadConfig({ API_TOKEN: validToken, ALERT_WEBHOOK_URL: "kein-url" })).toThrow("ALERT_WEBHOOK_URL");
+    expect(() => loadConfig({ API_TOKEN: validToken, ALERT_WEBHOOK_URL: "ftp://example.test" })).toThrow("https://");
+    expect(() => loadConfig({ API_TOKEN: validToken, ALERT_WEBHOOK_URL: "https://example.test", ALERT_WEBHOOK_FORMAT: "teams" })).toThrow("ALERT_WEBHOOK_FORMAT");
+    expect(() => loadConfig({ API_TOKEN: validToken, ALERT_WEBHOOK_URL: "https://example.test", ALERT_FAILURE_RATE: "2" })).toThrow("ALERT_FAILURE_RATE");
+    expect(() => loadConfig({ API_TOKEN: validToken, PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR: "0" })).toThrow("PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR");
+  });
+});

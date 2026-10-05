@@ -21,7 +21,10 @@ export const testConfig: Config = {
   dataDir: "./data",
   planTimezone: "Europe/Berlin",
   maxGenerationsPerHour: 5,
-  maxGenerationsPerDay: 20
+  maxGenerationsPerDay: 20,
+  maxGenerationsTotalPerHour: 15,
+  maxGenerationsTotalPerDay: 60,
+  alerts: undefined
 };
 
 export function buildApp(options: AppOptions = {}): Express {

@@ -1,12 +1,15 @@
 import express, { ErrorRequestHandler, Express, Router } from "express";
 import { Logger } from "pino";
 import { pinoHttp } from "pino-http";
-import { requireBearerToken } from "./auth";
+import { currentUser, requireBearerToken } from "./auth";
 import { Config } from "./config";
+import { SingleUserDirectory, UserDirectory } from "./users";
 
 export interface AppOptions {
-  /** Haengt Routen unter /v1 ein (bereits hinter der Token-Pruefung). Fuer M5 (/v1/plan/today). */
+  /** Haengt Routen unter /v1 ein (bereits hinter der Token-Pruefung, der Nutzer steht in `res.locals.user`). */
   registerV1Routes?: (router: Router) => void;
+  /** Die Nutzer des Servers; ohne Angabe nur der Token aus `API_TOKEN`. */
+  users?: UserDirectory;
 }
 
 const MAX_BODY_SIZE = "100kb";
@@ -22,6 +25,11 @@ export function createApp(config: Config, logger: Logger, options: AppOptions = 
       logger,
       // Health-Checks (Uptime-Monitor alle paar Sekunden) wuerden das Log sonst zumuellen.
       autoLogging: { ignore: (req) => req.url === "/health" },
+      // Wer die Anfrage gestellt hat (Kennung, nie der Token).
+      customProps: (_req, res) => {
+        const user = currentUser((res as unknown as { locals?: Record<string, unknown> }).locals ?? {});
+        return user ? { user: user.id } : {};
+      },
       customLogLevel: (_req, res, error) => {
         if (error || res.statusCode >= 500) return "error";
         if (res.statusCode >= 400) return "warn";
@@ -37,10 +45,10 @@ export function createApp(config: Config, logger: Logger, options: AppOptions = 
 
   const v1 = Router();
   // Erst Auth, dann Body-Parsing: Unautorisierte Requests kosten keine Parsing-Arbeit.
-  v1.use(requireBearerToken(config.apiToken));
+  v1.use(requireBearerToken(options.users ?? new SingleUserDirectory(config.apiToken)));
   v1.use(express.json({ limit: MAX_BODY_SIZE }));
   v1.get("/status", (_req, res) => {
-    res.json({ status: "authenticated" });
+    res.json({ status: "authenticated", user: currentUser(res.locals)?.id });
   });
   options.registerV1Routes?.(v1);
   app.use("/v1", v1);

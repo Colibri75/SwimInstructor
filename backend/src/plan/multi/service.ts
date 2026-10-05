@@ -1,7 +1,9 @@
 import { createHash } from "node:crypto";
 import { Logger } from "pino";
 import { z } from "zod";
-import { GenerationBudget } from "../budget";
+import { OWNER_ID } from "../../users";
+import { UsageOutcome, UsageRecorder } from "../../usage";
+import { GenerationBudget, UserBudgets } from "../budget";
 import { FallbackReason, PlanGenerationError, PlanUnavailableError } from "../errors";
 import { CallOptions, GeneratedPlan, StructuredGenerator } from "../generator";
 import { localDate, macroWeekStarts, windowDates } from "../calendar";
@@ -49,14 +51,22 @@ import { sanitizeWeekV2, WeekContextV2, WeekPlanV2 } from "./weekSanity";
 export interface MultiServiceDeps {
   /** `null`, wenn kein ANTHROPIC_API_KEY konfiguriert ist. */
   generator: StructuredGenerator | null;
-  store: DayPlanStoreV2;
+  /** Der Speicher des letzten Tagesplans: einer fuer alle oder einer je Nutzer. */
+  store: DayPlanStoreV2 | ((user: string) => DayPlanStoreV2);
+  /** Das Budget des ganzen Servers (Kostenbremse). */
   budget: GenerationBudget;
+  /** Zusaetzlich ein Budget je Nutzer, damit einer nicht das der anderen aufbraucht. */
+  userBudgets?: UserBudgets;
+  /** Nimmt jede Anfrage mit Ergebnis, Token und Dauer auf (Monitoring). */
+  usage?: UsageRecorder;
   logger: Logger;
   timezone: string;
   now?: () => Date;
 }
 
 export interface DayInputV2 {
+  /** Kennung des Nutzers (Token), Standard der Besitzer. */
+  user?: string;
   snapshot: SnapshotV2;
   regenerate?: boolean;
   wishes?: string;
@@ -78,6 +88,8 @@ export interface DayResultV2 {
 }
 
 export interface WeekInputV2 {
+  /** Kennung des Nutzers (Token), Standard der Besitzer. */
+  user?: string;
   snapshot: SnapshotV2;
   fromDate: string;
   today: string;
@@ -105,6 +117,8 @@ export interface MacroResultV2 {
 }
 
 export interface ReviseInput {
+  /** Kennung des Nutzers (Token), Standard der Besitzer. */
+  user?: string;
   snapshot: SnapshotV2;
   today: string;
   plan: { rationale?: string; weeks: MacroWeekTargetV2[] };
@@ -120,6 +134,8 @@ export interface ReviseResult extends MacroResultV2 {
 }
 
 export interface ReviewInput {
+  /** Kennung des Nutzers (Token), Standard der Besitzer. */
+  user?: string;
   snapshot: SnapshotV2;
   today: string;
   plan: { rationale?: string; weeks: MacroWeekTargetV2[] };
@@ -140,6 +156,19 @@ export interface ReviewResult extends MacroResultV2 {
   feedback?: string;
 }
 
+export interface MacroInputV2 {
+  snapshot: SnapshotV2;
+  today: string;
+  testSettings?: TestSettings;
+  user?: string;
+}
+
+/** Was ein Claude-Aufruf verbraucht hat, auch wenn er danach scheiterte (fuer die Nutzung). */
+interface Attempt {
+  meta?: GeneratedPlan;
+  latencyMs?: number;
+}
+
 export class MultiPlanService {
   private readonly now: () => Date;
 
@@ -148,13 +177,19 @@ export class MultiPlanService {
   }
 
   async planDay(input: DayInputV2): Promise<DayResultV2> {
-    const { store, logger } = this.deps;
+    const user = input.user ?? OWNER_ID;
+    return this.tracked("day", user, (attempt) => this.dayPlan(input, user, attempt), (result) => ({ outcome: result.source, reason: result.fallbackReason }));
+  }
+
+  private async dayPlan(input: DayInputV2, user: string, attempt: Attempt): Promise<DayResultV2> {
+    const { logger } = this.deps;
+    const store = this.storeFor(user);
     const today = localDate(this.now(), this.deps.timezone);
     const wishes = input.wishes?.trim() || undefined;
     const hash = dayHash(input, wishes);
     const options = { date: today, equipment: input.equipment, recent: input.recent ?? [], testSettings: input.testSettings };
 
-    const stored = await this.latestOrNull();
+    const stored = await this.latestOrNull(store);
     if (input.regenerate !== true && stored !== null && stored.date === today && stored.hash === hash) {
       logger.info({ date: today }, "plan v2 served from cache");
       return { source: "cache", date: today, generatedAt: stored.generatedAt, stale: false, plan: stored.plan, adjustments: stored.adjustments, ...(wishes ? { wishes } : {}) };
@@ -166,7 +201,9 @@ export class MultiPlanService {
         "day",
         MULTI_DAY_SYSTEM_PROMPT,
         buildDayUserMessageV2({ snapshot: input.snapshot, date: today, wishes, dayTarget: input.dayTarget, equipment: input.equipment, recent: input.recent, testSettings: input.testSettings }),
-        MultiDayPlanSchema
+        MultiDayPlanSchema,
+        user,
+        attempt
       );
     } catch (error) {
       if (error instanceof PlanUnavailableError) return this.fallback(error.reason, input.snapshot, today, stored, options);
@@ -185,12 +222,17 @@ export class MultiPlanService {
       plan: sanitized.plan,
       adjustments: sanitized.adjustments
     };
-    await this.saveQuietly(record);
+    await this.saveQuietly(store, record);
     this.logGenerated("day", generated.meta, sanitized.adjustments.length, { sessions: sanitized.plan.sessions.length, wishChars: wishes?.length ?? 0 });
     return { source: "claude", date: today, generatedAt: record.generatedAt, stale: false, plan: record.plan, adjustments: record.adjustments, ...(wishes ? { wishes } : {}) };
   }
 
   async planWeek(input: WeekInputV2): Promise<WeekResultV2> {
+    const user = input.user ?? OWNER_ID;
+    return this.tracked("week", user, (attempt) => this.weekPlan(input, user, attempt), () => ({ outcome: "claude" }));
+  }
+
+  private async weekPlan(input: WeekInputV2, user: string, attempt: Attempt): Promise<WeekResultV2> {
     const wishes = input.wishes?.trim() || undefined;
     const context: WeekContextV2 = {
       today: input.today,
@@ -204,7 +246,9 @@ export class MultiPlanService {
       "week",
       MULTI_WEEK_SYSTEM_PROMPT,
       buildWeekUserMessageV2({ snapshot: input.snapshot, context, wishes, equipment: input.equipment }),
-      MultiWeekPlanSchema
+      MultiWeekPlanSchema,
+      user,
+      attempt
     );
     const sanitized = sanitizeWeekV2(generated.data, input.snapshot, context);
     if (sanitized.blocked !== null) throw this.blocked("week", sanitized.blocked);
@@ -212,9 +256,14 @@ export class MultiPlanService {
     return { fromDate: input.fromDate, generatedAt: this.now().toISOString(), plan: sanitized.plan, adjustments: sanitized.adjustments, ...(wishes ? { wishes } : {}) };
   }
 
-  async planMacro(input: { snapshot: SnapshotV2; today: string; testSettings?: TestSettings }): Promise<MacroResultV2> {
+  async planMacro(input: MacroInputV2): Promise<MacroResultV2> {
+    const user = input.user ?? OWNER_ID;
+    return this.tracked("macro", user, (attempt) => this.macroPlan(input, user, attempt), () => ({ outcome: "claude" }));
+  }
+
+  private async macroPlan(input: MacroInputV2, user: string, attempt: Attempt): Promise<MacroResultV2> {
     const context = macroContext(input.snapshot, input.today, input.testSettings);
-    const generated = await this.generate("macro", MULTI_MACRO_SYSTEM_PROMPT, buildMacroUserMessageV2(input.snapshot, context), MultiMacroPlanSchema, { macro: true });
+    const generated = await this.generate("macro", MULTI_MACRO_SYSTEM_PROMPT, buildMacroUserMessageV2(input.snapshot, context), MultiMacroPlanSchema, user, attempt, { macro: true });
     const weeks = expandMacroBlocks(generated.data.blocks, context.weeks);
     const sanitized = sanitizeMacroV2({ rationale: generated.data.rationale, weeks }, input.snapshot, context);
     if (sanitized.blocked !== null) throw this.blocked("macro", sanitized.blocked);
@@ -223,6 +272,11 @@ export class MultiPlanService {
   }
 
   async reviseMacro(input: ReviseInput): Promise<ReviseResult> {
+    const user = input.user ?? OWNER_ID;
+    return this.tracked("revise", user, (attempt) => this.revise(input, user, attempt), () => ({ outcome: "claude" }));
+  }
+
+  private async revise(input: ReviseInput, user: string, attempt: Attempt): Promise<ReviseResult> {
     const context = macroContext(input.snapshot, input.today, input.testSettings);
     const feedback = input.feedback.trim();
     const generated = await this.generate(
@@ -230,6 +284,8 @@ export class MultiPlanService {
       MULTI_REVISE_SYSTEM_PROMPT,
       buildReviseUserMessage({ snapshot: input.snapshot, context, plan: input.plan, feedback, history: input.history }),
       MacroRevisionSchema,
+      user,
+      attempt,
       { macro: true }
     );
     const weeks = expandMacroBlocks(generated.data.blocks, context.weeks);
@@ -248,6 +304,11 @@ export class MultiPlanService {
    * laufenden, die Bilanz und die Aenderungen. Die laufende Woche haelt die App fest (sie ersetzt sie durch ihre).
    */
   async reviewMacro(input: ReviewInput): Promise<ReviewResult> {
+    const user = input.user ?? OWNER_ID;
+    return this.tracked("review", user, (attempt) => this.review(input, user, attempt), () => ({ outcome: "claude" }));
+  }
+
+  private async review(input: ReviewInput, user: string, attempt: Attempt): Promise<ReviewResult> {
     const context = macroContext(input.snapshot, input.today, input.testSettings);
     const feedback = input.feedback?.trim() || undefined;
     const generated = await this.generate(
@@ -255,6 +316,8 @@ export class MultiPlanService {
       MULTI_REVIEW_SYSTEM_PROMPT,
       buildReviewUserMessage({ snapshot: input.snapshot, context, plan: input.plan, actual: input.actual, reason: input.reason, pause: input.pause, feedback, performanceChanges: input.performanceChanges }),
       MacroReviewSchema,
+      user,
+      attempt,
       { macro: true }
     );
     const weeks = expandMacroBlocks(generated.data.blocks, context.weeks);
@@ -282,29 +345,74 @@ export class MultiPlanService {
   private async generate<S extends z.ZodType>(
     kind: string,
     system: string,
-    user: string,
+    message: string,
     schema: S,
+    user: string,
+    attempt: Attempt,
     options: CallOptions = {}
   ): Promise<{ data: z.infer<S>; meta: GeneratedPlan }> {
-    const { generator, budget, logger } = this.deps;
+    const { generator, budget, userBudgets, logger } = this.deps;
     if (generator === null) throw new PlanUnavailableError("not_configured");
-    if (!budget.tryConsume()) throw new PlanUnavailableError("budget_exceeded");
+    const budgets = userBudgets === undefined ? [budget] : [budget, userBudgets.for(user)];
+    if (!GenerationBudget.tryConsumeAll(budgets)) {
+      logger.warn({ kind, user }, "plan v2 budget exceeded");
+      throw new PlanUnavailableError("budget_exceeded");
+    }
     const started = Date.now();
     let meta: GeneratedPlan;
     try {
-      meta = await generator.complete(system, user, schema, options);
+      meta = await generator.complete(system, message, schema, options);
     } catch (error) {
+      attempt.latencyMs = Date.now() - started;
       const reason = error instanceof PlanGenerationError ? error.reason : "unknown";
       const level = reason === "auth" || reason === "bad_request" || reason === "unknown" ? "error" : "warn";
-      logger[level]({ err: error, reason, kind, latencyMs: Date.now() - started }, "plan v2 generation failed");
+      logger[level]({ err: error, reason, kind, latencyMs: attempt.latencyMs }, "plan v2 generation failed");
       throw new PlanUnavailableError(reason);
     }
+    attempt.latencyMs = Date.now() - started;
+    attempt.meta = meta;
     const parsed = schema.safeParse(meta.raw);
     if (!parsed.success) {
       logger.warn({ kind, issues: parsed.error.issues.slice(0, 5) }, "claude plan v2 does not match schema");
       throw new PlanUnavailableError("schema_invalid");
     }
     return { data: parsed.data as z.infer<S>, meta };
+  }
+
+  /** Fuehrt eine Anfrage aus und nimmt sie mit Ergebnis in die Nutzung auf, auch wenn sie scheitert. */
+  private async tracked<T>(
+    kind: string,
+    user: string,
+    work: (attempt: Attempt) => Promise<T>,
+    outcomeOf: (result: T) => { outcome: UsageOutcome; reason?: string }
+  ): Promise<T> {
+    const attempt: Attempt = {};
+    try {
+      const result = await work(attempt);
+      this.recordUsage(kind, user, attempt, outcomeOf(result));
+      return result;
+    } catch (error) {
+      if (error instanceof PlanUnavailableError) this.recordUsage(kind, user, attempt, { outcome: "failed", reason: error.reason });
+      throw error;
+    }
+  }
+
+  private recordUsage(kind: string, user: string, attempt: Attempt, result: { outcome: UsageOutcome; reason?: string }): void {
+    this.deps.usage?.record({
+      user,
+      kind,
+      outcome: result.outcome,
+      ...(result.reason !== undefined ? { reason: result.reason } : {}),
+      ...(attempt.meta !== undefined
+        ? { model: attempt.meta.model, inputTokens: attempt.meta.usage.inputTokens, outputTokens: attempt.meta.usage.outputTokens }
+        : {}),
+      ...(attempt.latencyMs !== undefined ? { latencyMs: attempt.latencyMs } : {})
+    });
+  }
+
+  private storeFor(user: string): DayPlanStoreV2 {
+    const store = this.deps.store;
+    return typeof store === "function" ? store(user) : store;
   }
 
   private blocked(kind: string, reason: string): PlanUnavailableError {
@@ -348,18 +456,18 @@ export class MultiPlanService {
     };
   }
 
-  private async latestOrNull(): Promise<StoredDayV2 | null> {
+  private async latestOrNull(store: DayPlanStoreV2): Promise<StoredDayV2 | null> {
     try {
-      return await this.deps.store.latest();
+      return await store.latest();
     } catch (error) {
       this.deps.logger.error({ err: error }, "could not read stored plan v2");
       return null;
     }
   }
 
-  private async saveQuietly(record: StoredDayV2): Promise<void> {
+  private async saveQuietly(store: DayPlanStoreV2, record: StoredDayV2): Promise<void> {
     try {
-      await this.deps.store.save(record);
+      await store.save(record);
     } catch (error) {
       this.deps.logger.error({ err: error }, "could not store plan v2");
     }

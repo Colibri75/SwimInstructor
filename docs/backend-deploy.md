@@ -113,7 +113,7 @@ curl -i https://swiminstructor.kellner.v6.rocks/v1/status
 # HTTP/2 401 ... {"error":"unauthorized"}
 
 curl -i -H "Authorization: Bearer <DEIN-TOKEN>" https://swiminstructor.kellner.v6.rocks/v1/status
-# HTTP/2 200 ... {"status":"authenticated"}
+# HTTP/2 200 ... {"status":"authenticated","user":"owner"}
 ```
 
 Der Token-Test auf einem Windows-Rechner (PowerShell, `curl.exe` mit Endung). Der Token wird
@@ -179,7 +179,31 @@ Nach jedem Merge, der das Backend ändert:
 ```
 
 Das Skript holt den neuesten Stand aus `main`, baut das Image, startet den Container neu und
-wartet auf den Healthcheck.
+wartet auf den Healthcheck. Wird der neue Container nicht gesund, startet es wieder das vorige Image
+(`swiminstructor-backend:previous`), meldet das deutlich und endet mit Fehler. Der Server läuft dann weiter
+in der alten Version, bis du den Fehler behoben hast.
+
+### Automatisch deployen (optional)
+
+Der Workflow `Backend Deploy` spielt das Backend nach jedem grünen `Backend CI` auf `main` selbst ein. Er
+bleibt aus, solange die Secrets fehlen. Einrichtung, einmalig:
+
+1. Auf dem Server einen eigenen Schlüssel nur für das Deployment anlegen und ihn auf das Skript
+   festnageln, damit er nichts anderes kann:
+
+```bash
+ssh-keygen -t ed25519 -N "" -C github-deploy -f /root/github-deploy
+echo "command=\"/opt/stack/swiminstructor/backend/deploy/deploy.sh\",no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-pty $(cat /root/github-deploy.pub)" >> /root/.ssh/authorized_keys
+cat /root/github-deploy          # privaten Schlüssel kopieren, danach:
+rm /root/github-deploy /root/github-deploy.pub
+ssh-keyscan -t ed25519 <server>  # Zeile für DEPLOY_KNOWN_HOSTS
+```
+
+2. In GitHub unter *Settings → Secrets and variables → Actions* vier Secrets anlegen: `DEPLOY_HOST`
+   (Name oder IP des Servers), `DEPLOY_USER` (`root`), `DEPLOY_SSH_KEY` (der private Schlüssel),
+   `DEPLOY_KNOWN_HOSTS` (die Zeile aus `ssh-keyscan`).
+3. Einmal von Hand starten (*Actions → Backend Deploy → Run workflow*) und im Log auf
+   "Deploy erfolgreich" achten.
 
 ## Logs
 
@@ -242,7 +266,75 @@ docker run --rm --volumes-from swiminstructor-backend -v /tmp/restore/data:/rest
 rm -rf /tmp/restore
 ```
 
+## Nutzer (ein Token je Person)
+
+Jede Person bekommt einen eigenen Token. Damit hat sie ihren eigenen gespeicherten Tagesplan und ihr eigenes
+Aufrufbudget (`PLAN_MAX_GENERATIONS_PER_HOUR` und `_PER_DAY` gelten je Nutzer), und ein gesperrter Token betrifft
+nur sie. Der Token aus `API_TOKEN` ist der Besitzer (`owner`) und Admin; seine Daten liegen wie bisher direkt in
+`/data`, die der anderen unter `/data/users/<kennung>/`.
+
+```bash
+docker exec swiminstructor-backend node dist/cli/users.js add anna --name "Anna"   # zeigt den Token einmal
+docker exec swiminstructor-backend node dist/cli/users.js list
+docker exec swiminstructor-backend node dist/cli/users.js rotate anna             # neuer Token, alter gilt nicht mehr
+docker exec swiminstructor-backend node dist/cli/users.js disable anna            # sperren (enable: entsperren)
+docker exec swiminstructor-backend node dist/cli/users.js remove anna
+```
+
+Der Server liest `users.json` bei Änderungen selbst neu, ein Neustart ist nicht nötig. In der Datei steht nur der
+SHA-256 jedes Tokens. Den Token trägt die Person in der App unter *Einstellungen → Server* ein. Über alle Nutzer
+zusammen gilt zusätzlich eine Kostenbremse für den ganzen Server (`PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR`, Standard
+15, und `PLAN_MAX_GENERATIONS_TOTAL_PER_DAY`, Standard 60). Admin-Rechte für weitere Nutzer gibt `add … --admin`.
+
 ## Monitoring
+
+### Nutzung und Kosten
+
+Jede Plan-Anfrage landet mit Nutzer, Plan-Art, Ergebnis (`claude`, `cache`, `fallback`, `failed`), Ausfallgrund,
+Modell, Token, Dauer und geschätzten Kosten in `/data/metrics/usage-<Tag>.jsonl` (120 Tage aufbewahrt). Die
+Auswertung liefert der Server Admins:
+
+```bash
+curl -s -H "Authorization: Bearer <TOKEN>" "https://swiminstructor.kellner.v6.rocks/v1/admin/usage?days=7" | jq '.total, .days[-1]'
+curl -s -H "Authorization: Bearer <TOKEN>" https://swiminstructor.kellner.v6.rocks/v1/admin/users | jq
+```
+
+Je Tag: Anfragen, Claude-Aufrufe, Ergebnisse, Fehlerquote (Fallback und Ausfall), Gründe, Token, Kosten, Dauer je
+Plan-Art (Median und 95. Perzentil) und je Nutzer. Die Kosten sind eine Schätzung nach Listenpreis (Opus $4/$20,
+Sonnet $2/$10, Haiku $1/$5 je Million Token; unbekannte Modelle wie Opus); maßgeblich bleibt die Anthropic Console.
+
+### Alarme
+
+Mit `ALERT_WEBHOOK_URL` in `/etc/swiminstructor/backend.env` meldet der Server sich selbst:
+
+| Alarm | Wann | Wie oft |
+|---|---|---|
+| Tageskosten | Kosten heute über `ALERT_DAILY_COST_USD` (Standard 5) | einmal am Tag |
+| Pläne fallen aus | in der letzten Stunde mindestens `ALERT_FAILURES_PER_HOUR` (3) Ausfälle von Claude oder der Sicherheitsschicht und mindestens `ALERT_FAILURE_RATE` (0,5) aller Anfragen | höchstens alle 3 Stunden |
+| Konfigurationsfehler | Key ungültig (`auth`), Anfrage abgelehnt (`bad_request`), kein Key | höchstens alle 6 Stunden |
+| Budget erschöpft | ein Nutzer hat sein Aufrufbudget erreicht | einmal je Nutzer und Tag |
+
+Am einfachsten mit [ntfy](https://ntfy.sh) (App aufs iPhone, Thema mit schwer zu ratendem Namen abonnieren):
+
+```bash
+printf 'ALERT_WEBHOOK_URL=https://ntfy.sh/<geheimes-thema>\n' >> /etc/swiminstructor/backend.env
+cd /opt/stack/swiminstructor/backend && docker compose up -d --force-recreate
+```
+
+Slack und Discord gehen auch (`ALERT_WEBHOOK_FORMAT=slack` bzw. `discord` mit der Webhook-URL), `json` schickt
+`{"title", "message"}` an einen eigenen Empfänger.
+
+### Server antwortet nicht
+
+Fällt der Container ganz aus, kann er sich nicht selbst melden. Dafür prüft `deploy/healthcheck.sh` von außerhalb
+des Containers und meldet über denselben Webhook, wenn `/health` zweimal hintereinander nicht antwortet, und noch
+einmal, wenn er wieder da ist (`crontab -e` als root):
+
+```cron
+*/5 * * * * /opt/stack/swiminstructor/backend/deploy/healthcheck.sh >/dev/null 2>&1
+```
+
+### Weitere Dienste
 
 Der Container startet nach einem Absturz von selbst neu (`restart: unless-stopped`), und Docker
 markiert ihn als `unhealthy`, wenn `/health` nicht mehr antwortet. Benachrichtigt wirst du davon
@@ -261,12 +353,13 @@ aber nicht. Dafür zwei kostenlose Dienste, beide ohne Änderung am Server:
 15 3 * * * HEALTHCHECK_URL=https://hc-ping.com/<uuid> /opt/stack/swiminstructor/backend/deploy/backup.sh >> /var/log/swiminstructor-backup.log 2>&1
 ```
 
-Die Kosten der Claude-Aufrufe überwachst du über das Ausgabenlimit in der Anthropic Console (siehe
-oben).
+Die Kosten der Claude-Aufrufe siehst du in `/v1/admin/usage` und in den Alarmen; die harte Grenze bleibt das
+Ausgabenlimit in der Anthropic Console (siehe oben).
 
 ## Token wechseln
 
-Falls der Token je in falsche Hände gerät:
+Für einen weiteren Nutzer: `users.js rotate <kennung>` (siehe oben). Für den Besitzer, falls der Token je in falsche
+Hände gerät:
 
 ```bash
 nano /etc/swiminstructor/backend.env              # neuen Wert: openssl rand -hex 32

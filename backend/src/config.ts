@@ -2,6 +2,16 @@ export type Environment = "development" | "production" | "test";
 
 export type Effort = "low" | "medium" | "high" | "xhigh" | "max";
 
+export type AlertFormat = "ntfy" | "slack" | "discord" | "json";
+
+export interface AlertConfig {
+  webhookUrl: string;
+  format: AlertFormat;
+  dailyCostUsd: number;
+  failuresPerHour: number;
+  failureRate: number;
+}
+
 export interface Config {
   env: Environment;
   host: string;
@@ -21,8 +31,14 @@ export interface Config {
   /** Verzeichnis fuer den letzten gueltigen Plan (im Container das Volume /data). */
   dataDir: string;
   planTimezone: string;
+  /** Aufrufbudget je Nutzer. */
   maxGenerationsPerHour: number;
   maxGenerationsPerDay: number;
+  /** Aufrufbudget des ganzen Servers ueber alle Nutzer (Kostenbremse). */
+  maxGenerationsTotalPerHour: number;
+  maxGenerationsTotalPerDay: number;
+  /** Alarme per Webhook; `undefined` ohne `ALERT_WEBHOOK_URL`. */
+  alerts: AlertConfig | undefined;
 }
 
 const MIN_PRODUCTION_TOKEN_LENGTH = 32;
@@ -56,8 +72,43 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     dataDir: env.DATA_DIR?.trim() || "./data",
     planTimezone: parseTimezone(env.PLAN_TIMEZONE),
     maxGenerationsPerHour: parseInteger("PLAN_MAX_GENERATIONS_PER_HOUR", env.PLAN_MAX_GENERATIONS_PER_HOUR, 5, 1, 1_000),
-    maxGenerationsPerDay: parseInteger("PLAN_MAX_GENERATIONS_PER_DAY", env.PLAN_MAX_GENERATIONS_PER_DAY, 20, 1, 10_000)
+    maxGenerationsPerDay: parseInteger("PLAN_MAX_GENERATIONS_PER_DAY", env.PLAN_MAX_GENERATIONS_PER_DAY, 20, 1, 10_000),
+    maxGenerationsTotalPerHour: parseInteger("PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR", env.PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR, 15, 1, 10_000),
+    maxGenerationsTotalPerDay: parseInteger("PLAN_MAX_GENERATIONS_TOTAL_PER_DAY", env.PLAN_MAX_GENERATIONS_TOTAL_PER_DAY, 60, 1, 100_000),
+    alerts: parseAlerts(env)
   };
+}
+
+function parseAlerts(env: NodeJS.ProcessEnv): AlertConfig | undefined {
+  const webhookUrl = env.ALERT_WEBHOOK_URL?.trim();
+  if (!webhookUrl) return undefined;
+  let url: URL;
+  try {
+    url = new URL(webhookUrl);
+  } catch {
+    throw new Error("ALERT_WEBHOOK_URL ist keine gueltige URL");
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("ALERT_WEBHOOK_URL muss mit https:// beginnen");
+  const formatValue = env.ALERT_WEBHOOK_FORMAT?.trim() || (url.hostname.includes("ntfy") ? "ntfy" : "json");
+  if (formatValue !== "ntfy" && formatValue !== "slack" && formatValue !== "discord" && formatValue !== "json") {
+    throw new Error(`ALERT_WEBHOOK_FORMAT ungueltig: "${formatValue}" (erlaubt: ntfy, slack, discord, json)`);
+  }
+  return {
+    webhookUrl,
+    format: formatValue,
+    dailyCostUsd: parseNumber("ALERT_DAILY_COST_USD", env.ALERT_DAILY_COST_USD, 5, 0.01, 10_000),
+    failuresPerHour: parseInteger("ALERT_FAILURES_PER_HOUR", env.ALERT_FAILURES_PER_HOUR, 3, 1, 1_000),
+    failureRate: parseNumber("ALERT_FAILURE_RATE", env.ALERT_FAILURE_RATE, 0.5, 0.01, 1)
+  };
+}
+
+function parseNumber(name: string, value: string | undefined, fallback: number, min: number, max: number): number {
+  if (value === undefined || value.trim() === "") return fallback;
+  const number = Number(value);
+  if (!Number.isFinite(number) || number < min || number > max) {
+    throw new Error(`${name} ungueltig: "${value}" (erlaubt: Zahl von ${min} bis ${max})`);
+  }
+  return number;
 }
 
 /**

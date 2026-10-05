@@ -18,11 +18,47 @@ export class GenerationBudget {
 
   /** Verbraucht einen Aufruf, wenn das Budget reicht, und meldet, ob er erlaubt ist. */
   tryConsume(): boolean {
+    if (!this.available()) return false;
+    this.consume();
+    return true;
+  }
+
+  /** Ob noch ein Aufruf frei ist, ohne ihn zu verbrauchen. */
+  available(): boolean {
     const current = this.now();
     this.calls = this.calls.filter((time) => time > current - DAY_MS);
     const lastHour = this.calls.filter((time) => time > current - HOUR_MS).length;
-    if (lastHour >= this.maxPerHour || this.calls.length >= this.maxPerDay) return false;
-    this.calls.push(current);
+    return lastHour < this.maxPerHour && this.calls.length < this.maxPerDay;
+  }
+
+  consume(): void {
+    this.calls.push(this.now());
+  }
+
+  /** Verbraucht in allen Budgets einen Aufruf, aber nur, wenn alle noch einen frei haben. */
+  static tryConsumeAll(budgets: readonly GenerationBudget[]): boolean {
+    if (!budgets.every((budget) => budget.available())) return false;
+    for (const budget of budgets) budget.consume();
     return true;
+  }
+}
+
+/** Ein Budget je Nutzer, mit denselben Grenzen, angelegt beim ersten Aufruf. */
+export class UserBudgets {
+  private readonly budgets = new Map<string, GenerationBudget>();
+
+  constructor(
+    private readonly maxPerHour: number,
+    private readonly maxPerDay: number,
+    private readonly now: () => number = Date.now
+  ) {}
+
+  for(user: string): GenerationBudget {
+    let budget = this.budgets.get(user);
+    if (budget === undefined) {
+      budget = new GenerationBudget(this.maxPerHour, this.maxPerDay, this.now);
+      this.budgets.set(user, budget);
+    }
+    return budget;
   }
 }

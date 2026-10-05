@@ -42,7 +42,7 @@ describe("Token-Auth unter /v1", () => {
     const response = await request(app).get("/v1/status").set("Authorization", `Bearer ${TEST_TOKEN}`);
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ status: "authenticated" });
+    expect(response.body).toEqual({ status: "authenticated", user: "owner" });
   });
 
   it("akzeptiert das Schema unabhaengig von der Gross-/Kleinschreibung", async () => {

@@ -1,4 +1,6 @@
 import { Request, Response, Router } from "express";
+import { currentUser } from "../../auth";
+import { OWNER_ID } from "../../users";
 import { z } from "zod";
 import { PlanUnavailableError } from "../errors";
 import { isRealDate, weekdayIndex } from "../calendar";
@@ -37,6 +39,10 @@ function macroWeekProblems(weeks: MacroWeekTargetV2[] | undefined, prefix: strin
   return (weeks ?? []).flatMap((week, index) => (weekdayIndex(week.week_start) === 0 ? [] : [{ path: `${prefix}.${index}.week_start`, message: "muss ein Montag sein" }]));
 }
 
+function userOf(res: Response): string {
+  return currentUser(res.locals)?.id ?? OWNER_ID;
+}
+
 async function answer<T>(res: Response, work: () => Promise<T>, toJson: (result: T) => unknown): Promise<void> {
   try {
     res.json(toJson(await work()));
@@ -61,6 +67,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
         res,
         () =>
           service.planDay({
+            user: userOf(res),
             snapshot: data.snapshot,
             regenerate: data.regenerate === true,
             wishes: data.wishes,
@@ -91,6 +98,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
         res,
         () =>
           service.planWeek({
+            user: userOf(res),
             snapshot: data.snapshot,
             fromDate: data.from_date,
             today: data.today,
@@ -111,7 +119,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
       const data = parsed.data;
       const problems = dateProblems([["today", data.today]]);
       if (problems.length > 0) return invalid(res, problems);
-      await answer(res, () => service.planMacro({ snapshot: data.snapshot, today: data.today, testSettings: data.test_settings }), macroResponse);
+      await answer(res, () => service.planMacro({ user: userOf(res), snapshot: data.snapshot, today: data.today, testSettings: data.test_settings }), macroResponse);
     });
 
     router.post("/plan/macro/revise", async (req: Request, res: Response) => {
@@ -124,6 +132,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
         res,
         () =>
           service.reviseMacro({
+            user: userOf(res),
             snapshot: data.snapshot,
             today: data.today,
             plan: data.plan,
@@ -150,6 +159,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
         res,
         () =>
           service.reviewMacro({
+            user: userOf(res),
             snapshot: data.snapshot,
             today: data.today,
             plan: data.plan,

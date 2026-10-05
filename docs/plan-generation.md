@@ -52,8 +52,9 @@ Text zusammenpassen. Was nicht mehr zu retten ist, blockt sie (`sanity_blocked`)
 
 ## Kostenbremse
 
-Der Server ruft Claude höchstens 5-mal pro Stunde und 20-mal pro Tag auf (`PLAN_MAX_GENERATIONS_PER_HOUR`,
-`PLAN_MAX_GENERATIONS_PER_DAY`), alle Pläne zählen zusammen. Darüber liefert er den letzten gültigen Tagesplan
+Der Server ruft Claude je Nutzer höchstens 5-mal pro Stunde und 20-mal pro Tag auf (`PLAN_MAX_GENERATIONS_PER_HOUR`,
+`PLAN_MAX_GENERATIONS_PER_DAY`), über alle Nutzer höchstens 15-mal pro Stunde und 60-mal pro Tag
+(`PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR`, `_TOTAL_PER_DAY`); alle Pläne zählen zusammen. Darüber liefert er den letzten gültigen Tagesplan
 (`fallback_reason: budget_exceeded`) bzw. 503. Ein durchgesickerter Token kann so nur begrenzt Kosten erzeugen. Der
 Zähler liegt im Speicher und beginnt nach einem Neustart neu. Zusätzlich wird derselbe Zustand am selben Tag nur einmal
 geplant (Cache), außer die Anfrage verlangt `regenerate`.
@@ -75,13 +76,16 @@ der Prompt allein: Das JSON-Schema der strukturierten Ausgabe zählt mit. Die Au
 
 Die Kostenbremse deckelt den Worst Case bei 20 Aufrufen pro Tag. Das Modell lässt sich per `PLAN_MODEL` wechseln
 (z. B. `claude-sonnet-5-5`, halber Preis), die Denktiefe per `PLAN_EFFORT` (`low` bis `max`). Jeder Aufruf schreibt
-Modell, Token und Dauer ins Server-Log (`docker logs swiminstructor-backend`).
+Modell, Token und Dauer ins Server-Log (`docker logs swiminstructor-backend`) und in die Nutzungsdatei; Tageskosten,
+Fehlerquote und Dauer zeigt `GET /v1/admin/usage`, Alarme kommen per Webhook (siehe
+[backend-deploy.md](backend-deploy.md#monitoring)).
 
 ## Datenschutz
 
 An Anthropic geht nur der Snapshot: aggregierte Zahlen (Umfänge, Tempo, Erholungsabweichungen, Warnhinweise, Leistungswerte
 und Zonen), keine Namen, keine einzelnen Workouts, keine Rohdaten aus Health. Dazu kommen die Angaben, die der Athlet
-selbst macht (Ziel, Wünsche, Feedback). Der Server speichert nur den letzten Tagesplan, den Snapshot selbst nicht.
+selbst macht (Ziel, Wünsche, Feedback). Der Server speichert je Nutzer nur den letzten Tagesplan, den Snapshot selbst
+nicht, dazu die Nutzung je Anfrage (Nutzerkennung, Plan-Art, Ergebnis, Token, Dauer, keine Trainingsdaten).
 
 ## Konfiguration
 
@@ -93,10 +97,13 @@ selbst macht (Ziel, Wünsche, Feedback). Der Server speichert nur den letzten Ta
 | `PLAN_TIMEOUT_MS` | `75000` | Zeitlimit für Tages- und Wochenpläne (1.000 bis 85.000, bleibt unter den 95 s der App) |
 | `PLAN_MACRO_TIMEOUT_MS` | `180000` | Zeitlimit für Gesamtplan und Überarbeitung (1.000 bis 230.000, bleibt unter den 240 s von Caddy und den 245 s der App) |
 | `PLAN_SERVER_FALLBACK` | `true` | Bei Ablehnung durch Claudes Sicherheitsklassifikatoren automatisch ein anderes Modell versuchen |
-| `DATA_DIR` | `./data` (im Container `/data`) | Hier liegt der letzte Tagesplan (`latest-plan-v2.json`) |
+| `DATA_DIR` | `./data` (im Container `/data`) | Letzter Tagesplan (`latest-plan-v2.json`, weitere Nutzer unter `users/<kennung>/`), Nutzer (`users.json`), Nutzung (`metrics/`) |
 | `PLAN_TIMEZONE` | `Europe/Berlin` | Zeitzone für "heute" |
-| `PLAN_MAX_GENERATIONS_PER_HOUR` | `5` | Kostenbremse |
-| `PLAN_MAX_GENERATIONS_PER_DAY` | `20` | Kostenbremse |
+| `PLAN_MAX_GENERATIONS_PER_HOUR` | `5` | Kostenbremse je Nutzer |
+| `PLAN_MAX_GENERATIONS_PER_DAY` | `20` | Kostenbremse je Nutzer |
+| `PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR` | `15` | Kostenbremse des ganzen Servers |
+| `PLAN_MAX_GENERATIONS_TOTAL_PER_DAY` | `60` | Kostenbremse des ganzen Servers |
+| `ALERT_WEBHOOK_URL` und weitere `ALERT_*` | (leer) | Alarme, siehe [backend-deploy.md](backend-deploy.md#alarme) |
 
 ## Bewertung der Pläne
 

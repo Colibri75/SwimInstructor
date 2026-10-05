@@ -97,6 +97,22 @@ jobs:
           echo "$BODY" | head -n1 | jq -e '.error == "plan_unavailable" and .reason == "not_configured"'
           echo "Plan-Endpunkt ok: 401 ohne Token, 400 bei ungueltigem Body, 503 ohne API-Key"
 
+      - name: Smoke-Test Nutzer und Admin-Routen
+        run: |
+          OWNER=$(grep '^API_TOKEN=' /etc/swiminstructor/backend.env | cut -d= -f2)
+          # Nutzer im laufenden Container anlegen: Der Token steht in der letzten Zeile der Ausgabe.
+          USER_TOKEN=$(docker exec swiminstructor-backend node dist/cli/users.js add ci-test --name "CI" | tail -n1)
+          test ${#USER_TOKEN} -eq 64
+          sleep 3
+          curl -fsS -H "Authorization: Bearer $USER_TOKEN" http://127.0.0.1:3100/v1/status | jq -e '.user == "ci-test"'
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $USER_TOKEN" http://127.0.0.1:3100/v1/admin/usage)" = "403"
+          curl -fsS -H "Authorization: Bearer $OWNER" "http://127.0.0.1:3100/v1/admin/usage?days=1" | jq -e '.days | length == 1'
+          curl -fsS -H "Authorization: Bearer $OWNER" http://127.0.0.1:3100/v1/admin/users | jq -e '[.users[].id] == ["owner", "ci-test"]'
+          docker exec swiminstructor-backend node dist/cli/users.js disable ci-test
+          sleep 3
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $USER_TOKEN" http://127.0.0.1:3100/v1/status)" = "401"
+          echo "Nutzer ok: eigener Token, keine Admin-Rechte, Sperre greift, Besitzer sieht Nutzung und Nutzer"
+
       - name: Container-Logs
         if: failure()
         run: docker logs swiminstructor-backend || true
