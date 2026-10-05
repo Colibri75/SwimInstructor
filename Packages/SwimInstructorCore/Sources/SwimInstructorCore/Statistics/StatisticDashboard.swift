@@ -64,13 +64,13 @@ public final class StatisticDashboard: ObservableObject {
 
     /// Verschiebt Kacheln wie `List.onMove`: `destination` ist die Stelle vor dem Verschieben, an die sie kommen.
     public func move(fromOffsets source: IndexSet, toOffset destination: Int) {
-        let moving = source.filter { tiles.indices.contains($0) }
-        guard !moving.isEmpty else { return }
         var layout = self.layout
-        let tiles = moving.map { layout.tiles[$0] }
+        let moving = source.filter { layout.tiles.indices.contains($0) }
+        guard !moving.isEmpty else { return }
+        let moved = moving.map { layout.tiles[$0] }
         let remaining = layout.tiles.enumerated().filter { !moving.contains($0.offset) }.map(\.element)
         let index = min(max(destination - moving.filter { $0 < destination }.count, 0), remaining.count)
-        layout.tiles = Array(remaining[..<index]) + tiles + Array(remaining[index...])
+        layout.tiles = Array(remaining[..<index]) + moved + Array(remaining[index...])
         save(layout)
     }
 
