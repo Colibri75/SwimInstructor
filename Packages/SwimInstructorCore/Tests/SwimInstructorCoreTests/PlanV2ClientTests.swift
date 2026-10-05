@@ -453,7 +453,9 @@ final class PlanV2ClientTests: XCTestCase {
         // Ein Server ohne Plan v2 antwortet auf dieselbe Route mit einem Plan v1 (ohne `plan_version`).
         let withoutVersion = await dayFailure(status: 200, body: TestFixtures.responseJSON)
         let olderVersion = await dayFailure(status: 200, body: #"{"plan_version": 1}"#)
-        let client = makeClient(StubTransport(status: 200, body: try Self.contract("plan-macro-response.json")))
+        // Die Antwort eines alten Servers: ein Gesamtplan ohne `plan_version`.
+        let oldMacroBody = #"{"goal_day":"2027-07-04","generated_at":"2026-09-30T10:00:00.000Z","plan":{"rationale":"alt","weeks":[]},"adjustments":[]}"#
+        let client = makeClient(StubTransport(status: 200, body: oldMacroBody))
         let macro = await Self.failure { try await client.fetchMacroPlanV2(MacroPlanV2Request(snapshot: TestFixtures.snapshot, today: "2026-09-30")) }
 
         XCTAssertEqual(withoutVersion as? PlanAPIError, .serverOutdated)
