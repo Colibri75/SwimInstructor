@@ -172,6 +172,9 @@ struct GoalAssistantView: View {
                         Text("km")
                     }
                 }
+                if let venue = sports.module(for: sport)?.openWater {
+                    Toggle("Im \(venue.displayName)", isOn: openWaterBinding(sport))
+                }
                 if goal.kind != .distance {
                     Toggle("Zielzeit", isOn: hasTimeBinding(sport))
                 }
@@ -210,6 +213,18 @@ struct GoalAssistantView: View {
             set: { kilometers in
                 guard var discipline = goal.discipline(for: sport) else { return }
                 discipline.distanceMeters = (kilometers * 1000).rounded()
+                goal = goal.settingDiscipline(discipline, for: sport)
+            }
+        )
+    }
+
+    /// Im Freiwasser: Der Plan bringt Einheiten dorthin (mit Zugang) oder Elemente davon ins Becken.
+    private func openWaterBinding(_ sport: SportID) -> Binding<Bool> {
+        Binding(
+            get: { goal.discipline(for: sport)?.openWater ?? false },
+            set: { isOn in
+                guard var discipline = goal.discipline(for: sport) else { return }
+                discipline.openWater = isOn
                 goal = goal.settingDiscipline(discipline, for: sport)
             }
         )

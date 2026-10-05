@@ -153,6 +153,7 @@ function validPlanning(sport: SportDefinition): boolean {
   if (planning.promptRules.trim() === "") return false;
   if (planning.indoor !== null && (!/^[a-z][a-z0-9_]{1,39}$/.test(planning.indoor.equipment) || planning.indoor.displayName.trim() === "")) return false;
   if (planning.indoor !== null && !planning.weatherSensitive) return false;
+  if (planning.openWater !== null && (!/^[a-z][a-z0-9_]{1,39}$/.test(planning.openWater.equipment) || planning.openWater.displayName.trim() === "")) return false;
   const tests = sport.performanceTests.map((test) => test.id);
   const templates = Object.keys(planning.testSessions);
   return tests.every((id) => (planning.testSessions[id]?.length ?? 0) > 0) && templates.every((id) => tests.includes(id));

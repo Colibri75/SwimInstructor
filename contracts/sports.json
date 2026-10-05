@@ -19,6 +19,7 @@
       "brick_after": [],
       "weather_sensitive": false,
       "indoor": null,
+      "open_water": {"equipment": "open_water", "display_name": "Freiwasser"},
       "performance_metrics": [
         {"id": "css_pace_per_100m", "display_name": "CSS-Pace", "unit": "s/100m", "min": 50, "max": 300}
       ],
@@ -39,6 +40,7 @@
       "brick_after": ["swim"],
       "weather_sensitive": true,
       "indoor": {"equipment": "indoor_trainer", "display_name": "Rolle"},
+      "open_water": null,
       "performance_metrics": [
         {"id": "threshold_heart_rate", "display_name": "Schwellenpuls", "unit": "bpm", "min": 100, "max": 215},
         {"id": "threshold_power", "display_name": "Schwellenleistung (FTP)", "unit": "W", "min": 50, "max": 600}
@@ -59,6 +61,7 @@
       "brick_after": ["bike"],
       "weather_sensitive": true,
       "indoor": {"equipment": "treadmill", "display_name": "Laufband"},
+      "open_water": null,
       "performance_metrics": [
         {"id": "threshold_heart_rate", "display_name": "Schwellenpuls", "unit": "bpm", "min": 100, "max": 215},
         {"id": "threshold_pace_per_km", "display_name": "Schwellentempo", "unit": "s/km", "min": 150, "max": 900}

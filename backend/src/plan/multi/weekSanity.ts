@@ -9,6 +9,7 @@ import { EXERCISE_RULES, EXTRA_RULES, normalizeWeekExtras, perWeek, strengthBlac
 import { amountToMeters, amountToMinutes, floorAmount, formatAmount, plannedSports, roundAmount, sportName } from "./sports";
 import { fixedSport, scheduleDay, trainingDaysPerWeek, weeklyMinutes } from "./schedule";
 import { chooseTest, TestPlan, TestRef, testRef } from "./tests";
+import { inOpenWaterBlock, openWaterAllowed, openWaterBlocked, raceInOpenWater } from "./openWater";
 
 /**
  * Sicherheitsschicht fuer den Wochenplan ueber mehrere Sportarten (die naechsten sieben Tage). Reiner Code: korrigiert
@@ -63,6 +64,8 @@ export interface WeekSessionV2 {
   brick: boolean;
   /** Drinnen (Rolle, Laufband). */
   indoor: boolean;
+  /** Im Freiwasser (See, Meer) statt im Becken. */
+  open_water: boolean;
 }
 
 export interface WeekDayV2 {
@@ -126,6 +129,7 @@ interface Draft {
   test: TestPlan | null;
   brick: boolean;
   indoor: boolean;
+  openWater: boolean;
 }
 
 interface DraftDay {
@@ -226,7 +230,8 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
       day.sessions
         .flatMap((draft) => applyPain(draft, day.date, reports, notes))
         .flatMap((draft) => limitSession(draft, day.date, notes))
-        .map((draft) => placeIndoor(draft, day.date, context, notes)),
+        .map((draft) => placeIndoor(draft, day.date, context, notes))
+        .map((draft) => placeOpenWater(draft, day.date, context, notes)),
       day.date,
       []
     )
@@ -295,7 +300,10 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
   // 11. Etwa 80 % locker: zu viel Intensitaet senkt mittlere Einheiten auf locker, die laengsten zuerst.
   days = limitIntensity(days, notes);
 
-  // 12. Kraft und Mobilitaet: so oft wie gewuenscht, Kraft nicht vor einem harten Tag und nicht kurz vor dem Ziel, in der Tageszeit.
+  // 12. Ziel im Freiwasser: in den letzten Wochen davor mindestens eine Freiwasser-Einheit (wenn Zugang und Wetter passen).
+  days = ensureOpenWater(days, snapshot, context, notes);
+
+  // 13. Kraft und Mobilitaet: so oft wie gewuenscht, Kraft nicht vor einem harten Tag und nicht kurz vor dem Ziel, in der Tageszeit.
   days = placeExtras(days, snapshot, context, week, free, notes);
 
   const result = days.map(finalizeDay);
@@ -347,7 +355,8 @@ function toDraft(session: WeekSessionRaw, week: WeekLimitsV2, unplanned: Set<str
       testId: isTest ? (session.test_id ?? null) : null,
       test: null,
       brick: session.brick === true,
-      indoor: session.indoor === true
+      indoor: session.indoor === true,
+      openWater: session.open_water === true && !isTest
     }
   ];
 }
@@ -410,6 +419,46 @@ function placeIndoor(draft: Draft, date: string, context: WeekContextV2, notes: 
     return { ...draft, indoor: true };
   }
   return draft;
+}
+
+/** Freiwasser nur, wo die Sportart es kennt, der Athlet Zugang hat und das Wetter passt (sonst ins Becken). */
+function placeOpenWater(draft: Draft, date: string, context: WeekContextV2, notes: string[]): Draft {
+  if (!draft.openWater) return draft;
+  const venue = draft.sport.planning.openWater;
+  if (venue === null || !openWaterAllowed(draft.sport, context.equipment)) {
+    notes.push(`${label(date)}: ${draft.sport.displayName} im Becken (${venue === null ? "Freiwasser gibt es nicht" : "kein Zugang zu Freiwasser angegeben"})`);
+    return { ...draft, openWater: false };
+  }
+  const blocked = openWaterBlocked(context.weather?.find((day) => day.date === date));
+  if (blocked !== null) {
+    notes.push(`${label(date)}: ${blocked}, ${draft.sport.displayName} im Becken`);
+    return { ...draft, openWater: false };
+  }
+  return draft;
+}
+
+/**
+ * Ein Ziel im Freiwasser braucht Gewoehnung (Orientierung, Start, kein Abstossen an der Wand): Liegt die Woche in den
+ * letzten Wochen davor und plant sie die Sportart ohne Freiwasser, kommt die laengste passende Einheit dorthin.
+ */
+function ensureOpenWater(days: DraftDay[], snapshot: SnapshotV2, context: WeekContextV2, notes: string[]): DraftDay[] {
+  let result = days;
+  for (const discipline of snapshot.training_goal.disciplines) {
+    const own = result.flatMap((day) => day.sessions.filter((draft) => draft.sport.id === discipline.sport).map((draft) => ({ day, draft })));
+    if (own.length === 0 || own.some(({ draft }) => draft.openWater)) continue;
+    const sport = own[0].draft.sport;
+    if (!raceInOpenWater(snapshot, sport.id) || !openWaterAllowed(sport, context.equipment)) continue;
+    const candidates = own.filter(
+      ({ day, draft }) => draft.test === null && inOpenWaterBlock(snapshot, day.date) && openWaterBlocked(context.weather?.find((entry) => entry.date === day.date)) === null
+    );
+    const chosen = [...candidates].sort((a, b) => RANK[a.draft.intensity] - RANK[b.draft.intensity] || b.draft.amount - a.draft.amount)[0];
+    if (chosen === undefined) continue;
+    notes.push(`${label(chosen.day.date)}: ${sport.displayName} im Freiwasser (Ziel im Freiwasser)`);
+    result = result.map((day) =>
+      day === chosen.day ? { ...day, sessions: day.sessions.map((draft) => (draft === chosen.draft ? { ...draft, openWater: true } : draft)) } : day
+    );
+  }
+  return result;
 }
 
 /** Kraft und Mobilitaet nach den Regeln in `extras.ts`. */
@@ -653,7 +702,8 @@ function finalizeDay(day: DraftDay): WeekDayV2 {
       focus: draft.focus,
       test: draft.test === null ? null : testRef(draft.test.test),
       brick: draft.brick,
-      indoor: draft.indoor
+      indoor: draft.indoor,
+      open_water: draft.openWater && draft.test === null
     })
   );
   const focus = day.focus !== "" && (sessions.length > 0 || day.focus === "Keine Zeit") ? day.focus : sessions.length > 0 ? sessions.map((session) => session.focus).join(" + ").slice(0, MULTI_RULES.maxFocusLength) : "Ruhetag";

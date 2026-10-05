@@ -12,6 +12,20 @@ public struct IndoorEquipment: Equatable, Sendable {
     }
 }
 
+/// Draußen statt am üblichen Ort (Schwimmen: Freiwasser statt Becken). `id` ist die Kennung des Zugangs, die mit dem
+/// Equipment zum Server geht; `locationID` der Ort der Aufzeichnung auf der Watch.
+public struct OpenWaterVenue: Equatable, Sendable {
+    public let id: String
+    public let displayName: String
+    public let locationID: String
+
+    public init(id: String, displayName: String, locationID: String) {
+        self.id = id
+        self.displayName = displayName
+        self.locationID = locationID
+    }
+}
+
 /// Alles, was eine Sportart der App beibringt. Der Kern fragt nie "welche Sportart ist das?", sondern
 /// immer das Modul: Eine neue Sportart ist ein neues Modul plus Tests, ohne Änderungen quer durch den Code.
 ///
@@ -51,6 +65,9 @@ public protocol SportModule: Sendable {
     var weatherSensitive: Bool { get }
     /// Drinnen möglich mit diesem Hilfsmittel (Rolle, Laufband), `nil` sonst. Steht auch in `contracts/sports.json`.
     var indoorEquipment: IndoorEquipment? { get }
+    /// Freiwasser statt des üblichen Orts, `nil` sonst. Ein Ziel kann dort stattfinden, dann plant der Server dort
+    /// Einheiten, wenn der Athlet Zugang hat. Steht auch in `contracts/sports.json`.
+    var openWater: OpenWaterVenue? { get }
 
     // MARK: Leistungsprofil (T2b)
 
@@ -96,6 +113,7 @@ public extension SportModule {
     var brickAfter: [SportID] { [] }
     var weatherSensitive: Bool { false }
     var indoorEquipment: IndoorEquipment? { nil }
+    var openWater: OpenWaterVenue? { nil }
 
     var statistics: [StatisticDefinition] { SportStatistics.derived(for: self) }
 }

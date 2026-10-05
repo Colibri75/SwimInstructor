@@ -54,6 +54,10 @@ Je eine Einheit, danach in der Fitness-App Strecke, Karte und Herzfrequenz prüf
 - [ ] **Laufen draußen, Intervalle:** GPS-Strecke und Karte, Pace stimmt mit der Fitness-App, Ansagen zu den Wechseln
 - [ ] **Rad draußen** mit und ohne Sensor (Watt, Trittfrequenz nur mit Sensor)
 - [ ] **Drinnen:** Eine Einheit, die der Plan "drinnen (Rolle)" vorsieht: Auf der Watch ist "Drinnen" vorgewählt, kein GPS
+- [ ] **Freiwasser:** Ziel (Einstellungen, Ziel) mit "Im Freiwasser" beim Schwimmen, unter Equipment "Zugang zu Freiwasser"
+      an. In den 8 Wochen vor dem Ziel steht jede Woche eine Schwimmeinheit mit Wellen-Symbol im Plan; auf der Watch ist
+      "Freiwasser" vorgewählt (GPS-Strecke, Wassersperre), der Hinweis "nie allein, mit Boje" steht dabei. Ohne Zugang
+      enthalten die Beckeneinheiten Orientierungsschwimmen
 - [ ] **Koppeltraining:** Rad, gleich danach den Koppellauf über "Starten" in der zweiten Einheit; beide stehen getrennt
       in Health
 - [ ] Watch-Startseite: Zeit und Puls groß, Countdown 30 s mit Impulsen

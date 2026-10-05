@@ -47,13 +47,38 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
         public var distanceMeters: Double
         /// `nil`: ankommen ohne Zielzeit.
         public var targetDurationSeconds: TimeInterval?
+        /// Im Freiwasser (nur bei Sportarten mit `SportModule.openWater`, z. B. Schwimmen im See).
+        public var openWater: Bool
 
         public var id: SportID { sport }
 
-        public init(sport: SportID, distanceMeters: Double, targetDurationSeconds: TimeInterval? = nil) {
+        public init(sport: SportID, distanceMeters: Double, targetDurationSeconds: TimeInterval? = nil, openWater: Bool = false) {
             self.sport = sport
             self.distanceMeters = distanceMeters
             self.targetDurationSeconds = targetDurationSeconds
+            self.openWater = openWater
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case sport, distanceMeters, targetDurationSeconds, openWater
+        }
+
+        /// Gespeicherte Ziele von vor dem Freiwasser bleiben lesbar.
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            sport = try container.decode(SportID.self, forKey: .sport)
+            distanceMeters = try container.decode(Double.self, forKey: .distanceMeters)
+            targetDurationSeconds = try container.decodeIfPresent(TimeInterval.self, forKey: .targetDurationSeconds)
+            openWater = try container.decodeIfPresent(Bool.self, forKey: .openWater) ?? false
+        }
+
+        /// `open_water` steht nur drin, wenn ja: Ziele im Becken sehen aus wie bisher.
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(sport, forKey: .sport)
+            try container.encode(distanceMeters, forKey: .distanceMeters)
+            try container.encodeIfPresent(targetDurationSeconds, forKey: .targetDurationSeconds)
+            if openWater { try container.encode(true, forKey: .openWater) }
         }
     }
 
@@ -154,6 +179,9 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
                !registry.isPlausibleGoal(sport: discipline.sport, distanceMeters: discipline.distanceMeters, durationSeconds: duration) {
                 return "\(module.displayName): Strecke und Zielzeit ergeben ein unrealistisches Tempo."
             }
+            if discipline.openWater, module.openWater == nil {
+                return "\(module.displayName) gibt es nicht im Freiwasser."
+            }
         }
         guard Self.trainingDaysRange.contains(trainingDaysPerWeek) else { return "Trainingstage: 1 bis 7 pro Woche." }
         guard Self.weeklyHoursRange.contains(weeklyHours) else { return "Trainingszeit: 1 bis 30 Stunden pro Woche." }
@@ -198,7 +226,7 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
                 copy.disciplines = [Discipline(sport: sport, distanceMeters: 5_000)]
             }
             if newKind == .distance {
-                copy.disciplines = copy.disciplines.map { Discipline(sport: $0.sport, distanceMeters: $0.distanceMeters) }
+                copy.disciplines = copy.disciplines.map { Discipline(sport: $0.sport, distanceMeters: $0.distanceMeters, openWater: $0.openWater) }
             }
         } else {
             copy.disciplines = []

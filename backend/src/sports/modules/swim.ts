@@ -120,12 +120,15 @@ export const swim: SportDefinition = {
     brickAfter: [],
     weatherSensitive: false,
     indoor: null,
+    openWater: { equipment: "open_water", displayName: "Freiwasser" },
     canFuelDuringRace: false,
     promptRules: `- Gesteuert über das Tempo pro 100 m (target_type pace_per_100m, target_value in Sekunden pro 100 m) oder die gefühlte Anstrengung (perceived_effort, 1 bis 10). Kein Pulsziel: Puls ist im Wasser kaum brauchbar. Die Pace im Snapshot enthält Pausen, das reine Schwimmtempo ist schneller.
 - Ist die CSS-Pace bekannt (Abschnitt Leistungswerte), richte das Tempo danach: Grundlage etwa 8 bis 12 % langsamer als die CSS-Pace, Schwelle (CSS-Serien) etwa auf CSS-Pace, kurze schnelle Wiederholungen etwa 5 % schneller.
 - Eine Einheit besteht aus Einschwimmen, Hauptteil und Ausschwimmen. Jeder Schritt wird über die Strecke gemessen (measure distance). Jede Wiederholung ist ein Vielfaches von 50 m und mindestens 50 m lang (50, 100, 150, 200 …), damit der Plan in einem 25-m- und in einem 50-m-Becken aufgeht: keine 25er und keine 75er.
 - Der Athlet schwimmt ohne Trainer vor Ort: Erkläre jede Technikübung im Feld instructions in ein bis zwei Sätzen und verwende keinen Fachbegriff ohne diese Erklärung. Das Feld cue liest er im Wasser auf der Uhr: zwei bis vier Wörter, höchstens 30 Zeichen, zum Beispiel "Locker kraulen" oder "Zielpace halten".
 - Hilfsmittel (pull_buoy, paddles, fins, snorkel, kickboard, ankle_band) sparsam und nur, wenn der Athlet sie hat; Abschnitte mit Hilfsmitteln ohne Zielpace.
-- Im Triathlon zählt Schwimmen als Technik- und Ausdauerdisziplin: Technik und gleichmäßiges Tempo gehen vor harten Serien, die Schulter wird nicht überlastet.`
+- Im Triathlon zählt Schwimmen als Technik- und Ausdauerdisziplin: Technik und gleichmäßiges Tempo gehen vor harten Serien, die Schulter wird nicht überlastet.
+- Freiwasser (open_water true): eine durchgehende Strecke oder wenige lange Abschnitte nach Zeit oder Strecke, gesteuert über die gefühlte Anstrengung (perceived_effort), weil es keine Bahnen und Wände gibt; das 50-m-Raster gilt hier nicht. Übe, was im Wettkampf zählt: alle 6 bis 9 Züge nach vorn orientieren (Kopf kurz heben), Start aus dem Wasser oder vom Ufer, Bojen umschwimmen, im Wasserschatten anderer schwimmen. Sicherheit gehört in coach_notes: nie allein, mit auffälliger Boje, bei kaltem Wasser im Neoprenanzug und kürzer.
+- Ist der Wettkampf im Freiwasser und gibt es keinen Zugang, bring Freiwasser-Elemente ins Becken: Orientierungsschwimmen (alle 6 bis 9 Züge Kopf heben), Wenden ohne Abstoßen, Starts ohne Abstoßen aus dem Wasser, Tempowechsel wie nach dem Start.`
   }
 };

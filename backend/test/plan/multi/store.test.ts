@@ -29,6 +29,7 @@ const plan: DayPlanV2 = {
       duration_minutes: 17,
       brick: false,
       indoor: false,
+      open_water: false,
       steps: [swimStep(300, { name: "Einschwimmen", equipment: ["pull_buoy"] }), swimStep(400), swimStep(150, { name: "Ausschwimmen" })]
     },
     {
@@ -43,6 +44,7 @@ const plan: DayPlanV2 = {
       duration_minutes: 35,
       brick: false,
       indoor: false,
+      open_water: false,
       steps: [step({ name: "Einlaufen", duration_seconds: 600 }), step({ duration_seconds: 1500 })]
     }
   ]
@@ -153,6 +155,7 @@ describe("asRawDayPlan", () => {
       test_id: null,
       brick: false,
       indoor: false,
+      open_water: false,
       steps: plan.sessions[0].steps
     });
     expect(raw.extras).toEqual(plan.extras);

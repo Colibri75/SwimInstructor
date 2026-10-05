@@ -19,6 +19,7 @@ final class ContractTests: XCTestCase {
             let brickAfter: [String]
             let weatherSensitive: Bool
             let indoor: Indoor?
+            let openWater: Indoor?
             let performanceMetrics: [Metric]
             let performanceTests: [Test]
         }
@@ -114,6 +115,7 @@ final class ContractTests: XCTestCase {
             XCTAssertEqual(module.brickAfter.map(\.rawValue), sport.brickAfter, sport.id)
             XCTAssertEqual(module.weatherSensitive, sport.weatherSensitive, sport.id)
             XCTAssertEqual(module.indoorEquipment.map { SportsContract.Indoor(equipment: $0.id, displayName: $0.displayName) }, sport.indoor, sport.id)
+            XCTAssertEqual(module.openWater.map { SportsContract.Indoor(equipment: $0.id, displayName: $0.displayName) }, sport.openWater, sport.id)
             XCTAssertEqual(module.performanceMetrics.map { SportsContract.Metric($0) }, sport.performanceMetrics, sport.id)
             XCTAssertEqual(module.performanceTests.map { SportsContract.Test($0) }, sport.performanceTests, sport.id)
         }

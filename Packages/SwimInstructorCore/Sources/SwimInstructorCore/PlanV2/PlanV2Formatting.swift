@@ -197,8 +197,8 @@ public enum PlanV2Formatting {
 // MARK: - Koppeltraining, drinnen, Kraft und Mobilität, Anpassung
 
 public extension PlanV2Formatting {
-    /// Hinweise zu einer Einheit: "Koppeltraining: direkt nach dem Radfahren", "Drinnen (Rolle)".
-    static func sessionHints(brick: Bool, indoor: Bool, sport: SportID, previous: SportID?, registry: SportRegistry = .standard) -> [String] {
+    /// Hinweise zu einer Einheit: "Koppeltraining: direkt nach dem Radfahren", "Drinnen (Rolle)", "Freiwasser: …".
+    static func sessionHints(brick: Bool, indoor: Bool, openWater: Bool = false, sport: SportID, previous: SportID?, registry: SportRegistry = .standard) -> [String] {
         var hints: [String] = []
         if brick, let previous {
             hints.append("Koppeltraining: direkt nach \(registry.displayName(for: previous))")
@@ -209,6 +209,10 @@ public extension PlanV2Formatting {
             } else {
                 hints.append("Drinnen")
             }
+        }
+        if openWater {
+            let name = registry.module(for: sport)?.openWater?.displayName ?? "Freiwasser"
+            hints.append("\(name): nie allein, mit Boje")
         }
         return hints
     }

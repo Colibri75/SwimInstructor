@@ -49,13 +49,14 @@ Eine weitere Sportart: [Neue Sportart hinzufügen](docs/neue-sportart.md) (acht 
 - **Plan reagiert auf echtes Training:** Nach jeder Einheit fragt Heute "Wie war's?" (Anstrengung, Beschwerden mit
   Stelle). Bei deutlichen oder starken Beschwerden, einer sehr harten Einheit (ab 8 von 10) oder einer ausgefallenen
   Einheit plant die App die sieben Tage außer der Reihe neu; der Server bremst die betroffene Sportart.
-- **Triathlon:** Koppeltraining (Laufen nach Rad), drinnen auf Rolle oder Laufband, Wetter (bei Gewitter, Sturm,
+- **Triathlon:** Koppeltraining (Laufen nach Rad), drinnen auf Rolle oder Laufband, Freiwasser (Ziel im Freiwasser:
+  in den 8 Wochen davor jede Woche eine Einheit im See, ohne Zugang Freiwasser-Elemente im Becken), Wetter (bei Gewitter, Sturm,
   Starkregen oder Glätte nach drinnen), Kalender (volle Tage werden kürzer oder "keine Zeit"), Kraft- und
   Mobilitätsblöcke mit Übungen und ein Plan für den Wettkampftag (Ablauf, Pacing, Wechsel, Verpflegung, Packliste).
 - **iPhone:** Heute (Einheiten des Tages, Wunsch, Rückmeldung, Testergebnis bestätigen), Plan (sieben Tage anpassen,
   Sportart tauschen, Gesamtplan mit Feedback, Wettkampftag), Dashboard (Kacheln, Woche gegen Plan, Erholung, Ziel),
   Verlauf, Leistungsprofil. Einstellungen "Planung": Kraft und Mobilität pro Woche, Wetter (ungefährer Ort), Kalender
-  (Trainingsfenster), unter Equipment Rolle und Laufband.
+  (Trainingsfenster), unter Equipment Rolle, Laufband und Zugang zu Freiwasser.
 - **Watch:** Einheiten vom iPhone oder freies Training, Stand im Plan mit Ansagen, Hinweise zu Koppeltraining und drinnen
   (Ort vorgewählt), Leistungstests mit Auswertung auf der Uhr, Aufzeichnung in Health.
 - **Verträge** zwischen App und Server ([`contracts/`](contracts/README.md)): Swift- und Jest-Tests lesen dieselben

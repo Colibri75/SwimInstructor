@@ -27,7 +27,8 @@
             "focus": "Grundlage",
             "test": null,
             "brick": false,
-            "indoor": false
+            "indoor": false,
+            "open_water": false
           }
         ],
         "extras": [
@@ -61,7 +62,8 @@
               ]
             },
             "brick": false,
-            "indoor": false
+            "indoor": false,
+            "open_water": false
           }
         ],
         "extras": []
@@ -81,7 +83,8 @@
             "focus": "Lockerer Einstieg",
             "test": null,
             "brick": false,
-            "indoor": false
+            "indoor": false,
+            "open_water": false
           },
           {
             "sport": "swim",
@@ -94,7 +97,8 @@
             "focus": "Technik",
             "test": null,
             "brick": false,
-            "indoor": false
+            "indoor": false,
+            "open_water": false
           }
         ],
         "extras": [
@@ -120,7 +124,8 @@
             "focus": "Grundlage lang",
             "test": null,
             "brick": false,
-            "indoor": true
+            "indoor": true,
+            "open_water": false
           }
         ],
         "extras": []
@@ -146,7 +151,8 @@
             "focus": "100er zügig",
             "test": null,
             "brick": false,
-            "indoor": false
+            "indoor": false,
+            "open_water": false
           }
         ],
         "extras": []

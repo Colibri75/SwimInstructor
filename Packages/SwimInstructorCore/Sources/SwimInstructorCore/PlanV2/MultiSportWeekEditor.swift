@@ -153,6 +153,9 @@ public enum MultiSportWeekEditor {
             session.amount = amount
             session.minutes = converted.minutes
             session.distanceMeters = converted.meters
+            // Drinnen und Freiwasser gehören zur alten Sportart, wenn die neue sie nicht kennt.
+            if module.indoorEquipment == nil { session.indoor = false }
+            if module.openWater == nil { session.openWater = false }
             if session.test != nil {
                 session.test = nil
                 session.sessionType = .endurance

@@ -185,6 +185,12 @@ export interface SportPlanning {
    * gibt oder sie ohnehin drinnen stattfindet. Gegenstueck: `SportModule.indoorEquipment`.
    */
   readonly indoor: { readonly equipment: string; readonly displayName: string } | null;
+  /**
+   * Draussen statt am ueblichen Ort (Schwimmen: Freiwasser statt Becken), mit dem Zugang des Athleten als Kennung in
+   * `equipment`; `null`, wenn es das fuer die Sportart nicht gibt. Ein Ziel kann dort stattfinden (`open_water` der
+   * Disziplin), dann plant der Server passende Einheiten. Gegenstueck: `SportModule.openWater`.
+   */
+  readonly openWater: { readonly equipment: string; readonly displayName: string } | null;
   /** Ob man waehrend dieser Disziplin im Wettkampf essen und trinken kann (beim Schwimmen nicht). */
   readonly canFuelDuringRace: boolean;
   /**

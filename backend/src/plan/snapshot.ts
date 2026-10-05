@@ -95,7 +95,9 @@ const TrainingGoalSchema = z
         z.object({
           sport: sportId,
           distance_meters: z.number().min(25).max(1_000_000),
-          target_duration_seconds: z.number().min(60).max(1_000_000).optional()
+          target_duration_seconds: z.number().min(60).max(1_000_000).optional(),
+          /** Findet im Freiwasser statt (nur bei Sportarten mit `openWater`, z. B. Schwimmen im See). */
+          open_water: z.boolean().optional()
         })
       )
       .max(8),
@@ -131,6 +133,9 @@ const TrainingGoalSchema = z
     goal.disciplines.forEach((discipline, index) => {
       if (!goal.emphasis.some((entry) => entry.sport === discipline.sport && entry.percent > 0)) {
         ctx.addIssue({ code: "custom", path: ["disciplines", index, "sport"], message: "Disziplin ohne Schwerpunkt" });
+      }
+      if (discipline.open_water === true && SPORTS.get(discipline.sport)?.planning.openWater === null) {
+        ctx.addIssue({ code: "custom", path: ["disciplines", index, "open_water"], message: "Sportart ohne Freiwasser" });
       }
       const duration = discipline.target_duration_seconds;
       if (duration !== undefined && !SPORTS.plausibleGoal(discipline.sport, discipline.distance_meters, duration)) {

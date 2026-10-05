@@ -67,7 +67,7 @@ struct SessionCardView: View {
         VStack(alignment: .leading, spacing: 10) {
             header
             SessionHintsView(hints: PlanV2Formatting.sessionHints(
-                brick: session.brick, indoor: session.indoor, sport: session.sport, previous: previousSport, registry: registry
+                brick: session.brick, indoor: session.indoor, openWater: session.openWater, sport: session.sport, previous: previousSport, registry: registry
             ))
             if !session.focus.isEmpty {
                 Text(session.focus)

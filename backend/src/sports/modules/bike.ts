@@ -97,6 +97,7 @@ export const bike: SportDefinition = {
     brickAfter: ["swim"],
     weatherSensitive: true,
     indoor: { equipment: "indoor_trainer", displayName: "Rolle" },
+    openWater: null,
     // Auf dem Rad wird im Triathlon am meisten gegessen und getrunken.
     canFuelDuringRace: true,
     promptRules: `- Gesteuert über Pulszonen (target_type heart_rate_zone, target_value 1 bis 5 nach Prozent der Rad-Schwellenherzfrequenz: 1 unter 81 %, 2 81 bis 89 %, 3 90 bis 93 %, 4 94 bis 99 %, 5 ab 100 %) und die gefühlte Anstrengung (perceived_effort, 1 bis 10). Kurze harte Abschnitte unter etwa 3 Minuten bekommen ein perceived_effort-Ziel statt eines Pulsziels, weil der Puls zu träge reagiert. Kein Tempo als Ziel. Trittfrequenz (cadence, Umdrehungen pro Minute) nur für Technikabschnitte.

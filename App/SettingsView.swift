@@ -100,10 +100,13 @@ struct SettingsView: View {
                     ForEach(SportRegistry.standard.indoorEquipment, id: \.id) { item in
                         Toggle(item.displayName, isOn: indoorBinding(for: item.id))
                     }
+                    ForEach(SportRegistry.standard.openWaterVenues, id: \.id) { venue in
+                        Toggle("Zugang zu \(venue.displayName) (See, Meer)", isOn: indoorBinding(for: venue.id))
+                    }
                 } header: {
                     Text("Mein Equipment")
                 } footer: {
-                    Text("Der Plan nutzt nur, was hier an ist. Mit Rolle oder Laufband plant er bei Unwetter drinnen. Die Auswahl gilt ab dem nächsten Plan (zum Aktualisieren auf Heute nach unten ziehen). Ohne Auswahl plant dein Coach ganz ohne Hilfsmittel.")
+                    Text("Der Plan nutzt nur, was hier an ist. Mit Rolle oder Laufband plant er bei Unwetter drinnen. Mit Zugang zu Freiwasser plant er dort, wenn es warm genug ist, vor allem vor einem Ziel im Freiwasser. Die Auswahl gilt ab dem nächsten Plan (zum Aktualisieren auf Heute nach unten ziehen). Ohne Auswahl plant dein Coach ganz ohne Hilfsmittel.")
                 }
 
                 Section("Apple Health") {

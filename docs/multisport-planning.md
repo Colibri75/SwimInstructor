@@ -236,6 +236,12 @@ Stelle). Beides geht mit `recent_training` an den Server; ohne eigene Angabe zä
   (`brickAfter`: Laufen nach Rad, Rad nach Schwimmen) und die Einheit davor am selben Tag diese Sportart ist; sonst
   streicht die Sicherheitsschicht die Markierung.
 - **Drinnen** (`indoor`): nur mit dem Hilfsmittel aus `equipment` (`indoor_trainer` Rolle, `treadmill` Laufband).
+- **Freiwasser** (`open_water`, Modul-Eigenschaft `openWater`, heute nur Schwimmen): Eine Disziplin des Ziels kann im
+  Freiwasser sein (`training_goal.disciplines[].open_water`). Einheiten dorthin nur mit Zugang (`open_water` in
+  `equipment`), nie als Leistungstest und nicht bei Unwetter oder unter 16 °C Tageshöchstwert, sonst ins Becken. Ist das
+  Ziel im Freiwasser, setzt die Sicherheitsschicht in den 8 Wochen davor jede Woche die längste lockere Schwimmeinheit
+  dorthin, wenn Claude keine geplant hat (`openWater.ts`). Ohne Zugang bringt der Prompt Freiwasser-Elemente ins Becken
+  (Orientierungsschwimmen, Starts und Wenden ohne Abstoßen). Der Plan für den Wettkampftag nennt das Freiwasser.
 - **Wetter:** Mit `location` (die App rundet auf 0,1°) holt der Server die Vorhersage bei Open-Meteo (ohne Schlüssel,
   1 h Cache). Bei Gewitter, Sturm ab 60 km/h, Starkregen ab 20 mm oder Glätte kommen wetterabhängige Einheiten
   (`weatherSensitive`) nach drinnen, wenn das Hilfsmittel da ist; sonst steht ein Hinweis in der Begründung. Hitze ab

@@ -100,7 +100,7 @@ struct WatchTodayView: View {
             }
             .tint(.green)
             // Koppeltraining: gleich nach dem Ende der Einheit davor hier starten; drinnen ist der Ort vorgewählt.
-            ForEach(PlanV2Formatting.sessionHints(brick: session.brick, indoor: session.indoor, sport: session.sport, previous: previous, registry: registry), id: \.self) { hint in
+            ForEach(PlanV2Formatting.sessionHints(brick: session.brick, indoor: session.indoor, openWater: session.openWater, sport: session.sport, previous: previous, registry: registry), id: \.self) { hint in
                 Text(hint)
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(.green)
@@ -189,11 +189,12 @@ struct WatchStartView: View {
     init(sport: SportID, session: DaySession?) {
         self.session = session
         _sport = State(initialValue: sport)
-        // Plant der Plan drinnen (Rolle, Laufband), ist "Drinnen" vorgewählt; sonst der zuletzt gewählte Ort.
-        let indoor = session?.indoor == true
-            ? SportRegistry.standard.module(for: sport)?.recording.locations.first { $0.isIndoor == true }?.id
-            : nil
-        _locationID = State(initialValue: indoor ?? Self.savedLocation(for: sport))
+        // Plant der Plan drinnen (Rolle, Laufband) oder im Freiwasser, ist der Ort vorgewählt; sonst der zuletzt gewählte.
+        let module = SportRegistry.standard.module(for: sport)
+        let planned = session?.indoor == true
+            ? module?.recording.locations.first { $0.isIndoor == true }?.id
+            : session?.openWater == true ? module?.openWater?.locationID : nil
+        _locationID = State(initialValue: planned ?? Self.savedLocation(for: sport))
     }
 
     private var module: (any SportModule)? { registry.module(for: sport) }

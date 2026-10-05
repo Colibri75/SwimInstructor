@@ -43,6 +43,7 @@ const Brick = z
   .describe("true, wenn die Einheit am selben Tag direkt an die vorige Einheit anschließt (Koppeltraining, nur die zweite Einheit des Tages), sonst false")
   .default(false);
 const Indoor = z.boolean().describe("true: drinnen (Rolle oder Laufband, nur wenn die Nutzernachricht es erlaubt), sonst false").default(false);
+const OpenWater = z.boolean().describe("true: im Freiwasser (See, Meer; nur wenn die Nutzernachricht es erlaubt), sonst false").default(false);
 
 /** Ergaenzungstraining neben den Sportarten: Kraft und Mobilitaet (Dehnen, Beweglichkeit). */
 export const EXTRA_KINDS = ["strength", "mobility"] as const;
@@ -78,6 +79,7 @@ export const DaySessionSchema = z.object({
   test_id: TestId,
   brick: Brick,
   indoor: Indoor,
+  open_water: OpenWater,
   steps: z.array(StepSchema).describe("Die Schritte in der Reihenfolge des Trainings; bei einem Leistungstest setzt der Server sie selbst ein")
 });
 
@@ -96,7 +98,8 @@ export const WeekSessionSchema = z.object({
   focus: z.string().describe("Schwerpunkt in höchstens 60 Zeichen auf Deutsch"),
   test_id: TestId,
   brick: Brick,
-  indoor: Indoor
+  indoor: Indoor,
+  open_water: OpenWater
 });
 
 export const MultiWeekPlanSchema = z.object({
@@ -240,7 +243,8 @@ const TargetSession = z.object({
   focus: z.string().max(120),
   test_id: Identifier.nullable().optional(),
   brick: z.boolean().optional(),
-  indoor: z.boolean().optional()
+  indoor: z.boolean().optional(),
+  open_water: z.boolean().optional()
 });
 
 const TargetExtra = z.object({ kind: ExtraKind, minutes: z.number().int().min(1).max(120), focus: z.string().max(120) });

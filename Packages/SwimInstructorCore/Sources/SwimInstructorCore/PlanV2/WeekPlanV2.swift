@@ -15,8 +15,10 @@ public struct DayTargetV2: Codable, Equatable, Sendable {
         public let brick: Bool?
         /// Drinnen, nur gesetzt, wenn ja.
         public let indoor: Bool?
+        /// Im Freiwasser, nur gesetzt, wenn ja.
+        public let openWater: Bool?
 
-        public init(sport: SportID, sessionType: SessionType, intensity: PlanIntensity, amount: Double, focus: String, testID: String? = nil, brick: Bool = false, indoor: Bool = false) {
+        public init(sport: SportID, sessionType: SessionType, intensity: PlanIntensity, amount: Double, focus: String, testID: String? = nil, brick: Bool = false, indoor: Bool = false, openWater: Bool = false) {
             self.sport = sport
             self.sessionType = sessionType
             self.intensity = intensity
@@ -25,10 +27,11 @@ public struct DayTargetV2: Codable, Equatable, Sendable {
             self.testID = testID
             self.brick = brick ? true : nil
             self.indoor = indoor ? true : nil
+            self.openWater = openWater ? true : nil
         }
 
         private enum CodingKeys: String, CodingKey {
-            case sport, sessionType, intensity, amount, focus, brick, indoor
+            case sport, sessionType, intensity, amount, focus, brick, indoor, openWater
             case testID = "testId"
         }
     }
@@ -76,6 +79,8 @@ public struct WeekSession: Codable, Equatable, Sendable {
     public var brick: Bool
     /// Drinnen (Rolle, Laufband).
     public var indoor: Bool
+    /// Im Freiwasser (See, Meer) statt im Becken.
+    public var openWater: Bool
 
     public init(
         sport: SportID,
@@ -88,7 +93,8 @@ public struct WeekSession: Codable, Equatable, Sendable {
         focus: String,
         test: PlannedTest? = nil,
         brick: Bool = false,
-        indoor: Bool = false
+        indoor: Bool = false,
+        openWater: Bool = false
     ) {
         self.sport = sport
         self.sessionType = sessionType
@@ -101,13 +107,14 @@ public struct WeekSession: Codable, Equatable, Sendable {
         self.test = test
         self.brick = brick
         self.indoor = indoor
+        self.openWater = openWater
     }
 
     private enum CodingKeys: String, CodingKey {
-        case sport, sessionType, intensity, amount, unit, minutes, distanceMeters, focus, test, brick, indoor
+        case sport, sessionType, intensity, amount, unit, minutes, distanceMeters, focus, test, brick, indoor, openWater
     }
 
-    /// Gespeicherte Wochen und ältere Server ohne `brick` und `indoor` bleiben lesbar.
+    /// Gespeicherte Wochen und ältere Server ohne `brick`, `indoor` und `open_water` bleiben lesbar.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         sport = try container.decode(SportID.self, forKey: .sport)
@@ -121,6 +128,7 @@ public struct WeekSession: Codable, Equatable, Sendable {
         test = try container.decodeIfPresent(PlannedTest.self, forKey: .test)
         brick = try container.decodeIfPresent(Bool.self, forKey: .brick) ?? false
         indoor = try container.decodeIfPresent(Bool.self, forKey: .indoor) ?? false
+        openWater = try container.decodeIfPresent(Bool.self, forKey: .openWater) ?? false
     }
 
     /// Hart im Sinne der Planung: harte Intensität oder ein Test mit Vollbelastung.
@@ -130,7 +138,8 @@ public struct WeekSession: Codable, Equatable, Sendable {
     public var target: DayTargetV2.Session {
         DayTargetV2.Session(
             sport: sport, sessionType: sessionType, intensity: intensity, amount: amount,
-            focus: String(focus.prefix(DayTargetV2Limits.focusLength)), testID: test?.id, brick: brick, indoor: indoor
+            focus: String(focus.prefix(DayTargetV2Limits.focusLength)), testID: test?.id, brick: brick, indoor: indoor,
+            openWater: openWater
         )
     }
 }

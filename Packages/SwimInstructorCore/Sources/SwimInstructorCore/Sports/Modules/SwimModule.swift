@@ -35,6 +35,7 @@ public struct SwimModule: SportModule {
     public let planUnit = PlanUnit.meters
     /// 2:05 pro 100 m inklusive Pausen.
     public let typicalSpeedMetersPerSecond: Double = 0.8
+    public let openWater: OpenWaterVenue? = OpenWaterVenue(id: "open_water", displayName: "Freiwasser", locationID: RecordingLocation.openWater.id)
 
     public let recording = SportRecording(
         locations: [.pool, .openWater],

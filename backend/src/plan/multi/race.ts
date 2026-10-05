@@ -341,7 +341,7 @@ export function buildRaceUserMessage(input: RacePromptInput): string {
       return range === null ? [] : [`${target} ${range.min} bis ${range.max}${TARGET_UNIT[target] ? ` ${TARGET_UNIT[target]}` : ""}`];
     });
     lines.push(
-      `- ${sport.displayName} (sport "${sport.id}"): ${discipline.distance_meters} m, ${goalTime}; Pacing-Ziele: ${targets.join(", ") || "keine"}; ${sport.planning.canFuelDuringRace ? "Essen und Trinken möglich" : "kein Essen und Trinken möglich"}.`
+      `- ${sport.displayName} (sport "${sport.id}"): ${discipline.distance_meters} m${discipline.open_water === true && sport.planning.openWater !== null ? ` im ${sport.planning.openWater.displayName} (Orientierung, Start im Feld, Neopren je nach Wassertemperatur)` : ""}, ${goalTime}; Pacing-Ziele: ${targets.join(", ") || "keine"}; ${sport.planning.canFuelDuringRace ? "Essen und Trinken möglich" : "kein Essen und Trinken möglich"}.`
     );
   }
   lines.push(`Zusammen etwa ${total} min: Kohlenhydrate höchstens ${maxCarbs(total)} g pro Stunde.`);

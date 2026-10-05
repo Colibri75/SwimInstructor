@@ -353,6 +353,12 @@ struct PlannedSessionLine: View {
                     .foregroundStyle(.tint)
                     .accessibilityLabel("Drinnen")
             }
+            if session.openWater {
+                Image(systemName: "water.waves")
+                    .font(.caption)
+                    .foregroundStyle(.tint)
+                    .accessibilityLabel("Freiwasser")
+            }
         }
         .accessibilityElement(children: .combine)
     }

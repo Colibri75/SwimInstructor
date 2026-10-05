@@ -125,6 +125,7 @@ export const run: SportDefinition = {
     brickAfter: ["bike"],
     weatherSensitive: true,
     indoor: { equipment: "treadmill", displayName: "Laufband" },
+    openWater: null,
     canFuelDuringRace: true,
     promptRules: `- Laufen ist im Triathlon die verletzungsträchtigste Disziplin und hat die strengsten Grenzen. Keine Laufeinheit ist mehr als 10 % länger als die längste der letzten 4 Wochen (longest_session_minutes im Snapshot). Der Laufumfang steigt pro Woche um etwa 10 %, auch wenn die Grenzen mehr erlauben, und nicht mehrere Wochen hintereinander am oberen Rand.
 - Rund 80 % der Laufzeit sind locker (Zone 1 bis 2, Gespräch möglich). Schwelle und Intervalle erst auf einer stabilen Grundlage, höchstens eine harte Laufeinheit pro Woche.

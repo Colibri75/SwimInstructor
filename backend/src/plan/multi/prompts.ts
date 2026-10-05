@@ -29,6 +29,7 @@ import { chooseTest, lastConfirmedTest, preferredTest, scheduleMacroTests } from
 import { indoorAllowed, MIN_FREE_MINUTES, WeekContextV2, weekLimitsV2 } from "./weekSanity";
 import { DayWeather, severeWeather, weatherText } from "../weather";
 import { EXTRA_RULES, perWeek, strengthBlackout } from "./extras";
+import { inOpenWaterBlock, OPEN_WATER_RULES, openWaterAllowed, raceInOpenWater } from "./openWater";
 
 /**
  * Prompts der Planung fuer mehrere Sportarten. Die System-Prompts sind fest (kein Datum, keine Zahlen des Athleten)
@@ -85,10 +86,11 @@ function startingLevelLines(snapshot: SnapshotV2): string[] {
   return lines.length === 0 ? [] : ["", "Startniveau (vom Athleten angegeben, in den Grenzen schon berücksichtigt):", ...lines];
 }
 
-/** Regeln fuer Tag und Woche: Koppeltraining, drinnen, Wetter, Kalender, Kraft und Mobilitaet. */
-const DAY_AND_WEEK_RULES = `## Koppeltraining, drinnen, Wetter, Kalender, Kraft und Mobilität
+/** Regeln fuer Tag und Woche: Koppeltraining, drinnen, Freiwasser, Wetter, Kalender, Kraft und Mobilitaet. */
+const DAY_AND_WEEK_RULES = `## Koppeltraining, drinnen, Freiwasser, Wetter, Kalender, Kraft und Mobilität
 - brick true heißt Koppeltraining: Die Einheit schließt am selben Tag direkt an die erste an, ohne Pause außer dem Wechsel. Nur bei der zweiten Einheit des Tages und nur in der Reihenfolge, die die Nutzernachricht unter "Koppeltraining" nennt. Die angehängte Einheit ist kurz (beim Koppellauf 10 bis 30 Minuten) und locker bis mittel. In der zielspezifischen Phase etwa einmal pro Woche, im Aufbau selten, nie direkt nach einem harten Tag. Beide Einheiten zählen voll für ihre Grenzen.
 - indoor true heißt drinnen (Rolle, Laufband), nur wo die Nutzernachricht es für den Athleten erlaubt; sonst indoor false. Bei Gewitter, Sturm, Starkregen oder Glätte (Abschnitt "Wetter") kommen wetterabhängige Einheiten nach drinnen oder auf einen anderen Tag. Bei Hitze ab 30 °C harte Einheiten früh am Morgen oder lockerer, und erinnere ans Trinken.
+- open_water true heißt im Freiwasser (See, Meer) statt im Becken, nur wo die Nutzernachricht es erlaubt (Abschnitt "Freiwasser"), nie für einen Leistungstest und nicht bei Gewitter, Sturm oder Kälte; sonst open_water false. Ist das Ziel im Freiwasser, gewöhnt sich der Athlet dort an Orientierung, Start und Gedränge.
 - Steht bei einem Tag die freie Zeit laut Kalender, ist sie die Obergrenze für den Tag, Kraft und Mobilität eingeschlossen.
 - extras (Kraft und Mobilität) nur, wenn die Nutzernachricht sie vorsieht, sonst leer. Kraft (strength, 15 bis 45 Minuten): Rumpf, Hüfte und Beine, mit eigenem Körpergewicht, Band oder Matte; nicht am Tag vor einer harten Einheit, gern an einem lockeren Tag oder nach der harten Einheit am selben Tag; keine in den letzten 7 Tagen vor dem Ziel. Mobilität (mobility, 5 bis 30 Minuten): locker dehnen und mobilisieren, gern an Ruhetagen oder nach einer Einheit.`;
 
@@ -289,7 +291,8 @@ export function goalSectionV2(snapshot: SnapshotV2, today: string): string {
   const lines = ["Gesamtziel (in der App eingestellt, aus dem Snapshot berechnet, nach der Sicherheit dein wichtigster Maßstab):", `- Zielart: ${KIND_TEXT[kind]}.`];
   for (const discipline of goal.disciplines) {
     const time = discipline.target_duration_seconds !== undefined ? ` in ${formatDuration(discipline.target_duration_seconds)}` : "";
-    lines.push(`- ${sportName(discipline.sport)}: ${formatDistance(discipline.distance_meters)}${time}.`);
+    const venue = discipline.open_water === true ? ` im ${SPORTS.get(discipline.sport)?.planning.openWater?.displayName ?? "Freiwasser"}` : "";
+    lines.push(`- ${sportName(discipline.sport)}: ${formatDistance(discipline.distance_meters)}${time}${venue}.`);
   }
   lines.push(
     kind === "fitness"
@@ -473,6 +476,29 @@ function indoorLines(snapshot: SnapshotV2, equipment: readonly string[] | undefi
   return lines.length === 0 ? [] : ["Drinnen (alle anderen Sportarten: indoor false):", ...lines];
 }
 
+/** Freiwasser je Sportart, die es kennt: Zugang des Athleten, Ziel im Freiwasser und was das fuer diese Tage heisst. */
+function openWaterLines(snapshot: SnapshotV2, equipment: readonly string[] | undefined, dates: readonly string[]): string[] {
+  const lines = plannedSports(snapshot).flatMap((sport) => {
+    const venue = sport.planning.openWater;
+    if (venue === null) return [];
+    const race = raceInOpenWater(snapshot, sport.id);
+    if (!openWaterAllowed(sport, equipment)) {
+      const line = `- ${sport.displayName}: kein Zugang zu ${venue.displayName} angegeben (open_water false).`;
+      return race ? [line, `  Das Ziel ist im ${venue.displayName}: bring Elemente davon ins Becken (Orientierungsschwimmen, Wenden und Starts ohne Abstoßen, Tempowechsel wie nach dem Start).`] : [line];
+    }
+    const line = `- ${sport.displayName}: ${venue.displayName} möglich (open_water true), wenn das Wetter passt (nicht bei Unwetter und nicht unter ${OPEN_WATER_RULES.minAirTempC} °C Tageshöchstwert).`;
+    if (!race) return [line, `  Das Ziel ist nicht im ${venue.displayName}: nur gelegentlich, wenn es passt.`];
+    const block = dates.some((date) => inOpenWaterBlock(snapshot, date));
+    return [
+      line,
+      block
+        ? `  Das Ziel ist im ${venue.displayName}: plane in diesen Tagen mindestens eine ${sport.displayName}-Einheit dort, locker bis mittel, mit Orientierung und Wettkampfelementen (fehlt sie, setzt der Server die längste lockere dorthin).`
+        : `  Das Ziel ist im ${venue.displayName}: etwa alle zwei Wochen eine Einheit dort, wenn das Wetter passt; in den ${OPEN_WATER_RULES.raceWeeks} Wochen vor dem Ziel jede Woche.`
+    ];
+  });
+  return lines.length === 0 ? [] : ["Freiwasser (alle anderen Einheiten: open_water false):", ...lines];
+}
+
 function extrasLines(snapshot: SnapshotV2, supplements: Supplements | undefined, dates: readonly string[], planned?: readonly ExtraKind[]): string[] {
   const kinds = EXTRA_KINDS.filter((kind) => perWeek(supplements, kind) > 0 && (planned === undefined || planned.includes(kind)));
   if (kinds.length === 0) return ["Kraft und Mobilität: keine (extras leer)."];
@@ -564,7 +590,7 @@ export function buildDayUserMessageV2(input: DayPromptInput): string {
             : session.amount > limits.maxAmount
               ? ` Das ist mehr als die Grenze für heute: plane höchstens ${formatAmount(sport, limits.maxAmount)} und sag in der rationale in einfachen Worten, warum es weniger wird.`
               : "";
-      const how = [session.brick === true ? "direkt nach der ersten Einheit (Koppeltraining, brick true)" : "", session.indoor === true ? "drinnen (indoor true)" : ""].filter((text) => text !== "").join(", ");
+      const how = [session.brick === true ? "direkt nach der ersten Einheit (Koppeltraining, brick true)" : "", session.indoor === true ? "drinnen (indoor true)" : "", session.open_water === true ? "im Freiwasser (open_water true)" : ""].filter((text) => text !== "").join(", ");
       lines.push(`- ${sport.displayName}: Typ ${session.session_type}, Intensität ${session.intensity}, etwa ${formatAmount(sport, session.amount)}${how !== "" ? `, ${how}` : ""}, Schwerpunkt ${JSON.stringify(session.focus)}.${beyond}`);
     }
     for (const extra of target.extras ?? []) lines.push(`- ${EXTRA_RULES[extra.kind].displayName} (${extra.kind}): etwa ${extra.minutes} min, Schwerpunkt ${JSON.stringify(extra.focus)}.`);
@@ -572,6 +598,8 @@ export function buildDayUserMessageV2(input: DayPromptInput): string {
   lines.push("", ...brickLines(snapshot));
   const indoor = indoorLines(snapshot, input.equipment);
   if (indoor.length > 0) lines.push("", ...indoor);
+  const openWater = openWaterLines(snapshot, input.equipment, [date]);
+  if (openWater.length > 0) lines.push("", ...openWater);
   lines.push("", ...extrasLines(snapshot, input.supplements, [date], target !== undefined ? (target.extras ?? []).map((extra) => extra.kind) : undefined));
 
   lines.push(...painLines(snapshot, input.recent ?? [], [date]));
@@ -668,6 +696,8 @@ export function buildWeekUserMessageV2(input: WeekPromptInput): string {
   lines.push("", ...brickLines(snapshot));
   const indoor = indoorLines(snapshot, context.equipment);
   if (indoor.length > 0) lines.push("", ...indoor);
+  const openWater = openWaterLines(snapshot, context.equipment, context.dates);
+  if (openWater.length > 0) lines.push("", ...openWater);
   lines.push("", ...extrasLines(snapshot, context.supplements, context.dates));
 
   if (context.macroWeeks !== undefined && context.macroWeeks.length > 0) {

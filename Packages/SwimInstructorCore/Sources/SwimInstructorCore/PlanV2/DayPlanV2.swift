@@ -110,6 +110,8 @@ public struct DaySession: Codable, Equatable, Sendable {
     public let brick: Bool
     /// Drinnen (Rolle, Laufband).
     public let indoor: Bool
+    /// Im Freiwasser (See, Meer) statt im Becken.
+    public let openWater: Bool
     public let steps: [PlanStep]
 
     public init(
@@ -124,6 +126,7 @@ public struct DaySession: Codable, Equatable, Sendable {
         durationMinutes: Double,
         brick: Bool = false,
         indoor: Bool = false,
+        openWater: Bool = false,
         steps: [PlanStep]
     ) {
         self.sport = sport
@@ -137,14 +140,15 @@ public struct DaySession: Codable, Equatable, Sendable {
         self.durationMinutes = durationMinutes
         self.brick = brick
         self.indoor = indoor
+        self.openWater = openWater
         self.steps = steps
     }
 
     private enum CodingKeys: String, CodingKey {
-        case sport, sessionType, intensity, focus, test, amount, unit, distanceMeters, durationMinutes, brick, indoor, steps
+        case sport, sessionType, intensity, focus, test, amount, unit, distanceMeters, durationMinutes, brick, indoor, openWater, steps
     }
 
-    /// Gespeicherte Pläne und ältere Server ohne `brick` und `indoor` bleiben lesbar.
+    /// Gespeicherte Pläne und ältere Server ohne `brick`, `indoor` und `open_water` bleiben lesbar.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         sport = try container.decode(SportID.self, forKey: .sport)
@@ -158,6 +162,7 @@ public struct DaySession: Codable, Equatable, Sendable {
         durationMinutes = try container.decode(Double.self, forKey: .durationMinutes)
         brick = try container.decodeIfPresent(Bool.self, forKey: .brick) ?? false
         indoor = try container.decodeIfPresent(Bool.self, forKey: .indoor) ?? false
+        openWater = try container.decodeIfPresent(Bool.self, forKey: .openWater) ?? false
         steps = try container.decode([PlanStep].self, forKey: .steps)
     }
 

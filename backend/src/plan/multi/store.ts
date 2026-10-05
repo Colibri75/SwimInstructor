@@ -21,6 +21,7 @@ const StoredSessionSchema = z.object({
   duration_minutes: z.number(),
   brick: z.boolean().default(false),
   indoor: z.boolean().default(false),
+  open_water: z.boolean().default(false),
   steps: z.array(StepSchema)
 });
 
@@ -65,6 +66,7 @@ export function asRawDayPlan(plan: DayPlanV2): MultiDayPlanRaw {
       test_id: session.test?.id ?? null,
       brick: session.brick,
       indoor: session.indoor,
+      open_water: session.open_water,
       steps: session.steps.map((step) => ({ ...step, equipment: [...step.equipment] }))
     })),
     extras: plan.extras.map((extra) => ({ ...extra, exercises: extra.exercises.map((exercise) => ({ ...exercise })) }))

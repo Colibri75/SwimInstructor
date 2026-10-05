@@ -72,6 +72,7 @@ describe("contracts/sports.json", () => {
       expect(definition?.planning.brickAfter).toEqual(sport.brick_after);
       expect(definition?.planning.weatherSensitive).toBe(sport.weather_sensitive);
       expect(definition?.planning.indoor).toEqual(sport.indoor === null ? null : { equipment: sport.indoor.equipment, displayName: sport.indoor.display_name });
+      expect(definition?.planning.openWater).toEqual(sport.open_water === null ? null : { equipment: sport.open_water.equipment, displayName: sport.open_water.display_name });
       expect(definition?.performanceMetrics).toEqual(sport.performance_metrics.map(metricOf));
       expect(definition?.performanceTests).toEqual(
         sport.performance_tests.map((test: any) => ({

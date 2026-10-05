@@ -46,10 +46,10 @@ public struct UserDefaultsOwnedEquipmentStore: OwnedEquipmentStoring {
     }
 }
 
-/// Hilfsmittel, mit denen eine Sportart drinnen geht (Rolle, Laufband), aus den Sportmodulen. Anders als beim Schwimm-
-/// Equipment ist ohne Auswahl keins da: Erst mit Rolle oder Laufband plant der Server drinnen.
+/// Hilfsmittel und Orte aus den Sportmodulen: womit eine Sportart drinnen geht (Rolle, Laufband) und Zugang zu Freiwasser.
+/// Anders als beim Schwimm-Equipment ist ohne Auswahl nichts da: Erst damit plant der Server drinnen oder im Freiwasser.
 public protocol IndoorEquipmentStoring {
-    /// Kennungen (`indoor_trainer`, …) in der Reihenfolge der Sportarten.
+    /// Kennungen (`indoor_trainer`, `open_water`, …) in der Reihenfolge der Sportarten.
     func ownedIndoorEquipment() -> [String]
     func setOwnedIndoorEquipment(_ ids: Set<String>)
 }
@@ -67,11 +67,11 @@ public struct UserDefaultsIndoorEquipmentStore: IndoorEquipmentStoring {
 
     public func ownedIndoorEquipment() -> [String] {
         let stored = Set(defaults.stringArray(forKey: Self.storageKey) ?? [])
-        return registry.indoorEquipment.map(\.id).filter(stored.contains)
+        return registry.venueIDs.filter(stored.contains)
     }
 
     public func setOwnedIndoorEquipment(_ ids: Set<String>) {
-        defaults.set(registry.indoorEquipment.map(\.id).filter(ids.contains), forKey: Self.storageKey)
+        defaults.set(registry.venueIDs.filter(ids.contains), forKey: Self.storageKey)
     }
 }
 
@@ -80,5 +80,16 @@ public extension SportRegistry {
     var indoorEquipment: [IndoorEquipment] {
         var seen = Set<String>()
         return modules.compactMap(\.indoorEquipment).filter { seen.insert($0.id).inserted }
+    }
+
+    /// Freiwasser über alle Sportarten, ohne Doppelte.
+    var openWaterVenues: [OpenWaterVenue] {
+        var seen = Set<String>()
+        return modules.compactMap(\.openWater).filter { seen.insert($0.id).inserted }
+    }
+
+    /// Alle Kennungen für drinnen und Freiwasser, wie sie gespeichert werden und zum Server gehen.
+    var venueIDs: [String] {
+        indoorEquipment.map(\.id) + openWaterVenues.map(\.id)
     }
 }

@@ -19,6 +19,7 @@
         "duration_minutes": 12,
         "brick": false,
         "indoor": false,
+        "open_water": false,
         "steps": [
           {
             "name": "Einschwimmen",
@@ -83,6 +84,7 @@
         "duration_minutes": 58,
         "brick": false,
         "indoor": false,
+        "open_water": false,
         "steps": [
           {
             "name": "Einfahren",

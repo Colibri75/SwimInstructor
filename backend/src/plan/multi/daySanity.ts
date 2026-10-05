@@ -10,6 +10,7 @@ import { formatAmount, planningContext, sportName } from "./sports";
 import { checkTarget, normalizeStep, stepsAmount, trimSteps } from "./steps";
 import { chooseTest, stepsTotals, TestRef, testRef } from "./tests";
 import { indoorAllowed, withNote } from "./weekSanity";
+import { openWaterAllowed, openWaterBlocked } from "./openWater";
 
 /**
  * Sicherheitsschicht fuer den Tagesplan ueber mehrere Sportarten. Reiner Code: korrigiert Claudes Plan
@@ -53,6 +54,8 @@ export interface DaySessionV2 {
   brick: boolean;
   /** Drinnen (Rolle, Laufband). */
   indoor: boolean;
+  /** Im Freiwasser (See, Meer) statt im Becken. */
+  open_water: boolean;
   steps: SessionStep[];
 }
 
@@ -80,6 +83,7 @@ interface Draft {
   steps: SessionStep[];
   brick: boolean;
   indoor: boolean;
+  openWater: boolean;
 }
 
 const FORMAL_PREFIX = "Formal:";
@@ -119,7 +123,7 @@ export function sanitizeDayV2(input: MultiDayPlanRaw, snapshot: SnapshotV2, opti
     const keep = [...drafts].sort((a, b) => minutesOf(b) - minutesOf(a)).slice(0, MULTI_RULES.maxSessionsPerDay);
     drafts = drafts.filter((draft) => keep.includes(draft));
   }
-  drafts = drafts.map((draft) => placeIndoor(draft, options, notes));
+  drafts = drafts.map((draft) => placeOpenWater(placeIndoor(draft, options, notes), options, notes));
 
   // 2. Leistungstests: Schritte aus dem Modul oder eine lockere Einheit.
   let testDone = false;
@@ -245,6 +249,22 @@ function placeIndoor(draft: Draft, options: DayOptionsV2, notes: string[]): Draf
   return draft;
 }
 
+/** Freiwasser nur mit Zugang und passendem Wetter (wie im Wochenplan), sonst im Becken. */
+function placeOpenWater(draft: Draft, options: DayOptionsV2, notes: string[]): Draft {
+  if (!draft.openWater) return draft;
+  const sport = draft.sport;
+  if (sport.planning.openWater === null || !openWaterAllowed(sport, options.equipment)) {
+    notes.push(`${sport.displayName} im Becken (${sport.planning.openWater === null ? "Freiwasser gibt es nicht" : "kein Zugang zu Freiwasser angegeben"})`);
+    return { ...draft, openWater: false };
+  }
+  const blocked = openWaterBlocked(options.weather);
+  if (blocked !== null) {
+    notes.push(`${blocked}: ${sport.displayName} im Becken`);
+    return { ...draft, openWater: false };
+  }
+  return draft;
+}
+
 function findProblem(input: MultiDayPlanRaw): string | null {
   if (input.rationale.trim() === "") return "Begründung fehlt";
   if (input.sessions.length > 6) return `zu viele Einheiten (${input.sessions.length})`;
@@ -301,7 +321,8 @@ function toDraft(
       test: test !== undefined ? testRef(test) : null,
       steps,
       brick: raw.brick === true,
-      indoor: raw.indoor === true
+      indoor: raw.indoor === true,
+      openWater: raw.open_water === true && !isTest
     }
   ];
 }
@@ -359,6 +380,7 @@ function done(rationale: string, drafts: Draft[], extras: DayExtra[], coachNotes
       duration_minutes: Math.max(Math.round(totals.minutes), 1),
       brick: draft.brick,
       indoor: draft.indoor,
+      open_water: draft.openWater && draft.session_type !== "test",
       steps: draft.steps
     };
   });
