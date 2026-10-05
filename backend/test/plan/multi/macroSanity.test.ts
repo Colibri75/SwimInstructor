@@ -158,10 +158,10 @@ describe("sanitizeMacroV2", () => {
       const result = sanitizeMacroV2(raw, snapshot, { today: TODAY, goalDay: "2026-11-09", weeks });
 
       expect(result.plan.weeks.map((week) => week.phase)).toEqual(["specific", "specific", "specific", "specific", "specific", "taper", "goal_week"]);
-      // Hoehepunkt Schwimmen 4000 m: Zuspitzen 60 %, Zielwoche hoechstens 50 % oder 1,2-mal der Wettkampf.
-      expect(amounts(result.plan, "swim").slice(-2)).toEqual([2400, 2000]);
+      // Hoehepunkt Schwimmen 4000 m: Zuspitzen 55 %, Zielwoche hoechstens 50 % oder 1,2-mal der Wettkampf.
+      expect(amounts(result.plan, "swim").slice(-2)).toEqual([2200, 2000]);
       // Laufen: Hoehepunkt 60 min; Zielwoche hoechstens 1,2-mal 60 min (der Wettkampf selbst).
-      expect(amounts(result.plan, "run").slice(-2)).toEqual([35, 70]);
+      expect(amounts(result.plan, "run").slice(-2)).toEqual([30, 70]);
     });
 
     it("spitzt einen langen Wettkampf zwei Wochen zu", () => {
@@ -174,7 +174,27 @@ describe("sanitizeMacroV2", () => {
       const result = sanitizeMacroV2(raw, snapshot, { today: TODAY, goalDay: "2026-11-09", weeks });
 
       expect(result.plan.weeks.slice(-3).map((week) => week.phase)).toEqual(["taper", "taper", "goal_week"]);
-      expect(amounts(result.plan, "swim").slice(-3)).toEqual([3000, 2200, 4550]);
+      // Hoehepunkt 4000 m: 60 %, dann 45 % (Bosquet 2007: 41 bis 60 % weniger).
+      expect(amounts(result.plan, "swim").slice(-3)).toEqual([2400, 1800, 4550]);
+    });
+
+    it("behaelt beim Zuspitzen die Zahl der Einheiten der letzten Belastungswoche", () => {
+      const snapshot = multiSnapshot({
+        daysUntilGoal: 40,
+        goal: { weekly_hours: 20, disciplines: [{ sport: "swim", distance_meters: 3800 }, { sport: "bike", distance_meters: 180_000 }, { sport: "run", distance_meters: 42_195 }] }
+      });
+      const weeks = macroWeekStarts(TODAY, "2026-11-09");
+      const raw = macroPlan(weeks, () => ({ swim: 4000, bike: 120, run: 60 }));
+      // Claude halbiert beim Zuspitzen die Einheiten: Schwimmen nur noch einmal.
+      for (const [index, week] of raw.weeks.entries()) {
+        if (index >= weeks.length - 3 && index < weeks.length - 1) week.sports = week.sports.map((entry) => (entry.sport === "swim" ? { ...entry, sessions: 1 } : entry));
+      }
+      const result = sanitizeMacroV2(raw, snapshot, { today: TODAY, goalDay: "2026-11-09", weeks });
+
+      const taper = result.plan.weeks.filter((week) => week.phase === "taper");
+      expect(taper).toHaveLength(2);
+      expect(taper.map((week) => week.sports.find((entry) => entry.sport === "swim")?.sessions)).toEqual([3, 3]);
+      expect(result.adjustments.some((line) => line.includes("beim Zuspitzen bleibt die Zahl der Einheiten"))).toBe(true);
     });
 
     it("plant nach dem Ziel erhaltend und ohne Pflicht-Entlastung", () => {

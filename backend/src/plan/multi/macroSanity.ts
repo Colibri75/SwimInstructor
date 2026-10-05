@@ -154,6 +154,8 @@ export function sanitizeMacroV2(input: MacroWeeksRaw, snapshot: SnapshotV2, cont
 
   const reference = new Map<string, number>(sportLimitsList.map((entry) => [entry.limits.sport.id, entry.limits.average]));
   const peak = new Map<string, number>();
+  /** Einheiten je Sportart in der letzten Belastungswoche; beim Zuspitzen bleibt ihre Zahl (Bosquet 2007). */
+  const loadingSessions = new Map<string, number>();
   const notes: string[] = [];
   const weeks: MacroWeekV2[] = [];
   let missing = 0;
@@ -228,7 +230,13 @@ export function sanitizeMacroV2(input: MacroWeeksRaw, snapshot: SnapshotV2, cont
         amount = cap;
       }
       if (amount > 0 && amount < limits.minSession) amount = cap >= limits.minSession ? limits.minSession : 0;
-      const sessions = clampSessions(Math.round(requested?.sessions ?? 0), amount, limits.minSession, limits.maxSessionsPerWeek);
+      let requestedSessions = Math.round(requested?.sessions ?? 0);
+      const before = loadingSessions.get(sport.id) ?? 0;
+      if (phase === "taper" && amount > 0 && requestedSessions < before) {
+        notes.push(`${label(weekStart)}: ${sport.displayName} mit ${before} statt ${requestedSessions} Einheiten (beim Zuspitzen bleibt die Zahl der Einheiten)`);
+        requestedSessions = before;
+      }
+      const sessions = clampSessions(requestedSessions, amount, limits.minSession, limits.maxSessionsPerWeek);
       return toSportWeek(entry.limits, amount, sessions);
     });
 
@@ -255,6 +263,7 @@ export function sanitizeMacroV2(input: MacroWeeksRaw, snapshot: SnapshotV2, cont
     for (const entry of sports) {
       if (!deload) reference.set(entry.sport, index === 0 ? Math.max(entry.amount, reference.get(entry.sport) ?? 0) : entry.amount);
       if (!deload && loading) peak.set(entry.sport, Math.max(peak.get(entry.sport) ?? 0, entry.amount));
+      if (!deload && loading) loadingSessions.set(entry.sport, entry.sessions);
     }
     loadingStreak = deload ? 0 : loading ? loadingStreak + 1 : loadingStreak;
 

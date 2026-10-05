@@ -28,10 +28,13 @@ export const MULTI_RULES = {
   deloadFactor: 0.7,
   /** Nach so vielen Belastungswochen hintereinander kommt eine Entlastungswoche. */
   maxLoadingWeeks: 3,
-  /** Zuspitzen (Bosquet 2007: etwa 2 Wochen, Umfang 41 bis 60 % weniger, Intensitaet bleibt). */
+  /**
+   * Zuspitzen (Bosquet 2007: etwa 2 Wochen, Umfang 41 bis 60 % weniger, Intensitaet und Haeufigkeit bleiben):
+   * hoechstens dieser Anteil des Hoehepunkts, bei langen Wettkaempfen erst 40 %, dann 55 % weniger.
+   */
   longRaceSeconds: 4 * 3600,
-  taperFactorsLong: [0.75, 0.55] as readonly number[],
-  taperFactorsShort: [0.6] as readonly number[],
+  taperFactorsLong: [0.6, 0.45] as readonly number[],
+  taperFactorsShort: [0.55] as readonly number[],
   /** Aufbauphase (zielspezifisch) vor dem Zuspitzen, in Wochen. */
   specificWeeks: 8,
   /** Zielwoche: hoechstens dieser Anteil des Hoehepunkts, mindestens aber das 1,2-Fache des Wettkampfs. */
