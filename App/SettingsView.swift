@@ -24,6 +24,8 @@ struct SettingsView: View {
     private let startingLevelStore = UserDefaultsStartingLevelStore()
     @State private var scheduleSummary = ""
     private let scheduleStore = UserDefaultsWeeklyScheduleStore()
+    @State private var pauseReport: PauseReport?
+    private let pauseStore = UserDefaultsPauseReportStore()
 
     init(onSave: @escaping () -> Void = {}) {
         self.onSave = onSave
@@ -67,6 +69,9 @@ struct SettingsView: View {
 
                 startingLevelSection
                     .onAppear { startingLevels = startingLevelStore.levels() }
+
+                pauseSection
+                    .onAppear { pauseReport = pauseStore.report() }
 
                 Section {
                     NavigationLink {
@@ -168,6 +173,20 @@ struct SettingsView: View {
             }
         } footer: {
             Text("Wenn Health weniger zeigt, als du schaffst (Training ohne Uhr, Pause), gib hier deinen Wochenumfang und deine längste Einheit an. Die Angabe gilt 28 Tage.")
+        }
+    }
+
+    // MARK: - Pause
+
+    private var pauseSection: some View {
+        Section {
+            NavigationLink {
+                PauseReportView(store: pauseStore)
+            } label: {
+                LabeledContent("Pause melden", value: pauseReport.map { $0.kind.title } ?? "")
+            }
+        } footer: {
+            Text("Krank, verletzt oder im Urlaub? Ab 7 Tagen Pause schreibt die App den Gesamtplan gleich fort und steigt danach behutsam wieder ein.")
         }
     }
 

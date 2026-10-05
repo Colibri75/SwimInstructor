@@ -103,6 +103,13 @@ export const MacroRevisionSchema = z.object({
   blocks: z.array(MacroBlockRawSchema).describe("Die Abschnitte von der ersten Woche bis zur Zielwoche, in zeitlicher Reihenfolge")
 });
 
+export const MacroReviewSchema = z.object({
+  summary: z.string().describe("Bilanz der letzten Wochen in zwei, drei Sätzen auf Deutsch: Plan gegen Ist je Sportart in Prozent, Auffälligkeiten wie Pause oder Krankheit"),
+  rationale: z.string().describe("Begründung des fortgeschriebenen Gesamtplans auf Deutsch, höchstens fünf Sätze"),
+  changes: z.array(z.string()).describe("Was sich gegenüber dem bisherigen Plan ändert, ein Punkt je Änderung, höchstens acht, auf Deutsch"),
+  blocks: z.array(MacroBlockRawSchema).describe("Die Abschnitte von der laufenden Woche bis zur Zielwoche, in zeitlicher Reihenfolge")
+});
+
 /** Eine Woche des Gesamtplans, wie die Sicherheitsschicht sie prueft (aus den Abschnitten berechnet). */
 export interface MacroWeekRawV2 {
   week_start: string;
@@ -125,6 +132,7 @@ export type MultiWeekPlanRaw = z.infer<typeof MultiWeekPlanSchema>;
 export type MacroBlockRaw = z.infer<typeof MacroBlockRawSchema>;
 export type MultiMacroPlanRaw = z.infer<typeof MultiMacroPlanSchema>;
 export type MacroRevisionRaw = z.infer<typeof MacroRevisionSchema>;
+export type MacroReviewRaw = z.infer<typeof MacroReviewSchema>;
 
 // --- Was die App schickt ---
 
@@ -228,6 +236,36 @@ export const ReviseRequestSchema = z
     test_settings: TestSettingsSchema.optional()
   })
   .superRefine(requireV2);
+
+/** Anlass der Fortschreibung: alle 2 Wochen, nach einer gemeldeten Pause oder nach zwei schwachen Wochen. */
+export const REVIEW_REASONS = ["scheduled", "pause", "low_compliance"] as const;
+export const PAUSE_KINDS = ["sick", "injury", "vacation", "other"] as const;
+
+/** Was in einer vergangenen Woche tatsaechlich trainiert wurde, je Sportart in ihrer Planeinheit. */
+const ActualWeekSchema = z.object({
+  week_start: DateString,
+  sports: z.array(z.object({ sport: KnownSport, amount: Amount, sessions: z.number().int().min(0).max(30) })).max(16)
+});
+
+/** Fortschreibung des Gesamtplans (P4): der Plan, wie die App ihn haelt, das Ist der letzten Wochen, der Anlass. */
+export const ReviewRequestSchema = z
+  .object({
+    plan_version: PlanVersion.optional(),
+    snapshot: SnapshotSchema,
+    today: DateString,
+    plan: z.object({ rationale: z.string().max(2000).optional(), weeks: z.array(MacroWeekTargetV2Schema).min(1).max(80) }),
+    actual: z.array(ActualWeekSchema).max(12),
+    reason: z.enum(REVIEW_REASONS),
+    pause: z.object({ from: DateString, to: DateString.optional(), kind: z.enum(PAUSE_KINDS) }).optional(),
+    feedback: z.string().trim().min(1).max(MAX_FEEDBACK_LENGTH).optional(),
+    test_settings: TestSettingsSchema.optional()
+  })
+  .superRefine(requireV2);
+
+export type ReviewRequest = z.infer<typeof ReviewRequestSchema>;
+export type ActualWeek = z.infer<typeof ActualWeekSchema>;
+export type ReviewReason = (typeof REVIEW_REASONS)[number];
+export type PauseReport = NonNullable<ReviewRequest["pause"]>;
 
 export type RecentTraining = z.infer<typeof RecentTrainingSchema>[number];
 export type TestSettings = z.infer<typeof TestSettingsSchema>;

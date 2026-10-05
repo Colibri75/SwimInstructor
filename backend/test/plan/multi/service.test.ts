@@ -3,8 +3,10 @@ import { FallbackReason, PlanGenerationError, PlanUnavailableError } from "../..
 import { GeneratedPlan } from "../../../src/plan/generator";
 import { macroWeekStarts } from "../../../src/plan/macro";
 import { sanitizeDayV2 } from "../../../src/plan/multi/daySanity";
-import { MULTI_DAY_SYSTEM_PROMPT, MULTI_MACRO_SYSTEM_PROMPT, MULTI_REVISE_SYSTEM_PROMPT, MULTI_WEEK_SYSTEM_PROMPT } from "../../../src/plan/multi/prompts";
+import { MULTI_DAY_SYSTEM_PROMPT, MULTI_MACRO_SYSTEM_PROMPT, MULTI_REVISE_SYSTEM_PROMPT, MULTI_REVIEW_SYSTEM_PROMPT, MULTI_WEEK_SYSTEM_PROMPT } from "../../../src/plan/multi/prompts";
 import {
+  MacroReviewRaw,
+  MacroReviewSchema,
   MacroRevisionRaw,
   MacroRevisionSchema,
   MacroWeekTargetV2,
@@ -15,7 +17,7 @@ import {
   MultiWeekPlanSchema,
   RecentTraining
 } from "../../../src/plan/multi/schemas";
-import { dayHash, MultiPlanService, ReviseInput, WeekInputV2 } from "../../../src/plan/multi/service";
+import { dayHash, MultiPlanService, ReviewInput, ReviseInput, WeekInputV2 } from "../../../src/plan/multi/service";
 import { DayPlanStoreV2, MemoryDayPlanStoreV2, StoredDayV2 } from "../../../src/plan/multi/store";
 import { createLogger } from "../../../src/logger";
 import { testConfig } from "../../helpers";
@@ -590,5 +592,58 @@ describe("MultiPlanService.reviseMacro", () => {
     const { service } = setup(options());
 
     await expect(service.reviseMacro(reviseInput())).rejects.toMatchObject({ name: "PlanUnavailableError", reason });
+  });
+});
+
+// --- Fortschreibung ---
+
+const reviewInput = (extra: Partial<ReviewInput> = {}): ReviewInput => ({
+  snapshot: multiSnapshot(),
+  today: TODAY,
+  plan: { rationale: "Bisheriger Plan.", weeks: currentWeeks },
+  actual: [],
+  reason: "scheduled",
+  ...extra
+});
+
+const reviewRaw = (summary = "Schwimmen 90 % erfüllt.", changes: string[] = ["Rad etwas mehr"]): MacroReviewRaw => ({ ...goodMacro(), summary, changes });
+
+describe("MultiPlanService.reviewMacro", () => {
+  it("schreibt den Gesamtplan mit Bilanz und Aenderungen fort", async () => {
+    const complete = jest.fn().mockResolvedValue(generated(reviewRaw()));
+    const { service } = setup({ complete });
+
+    const result = await service.reviewMacro(reviewInput({ feedback: "  mehr Rad " }));
+
+    expect(result).toMatchObject({ goalDay: GOAL_DAY, generatedAt: NOW_ISO, summary: "Schwimmen 90 % erfüllt.", changes: ["Rad etwas mehr"], reason: "scheduled", feedback: "mehr Rad" });
+    expect(result.plan.weeks[0].week_start).toBe(WEEKS[0]);
+    const [system, user, schema, options] = complete.mock.calls[0];
+    expect(system).toBe(MULTI_REVIEW_SYSTEM_PROMPT);
+    expect(schema).toBe(MacroReviewSchema);
+    expect(options).toEqual({ macro: true });
+    expect(user).toContain("Anlass: regelmäßige Fortschreibung (alle zwei Wochen).");
+    expect(user).toContain("- keine vergangenen Wochen im Plan");
+    expect(user).toContain(JSON.stringify("mehr Rad"));
+  });
+
+  it("kuerzt die Bilanz und laesst ein leeres Feedback weg", async () => {
+    const { service } = setup({ complete: jest.fn().mockResolvedValue(generated(reviewRaw(`  ${"b".repeat(700)} `))) });
+
+    const result = await service.reviewMacro(reviewInput({ feedback: "   " }));
+
+    expect(result.summary).toBe("b".repeat(600));
+    expect(result).not.toHaveProperty("feedback");
+  });
+
+  it("wirft sanity_blocked, wenn die Sicherheitsschicht den Plan blockt", async () => {
+    const { service } = setup({ complete: jest.fn().mockResolvedValue(generated({ ...reviewRaw(), rationale: "" })) });
+
+    await expect(service.reviewMacro(reviewInput())).rejects.toMatchObject({ name: "PlanUnavailableError", reason: "sanity_blocked" });
+  });
+
+  it("wirft schema_invalid ohne Bilanz", async () => {
+    const { service } = setup({ complete: jest.fn().mockResolvedValue(generated(revision())) });
+
+    await expect(service.reviewMacro(reviewInput())).rejects.toMatchObject({ name: "PlanUnavailableError", reason: "schema_invalid" });
   });
 });

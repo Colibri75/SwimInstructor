@@ -13,6 +13,7 @@ struct SwimInstructorApp: App {
     @StateObject private var planSync: PhonePlanSync
     @StateObject private var testResultInbox: WatchTestResultInbox
     @StateObject private var statisticDashboard: StatisticDashboard
+    @StateObject private var reviewRunner: MacroReviewRunner
 
     init() {
         let healthKitManager = HealthKitManager()
@@ -56,6 +57,8 @@ struct SwimInstructorApp: App {
             // Ein Gesamtplan gehört zu einer Zielversion: Eine Feinjustierung lässt ihn stehen (P3).
             goalVersion: { goalStore.goalVersion }
         )
+        // Fortschreibung alle zwei Wochen und nach einer gemeldeten Pause, im Hintergrund (P4).
+        let reviewRunner = MacroReviewRunner(macroLoader: macroLoader, pauseStore: UserDefaultsPauseReportStore())
         let wishStore = UserDefaultsDailyWishStore()
         let loader = MultiSportTodayLoader(
             authorizer: healthKitManager,
@@ -78,9 +81,11 @@ struct SwimInstructorApp: App {
             // Beim ersten Öffnen am Tag, nach dem Lesen von Health und vor dem Tagesplan: Gesamtplan sicherstellen und
             // die nächsten sieben Tage neu abstimmen. Nach einer Überarbeitung des Gesamtplans gilt der Tag wieder als
             // offen, damit die Tage zum neuen Gesamtplan passen.
-            prepare: { [weak macroLoader, weak weekLoader] reading in
+            prepare: { [weak macroLoader, weak weekLoader, weak reviewRunner] reading in
                 guard let macroLoader, let weekLoader else { return }
                 await macroLoader.ensureCurrent(snapshot: reading.snapshot)
+                // Läuft nebenher; danach stimmt `onReviewed` die Tage neu ab.
+                reviewRunner?.startIfDue(reading: reading)
                 let today = PlanFormatting.isoDay(Date())
                 await weekLoader.refreshDaily(
                     wishes: wishStore.wish(for: today),
@@ -88,6 +93,7 @@ struct SwimInstructorApp: App {
                 )
             }
         )
+        reviewRunner.onReviewed = { [weak loader] in await loader?.refreshIfNeeded() }
         weekLoader.equipmentProvider = { ownedEquipment.ownedEquipment() }
         weekLoader.testSettingsProvider = { testSettingsStore.settings() }
         // Die nächsten sieben Tage richten sich nach den Wochen des Gesamtplans.
@@ -118,6 +124,7 @@ struct SwimInstructorApp: App {
         _planSync = StateObject(wrappedValue: planSync)
         _testResultInbox = StateObject(wrappedValue: testResultInbox)
         // Die Kacheln der Statistik, gespeichert auf dem Gerät.
+        _reviewRunner = StateObject(wrappedValue: reviewRunner)
         _statisticDashboard = StateObject(wrappedValue: StatisticDashboard(store: UserDefaultsStatisticLayoutStore()))
     }
 
@@ -132,6 +139,7 @@ struct SwimInstructorApp: App {
                 .environmentObject(profileLoader)
                 .environmentObject(testResultInbox)
                 .environmentObject(statisticDashboard)
+                .environmentObject(reviewRunner)
         }
     }
 }

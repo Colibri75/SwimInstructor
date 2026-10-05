@@ -124,6 +124,8 @@ public struct MacroPlanV2: Codable, Equatable, Sendable {
     public var weeks: [MacroWeekV2]
     /// Feedback-Runden zu diesem Plan, älteste zuerst. Ein neu berechneter Plan beginnt ohne.
     public var feedbackRounds: [MacroFeedbackRound]
+    /// Fortschreibungen (P4), älteste zuerst. Ein neu berechneter Plan beginnt ohne.
+    public var reviews: [MacroReview]
 
     public init(
         goalKey: String,
@@ -132,7 +134,8 @@ public struct MacroPlanV2: Codable, Equatable, Sendable {
         rationale: String,
         adjustments: [String] = [],
         weeks: [MacroWeekV2],
-        feedbackRounds: [MacroFeedbackRound] = []
+        feedbackRounds: [MacroFeedbackRound] = [],
+        reviews: [MacroReview] = []
     ) {
         self.goalKey = goalKey
         self.goalDay = goalDay
@@ -141,10 +144,11 @@ public struct MacroPlanV2: Codable, Equatable, Sendable {
         self.adjustments = adjustments
         self.weeks = weeks.sorted { $0.weekStart < $1.weekStart }
         self.feedbackRounds = feedbackRounds
+        self.reviews = reviews
     }
 
     private enum CodingKeys: String, CodingKey {
-        case goalKey, goalDay, generatedAt, rationale, adjustments, weeks, feedbackRounds
+        case goalKey, goalDay, generatedAt, rationale, adjustments, weeks, feedbackRounds, reviews
     }
 
     public init(from decoder: Decoder) throws {
@@ -156,8 +160,33 @@ public struct MacroPlanV2: Codable, Equatable, Sendable {
             rationale: try container.decode(String.self, forKey: .rationale),
             adjustments: try container.decodeIfPresent([String].self, forKey: .adjustments) ?? [],
             weeks: try container.decode([MacroWeekV2].self, forKey: .weeks),
-            feedbackRounds: try container.decodeIfPresent([MacroFeedbackRound].self, forKey: .feedbackRounds) ?? []
+            feedbackRounds: try container.decodeIfPresent([MacroFeedbackRound].self, forKey: .feedbackRounds) ?? [],
+            reviews: try container.decodeIfPresent([MacroReview].self, forKey: .reviews) ?? []
         )
+    }
+
+    // MARK: - Fortschreibung (P4)
+
+    /// Alle so viele Tage wird der Gesamtplan fortgeschrieben.
+    public static let reviewIntervalDays = 14
+
+    /// Wann zuletzt ein neuer Stand entstand: Erstellung oder letzte Fortschreibung.
+    public var lastRevisionDate: Date { reviews.last?.reviewedAt ?? generatedAt }
+
+    /// Montag der nächsten regelmäßigen Fortschreibung: zwei Wochen nach der Woche der letzten Fortschreibung bzw. der
+    /// Erstellung.
+    public func nextReviewWeekStart(calendar: Calendar = .current) -> String {
+        let weekCalendar = WeekCalendar(calendar: calendar)
+        let base = reviews.last?.weekStart ?? weekCalendar.weekStart(containing: generatedAt)
+        guard let date = weekCalendar.date(from: base),
+              let next = calendar.date(byAdding: .day, value: Self.reviewIntervalDays, to: date) else { return base }
+        return weekCalendar.weekStart(containing: next)
+    }
+
+    /// Feedback gibt es einmal nach einem neuen Plan und einmal nach jeder Fortschreibung (beide Zeiten vom Gerät).
+    public var canGiveFeedback: Bool {
+        guard let last = reviews.last else { return feedbackRounds.isEmpty }
+        return !feedbackRounds.contains { $0.revisedAt >= last.reviewedAt }
     }
 
     public func week(starting weekStart: String) -> MacroWeekV2? {
@@ -191,7 +220,7 @@ public struct MacroPlanV2: Codable, Equatable, Sendable {
     }
 }
 
-/// Antwort von `POST /v1/plan/macro` (v2) und `POST /v1/plan/macro/revise`.
+/// Antwort von `POST /v1/plan/macro` (v2), `POST /v1/plan/macro/revise` und `POST /v1/plan/macro/review`.
 public struct MacroPlanV2Response: Decodable, Equatable, Sendable {
     public struct Plan: Decodable, Equatable, Sendable {
         public let rationale: String
@@ -207,6 +236,10 @@ public struct MacroPlanV2Response: Decodable, Equatable, Sendable {
     public let changes: [String]?
     /// Nur bei der Überarbeitung: das Feedback, so wie der Server es gelesen hat.
     public let feedback: String?
+    /// Nur bei der Fortschreibung: die Bilanz der letzten Wochen.
+    public let summary: String?
+    /// Nur bei der Fortschreibung: der Anlass.
+    public let reason: MacroReviewReason?
 
     /// Als gespeicherter Gesamtplan für das Ziel `goalKey`, mit den Feedback-Runden `rounds`.
     public func macroPlan(goalKey: String, feedbackRounds rounds: [MacroFeedbackRound] = []) -> MacroPlanV2 {

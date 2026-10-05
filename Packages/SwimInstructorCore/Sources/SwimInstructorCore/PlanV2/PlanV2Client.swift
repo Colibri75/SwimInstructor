@@ -243,6 +243,46 @@ public struct MacroRevisionRequest: Equatable, Sendable {
     }
 }
 
+/// Fortschreibung des Gesamtplans (`POST /v1/plan/macro/review`, P4): der Plan, das Ist der letzten Wochen, der Anlass,
+/// eine gemeldete Pause und optional Feedback.
+public struct MacroReviewRequest: Equatable, Sendable {
+    /// So viele vergangene Wochen gehen höchstens als Ist mit.
+    public static let maxActualWeeks = 12
+
+    public var snapshot: AthleteStateSnapshot
+    public var today: String
+    public var plan: MacroPlanV2
+    /// Nur die Wochen ab hier gehen als bisheriger Plan mit (vergangene Wochen bleiben sonst unbegrenzt im Plan).
+    public var planFrom: String
+    public var actual: [MacroActualWeek]
+    public var reason: MacroReviewReason
+    public var pause: PauseReport?
+    public var feedback: String?
+    public var testSettings: TestSettings?
+
+    public init(
+        snapshot: AthleteStateSnapshot,
+        today: String,
+        plan: MacroPlanV2,
+        planFrom: String,
+        actual: [MacroActualWeek],
+        reason: MacroReviewReason,
+        pause: PauseReport? = nil,
+        feedback: String? = nil,
+        testSettings: TestSettings? = nil
+    ) {
+        self.snapshot = snapshot
+        self.today = today
+        self.plan = plan
+        self.planFrom = planFrom
+        self.actual = actual
+        self.reason = reason
+        self.pause = pause
+        self.feedback = feedback
+        self.testSettings = testSettings
+    }
+}
+
 public protocol DayPlanV2Providing: Sendable {
     func fetchDayPlanV2(_ request: DayPlanV2Request) async throws -> DayPlanV2Response
 }
@@ -254,6 +294,7 @@ public protocol WeekPlanV2Providing: Sendable {
 public protocol MacroPlanV2Providing: Sendable {
     func fetchMacroPlanV2(_ request: MacroPlanV2Request) async throws -> MacroPlanV2Response
     func reviseMacroPlan(_ request: MacroRevisionRequest) async throws -> MacroPlanV2Response
+    func reviewMacroPlan(_ request: MacroReviewRequest) async throws -> MacroPlanV2Response
 }
 
 // MARK: - Client
@@ -311,6 +352,26 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
             plan: ReviseBody.Plan(rationale: String(request.plan.rationale.prefix(2000)), weeks: Array(request.plan.weeks.prefix(80))),
             feedback: String(feedback.prefix(MacroRevisionRequest.maxFeedbackLength)),
             history: history.isEmpty ? nil : Array(history),
+            testSettings: request.testSettings
+        ))
+    }
+
+    public func reviewMacroPlan(_ request: MacroReviewRequest) async throws -> MacroPlanV2Response {
+        let feedback = request.feedback?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return try await postV2(path: "v1/plan/macro/review", timeout: Self.macroTimeout, body: ReviewBody(
+            planVersion: Self.planVersion,
+            snapshot: request.snapshot,
+            today: request.today,
+            plan: ReviseBody.Plan(
+                rationale: String(request.plan.rationale.prefix(2000)),
+                weeks: Array(request.plan.weeks(from: request.planFrom).prefix(80))
+            ),
+            actual: request.actual.suffix(MacroReviewRequest.maxActualWeeks).map { week in
+                ReviewBody.Week(weekStart: week.weekStart, sports: week.sports.prefix(16).map { .init(sport: $0.sport, amount: $0.amount, sessions: min($0.sessions, 30)) })
+            },
+            reason: request.reason.rawValue,
+            pause: request.pause.map { ReviewBody.Pause(from: $0.from, to: $0.to, kind: $0.kind.rawValue) },
+            feedback: (feedback?.isEmpty ?? true) ? nil : feedback.map { String($0.prefix(MacroRevisionRequest.maxFeedbackLength)) },
             testSettings: request.testSettings
         ))
     }
@@ -377,6 +438,35 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
         let planVersion: Int
         let snapshot: AthleteStateSnapshot
         let today: String
+        let testSettings: TestSettings?
+    }
+
+    private struct ReviewBody: Encodable {
+        struct Week: Encodable {
+            struct Sport: Encodable {
+                let sport: SportID
+                let amount: Double
+                let sessions: Int
+            }
+
+            let weekStart: String
+            let sports: [Sport]
+        }
+
+        struct Pause: Encodable {
+            let from: String
+            let to: String?
+            let kind: String
+        }
+
+        let planVersion: Int
+        let snapshot: AthleteStateSnapshot
+        let today: String
+        let plan: ReviseBody.Plan
+        let actual: [Week]
+        let reason: String
+        let pause: Pause?
+        let feedback: String?
         let testSettings: TestSettings?
     }
 

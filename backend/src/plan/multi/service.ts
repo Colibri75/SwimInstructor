@@ -15,21 +15,27 @@ import {
   buildDayUserMessageV2,
   buildMacroUserMessageV2,
   buildReviseUserMessage,
+  buildReviewUserMessage,
   buildWeekUserMessageV2,
   MULTI_DAY_SYSTEM_PROMPT,
   MULTI_MACRO_SYSTEM_PROMPT,
   MULTI_REVISE_SYSTEM_PROMPT,
+  MULTI_REVIEW_SYSTEM_PROMPT,
   MULTI_WEEK_SYSTEM_PROMPT
 } from "./prompts";
 import {
   DayTargetV2,
   FeedbackRound,
+  MacroReviewSchema,
   MacroRevisionSchema,
   MacroWeekTargetV2,
   MultiDayPlanSchema,
   MultiMacroPlanSchema,
   MultiWeekPlanSchema,
+  PauseReport,
   RecentTraining,
+  ReviewReason,
+  ActualWeek,
   TestSettings
 } from "./schemas";
 import { asRawDayPlan, DayPlanStoreV2, StoredDayV2 } from "./store";
@@ -112,6 +118,26 @@ export interface ReviseResult extends MacroResultV2 {
   /** Was sich laut Claude geaendert hat, auf Deutsch. */
   changes: string[];
   feedback: string;
+}
+
+export interface ReviewInput {
+  snapshot: SnapshotV2;
+  today: string;
+  plan: { rationale?: string; weeks: MacroWeekTargetV2[] };
+  actual: ActualWeek[];
+  reason: ReviewReason;
+  pause?: PauseReport;
+  feedback?: string;
+  testSettings?: TestSettings;
+}
+
+export interface ReviewResult extends MacroResultV2 {
+  /** Die Bilanz der letzten Wochen, auf Deutsch. */
+  summary: string;
+  changes: string[];
+  reason: ReviewReason;
+  /** Das Feedback zur Fortschreibung, so wie der Server es gelesen hat; fehlt ohne Feedback. */
+  feedback?: string;
 }
 
 export class MultiPlanService {
@@ -217,6 +243,41 @@ export class MultiPlanService {
     return { goalDay: context.goalDay, generatedAt: this.now().toISOString(), plan: sanitized.plan, adjustments: sanitized.adjustments, changes, feedback };
   }
 
+  /**
+   * Fortschreibung (P4): Plan gegen Ist der letzten Wochen, Anlass und optional Feedback; die Antwort hat die Wochen ab der
+   * laufenden, die Bilanz und die Aenderungen. Die laufende Woche haelt die App fest (sie ersetzt sie durch ihre).
+   */
+  async reviewMacro(input: ReviewInput): Promise<ReviewResult> {
+    const context = macroContext(input.snapshot, input.today, input.testSettings);
+    const feedback = input.feedback?.trim() || undefined;
+    const generated = await this.generate(
+      "review",
+      MULTI_REVIEW_SYSTEM_PROMPT,
+      buildReviewUserMessage({ snapshot: input.snapshot, context, plan: input.plan, actual: input.actual, reason: input.reason, pause: input.pause, feedback }),
+      MacroReviewSchema,
+      { macro: true }
+    );
+    const weeks = expandMacroBlocks(generated.data.blocks, context.weeks);
+    const sanitized = sanitizeMacroV2({ rationale: generated.data.rationale, weeks }, input.snapshot, context);
+    if (sanitized.blocked !== null) throw this.blocked("review", sanitized.blocked);
+    const changes = generated.data.changes
+      .map((change) => change.trim().slice(0, MULTI_RULES.maxChangeLength))
+      .filter((change) => change !== "")
+      .slice(0, MULTI_RULES.maxChanges);
+    const summary = generated.data.summary.trim().slice(0, MULTI_RULES.maxSummaryLength);
+    this.logGenerated("review", generated.meta, sanitized.adjustments.length, { weeks: sanitized.plan.weeks.length, changes: changes.length, reason: input.reason, actualWeeks: input.actual.length });
+    return {
+      goalDay: context.goalDay,
+      generatedAt: this.now().toISOString(),
+      plan: sanitized.plan,
+      adjustments: sanitized.adjustments,
+      summary,
+      changes,
+      reason: input.reason,
+      ...(feedback !== undefined ? { feedback } : {})
+    };
+  }
+
   /** Ein Claude-Aufruf mit Budget und Schema-Pruefung; jeder Ausfall wird `PlanUnavailableError` mit Grund. */
   private async generate<S extends z.ZodType>(
     kind: string,
@@ -251,7 +312,7 @@ export class MultiPlanService {
     return new PlanUnavailableError("sanity_blocked", reason);
   }
 
-  private logGenerated(kind: string, meta: GeneratedPlan, adjustments: number, extra: Record<string, number>): void {
+  private logGenerated(kind: string, meta: GeneratedPlan, adjustments: number, extra: Record<string, number | string>): void {
     this.deps.logger.info(
       { kind, model: meta.model, inputTokens: meta.usage.inputTokens, outputTokens: meta.usage.outputTokens, adjustments, ...extra },
       "plan v2 generated"

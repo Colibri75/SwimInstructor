@@ -320,6 +320,59 @@ final class PlanV2ClientTests: XCTestCase {
         XCTAssertEqual(Set(firstRound.keys), ["feedback", "changes"])
     }
 
+    func testReviewSendsPlanFromTheLookbackActualReasonPauseAndFeedback() async throws {
+        let transport = StubTransport(status: 200, body: try Self.contract("plan-v2-review-response.json"))
+        let actual = (1...14).map { index in
+            MacroActualWeek(weekStart: "w\(index)", sports: [.init(sport: .swim, amount: 2_400, sessions: 40)])
+        }
+        let request = MacroReviewRequest(
+            snapshot: TestFixtures.snapshot,
+            today: "2026-09-30",
+            plan: Self.macroPlan(),
+            planFrom: "2026-10-05",
+            actual: actual,
+            reason: .pause,
+            pause: PauseReport(kind: .sick, from: "2026-09-20", to: nil, reportedAt: TestFixtures.now),
+            feedback: "  Knie zwickt \n"
+        )
+
+        let response = try await makeClient(transport).reviewMacroPlan(request)
+
+        XCTAssertEqual(response.summary, "Schwimmen 96 % erfüllt, Radfahren 88 %, Laufen 70 %. In der zweiten Woche fielen zwei Läufe aus.")
+        XCTAssertEqual(response.reason, .scheduled)
+        XCTAssertEqual(response.changes?.count, 2)
+        let sent = try XCTUnwrap(transport.requests.first)
+        XCTAssertEqual(sent.url?.absoluteString, "https://example.test/v1/plan/macro/review")
+        XCTAssertEqual(sent.timeoutInterval, PlanAPIClient.macroTimeout)
+
+        let body = try Self.body(sent)
+        XCTAssertEqual(Set(body.keys), ["plan_version", "snapshot", "today", "plan", "actual", "reason", "pause", "feedback"])
+        XCTAssertEqual(body["reason"] as? String, "pause")
+        XCTAssertEqual(body["feedback"] as? String, "Knie zwickt")
+        XCTAssertEqual(body["pause"] as? [String: String], ["from": "2026-09-20", "kind": "sick"])
+        let plan = try XCTUnwrap(body["plan"] as? [String: Any])
+        XCTAssertEqual((plan["weeks"] as? [[String: Any]])?.compactMap { $0["week_start"] as? String }, ["2026-10-05"])
+        let sentActual = try XCTUnwrap(body["actual"] as? [[String: Any]])
+        XCTAssertEqual(sentActual.count, 12)
+        XCTAssertEqual(sentActual.first?["week_start"] as? String, "w3")
+        let sport = try XCTUnwrap((sentActual.first?["sports"] as? [[String: Any]])?.first)
+        XCTAssertEqual(sport["sessions"] as? Int, 30)
+        XCTAssertEqual(sport["amount"] as? Double, 2_400)
+    }
+
+    func testReviewWithoutPauseAndWithBlankFeedbackLeavesThemOut() async throws {
+        let transport = StubTransport(status: 200, body: try Self.contract("plan-v2-review-response.json"))
+        let request = MacroReviewRequest(
+            snapshot: TestFixtures.snapshot, today: "2026-09-30", plan: Self.macroPlan(), planFrom: "2026-09-28", actual: [], reason: .lowCompliance, feedback: "   "
+        )
+
+        _ = try await makeClient(transport).reviewMacroPlan(request)
+
+        let body = try Self.body(transport.requests.first)
+        XCTAssertEqual(Set(body.keys), ["plan_version", "snapshot", "today", "plan", "actual", "reason"])
+        XCTAssertEqual(body["reason"] as? String, "low_compliance")
+    }
+
     func testReviseCutsOverlongTexts() async throws {
         let transport = StubTransport(status: 200, body: try Self.contract("plan-v2-revise-response.json"))
         let round = MacroFeedbackRound(

@@ -9,6 +9,8 @@ public final class MultiSportMacroLoader: ObservableObject {
     @Published public private(set) var isLoading = false
     /// Eine Überarbeitung nach Feedback läuft.
     @Published public private(set) var isRevising = false
+    /// Eine Fortschreibung läuft (P4).
+    @Published public private(set) var isReviewing = false
     @Published public private(set) var error: String?
     /// Kein Token hinterlegt.
     @Published public private(set) var needsConfiguration = false
@@ -20,6 +22,7 @@ public final class MultiSportMacroLoader: ObservableObject {
     private let goal: @MainActor () -> TrainingGoal
     private let goalVersion: (@MainActor () -> Int)?
     private let attemptMarker: DailyRefreshMarking
+    private let reviewMarker: DailyRefreshMarking
     private let now: () -> Date
     private let calendar: Calendar
     private let weekCalendar: WeekCalendar
@@ -35,6 +38,7 @@ public final class MultiSportMacroLoader: ObservableObject {
         goal: @escaping @MainActor () -> TrainingGoal,
         goalVersion: (@MainActor () -> Int)? = nil,
         attemptMarker: DailyRefreshMarking = UserDefaultsDailyRefreshMarker(key: "plan.lastMacroAttemptV2"),
+        reviewMarker: DailyRefreshMarking = UserDefaultsDailyRefreshMarker(key: "plan.lastMacroReviewAttemptV2"),
         now: @escaping () -> Date = { Date() },
         calendar: Calendar = .current
     ) {
@@ -43,6 +47,7 @@ public final class MultiSportMacroLoader: ObservableObject {
         self.goal = goal
         self.goalVersion = goalVersion
         self.attemptMarker = attemptMarker
+        self.reviewMarker = reviewMarker
         self.now = now
         self.calendar = calendar
         self.weekCalendar = WeekCalendar(calendar: calendar)
@@ -104,7 +109,7 @@ public final class MultiSportMacroLoader: ObservableObject {
     /// sich nach einer Überarbeitung neu abzustimmen.
     public var revisionStamp: String {
         guard let plan else { return "" }
-        return "\(plan.generatedAt.timeIntervalSince1970)|\(plan.feedbackRounds.count)"
+        return "\(plan.generatedAt.timeIntervalSince1970)|\(plan.feedbackRounds.count)|\(plan.reviews.count)"
     }
 
     // MARK: - Erneuern
@@ -130,7 +135,7 @@ public final class MultiSportMacroLoader: ObservableObject {
     /// stehen.
     @discardableResult
     public func regenerate(snapshot: AthleteStateSnapshot) async -> Bool {
-        guard !isLoading, !isRevising else { return false }
+        guard !isLoading, !isRevising, !isReviewing else { return false }
         guard let provider = planProvider() else {
             needsConfiguration = true
             return false
@@ -166,7 +171,11 @@ public final class MultiSportMacroLoader: ObservableObject {
             error = "Es gibt noch keinen Gesamtplan."
             return false
         }
-        guard !isLoading, !isRevising else { return false }
+        guard !isLoading, !isRevising, !isReviewing else { return false }
+        guard current.canGiveFeedback else {
+            error = "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung."
+            return false
+        }
         guard let provider = planProvider() else {
             needsConfiguration = true
             return false
@@ -189,13 +198,127 @@ public final class MultiSportMacroLoader: ObservableObject {
                 adjustments: response.adjustments,
                 revisedAt: now()
             )
-            store(response.macroPlan(goalKey: current.goalKey, feedbackRounds: current.feedbackRounds + [round]))
+            var revisedPlan = keepingPastWeeks(of: current, in: response.macroPlan(goalKey: current.goalKey, feedbackRounds: current.feedbackRounds + [round]))
+            revisedPlan.generatedAt = current.generatedAt
+            revisedPlan.reviews = current.reviews
+            store(revisedPlan)
             error = nil
             return true
         } catch {
             self.error = error.localizedDescription
             return false
         }
+    }
+
+    // MARK: - Fortschreibung (P4)
+
+    /// Ist die regelmäßige Fortschreibung fällig? Ab dem Montag zwei Wochen nach der letzten.
+    public var reviewDue: Bool {
+        guard let plan, isCurrent else { return false }
+        return currentWeekStart >= plan.nextReviewWeekStart(calendar: calendar)
+    }
+
+    /// Montag der nächsten regelmäßigen Fortschreibung.
+    public var nextReviewWeekStart: String? { plan?.nextReviewWeekStart(calendar: calendar) }
+
+    /// So weit zurück gehen Plan und Ist an die Fortschreibung (4 Wochen; Health liefert 8).
+    public static let reviewLookbackDays = 28
+
+    /// Die vergangenen Wochen des Plans, die an die Fortschreibung gehen und im Plan-Tab mit Ist stehen.
+    public var reviewedPastWeekStarts: [String] {
+        guard let plan, let start = lookbackStart else { return [] }
+        return plan.weeks.map(\.weekStart).filter { $0 >= start && $0 < currentWeekStart }
+    }
+
+    private var lookbackStart: String? {
+        guard let current = weekCalendar.date(from: currentWeekStart),
+              let start = calendar.date(byAdding: .day, value: -Self.reviewLookbackDays, to: current) else { return nil }
+        return weekCalendar.weekStart(containing: start)
+    }
+
+    /// Der Anlass für eine Fortschreibung jetzt: eine gemeldete Pause geht vor, sonst die regelmäßige.
+    public func pendingReviewReason(pause: PauseReport?) -> MacroReviewReason? {
+        guard plan != nil, isCurrent else { return nil }
+        if pause != nil { return .pause }
+        return reviewDue ? .scheduled : nil
+    }
+
+    /// Schreibt fort, wenn es fällig ist (regelmäßig oder nach einer gemeldeten Pause), höchstens einmal am Tag je Anlass.
+    /// Gibt die neue Fortschreibung zurück, sonst `nil`.
+    @discardableResult
+    public func reviewIfDue(snapshot: AthleteStateSnapshot, workouts: [Workout], pause: PauseReport?) async -> MacroReview? {
+        guard let reason = pendingReviewReason(pause: pause) else { return nil }
+        let marker = "\(todayKey)|\(reason.rawValue)|\(currentGoalKey)"
+        guard reviewMarker.lastDay() != marker else { return nil }
+        reviewMarker.setLastDay(marker)
+        return await review(reason: reason, snapshot: snapshot, workouts: workouts, pause: reason == .pause ? pause : nil)
+    }
+
+    /// Schreibt den Gesamtplan fort: Plan gegen Ist der letzten Wochen, Anlass, optional Pause und Feedback. Die
+    /// vergangenen Wochen und die laufende Woche bleiben, wie sie sind; die Antwort ersetzt die Wochen danach. Scheitert
+    /// es, bleibt der bisherige Plan stehen.
+    @discardableResult
+    public func review(
+        reason: MacroReviewReason,
+        snapshot: AthleteStateSnapshot,
+        workouts: [Workout],
+        pause: PauseReport? = nil,
+        feedback: String? = nil
+    ) async -> MacroReview? {
+        guard let current = plan else {
+            error = "Es gibt noch keinen Gesamtplan."
+            return nil
+        }
+        guard !isLoading, !isRevising, !isReviewing else { return nil }
+        guard let provider = planProvider() else {
+            needsConfiguration = true
+            return nil
+        }
+        needsConfiguration = false
+
+        isReviewing = true
+        defer { isReviewing = false }
+        let actual = MacroActualCalculator(calendar: calendar).actualWeeks(reviewedPastWeekStarts, workouts: workouts)
+        do {
+            let response = try await provider.reviewMacroPlan(MacroReviewRequest(
+                snapshot: snapshot,
+                today: todayKey,
+                plan: current,
+                planFrom: lookbackStart ?? currentWeekStart,
+                actual: actual,
+                reason: reason,
+                pause: pause,
+                feedback: feedback,
+                testSettings: testSettingsProvider()
+            ))
+            let review = MacroReview(
+                reviewedAt: now(),
+                weekStart: currentWeekStart,
+                reason: response.reason ?? reason,
+                summary: response.summary ?? "",
+                changes: response.changes ?? [],
+                adjustments: response.adjustments,
+                feedback: response.feedback
+            )
+            let fresh = response.macroPlan(goalKey: current.goalKey, feedbackRounds: current.feedbackRounds)
+            var merged = keepingPastWeeks(of: current, in: keepingCurrentWeek(fresh))
+            merged.generatedAt = current.generatedAt
+            merged.reviews = current.reviews + [review]
+            store(merged)
+            error = nil
+            return review
+        } catch {
+            self.error = error.localizedDescription
+            return nil
+        }
+    }
+
+    /// Der neue Plan mit den vergangenen Wochen des bisherigen (Plan gegen Ist bleibt sichtbar).
+    private func keepingPastWeeks(of old: MacroPlanV2, in fresh: MacroPlanV2) -> MacroPlanV2 {
+        let past = old.weeks.filter { $0.weekStart < currentWeekStart }
+        var merged = fresh
+        merged.weeks = (past + fresh.weeks.filter { $0.weekStart >= currentWeekStart }).sorted { $0.weekStart < $1.weekStart }
+        return merged
     }
 
     /// Der neue Plan mit der laufenden Woche des bisherigen, falls es sie gibt.
