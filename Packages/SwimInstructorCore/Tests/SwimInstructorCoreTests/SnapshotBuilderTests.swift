@@ -188,10 +188,10 @@ final class SnapshotBuilderTests: XCTestCase {
         XCTAssertEqual(performance.sports.map(\.sport), [.swim, .bike, .run])
         XCTAssertEqual(performance.sports.first?.values.first?.source, .tested)
         XCTAssertEqual(performance.sports[1].values.first?.value, 162, "85 % von 190")
-        // TRIMP mit Ruhepuls 50 und Maximalpuls 190: 60 min, Reserve 100/140, mal 0,8 für Rad.
-        let reserve = 100.0 / 140
-        let trimp = 60 * reserve * 0.64 * exp(1.92 * reserve) * 0.8
-        XCTAssertEqual(reading.snapshot.sports?[1].loadLastSevenDays ?? 0, (trimp * 10).rounded() / 10, accuracy: 0.001)
+        // Session-RPE aus dem Puls (Ruhepuls 50, Maximalpuls 190): 60 min, Reserve 100/140, mal 0,8 für Rad.
+        let effort = 12 * (100.0 / 140) - 3
+        let load = 60 * effort / 4 * 0.8
+        XCTAssertEqual(reading.snapshot.sports?[1].loadLastSevenDays ?? 0, (load * 10).rounded() / 10, accuracy: 0.001)
         XCTAssertEqual(reading.snapshot.version1.performance, nil)
     }
 

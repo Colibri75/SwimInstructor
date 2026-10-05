@@ -25,7 +25,9 @@ public final class HealthKitManager: ObservableObject, HealthDataAuthorizing {
     /// power, cadence ...).
     // Plain constant data, not tied to actor state - keeping it nonisolated lets callers read it
     // without hopping onto the main actor (and avoids a Swift 6 strict-concurrency error).
-    public nonisolated static let readTypes: Set<HKObjectType> = coreReadTypes.union(SportRegistry.standard.healthReadTypes)
+    public nonisolated static let readTypes: Set<HKObjectType> = coreReadTypes
+        .union(SportRegistry.standard.healthReadTypes)
+        .union(HealthKitWorkoutRepository.effortScoreTypes.map { $0 as HKObjectType })
 
     nonisolated static let coreReadTypes: Set<HKObjectType> = [
         HKObjectType.workoutType(),

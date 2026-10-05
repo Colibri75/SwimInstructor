@@ -7,7 +7,7 @@ public struct StatisticInput: Sendable {
     public let vitals: [DailyVitals]
     /// Die gespeicherten Tagespläne, für "Plan erfüllt".
     public let plans: [DayPlanV2Response]
-    /// Für die Trainingslast nach TRIMP; ohne zählen die Minuten (`TrainingLoadCalculator`).
+    /// Für die Trainingslast (Session-RPE): Anstrengung aus dem Puls, wenn Health keine kennt (`TrainingLoadCalculator`).
     public let restingHeartRate: Double?
     public let maximumHeartRate: Double?
     public let now: Date

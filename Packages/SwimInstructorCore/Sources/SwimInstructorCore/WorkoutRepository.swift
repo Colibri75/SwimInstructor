@@ -13,6 +13,13 @@ public final class HealthKitWorkoutRepository: WorkoutRepository {
     /// Werte, die jedes Workout haben kann, egal welche Sportart.
     static let heartRate = HealthQuantity(.heartRate, unit: "count/min", aggregation: .average)
     static let activeEnergy = HealthQuantity(.activeEnergyBurned, unit: "kcal", aggregation: .sum)
+    /// Anstrengung einer Einheit (ab iOS 18 / watchOS 11): erst die eigene Bewertung, dann Apples Schätzung.
+    static var effortScoreTypes: [HKQuantityType] {
+        if #available(iOS 18.0, watchOS 11.0, macOS 15.0, *) {
+            return [HKQuantityType(.workoutEffortScore), HKQuantityType(.estimatedWorkoutEffortScore)]
+        }
+        return []
+    }
 
     private let healthStore: HKHealthStore
     private let registry: SportRegistry
@@ -36,6 +43,9 @@ public final class HealthKitWorkoutRepository: WorkoutRepository {
             var metrics: [WorkoutMetric: Double] = [:]
             for (metric, quantity) in module.health.metrics {
                 metrics[metric] = try await statistic(quantity, for: workout)
+            }
+            if let effort = await effort(for: workout) {
+                metrics[.effort] = effort
             }
             let heartRate = try await statistic(Self.heartRate, for: workout)
             let energy = try await statistic(Self.activeEnergy, for: workout)
@@ -112,14 +122,32 @@ public final class HealthKitWorkoutRepository: WorkoutRepository {
         }
     }
 
+    /// Die Anstrengung der Einheit aus Health. Health speichert sie nicht am Workout, sondern als eigene Probe über
+    /// dessen Zeitraum. Ein Fehler beim Lesen (etwa ohne Berechtigung) lässt nur die Anstrengung weg.
+    private func effort(for workout: HKWorkout) async -> Double? {
+        guard #available(iOS 18.0, watchOS 11.0, macOS 15.0, *) else { return nil }
+        let predicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate, options: [])
+        for type in Self.effortScoreTypes {
+            if let value = try? await statistic(type, unit: .appleEffortScore(), isSum: false, predicate: predicate) {
+                return value
+            }
+        }
+        return nil
+    }
+
     /// Summe oder Mittelwert eines Messwerts über die Einheit; `nil`, wenn es keine Messung gibt oder das System
     /// den Typ nicht kennt.
     private func statistic(_ quantity: HealthQuantity, for workout: HKWorkout) async throws -> Double? {
         guard let quantityType = quantity.quantityType else { return nil }
-        let predicate = HKQuery.predicateForObjects(from: workout)
-        let unit = quantity.healthUnit
-        let isSum = quantity.aggregation == .sum
+        return try await statistic(
+            quantityType,
+            unit: quantity.healthUnit,
+            isSum: quantity.aggregation == .sum,
+            predicate: HKQuery.predicateForObjects(from: workout)
+        )
+    }
 
+    private func statistic(_ quantityType: HKQuantityType, unit: HKUnit, isSum: Bool, predicate: NSPredicate) async throws -> Double? {
         return try await withCheckedThrowingContinuation { continuation in
             let query = HKStatisticsQuery(
                 quantityType: quantityType,

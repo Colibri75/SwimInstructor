@@ -211,8 +211,10 @@ final class StatisticCalculatorTests: XCTestCase {
             restingHeartRate: 50, maximumHeartRate: 190, now: TestFixtures.now
         )
 
-        // Banister: 50 min × (100/140) × 0,64 × e^(1,92 × 100/140) ≈ 90,08; ohne Puls 30 min × 1,0.
-        XCTAssertEqual(try XCTUnwrap(StatisticData.result("run", .trainingLoad, input: input).value), 90.0795 + 30, accuracy: 0.001)
+        // Session-RPE aus dem Puls: Reserve 100/140 → Anstrengung 12 × 100/140 - 3 ≈ 5,57 → 50 min × 5,57 / 4 ≈ 69,64;
+        // ohne Puls 30 min × 4 / 4.
+        let effort = 12 * 100.0 / 140 - 3
+        XCTAssertEqual(try XCTUnwrap(StatisticData.result("run", .trainingLoad, input: input).value), 50 * effort / 4 + 30, accuracy: 0.001)
     }
 
     // MARK: - Über alle Sportarten

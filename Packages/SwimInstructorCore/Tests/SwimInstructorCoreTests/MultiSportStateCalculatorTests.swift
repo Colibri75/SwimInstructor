@@ -130,7 +130,7 @@ final class MultiSportStateCalculatorTests: XCTestCase {
 
         XCTAssertEqual(sports.map(\.sport), [.swim, .bike, .run], "Unbekannte Sportart geht nicht zum Server")
         XCTAssertEqual(sports[1].sessionsLastSevenDays, 1, "Duplikat zählt einmal")
-        // TRIMP: Reserve (120 - 50) / 140 = 0,5 → 60 × 0,5 × 0,64 × e^0,96 = 50,1.
-        XCTAssertEqual(sports[2].loadLastSevenDays, 50.1)
+        // Session-RPE aus dem Puls: Reserve (120 - 50) / 140 = 0,5 → Anstrengung 3 → 60 × 3 / 4 = 45.
+        XCTAssertEqual(sports[2].loadLastSevenDays, 45)
     }
 }
