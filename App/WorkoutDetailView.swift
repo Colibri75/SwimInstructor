@@ -3,15 +3,19 @@ import SwiftUI
 import SwimInstructorCore
 
 /// Eine Einheit im Detail: wann, alle Werte, die ihre Sportart kennt (aus dem Katalog des Moduls), und der Pulsverlauf.
-/// Ein Tipp ins Pulsdiagramm zeigt den Puls zu dieser Minute.
+/// Darunter Sets und Bahnen (Schwimmen) oder Runden und Kilometer (Laufen, Rad), wie Fitness sie zeigt. Ein Tipp ins
+/// Pulsdiagramm zeigt den Puls zu dieser Minute.
 struct WorkoutDetailView: View {
     let workout: Workout
     /// Für die Trainingslast mit Ruhe- und Maximalpuls wie in der Statistik.
     let input: StatisticInput
     var heartRates: HeartRateRepository = HealthKitHeartRateRepository()
+    var splits: WorkoutSplitRepository = HealthKitWorkoutSplitRepository()
 
     @State private var curve: HeartRateCurve?
     @State private var heartRateError: String?
+    @State private var report: WorkoutSplitReport?
+    @State private var splitError: String?
 
     private let calculator = StatisticCalculator()
     private let registry = SportRegistry.standard
@@ -53,6 +57,15 @@ struct WorkoutDetailView: View {
             }
             .font(.body)
 
+            if let report, !report.isEmpty {
+                WorkoutSplitSections(report: report, field: field)
+            } else if let splitError {
+                Section("Runden") {
+                    Text(splitError)
+                        .foregroundStyle(.red)
+                }
+            }
+
             Section("Puls") {
                 if let curve, !curve.points.isEmpty {
                     HeartRateChart(curve: curve, averageHeartRate: workout.averageHeartRate)
@@ -69,16 +82,124 @@ struct WorkoutDetailView: View {
         }
         .navigationTitle(registry.displayName(for: workout.sport))
         .navigationBarTitleDisplayMode(.inline)
-        .task(id: workout.id) { await loadHeartRate() }
+        .task(id: workout.id) {
+            let samples = await loadHeartRate()
+            await loadSplits(heartRates: samples)
+        }
     }
 
-    private func loadHeartRate() async {
+    /// Hauptfeld der Sportart: entscheidet über Pace pro 100 m, pro km oder km/h und die Länge der Teilstrecken.
+    private var field: LiveField {
+        registry.module(for: workout.sport)?.recording.primaryField ?? .pacePerKilometer
+    }
+
+    private func loadHeartRate() async -> [HeartRateSample] {
         do {
             let samples = try await heartRates.heartRates(from: workout.startDate, to: workout.endDate)
             curve = HeartRateCurve(samples: samples, start: workout.startDate, end: workout.endDate)
+            return samples
         } catch {
             heartRateError = error.localizedDescription
+            return []
         }
+    }
+
+    private func loadSplits(heartRates samples: [HeartRateSample]) async {
+        do {
+            let data = try await splits.splitData(for: workout)
+            report = WorkoutSplitBuilder.report(
+                data: data,
+                heartRates: samples,
+                workoutStart: workout.startDate,
+                workoutEnd: workout.endDate,
+                splitLengthMeters: WorkoutSplitBuilder.splitLength(for: field)
+            )
+        } catch {
+            splitError = error.localizedDescription
+        }
+    }
+}
+
+/// Sets mit ihren Bahnen (aufklappbar), Bahnen oder Runden außerhalb von Sets und gleich lange Teilstrecken. Je Zeile
+/// groß die Zeit, darunter Strecke, Pace, Stil, Züge und Puls.
+private struct WorkoutSplitSections: View {
+    let report: WorkoutSplitReport
+    let field: LiveField
+
+    var body: some View {
+        if !report.sets.isEmpty {
+            Section(WorkoutSplitFormatting.setsTitle(field: field)) {
+                ForEach(report.sets) { set in
+                    if let rest = set.restBefore, rest >= 1 {
+                        Label(WorkoutSplitFormatting.rest(rest), systemImage: "pause.circle")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                    if set.laps.isEmpty {
+                        SplitRow(title: WorkoutSplitFormatting.setTitle(set.summary.number, field: field), split: set.summary, field: field)
+                    } else {
+                        DisclosureGroup {
+                            ForEach(set.laps) { lap in
+                                SplitRow(
+                                    title: WorkoutSplitFormatting.lapTitle(lap.number, field: field),
+                                    split: lap,
+                                    field: field,
+                                    compact: true
+                                )
+                            }
+                        } label: {
+                            SplitRow(title: WorkoutSplitFormatting.setTitle(set.summary.number, field: field), split: set.summary, field: field)
+                        }
+                    }
+                }
+            }
+        }
+        if !report.laps.isEmpty {
+            Section(WorkoutSplitFormatting.lapsTitle(field: field)) {
+                ForEach(report.laps) { lap in
+                    SplitRow(title: WorkoutSplitFormatting.lapTitle(lap.number, field: field), split: lap, field: field)
+                }
+            }
+        }
+        if let length = report.splitLengthMeters, !report.distanceSplits.isEmpty {
+            Section(WorkoutSplitFormatting.splitsTitle(length: length)) {
+                ForEach(report.distanceSplits) { split in
+                    SplitRow(title: WorkoutSplitFormatting.splitTitle(split, length: length), split: split, field: field, showsDistance: false)
+                }
+            }
+        }
+    }
+}
+
+/// Eine Zeile: Titel und Zeit, darunter die Details.
+private struct SplitRow: View {
+    let title: String
+    let split: WorkoutSplit
+    let field: LiveField
+    var compact = false
+    var showsDistance = true
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(title)
+                    .font(compact ? .body : .headline)
+                Spacer()
+                Text(WorkoutSplitFormatting.duration(split.duration))
+                    .font(compact ? .body.weight(.semibold) : .title3.weight(.semibold))
+                    .monospacedDigit()
+            }
+            let detail = WorkoutSplitFormatting.detail(split, field: field, includeDistance: showsDistance)
+            if !detail.isEmpty {
+                Text(detail)
+                    .font(compact ? .footnote : .subheadline)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+            }
+        }
+        .padding(.vertical, compact ? 2 : 4)
+        .accessibilityElement(children: .combine)
     }
 }
 
