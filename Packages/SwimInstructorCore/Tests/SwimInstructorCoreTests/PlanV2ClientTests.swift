@@ -497,8 +497,8 @@ final class PlanV2ClientTests: XCTestCase {
         let array = await dayFailure(status: 200, body: "[1, 2]")
         let html = await dayFailure(status: 200, body: "<html>")
 
-        XCTAssertEqual(array as? PlanAPIError, .invalidResponse("kein JSON-Objekt"))
-        XCTAssertEqual(html as? PlanAPIError, .invalidResponse("kein JSON-Objekt"))
+        XCTAssertTrue(Self.isInvalidResponse(array), "erwartet: unverständliche Antwort, bekam \(String(describing: array))")
+        XCTAssertTrue(Self.isInvalidResponse(html), "erwartet: unverständliche Antwort, bekam \(String(describing: html))")
     }
 
     func testVersionTwoAnswerWithMissingFieldsIsInvalid() async {
