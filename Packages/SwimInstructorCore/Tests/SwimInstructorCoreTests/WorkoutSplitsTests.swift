@@ -153,7 +153,11 @@ final class WorkoutSplitsTests: XCTestCase {
     func testPoolLengthComesFromMetadata() {
         let workout = HKWorkout(
             activityType: .swimming, start: at(0), end: at(600), workoutEvents: nil, totalEnergyBurned: nil,
-            totalDistance: nil, metadata: [HKMetadataKeyLapLength: HKQuantity(unit: .meter(), doubleValue: 50)]
+            totalDistance: nil, metadata: [
+                HKMetadataKeyLapLength: HKQuantity(unit: .meter(), doubleValue: 50),
+                // Ohne Becken als Ort lehnt HealthKit eine Beckenlänge ab.
+                HKMetadataKeySwimmingLocationType: NSNumber(value: HKWorkoutSwimmingLocationType.pool.rawValue)
+            ]
         )
         XCTAssertEqual(HealthKitWorkoutSplitRepository.data(from: workout).lapLengthMeters, 50)
     }
