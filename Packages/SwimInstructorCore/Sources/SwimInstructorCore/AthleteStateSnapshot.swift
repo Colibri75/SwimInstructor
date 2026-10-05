@@ -28,8 +28,8 @@ public enum RecoverySignal: String, Codable, Sendable {
 /// Feldnamen bewusst ohne Ziffern, damit die snake_case-Umwandlung im JSON eindeutig ist.
 /// Optionale Felder fehlen im JSON, wenn es keinen Wert gibt (z. B. keine Vergleichsdaten).
 ///
-/// Schema v1 beschreibt nur das Schwimmen. v2 (Triathlon-Umbau) hängt Gesamtziel, Werte je Sportart und Gesamtlast an
-/// und lässt alle v1-Felder unverändert; `version1` macht daraus wieder genau den v1-Snapshot.
+/// Schema v1 beschrieb nur das Schwimmen, der Server nimmt nur noch v2 an. v2 (Triathlon-Umbau) hängt Gesamtziel, Werte je
+/// Sportart und Gesamtlast an die Basisfelder von v1 an; `version1` macht daraus wieder genau die Basisfelder.
 public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
     /// Die Version, die `AthleteStateCalculator` erzeugt (nur Schwimmen).
     public static let currentSchemaVersion = 1
@@ -99,7 +99,7 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
         )
     }
 
-    /// Derselbe Snapshot mit Leistungswerten und Zonen (nur für v2 gedacht; `version1` lässt sie wieder weg).
+    /// Derselbe Snapshot mit Leistungswerten und Zonen (nur für v2 gedacht; `version1` lässt sie weg).
     public func withPerformance(_ performance: PerformanceSummary) -> AthleteStateSnapshot {
         AthleteStateSnapshot(
             schemaVersion: schemaVersion,
@@ -109,7 +109,7 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
         )
     }
 
-    /// Derselbe Snapshot mit dem selbst angegebenen Startniveau (nur für v2 gedacht; `version1` lässt es wieder weg).
+    /// Derselbe Snapshot mit dem selbst angegebenen Startniveau (nur für v2 gedacht; `version1` lässt es weg).
     /// Ohne Angabe bleibt das Feld weg.
     public func withStartingLevels(_ levels: [StartingLevel]) -> AthleteStateSnapshot {
         AthleteStateSnapshot(
@@ -120,7 +120,8 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
         )
     }
 
-    /// Nur die v1-Felder, für einen Server, der v2 noch nicht kennt.
+    /// Nur die Basisfelder (Ziel, Umfang, Pace, Last, Erholung, Warnhinweise) ohne Gesamtziel, Sportarten und Gesamtlast.
+    /// Die Tests prüfen damit, dass der Snapshot für mehrere Sportarten den Schwimm-Teil unverändert lässt.
     public var version1: AthleteStateSnapshot {
         AthleteStateSnapshot(
             schemaVersion: Self.currentSchemaVersion,

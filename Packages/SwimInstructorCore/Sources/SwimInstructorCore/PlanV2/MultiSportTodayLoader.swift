@@ -1,8 +1,6 @@
 import Foundation
 
-/// Steuert "Heute" mit Plan v2: Health lesen, Snapshot bauen, Tagesplan für alle Sportarten holen, zwischenspeichern.
-///
-/// Wie `TodayPlanLoader`, nur mit Plan v2: Die Vorgabe kommt aus den sieben Tagen (`DayTargetV2`), dazu gehen das
+/// Steuert "Heute": Health lesen, Snapshot bauen, Tagesplan für alle Sportarten holen, zwischenspeichern. Die Vorgabe kommt aus den sieben Tagen (`DayTargetV2`), dazu gehen das
 /// bisherige Training und die Testeinstellungen mit. Absichtlich ohne SwiftUI, damit der Ablauf per Unit-Test prüfbar ist.
 @MainActor
 public final class MultiSportTodayLoader: ObservableObject {

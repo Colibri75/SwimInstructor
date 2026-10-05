@@ -31,25 +31,6 @@ public enum PlanFormatting {
         return String(format: "%d:%02d min", seconds / 60, seconds % 60)
     }
 
-    /// "6 × 200 m" bzw. "400 m" bei einer Wiederholung.
-    public static func setVolume(_ set: PlanSet) -> String {
-        set.repetitions > 1
-            ? "\(set.repetitions) × \(meters(set.distanceMeters))"
-            : meters(set.distanceMeters)
-    }
-
-    /// Kurze Detailzeile: Zielpace und Pause, soweit vorhanden.
-    public static func setDetails(_ set: PlanSet) -> String {
-        var parts: [String] = []
-        if let pace = set.targetPaceSecondsPerHundredMeters {
-            parts.append("\(self.pace(pace)) /100 m")
-        }
-        if set.restSeconds > 0 {
-            parts.append("\(rest(set.restSeconds)) Pause")
-        }
-        return parts.joined(separator: " · ")
-    }
-
     /// Deutscher Name eines Hilfsmittels; Unbekanntes bleibt lesbar (aus `snake_case` wird "Snake Case").
     public static func equipmentName(_ raw: String) -> String {
         switch raw {
@@ -61,18 +42,6 @@ public enum PlanFormatting {
         case "ankle_band": return "Beinband"
         default: return raw.replacingOccurrences(of: "_", with: " ").capitalized
         }
-    }
-
-    /// Die Kurzbeschreibung eines Abschnitts für die Uhr: das Feld `cue` des Plans, bei älteren Plänen die
-    /// ersten Wörter der Anweisung (höchstens vier, ohne Satzzeichen am Ende), sonst leer.
-    public static func shortCue(_ set: PlanSet, maxWords: Int = 4) -> String {
-        let cue = set.cue.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !cue.isEmpty { return cue }
-        let words = set.instructions
-            .split(whereSeparator: { $0.isWhitespace })
-            .prefix(maxWords)
-            .joined(separator: " ")
-        return words.trimmingCharacters(in: CharacterSet(charactersIn: ".,;:!?-– "))
     }
 
     /// "Pull Buoy, Paddles"; leer ohne Hilfsmittel.
@@ -103,16 +72,7 @@ public enum PlanFormatting {
         }
     }
 
-    /// Hinweis, wenn der Plan nicht frisch von Claude kommt, sonst `nil`.
-    public static func sourceNotice(_ response: PlanResponse) -> String? {
-        guard response.source == .fallback else { return nil }
-        let reason = fallbackReason(response.fallbackReason)
-        if response.stale {
-            return "Letzter gültiger Plan vom \(germanDate(response.date)). \(reason)"
-        }
-        return "Früherer Plan von heute. \(reason)"
-    }
-
+    /// Satz zum Ausfallgrund des Servers (`fallback_reason`), für Fehlermeldungen und Hinweise zum Plan.
     static func fallbackReason(_ reason: String?) -> String {
         switch reason {
         case "budget_exceeded": return "Das Tageslimit für neue Pläne ist erreicht."
@@ -122,12 +82,6 @@ public enum PlanFormatting {
         case "sanity_blocked": return "Der neue Plan hat die Sicherheitsprüfung nicht bestanden."
         default: return "Dein Coach hat keinen neuen Plan geliefert."
         }
-    }
-
-    /// Hinweis auf der Watch, wenn der gezeigte Plan nicht von heute ist, sonst `nil`.
-    public static func dayNotice(_ response: PlanResponse, now: Date, calendar: Calendar = .current) -> String? {
-        guard response.date != isoDay(now, calendar: calendar) else { return nil }
-        return "Plan vom \(germanDate(response.date)). Öffne die iPhone-App für den Plan von heute."
     }
 
     /// 754 → "12:34", 3723 → "1:02:03".
@@ -141,19 +95,6 @@ public enum PlanFormatting {
             : String(format: "%d:%02d", minutes, secs)
     }
 
-    /// "3 von 6 × 200 m" bzw. "400 m" bei einer Wiederholung.
-    public static func repetition(_ position: PlanPosition) -> String {
-        position.set.repetitions > 1
-            ? "\(position.repetition) von \(position.set.repetitions) × \(meters(position.set.distanceMeters))"
-            : meters(position.set.distanceMeters)
-    }
-
-    /// "noch 150 m".
-    public static func remaining(_ position: PlanPosition) -> String {
-        "noch \(meters(position.metersRemainingInRepetition))"
-    }
-
-    /// "2026-09-29" → "29.09.2026"; unbekannte Formate bleiben unverändert.
     /// Wie ein Tag der Woche im Vergleich zum Plan steht, als kurzer Text.
     public static func stateText(_ state: WeekDayState) -> String {
         switch state {
@@ -168,13 +109,6 @@ public enum PlanFormatting {
         case .restBroken: return "trotz Ruhetag geschwommen"
         case .skipped: return "keine Zeit"
         }
-    }
-
-    /// Kurze Beschreibung eines Tages: "Technik, 1.000 m" oder "Ruhetag".
-    public static func daySummary(_ day: WeekDayPlan?) -> String {
-        guard let day else { return "nicht geplant" }
-        if day.isRestDay { return day.isUnavailable ? "keine Zeit" : "Ruhetag" }
-        return "\(sessionType(day.sessionType)), \(meters(day.targetDistanceMeters))"
     }
 
     /// Deutscher Name einer Phase des Gesamtplans.
@@ -195,6 +129,7 @@ public enum PlanFormatting {
         return "\(parts[2]).\(parts[1])."
     }
 
+    /// "2026-09-29" → "29.09.2026"; unbekannte Formate bleiben unverändert.
     public static func germanDate(_ isoDay: String) -> String {
         let parts = isoDay.split(separator: "-")
         guard parts.count == 3 else { return isoDay }

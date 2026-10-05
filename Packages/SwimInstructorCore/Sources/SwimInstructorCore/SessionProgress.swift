@@ -30,7 +30,7 @@ public struct ProgressUnit: Equatable, Sendable {
     }
 
     /// Alle Wiederholungen der Schritte hintereinander. Schritte ohne Wiederholung fallen weg, ebenso Schritte nach Strecke
-    /// oder Zeit ohne Angabe (wie bei `PlanProgress`). Nach jeder Wiederholung kommt die Pause des Schritts, nach der
+    /// oder Zeit ohne Angabe. Nach jeder Wiederholung kommt die Pause des Schritts, nach der
     /// letzten der Einheit keine mehr.
     public static func units(for steps: [PlanStep]) -> [ProgressUnit] {
         var units: [ProgressUnit] = []
@@ -131,8 +131,8 @@ public enum ProgressStatus: Equatable, Sendable {
 
 /// Der Stand in einer Einheit mit Schritten nach Strecke, Zeit oder von Hand, für jede Sportart.
 ///
-/// Anders als `PlanProgress` (nur Strecke, wird jedes Mal neu berechnet) läuft die Engine mit: Sie bekommt laufend Strecke
-/// und Laufzeit (ohne Pausen der Aufzeichnung) und merkt sich, wo jede Wiederholung begann.
+/// Die Engine läuft mit: Sie bekommt laufend Strecke und Laufzeit (ohne Pausen der Aufzeichnung) und merkt sich, wo jede
+/// Wiederholung begann.
 ///
 /// - Eine Wiederholung nach Strecke endet bei ihrer Strecke, eine nach Zeit genau nach ihrer Dauer. Ohne Pause danach beginnt
 ///   die nächste genau dort; was über die Strecke hinaus gezählt wurde, gehört schon zu ihr.

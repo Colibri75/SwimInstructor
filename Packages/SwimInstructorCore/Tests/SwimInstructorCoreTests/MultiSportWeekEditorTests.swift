@@ -756,37 +756,20 @@ final class MultiSportWeekEditorTests: XCTestCase {
         XCTAssertEqual(merged.wishes, "w")
     }
 
-    func testMergeBehavesLikeThePlanV1Editor() {
-        // Gleiche Tage, gleiche Markierungen: Plan v1 und Plan v2 übernehmen dieselben Tage.
+    func testMergeKeepsUnavailableDaysInAndOutsideTheWindow() {
         let dates = ["2026-09-28", "2026-09-29", "2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04"]
-        let oldV1 = WeekPlanEditor.markUnavailable(
-            WeekFixtures.plan(days: dates.map { (date: String) -> WeekDayPlan in WeekFixtures.day(date) }),
-            date: "2026-10-02"
-        )
-        let oldV2 = MultiSportWeekEditor.markUnavailable(
+        let old = MultiSportWeekEditor.markUnavailable(
             Self.plan(dates.map { (date: String) -> PlannedDay in Self.day(date, "Alt", [Self.swimSession()]) }),
             date: "2026-10-02"
         )
         let newDates = ["2026-09-30", "2026-10-01", "2026-10-02"]
-        let newV1 = WeekFixtures.plan(days: newDates.map { (date: String) -> WeekDayPlan in
-            WeekFixtures.day(date, WeekFixtures.content(meters: 700))
-        })
-        let newV2 = Self.plan(newDates.map { (date: String) -> PlannedDay in Self.day(date, "Neu", [Self.swimSession(700, minutes: 20)]) })
+        let new = Self.plan(newDates.map { (date: String) -> PlannedDay in Self.day(date, "Neu", [Self.swimSession(700, minutes: 20)]) })
 
-        let windows: [String?] = [nil, "2026-10-02"]
-        for through in windows {
-            let label = through ?? "ohne Fenster"
-            let mergedV1 = WeekPlanEditor.merge(existing: oldV1, generated: newV1, fromDate: "2026-09-30", through: through)
-            let mergedV2 = MultiSportWeekEditor.merge(existing: oldV2, generated: newV2, fromDate: "2026-09-30", through: through)
-            XCTAssertEqual(mergedV2.days.map(\.date), mergedV1.days.map(\.date), label)
-            XCTAssertEqual(mergedV2.days.map(\.isUnavailable), mergedV1.days.map(\.isUnavailable), label)
-            XCTAssertEqual(mergedV2.days.map(\.isEdited), mergedV1.days.map(\.isEdited), label)
-        }
-
-        let withoutWindow = MultiSportWeekEditor.merge(existing: oldV2, generated: newV2, fromDate: "2026-09-30")
+        let withoutWindow = MultiSportWeekEditor.merge(existing: old, generated: new, fromDate: "2026-09-30")
         XCTAssertEqual(withoutWindow.days.map(\.date), ["2026-09-28", "2026-09-29", "2026-09-30", "2026-10-01", "2026-10-02"])
         XCTAssertEqual(withoutWindow.day(on: "2026-10-02")?.isUnavailable, true)
-        let withWindow = MultiSportWeekEditor.merge(existing: oldV2, generated: newV2, fromDate: "2026-09-30", through: "2026-10-02")
+        let withWindow = MultiSportWeekEditor.merge(existing: old, generated: new, fromDate: "2026-09-30", through: "2026-10-02")
         XCTAssertEqual(withWindow.days.map(\.date), dates)
+        XCTAssertEqual(withWindow.day(on: "2026-10-02")?.isUnavailable, true)
     }
 }

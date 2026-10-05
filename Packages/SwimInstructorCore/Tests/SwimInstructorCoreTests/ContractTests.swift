@@ -114,16 +114,6 @@ final class ContractTests: XCTestCase {
 
     // MARK: - Was über die Leitung geht
 
-    func testSnapshotV1RoundTripsWithoutLosingFields() throws {
-        let data = try RepoPaths.contractData("wire/snapshot-v1.json")
-        let snapshot = try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: data)
-        let reencoded = try AthleteStateSnapshot.jsonEncoder().encode(snapshot)
-
-        XCTAssertEqual(try JSONKeyPaths.of(reencoded), try JSONKeyPaths.of(data), "Die App schickt andere Felder als der Vertrag")
-        XCTAssertEqual(try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: reencoded), snapshot)
-        XCTAssertEqual(snapshot.schemaVersion, AthleteStateSnapshot.currentSchemaVersion)
-    }
-
     func testSnapshotV2RoundTripsWithoutLosingFields() throws {
         let data = try RepoPaths.contractData("wire/snapshot-v2.json")
         let snapshot = try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: data)
@@ -133,9 +123,6 @@ final class ContractTests: XCTestCase {
         XCTAssertEqual(try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: reencoded), snapshot)
         XCTAssertEqual(snapshot.schemaVersion, AthleteStateSnapshot.multiSportSchemaVersion)
         XCTAssertEqual(snapshot.sports?.map(\.sport), [.swim, .bike, .run])
-        // v1-Teil für einen älteren Server: genau die Felder von snapshot-v1.json.
-        let version1 = try AthleteStateSnapshot.jsonEncoder().encode(snapshot.version1)
-        XCTAssertEqual(try JSONKeyPaths.of(version1), try JSONKeyPaths.of(RepoPaths.contractData("wire/snapshot-v1.json")))
     }
 
     func testAppBuildsTheV2PartsWithExactlyTheContractFields() throws {
@@ -211,43 +198,10 @@ final class ContractTests: XCTestCase {
             StartingLevel(sport: .swim, weeklyAmount: 6000, longestSession: 2500, status: .shortBreak, reportedAt: reportedAt),
             StartingLevel(sport: .run, weeklyAmount: 180, longestSession: 90, status: .regular, reportedAt: reportedAt)
         ])
-        // Ohne Startniveau ist es genau der Snapshot v2, für v1 genau der v1-Snapshot.
+        // Ohne Startniveau ist es genau der Snapshot v2.
         let plain = try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: RepoPaths.contractData("wire/snapshot-v2.json"))
         XCTAssertEqual(snapshot.withStartingLevels([]), plain)
         XCTAssertEqual(plain.withStartingLevels(snapshot.startingLevels!), snapshot)
-        let version1 = try AthleteStateSnapshot.jsonEncoder().encode(snapshot.version1)
-        XCTAssertEqual(try JSONKeyPaths.of(version1), try JSONKeyPaths.of(RepoPaths.contractData("wire/snapshot-v1.json")))
-    }
-
-    func testTodayResponsesDecode() throws {
-        let decoder = PlanResponse.jsonDecoder()
-        let today = try decoder.decode(PlanResponse.self, from: RepoPaths.contractData("wire/plan-today-response.json"))
-        XCTAssertEqual(today.source, .claude)
-        XCTAssertEqual(today.plan.totalDistanceMeters, today.plan.sets.reduce(0) { $0 + $1.totalMeters })
-        XCTAssertEqual(today.plan.equipmentNeeded, ["pull_buoy"])
-        XCTAssertEqual(today.plan.sets.first?.cue, "Locker kraulen")
-        XCTAssertEqual(today.wishes, "mehr Technik")
-
-        let fallback = try decoder.decode(PlanResponse.self, from: RepoPaths.contractData("wire/plan-today-fallback-response.json"))
-        XCTAssertEqual(fallback.source, .fallback)
-        XCTAssertTrue(fallback.stale)
-        XCTAssertEqual(fallback.fallbackReason, "timeout")
-        XCTAssertTrue(fallback.plan.isRestDay)
-    }
-
-    func testWeekResponseDecodes() throws {
-        let response = try PlanResponse.jsonDecoder().decode(WeekPlanResponse.self, from: RepoPaths.contractData("wire/plan-week-response.json"))
-        XCTAssertEqual(response.weekPlan.weekStart, "2026-09-28")
-        XCTAssertEqual(response.weekPlan.days.map(\.date), ["2026-09-30", "2026-10-01", "2026-10-02"])
-        XCTAssertEqual(response.weekPlan.plannedMeters, response.plan.totalDistanceMeters)
-    }
-
-    func testMacroResponseDecodes() throws {
-        let response = try PlanResponse.jsonDecoder().decode(MacroPlanResponse.self, from: RepoPaths.contractData("wire/plan-macro-response.json"))
-        let plan = response.macroPlan(goalKey: "3800-3600-2027-07-04")
-        XCTAssertEqual(plan.goalDay, "2027-07-04")
-        XCTAssertEqual(plan.weeks.map(\.phase), [.base, .base, .base, .taper, .goalWeek])
-        XCTAssertEqual(plan.peakMeters, 3800)
     }
 
     // MARK: - Was die App heute auf dem Gerät speichert
@@ -264,18 +218,6 @@ final class ContractTests: XCTestCase {
         let history = FilePlanHistory(fileURL: RepoPaths.contract("app-storage/plan-history.json")).load()
         XCTAssertEqual(history.map(\.date), ["2026-09-28", "2026-09-29"])
         XCTAssertEqual(history.last?.plan.equipmentNeeded, ["pull_buoy", "paddles"])
-    }
-
-    func testStoredWeekPlansIncludingOldFormLoad() {
-        let weeks = FileWeekPlanStore(fileURL: RepoPaths.contract("app-storage/week-plans.json")).load()
-        XCTAssertEqual(weeks.map(\.weekStart), ["2026-09-28", "2026-10-05"])
-        // Alte Form ohne Markierungen des Athleten.
-        XCTAssertEqual(weeks.first?.days.map(\.isUnavailable), [false, false])
-        // Neue Form mit "keine Zeit" und gemerktem Inhalt.
-        let blocked = weeks.last?.day(on: "2026-10-06")
-        XCTAssertEqual(blocked?.isUnavailable, true)
-        XCTAssertEqual(blocked?.contentBeforeUnavailable?.targetDistanceMeters, 1000)
-        XCTAssertEqual(weeks.last?.day(on: "2026-10-07")?.isEdited, true)
     }
 
     func testStoredSwimGoalFromBeforeT2BecomesTheTrainingGoal() throws {
@@ -336,10 +278,4 @@ final class ContractTests: XCTestCase {
         XCTAssertEqual(profile.values.count, 4)
     }
 
-    func testStoredMacroPlanLoads() throws {
-        let plan = try XCTUnwrap(FileMacroPlanStore(fileURL: RepoPaths.contract("app-storage/macro-plan.json")).load())
-        XCTAssertEqual(plan.goalKey, "3800-3600-2027-07-04")
-        XCTAssertEqual(plan.weeks.count, 3)
-        XCTAssertEqual(plan.weeks.last?.phase, .goalWeek)
-    }
 }

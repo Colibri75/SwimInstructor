@@ -223,10 +223,4 @@ final class PlanV2FormattingTests: XCTestCase {
         )
     }
 
-    func testNoticeMatchesThePlanV1Wording() {
-        // Dieselben Sätze wie in Plan v1, damit die Anzeige beim Umstieg gleich bleibt.
-        let legacy = TestFixtures.response(date: "2026-09-29", source: .fallback, stale: true)
-
-        XCTAssertEqual(PlanV2Formatting.sourceNotice(DayPlanV2Response(legacy: legacy)), PlanFormatting.sourceNotice(legacy))
-    }
 }

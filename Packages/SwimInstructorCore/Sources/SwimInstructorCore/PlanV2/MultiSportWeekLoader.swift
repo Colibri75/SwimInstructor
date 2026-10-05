@@ -1,7 +1,7 @@
 import Foundation
 
 /// Steuert die nächsten sieben Tage in Plan v2: vom Server holen, Änderungen des Athleten anwenden, alles auf dem Gerät
-/// speichern. Wie `WeekPlanLoader`, mit null bis zwei Einheiten je Tag über alle Sportarten. Absichtlich ohne SwiftUI.
+/// speichern. Null bis zwei Einheiten je Tag über alle Sportarten. Absichtlich ohne SwiftUI.
 @MainActor
 public final class MultiSportWeekLoader: ObservableObject {
     /// Zustand und Einheiten aller Sportarten, aus denen eine Planung entsteht (kommt vom Heute-Bildschirm).

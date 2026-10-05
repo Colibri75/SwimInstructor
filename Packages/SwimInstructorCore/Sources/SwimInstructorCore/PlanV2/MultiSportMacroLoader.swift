@@ -1,8 +1,8 @@
 import Foundation
 
 /// Hält den Gesamtplan v2 bis zum Zieltag: holt ihn vom Server, speichert ihn, erneuert ihn bei geändertem Ziel und
-/// überarbeitet ihn nach dem Feedback des Athleten. Wie `MacroPlanLoader`, für alle Sportarten des Ziels. Absichtlich
-/// ohne SwiftUI.
+/// überarbeitet ihn nach dem Feedback des Athleten. Für alle Sportarten des Ziels.
+/// Absichtlich ohne SwiftUI.
 @MainActor
 public final class MultiSportMacroLoader: ObservableObject {
     @Published public private(set) var plan: MacroPlanV2?

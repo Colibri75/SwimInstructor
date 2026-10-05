@@ -22,16 +22,6 @@ final class PlanFormattingTests: XCTestCase {
         XCTAssertEqual(PlanFormatting.rest(90), "1:30 min")
     }
 
-    func testSetLines() {
-        let main = PlanSet(name: "Hauptsatz", repetitions: 6, distanceMeters: 200, targetPaceSecondsPerHundredMeters: 140, restSeconds: 30, instructions: "")
-        let warmUp = PlanSet(name: "Einschwimmen", repetitions: 1, distanceMeters: 400, targetPaceSecondsPerHundredMeters: nil, restSeconds: 0, instructions: "")
-
-        XCTAssertEqual(PlanFormatting.setVolume(main), "6 × 200 m")
-        XCTAssertEqual(PlanFormatting.setDetails(main), "2:20 /100 m · 30 s Pause")
-        XCTAssertEqual(PlanFormatting.setVolume(warmUp), "400 m")
-        XCTAssertEqual(PlanFormatting.setDetails(warmUp), "")
-    }
-
     func testLabelsCoverAllCases() {
         for type in SessionType.allCases {
             XCTAssertFalse(PlanFormatting.sessionType(type).isEmpty)
@@ -42,19 +32,6 @@ final class PlanFormattingTests: XCTestCase {
         XCTAssertEqual(PlanFormatting.sessionType(.rest), "Ruhetag")
     }
 
-    func testSourceNotice() {
-        XCTAssertNil(PlanFormatting.sourceNotice(TestFixtures.response(source: .claude)))
-        XCTAssertNil(PlanFormatting.sourceNotice(TestFixtures.response(source: .cache)))
-        XCTAssertEqual(
-            PlanFormatting.sourceNotice(TestFixtures.response(date: "2026-09-29", source: .fallback, stale: true)),
-            "Letzter gültiger Plan vom 29.09.2026. Dein Coach war gerade nicht erreichbar."
-        )
-        XCTAssertEqual(
-            PlanFormatting.sourceNotice(TestFixtures.response(source: .fallback, stale: false)),
-            "Früherer Plan von heute. Dein Coach war gerade nicht erreichbar."
-        )
-    }
-
     func testIsoDay() {
         XCTAssertEqual(PlanFormatting.isoDay(TestFixtures.now, calendar: TestFixtures.utc), "2026-09-30")
         XCTAssertEqual(PlanFormatting.germanDate("2026-09-30"), "30.09.2026")
@@ -63,34 +40,11 @@ final class PlanFormattingTests: XCTestCase {
 
     // MARK: - Watch
 
-    func testDayNoticeOnlyForOtherDays() {
-        XCTAssertNil(PlanFormatting.dayNotice(TestFixtures.response(date: "2026-09-30"), now: TestFixtures.now, calendar: TestFixtures.utc))
-        XCTAssertEqual(
-            PlanFormatting.dayNotice(TestFixtures.response(date: "2026-09-29"), now: TestFixtures.now, calendar: TestFixtures.utc),
-            "Plan vom 29.09.2026. Öffne die iPhone-App für den Plan von heute."
-        )
-    }
-
     func testElapsed() {
         XCTAssertEqual(PlanFormatting.elapsed(0), "0:00")
         XCTAssertEqual(PlanFormatting.elapsed(754), "12:34")
         XCTAssertEqual(PlanFormatting.elapsed(3723), "1:02:03")
         XCTAssertEqual(PlanFormatting.elapsed(-5), "0:00")
-    }
-
-    func testRepetitionAndRemaining() {
-        let set = PlanSet(name: "Hauptsatz", repetitions: 6, distanceMeters: 200, targetPaceSecondsPerHundredMeters: nil, restSeconds: 0, instructions: "")
-        let position = PlanPosition(setIndex: 1, set: set, repetition: 3, metersIntoRepetition: 50)
-        let single = PlanPosition(
-            setIndex: 0,
-            set: PlanSet(name: "Einschwimmen", repetitions: 1, distanceMeters: 1200, targetPaceSecondsPerHundredMeters: nil, restSeconds: 0, instructions: ""),
-            repetition: 1,
-            metersIntoRepetition: 0
-        )
-
-        XCTAssertEqual(PlanFormatting.repetition(position), "3 von 6 × 200 m")
-        XCTAssertEqual(PlanFormatting.remaining(position), "noch 150 m")
-        XCTAssertEqual(PlanFormatting.repetition(single), "1.200 m")
     }
 
     func testEquipmentNamesAreGermanAndUnknownOnesStayReadable() {
@@ -114,26 +68,6 @@ final class PlanFormattingTests: XCTestCase {
         XCTAssertEqual(Set(states.map { PlanFormatting.stateText($0) }).count, states.count)
         XCTAssertEqual(PlanFormatting.stateText(.missed), "nicht geschwommen")
         XCTAssertEqual(PlanFormatting.stateText(.skipped), "keine Zeit")
-    }
-
-    func testDaySummary() {
-        let session = WeekDayPlan(date: "2026-10-02", content: WeekDayContent(sessionType: .technique, intensity: .easy, targetDistanceMeters: 1000, estimatedDurationMinutes: 35, focus: "Technik"))
-
-        XCTAssertEqual(PlanFormatting.daySummary(session), "Technik, 1.000 m")
-        XCTAssertEqual(PlanFormatting.daySummary(WeekDayPlan(date: "2026-10-01", content: .rest())), "Ruhetag")
-        XCTAssertEqual(PlanFormatting.daySummary(WeekPlanEditor.markUnavailable(WeekPlan(weekStart: "2026-09-28", generatedAt: Date(), rationale: "", days: [session]), date: "2026-10-02").day(on: "2026-10-02")), "keine Zeit")
-        XCTAssertEqual(PlanFormatting.daySummary(nil), "nicht geplant")
-    }
-
-    func testShortCueUsesTheCueAndFallsBackToTheFirstWordsOfTheInstructions() {
-        func set(cue: String, instructions: String) -> PlanSet {
-            PlanSet(name: "Technik", repetitions: 1, distanceMeters: 100, targetPaceSecondsPerHundredMeters: nil, restSeconds: 0, instructions: instructions, cue: cue)
-        }
-
-        XCTAssertEqual(PlanFormatting.shortCue(set(cue: "  Beine kicken ", instructions: "Lang erklärter Text.")), "Beine kicken")
-        XCTAssertEqual(PlanFormatting.shortCue(set(cue: "", instructions: "Locker kraulen, Atmung alle drei Züge, ruhig.")), "Locker kraulen, Atmung alle")
-        XCTAssertEqual(PlanFormatting.shortCue(set(cue: "", instructions: "Gleichmäßig.")), "Gleichmäßig")
-        XCTAssertEqual(PlanFormatting.shortCue(set(cue: "", instructions: "")), "")
     }
 
     func testMacroPhaseNamesAreGerman() {
