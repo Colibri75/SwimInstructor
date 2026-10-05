@@ -1,24 +1,40 @@
 import SwiftUI
 import SwimInstructorCore
 
-/// Plan: die nächsten sieben Tage mit null bis zwei Einheiten je Tag über alle Sportarten (jeden Tag beim ersten Öffnen
-/// neu auf Zustand, Training und Gesamtplan abgestimmt) mit Änderungen des Athleten, darunter der Gesamtplan bis zum Ziel
-/// mit dem Feedback dazu. Die Tage sind ein Gerüst (Sportart, Art, Umfang, Schwerpunkt), die Schritte entstehen am Tag
-/// selbst im Tab Heute.
+/// Plan-Tab, getrennt in zwei Teile: der Wochenplan (eine Kalenderwoche mit den geplanten Tagen, null bis zwei Einheiten
+/// je Tag über alle Sportarten, jeden Tag beim ersten Öffnen neu auf Zustand, Training und Gesamtplan abgestimmt) und der
+/// Gesamtplan bis zum Ziel mit Fortschreibung und Feedback. Einheiten gibt es nur für die nächsten sieben Tage; spätere
+/// Wochen zeigen die Vorgabe des Gesamtplans und den Wochenraster. Die Schritte entstehen am Tag selbst im Tab Heute.
 struct WeekView: View {
+    private enum Part: Hashable {
+        case week, macro
+    }
+
     @EnvironmentObject private var weekLoader: MultiSportWeekLoader
+    @EnvironmentObject private var macroLoader: MultiSportMacroLoader
     @EnvironmentObject private var todayLoader: MultiSportTodayLoader
     @EnvironmentObject private var settings: BackendSettings
 
+    @State private var part = Part.week
     @State private var wish = ""
     @State private var editedDay: EditedDay?
 
     private let progress = MultiSportWeekProgressCalculator()
     private let weekCalendar = WeekCalendar()
     private let registry = SportRegistry.standard
+    private let scheduleStore = UserDefaultsWeeklyScheduleStore()
+    private let goalStore = UserDefaultsTrainingGoalStore()
 
     private var weekStart: String { weekLoader.selectedWeekStart }
+    private var weekEnd: String { weekCalendar.addingDays(6, to: weekStart) ?? weekStart }
     private var plan: WeekPlanV2? { weekLoader.selectedWeek }
+    private var macroWeek: MacroWeekV2? { macroLoader.plan?.week(starting: weekStart) }
+
+    /// Die Woche liegt ganz nach den geplanten sieben Tagen: Es gibt nur die Vorgabe des Gesamtplans.
+    private var isPreviewWeek: Bool { weekLoader.isBeyondWindow(weekStart) }
+
+    /// Die Woche enthält Tage der nächsten sieben Tage: Hier lässt sich neu planen.
+    private var overlapsWindow: Bool { weekStart <= weekLoader.windowEnd && weekEnd >= weekLoader.todayKey }
 
     private var statuses: [MultiSportDayStatus] {
         progress.statuses(plan: plan, weekStart: weekStart, workouts: todayLoader.reading?.allWorkouts ?? [], now: Date())
@@ -26,32 +42,48 @@ struct WeekView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                summarySection
-                if let plan, !plan.rationale.isEmpty {
-                    overviewSection(plan)
+            Group {
+                switch part {
+                case .week:
+                    weekList
+                case .macro:
+                    List {
+                        MacroPlanSections { start in
+                            // Eine Woche aus dem Gesamtplan im Wochenplan öffnen.
+                            if weekLoader.selectWeek(containing: start) { part = .week }
+                        }
+                    }
+                    .swipeClosesKeyboard()
                 }
-                daysSection
-                planSection
-                // Der Gesamtplan steht unten: Zuerst zählt, was in den nächsten Tagen ansteht.
-                MacroPlanSections()
             }
-            .navigationTitle("Plan")
-            .swipeClosesKeyboard()
+            .navigationTitle(part == .week ? "Wochenplan" : "Gesamtplan")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Picker("Ansicht", selection: $part) {
+                        Text("Woche").tag(Part.week)
+                        Text("Gesamtplan").tag(Part.macro)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(maxWidth: 260)
+                }
                 ToolbarItemGroup(placement: .topBarTrailing) {
-                    Button {
-                        weekLoader.shiftSelectedWeek(by: -1)
-                    } label: {
-                        Image(systemName: "chevron.left")
+                    if part == .week {
+                        Button {
+                            weekLoader.shiftSelectedWeek(by: -1)
+                        } label: {
+                            Image(systemName: "chevron.left")
+                        }
+                        .disabled(!weekLoader.canShiftSelectedWeek(by: -1))
+                        .accessibilityLabel("Vorige Woche")
+                        Button {
+                            weekLoader.shiftSelectedWeek(by: 1)
+                        } label: {
+                            Image(systemName: "chevron.right")
+                        }
+                        .disabled(!weekLoader.canShiftSelectedWeek(by: 1))
+                        .accessibilityLabel("Nächste Woche")
                     }
-                    .accessibilityLabel("Vorige Woche")
-                    Button {
-                        weekLoader.shiftSelectedWeek(by: 1)
-                    } label: {
-                        Image(systemName: "chevron.right")
-                    }
-                    .accessibilityLabel("Nächste Woche")
                 }
             }
             // Liest Health neu und stimmt die Tage einmal am Tag ab. Einen neuen Tagesplan holt nur der Tab Heute.
@@ -65,6 +97,23 @@ struct WeekView: View {
         }
     }
 
+    private var weekList: some View {
+        List {
+            weekHeaderSection
+            if let macroWeek {
+                macroTargetSection(macroWeek)
+            }
+            if let plan, !plan.rationale.isEmpty {
+                overviewSection(plan)
+            }
+            daysSection
+            if overlapsWindow {
+                planSection
+            }
+        }
+        .swipeClosesKeyboard()
+    }
+
     // MARK: - Überblick
 
     private var rangeText: String {
@@ -73,28 +122,73 @@ struct WeekView: View {
         return "\(PlanFormatting.shortGermanDate(first)) – \(PlanFormatting.shortGermanDate(last))"
     }
 
-    private var summarySection: some View {
+    private var weekTitle: String {
+        if weekStart == weekLoader.currentWeekStart { return "Diese Woche, \(rangeText)" }
+        if weekStart == weekCalendar.addingDays(7, to: weekLoader.currentWeekStart) { return "Nächste Woche, \(rangeText)" }
+        return "Woche \(rangeText)"
+    }
+
+    /// Geplant gegen trainiert; für eine Woche ganz in der Zukunft ohne Plan nur der Hinweis, wann sie geplant wird.
+    private var weekHeaderSection: some View {
         Section {
-            let summary = progress.summary(of: statuses)
-            if plan != nil {
-                LabeledContent("Geplant") { Text(PlanV2Formatting.duration(minutes: summary.plannedMinutes)) }
-            }
-            LabeledContent("Trainiert") { Text(PlanV2Formatting.duration(minutes: summary.actualMinutes)) }
-            ForEach(summary.sports) { total in
-                LabeledContent {
-                    Text(PlanV2Formatting.comparison(planned: total.planned, actual: total.actual, unit: total.unit))
-                        .monospacedDigit()
-                } label: {
-                    Label(registry.displayName(for: total.sport), systemImage: registry.symbolName(for: total.sport))
+            if plan == nil && weekStart > weekLoader.currentWeekStart {
+                Text(previewText)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                let summary = progress.summary(of: statuses)
+                if plan != nil {
+                    LabeledContent("Geplant") { Text(PlanV2Formatting.duration(minutes: summary.plannedMinutes)) }
                 }
-            }
-            if plan != nil {
-                LabeledContent("Einheiten") {
-                    Text("\(summary.sessionsDone) von \(summary.sessionsDue) fälligen, \(summary.sessionsPlanned) geplant")
+                LabeledContent("Trainiert") { Text(PlanV2Formatting.duration(minutes: summary.actualMinutes)) }
+                ForEach(summary.sports) { total in
+                    LabeledContent {
+                        Text(PlanV2Formatting.comparison(planned: total.planned, actual: total.actual, unit: total.unit))
+                            .monospacedDigit()
+                    } label: {
+                        Label(registry.displayName(for: total.sport), systemImage: registry.symbolName(for: total.sport))
+                    }
+                }
+                if plan != nil {
+                    LabeledContent("Einheiten") {
+                        Text("\(summary.sessionsDone) von \(summary.sessionsDue) fälligen, \(summary.sessionsPlanned) geplant")
+                    }
                 }
             }
         } header: {
-            Text(weekStart == weekLoader.currentWeekStart ? "Diese Woche, \(rangeText)" : "Woche \(rangeText)")
+            Text(weekTitle)
+        }
+    }
+
+    /// Ab wann die Einheiten der Woche feststehen: Die App plant immer die nächsten sieben Tage.
+    private var previewText: String {
+        let plannedFrom = weekCalendar.addingDays(-(MultiSportWeekLoader.windowDays - 1), to: weekStart) ?? weekStart
+        let when = PlanFormatting.germanDate(plannedFrom)
+        if macroWeek != nil {
+            return "Die einzelnen Einheiten plant die App immer für die nächsten sieben Tage, für diese Woche ab \(when). Bis dahin siehst du hier die Vorgabe aus dem Gesamtplan und deinen Wochenraster."
+        }
+        return "Die einzelnen Einheiten plant die App immer für die nächsten sieben Tage, für diese Woche ab \(when). Für diese Woche gibt es noch keine Vorgabe aus dem Gesamtplan."
+    }
+
+    /// Was der Gesamtplan für die Woche vorgibt: Phase, Umfang je Sportart, Tests und Schwerpunkt.
+    private func macroTargetSection(_ week: MacroWeekV2) -> some View {
+        Section("Vorgabe aus dem Gesamtplan") {
+            Text("\(PlanFormatting.macroPhase(week.phase)), etwa \(PlanV2Formatting.duration(minutes: week.totalMinutes))\(week.deload ? " (Entlastung)" : "")")
+                .font(.subheadline.weight(.semibold))
+            ForEach(week.sports, id: \.sport) { volume in
+                Label(PlanV2Formatting.macroVolume(volume, registry: registry), systemImage: registry.symbolName(for: volume.sport))
+            }
+            ForEach(week.tests, id: \.testID) { test in
+                Label("Test: \(test.displayName)", systemImage: "stopwatch")
+                    .foregroundStyle(.tint)
+            }
+            if !week.focus.isEmpty {
+                Text(week.focus)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
     }
 
@@ -117,20 +211,28 @@ struct WeekView: View {
 
     private var daysSection: some View {
         Section {
+            let schedule = scheduleStore.schedule(for: goalStore.goal())
             ForEach(statuses) { status in
-                Button {
-                    editedDay = EditedDay(date: status.date)
-                } label: {
-                    WeekDayRow(status: status, isToday: status.date == weekLoader.todayKey)
+                if status.day == nil && weekLoader.isBeyondWindow(status.date) {
+                    // Noch nicht geplant: was der Wochenraster für den Tag vorsieht.
+                    WeekDayPreviewRow(date: status.date, scheduled: schedule.day(on: status.date, weekCalendar: weekCalendar))
+                } else {
+                    Button {
+                        editedDay = EditedDay(date: status.date)
+                    } label: {
+                        WeekDayRow(status: status, isToday: status.date == weekLoader.todayKey)
+                    }
+                    .buttonStyle(.plain)
+                    .listRowBackground(status.date == weekLoader.todayKey ? Color.accentColor.opacity(0.1) : nil)
                 }
-                .buttonStyle(.plain)
-                .listRowBackground(status.date == weekLoader.todayKey ? Color.accentColor.opacity(0.1) : nil)
             }
         } header: {
             Text("Tage")
         } footer: {
             if plan != nil {
-                Text("Tippe auf einen Tag, um ihn anzupassen: Umfang ändern, Sportart tauschen, eine Einheit dazunehmen, mit einem anderen Tag tauschen oder \"keine Zeit\" markieren.")
+                Text("Tippe auf einen geplanten Tag, um ihn anzupassen: Umfang ändern, Sportart tauschen, eine Einheit dazunehmen, mit einem anderen Tag tauschen oder \"keine Zeit\" markieren.")
+            } else if isPreviewWeek {
+                Text("Die Tage zeigen deinen Wochenraster. Ändern kannst du ihn in den Einstellungen.")
             }
         }
     }
@@ -186,6 +288,58 @@ private struct EditedDay: Identifiable {
 }
 
 // MARK: - Zeile
+
+/// Ein Tag nach den geplanten sieben Tagen: nur was der Wochenraster vorsieht.
+private struct WeekDayPreviewRow: View {
+    let date: String
+    let scheduled: WeeklySchedule.Day?
+
+    private let weekCalendar = WeekCalendar()
+    private let registry = SportRegistry.standard
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(spacing: 0) {
+                Text(weekCalendar.weekdayShort(date))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                Text(String(date.suffix(2)))
+                    .font(.title3.monospacedDigit())
+            }
+            .frame(width: 34)
+
+            VStack(alignment: .leading, spacing: 3) {
+                if let scheduled, scheduled.trains {
+                    Text("Training, bis \(PlanV2Formatting.duration(minutes: Double(scheduled.maxMinutes)))")
+                        .font(.subheadline)
+                    if let detail {
+                        Text(detail)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Text("Ruhetag laut Wochenraster")
+                        .font(.subheadline)
+                }
+                Text("Einheiten folgen sieben Tage vorher")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 8)
+            Image(systemName: "calendar.badge.clock")
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+        }
+        .foregroundStyle(.primary)
+        .accessibilityElement(children: .combine)
+    }
+
+    /// "Abends, Laufen": Tageszeit und feste Sportart, soweit eingestellt.
+    private var detail: String? {
+        let parts = [scheduled?.timeOfDay?.title, scheduled?.sport.map { registry.displayName(for: $0) }].compactMap { $0 }
+        return parts.isEmpty ? nil : parts.joined(separator: ", ")
+    }
+}
 
 private struct WeekDayRow: View {
     let status: MultiSportDayStatus

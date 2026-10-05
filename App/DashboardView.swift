@@ -53,13 +53,6 @@ struct DashboardView: View {
                         RecoveryRow(reading: reading)
                     }
                     GoalSection(snapshot: reading.snapshot)
-                    Section {
-                        NavigationLink {
-                            ProfileView()
-                        } label: {
-                            Label("Leistungsprofil", systemImage: "gauge.with.dots.needle.67percent")
-                        }
-                    }
                 } else if loader.isLoadingHealth {
                     HStack(spacing: 12) {
                         ProgressView()

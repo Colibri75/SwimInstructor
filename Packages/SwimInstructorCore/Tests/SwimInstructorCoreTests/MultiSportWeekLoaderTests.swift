@@ -640,18 +640,55 @@ final class MultiSportWeekLoaderTests: XCTestCase {
 
     // MARK: - Woche wechseln
 
-    func testShiftingTheWeekIsLimitedToFourWeeksBackAndOneAhead() {
+    func testShiftingTheWeekIsLimitedToFourWeeksBackAndOneAheadWithoutGesamtplan() {
         let loader = makeLoader(provider: nil)
 
+        XCTAssertTrue(loader.canShiftSelectedWeek(by: 1))
         loader.shiftSelectedWeek(by: 1)
         XCTAssertEqual(loader.selectedWeekStart, "2026-10-05")
+        XCTAssertFalse(loader.canShiftSelectedWeek(by: 1))
         loader.shiftSelectedWeek(by: 1)
         XCTAssertEqual(loader.selectedWeekStart, "2026-10-05")
 
         for _ in 0..<6 { loader.shiftSelectedWeek(by: -1) }
         XCTAssertEqual(loader.selectedWeekStart, "2026-08-31")
+        XCTAssertFalse(loader.canShiftSelectedWeek(by: -1))
 
         loader.shiftSelectedWeek(by: 4)
         XCTAssertEqual(loader.selectedWeekStart, "2026-09-28")
+    }
+
+    func testShiftingAheadReachesTheLastWeekOfTheGesamtplan() {
+        let loader = makeLoader(provider: nil)
+        loader.lastWeekStartProvider = { "2026-11-02" }
+
+        for _ in 0..<10 { loader.shiftSelectedWeek(by: 1) }
+        XCTAssertEqual(loader.selectedWeekStart, "2026-11-02")
+        XCTAssertFalse(loader.canShiftSelectedWeek(by: 1))
+
+        // Ein Gesamtplan, der vor der nächsten Woche endet, nimmt das Vorblättern um eine Woche nicht weg.
+        loader.lastWeekStartProvider = { "2026-09-28" }
+        XCTAssertEqual(loader.latestWeekStart, "2026-10-05")
+    }
+
+    func testSelectingAWeekByDateStaysInRange() {
+        let loader = makeLoader(provider: nil)
+        loader.lastWeekStartProvider = { "2026-11-02" }
+
+        XCTAssertTrue(loader.selectWeek(containing: "2026-10-22"))
+        XCTAssertEqual(loader.selectedWeekStart, "2026-10-19")
+        XCTAssertFalse(loader.selectWeek(containing: "2026-11-10"))
+        XCTAssertFalse(loader.selectWeek(containing: "2026-08-20"))
+        XCTAssertEqual(loader.selectedWeekStart, "2026-10-19")
+    }
+
+    func testDaysAfterTheSevenDayWindowAreBeyondIt() {
+        let loader = makeLoader(provider: nil)
+
+        // Heute ist Mittwoch, der 30.09.: geplant wird bis Dienstag, den 06.10.
+        XCTAssertEqual(loader.windowEnd, "2026-10-06")
+        XCTAssertFalse(loader.isBeyondWindow("2026-10-06"))
+        XCTAssertTrue(loader.isBeyondWindow("2026-10-07"))
+        XCTAssertFalse(loader.isBeyondWindow("2026-09-28"))
     }
 }

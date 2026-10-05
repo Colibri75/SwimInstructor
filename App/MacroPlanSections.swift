@@ -2,9 +2,13 @@ import Charts
 import SwiftUI
 import SwimInstructorCore
 
-/// Der Gesamtplan bis zum Ziel im Plan-Tab: Überblick je Sportart, alle Wochen, Testtermine, die Fortschreibung mit Plan
-/// gegen Ist und darunter das Feedback mit der Liste der Änderungen und dem Verlauf der Runden.
+/// Der Gesamtplan bis zum Ziel im Plan-Tab: Überblick je Sportart, alle Wochen (antippen öffnet die Woche im
+/// Wochenplan), das Leistungsprofil, Testtermine, die Fortschreibung mit Plan gegen Ist und darunter das Feedback mit der Liste der Änderungen
+/// und dem Verlauf der Runden.
 struct MacroPlanSections: View {
+    /// Öffnet die Woche (Montag) im Wochenplan.
+    let onSelectWeek: (String) -> Void
+
     @EnvironmentObject private var macroLoader: MultiSportMacroLoader
     @EnvironmentObject private var todayLoader: MultiSportTodayLoader
     @EnvironmentObject private var settings: BackendSettings
@@ -13,11 +17,57 @@ struct MacroPlanSections: View {
     /// Der letzte Fehler kam aus dem Feedback (nicht aus dem Neuberechnen): Er steht dann beim Feedback-Feld.
     @State private var errorFromFeedback = false
 
+    init(onSelectWeek: @escaping (String) -> Void) {
+        self.onSelectWeek = onSelectWeek
+    }
+
     var body: some View {
         overviewSection
         if let plan = macroLoader.plan {
+            weeksSection(plan)
+        }
+        profileSection
+        if let plan = macroLoader.plan {
             reviewSection(plan)
             feedbackSection(plan)
+        }
+    }
+
+    // MARK: - Leistungsprofil
+
+    /// Die Werte, nach denen Zonen, Tempo und Tests im Gesamtplan entstehen.
+    private var profileSection: some View {
+        Section {
+            NavigationLink {
+                ProfileView()
+            } label: {
+                Label("Leistungswerte und Tests", systemImage: "gauge.with.dots.needle.67percent")
+            }
+        } header: {
+            Text("Leistungsprofil")
+        } footer: {
+            Text("Danach richten sich Zonen und Tempo im Plan. Hier trägst du Werte von Hand oder nach einem Test ein und stellst ein, ob und wie oft die App Tests einplant.")
+        }
+    }
+
+    // MARK: - Wochen
+
+    /// Alle Wochen bis zum Ziel, je eine Zeile; antippen zeigt die Woche mit ihren Tagen im Wochenplan.
+    private func weeksSection(_ plan: MacroPlanV2) -> some View {
+        Section {
+            ForEach(plan.weeks) { week in
+                Button {
+                    onSelectWeek(week.weekStart)
+                } label: {
+                    MacroWeekRow(week: week, isCurrent: week.weekStart == macroLoader.currentWeekStart)
+                }
+                .buttonStyle(.plain)
+                .listRowBackground(week.weekStart == macroLoader.currentWeekStart ? Color.accentColor.opacity(0.1) : nil)
+            }
+        } header: {
+            Text("Wochen bis zum Ziel (\(plan.weeks.count))")
+        } footer: {
+            Text("Tippe auf eine Woche, um sie im Wochenplan zu sehen. Einzelne Einheiten gibt es für die nächsten sieben Tage, spätere Wochen zeigen die Vorgabe von hier.")
         }
     }
 
@@ -315,8 +365,8 @@ private struct FeedbackRoundView: View {
 
 // MARK: - Überblick
 
-/// Der Gesamtplan auf einen Blick: Ziel, laufende Woche je Sportart, Wochenstunden je Sportart bis zum Zieltag, alle
-/// Wochen und Testtermine.
+/// Der Gesamtplan auf einen Blick: Ziel, laufende Woche je Sportart, Wochenstunden je Sportart bis zum Zieltag und
+/// Testtermine.
 private struct MacroOverview: View {
     let plan: MacroPlanV2
     let currentWeek: MacroWeekV2?
@@ -362,14 +412,6 @@ private struct MacroOverview: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
-        }
-        DisclosureGroup("Alle Wochen (\(plan.weeks.count))") {
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(plan.weeks) { week in
-                    MacroWeekRow(week: week, isCurrent: week.weekStart == currentWeekStart)
-                }
-            }
-            .padding(.top, 4)
         }
         if !plan.testSlots.isEmpty {
             DisclosureGroup("Testtermine (\(plan.testSlots.count))") {
@@ -439,30 +481,30 @@ private struct MacroWeekRow: View {
     private let registry = SportRegistry.standard
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text(PlanFormatting.shortGermanDate(week.weekStart))
-                .font(.caption.monospacedDigit().weight(isCurrent ? .bold : .regular))
-                .frame(width: 48, alignment: .leading)
-            VStack(alignment: .leading, spacing: 1) {
-                Text("\(PlanFormatting.macroPhase(week.phase)) · \(PlanV2Formatting.duration(minutes: week.totalMinutes))\(week.deload ? " · Entlastung" : "")")
-                    .font(.caption.weight(isCurrent ? .bold : .regular))
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("\(isCurrent ? "Diese Woche" : "Ab \(PlanFormatting.shortGermanDate(week.weekStart))") · \(PlanFormatting.macroPhase(week.phase))\(week.deload ? " · Entlastung" : "")")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(isCurrent ? Color.accentColor : Color.primary)
+                Text("Etwa \(PlanV2Formatting.duration(minutes: week.totalMinutes))")
+                    .font(.subheadline)
                 Text(week.sports.map { "\(registry.displayName(for: $0.sport)) \(PlanV2Formatting.amount($0.amount, unit: $0.unit))" }.joined(separator: " · "))
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 if !week.tests.isEmpty {
                     Text("Test: \(week.tests.map(\.displayName).joined(separator: ", "))")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(.tint)
                 }
-                if !week.focus.isEmpty {
-                    Text(week.focus)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
             }
+            Spacer(minLength: 8)
+            Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.tertiary)
         }
-        .foregroundStyle(isCurrent ? Color.accentColor : Color.primary)
+        .padding(.vertical, 2)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
     }
 }

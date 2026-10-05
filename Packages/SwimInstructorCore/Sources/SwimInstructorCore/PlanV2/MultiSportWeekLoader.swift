@@ -35,6 +35,8 @@ public final class MultiSportWeekLoader: ObservableObject {
     /// Was der Gesamtplan für die Wochen der Tage vorgibt.
     public var macroProvider: @MainActor ([String]) -> [MacroWeekV2] = { _ in [] }
     public var testSettingsProvider: @MainActor () -> TestSettings? = { nil }
+    /// Die letzte Woche des Gesamtplans (Montag); bis dorthin lässt sich im Plan-Tab vorblättern. `nil` ohne Gesamtplan.
+    public var lastWeekStartProvider: @MainActor () -> String? = { nil }
 
     private let store: WeekPlanV2Storing
     private let dailyMarker: DailyRefreshMarking
@@ -86,6 +88,13 @@ public final class MultiSportWeekLoader: ObservableObject {
 
     /// Die Vorgabe für den Tagesplan (geht an den Server), `nil` ohne Plan für heute.
     public var todayTarget: DayTargetV2? { todayEntry?.target }
+
+    /// Der letzte Tag, den der rollende Plan abdeckt (heute und sechs weitere Tage).
+    public var windowEnd: String { weekCalendar.addingDays(Self.windowDays - 1, to: todayKey) ?? todayKey }
+
+    /// Ob `date` nach den geplanten sieben Tagen liegt: Für diese Tage gibt es noch keine Einheiten, nur die Vorgabe des
+    /// Gesamtplans für die Woche und den Wochenraster.
+    public func isBeyondWindow(_ date: String) -> Bool { date > windowEnd }
 
     /// Ändern lässt sich ein Tag ab heute.
     public func isEditable(_ date: String) -> Bool { date >= todayKey }
@@ -269,13 +278,33 @@ public final class MultiSportWeekLoader: ObservableObject {
 
     // MARK: - Woche wechseln
 
-    /// Eine Woche vor oder zurück, höchstens vier Wochen zurück und eine Woche voraus.
+    /// So weit zurück lässt sich blättern: vier Wochen.
+    public var earliestWeekStart: String { weekCalendar.addingDays(-28, to: currentWeekStart) ?? currentWeekStart }
+
+    /// So weit voraus lässt sich blättern: bis zur letzten Woche des Gesamtplans, mindestens eine Woche.
+    public var latestWeekStart: String {
+        let nextWeek = weekCalendar.addingDays(7, to: currentWeekStart) ?? currentWeekStart
+        guard let last = lastWeekStartProvider(), let date = weekCalendar.date(from: last) else { return nextWeek }
+        return max(nextWeek, weekCalendar.weekStart(containing: date))
+    }
+
+    public func canShiftSelectedWeek(by weeksDelta: Int) -> Bool {
+        guard let target = weekCalendar.addingDays(weeksDelta * 7, to: selectedWeekStart) else { return false }
+        return target >= earliestWeekStart && target <= latestWeekStart
+    }
+
+    /// Eine Woche vor oder zurück, höchstens vier Wochen zurück und bis zum Ende des Gesamtplans voraus.
     public func shiftSelectedWeek(by weeksDelta: Int) {
-        let current = currentWeekStart
-        guard let target = weekCalendar.addingDays(weeksDelta * 7, to: selectedWeekStart),
-              let earliest = weekCalendar.addingDays(-28, to: current),
-              let latest = weekCalendar.addingDays(7, to: current),
-              target >= earliest, target <= latest else { return }
+        guard canShiftSelectedWeek(by: weeksDelta),
+              let target = weekCalendar.addingDays(weeksDelta * 7, to: selectedWeekStart) else { return }
         selectedWeekStart = target
+    }
+
+    /// Zeigt die Woche, in der `date` liegt, wenn sie im erlaubten Bereich liegt. Liefert `true`, wenn sie gewählt ist.
+    @discardableResult
+    public func selectWeek(containing date: String) -> Bool {
+        guard let start = weekStart(of: date), start >= earliestWeekStart, start <= latestWeekStart else { return false }
+        selectedWeekStart = start
+        return true
     }
 }
