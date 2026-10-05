@@ -212,23 +212,23 @@ struct TestError: Error, LocalizedError {
     var errorDescription: String? { message }
 }
 
-/// Höchster Puls und Alter wie aus Health.
+/// Tageshöchstwerte des Pulses und Alter wie aus Health.
 final class FakePerformanceRepository: PerformanceDataRepository {
-    var maximumHeartRate: Double?
+    var dailyMaximumHeartRates: [Double]
     var ageInYears: Int?
     var error: Error?
     private(set) var requestedStart: Date?
 
-    init(maximumHeartRate: Double? = nil, age: Int? = nil, error: Error? = nil) {
-        self.maximumHeartRate = maximumHeartRate
+    init(dailyMaximumHeartRates: [Double] = [], age: Int? = nil, error: Error? = nil) {
+        self.dailyMaximumHeartRates = dailyMaximumHeartRates
         self.ageInYears = age
         self.error = error
     }
 
-    func fetchMaximumHeartRate(from startDate: Date) async throws -> Double? {
+    func fetchDailyMaximumHeartRates(from startDate: Date) async throws -> [Double] {
         requestedStart = startDate
         if let error { throw error }
-        return maximumHeartRate
+        return dailyMaximumHeartRates
     }
 
     func age(now: Date) -> Int? {

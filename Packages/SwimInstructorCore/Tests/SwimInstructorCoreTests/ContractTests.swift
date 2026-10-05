@@ -187,7 +187,7 @@ final class ContractTests: XCTestCase {
             now: TestFixtures.now,
             workouts: runs,
             vitals: [DailyVitals(date: TestFixtures.date(daysAgo: 0, hour: 0), restingHeartRate: 52)],
-            observedMaximumHeartRate: 188,
+            dailyMaximumHeartRates: [188, 188],
             age: nil
         )
         let built = PerformanceEstimator().resolve(profile: profile, input: input).summary(sports: [.swim, .bike, .run])

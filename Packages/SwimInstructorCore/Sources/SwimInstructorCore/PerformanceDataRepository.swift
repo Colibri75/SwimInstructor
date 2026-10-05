@@ -3,13 +3,13 @@ import HealthKit
 
 /// Was die Schätzung der Leistungswerte über die Einheiten hinaus aus Health braucht.
 public protocol PerformanceDataRepository {
-    /// Höchster gemessener Puls ab `startDate`; `nil` ohne Messung.
-    func fetchMaximumHeartRate(from startDate: Date) async throws -> Double?
+    /// Höchster gemessener Puls je Tag ab `startDate`, ein Wert je Tag mit Messung (ohne Reihenfolge).
+    func fetchDailyMaximumHeartRates(from startDate: Date) async throws -> [Double]
     /// Alter in Jahren aus dem Geburtsdatum in Health; `nil`, wenn es fehlt oder nicht freigegeben ist.
     func age(now: Date) -> Int?
 }
 
-/// Liest höchsten Puls und Geburtsdatum aus Health. Die Schätzung selbst liegt in `PerformanceEstimator` und den
+/// Liest die Tageshöchstwerte des Pulses und das Geburtsdatum aus Health. Die Schätzung selbst liegt in `PerformanceEstimator` und den
 /// Sport-Modulen und ist dort getestet.
 public final class HealthKitPerformanceDataRepository: PerformanceDataRepository {
     private let healthStore: HKHealthStore
@@ -18,22 +18,36 @@ public final class HealthKitPerformanceDataRepository: PerformanceDataRepository
         self.healthStore = healthStore
     }
 
-    public func fetchMaximumHeartRate(from startDate: Date) async throws -> Double? {
-        guard let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate) else { return nil }
+    public func fetchDailyMaximumHeartRates(from startDate: Date) async throws -> [Double] {
+        guard let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate) else { return [] }
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: nil, options: .strictStartDate)
         let unit = HKUnit.count().unitDivided(by: .minute())
+        let end = Date()
 
         return try await withCheckedThrowingContinuation { continuation in
-            let query = HKStatisticsQuery(quantityType: heartRate, quantitySamplePredicate: predicate, options: .discreteMax) { _, statistics, error in
+            let query = HKStatisticsCollectionQuery(
+                quantityType: heartRate,
+                quantitySamplePredicate: predicate,
+                options: .discreteMax,
+                anchorDate: startDate,
+                intervalComponents: DateComponents(day: 1)
+            )
+            query.initialResultsHandler = { _, collection, error in
                 if let error {
                     if HealthKitSwimWorkoutRepository.isNoData(error) {
-                        continuation.resume(returning: nil)
+                        continuation.resume(returning: [])
                     } else {
                         continuation.resume(throwing: error)
                     }
                     return
                 }
-                continuation.resume(returning: statistics?.maximumQuantity()?.doubleValue(for: unit))
+                var result: [Double] = []
+                collection?.enumerateStatistics(from: startDate, to: end) { statistics, _ in
+                    if let value = statistics.maximumQuantity()?.doubleValue(for: unit) {
+                        result.append(value)
+                    }
+                }
+                continuation.resume(returning: result)
             }
             healthStore.execute(query)
         }
