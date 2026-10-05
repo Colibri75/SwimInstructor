@@ -151,8 +151,6 @@ function validPlanning(sport: SportDefinition): boolean {
   return tests.every((id) => (planning.testSessions[id]?.length ?? 0) > 0) && templates.every((id) => tests.includes(id));
 }
 
-/** Die Sportart, um die es vor dem Triathlon-Umbau allein ging: Snapshot v1 und alte Plaene sind Schwimmen. */
-export const LEGACY_SPORT_ID = swim.id;
 
 /** Die Sportarten des Servers. Die Tests pruefen, dass sie zu contracts/sports.json passen. */
 export const SPORTS = new SportRegistry([swim, bike, run]);

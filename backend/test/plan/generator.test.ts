@@ -1,24 +1,19 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { ClaudeOptions, ClaudePlanGenerator } from "../../src/plan/generator";
 import { PlanGenerationError } from "../../src/plan/errors";
-import { MACRO_SYSTEM_PROMPT } from "../../src/plan/macroPrompt";
+import { ClaudeOptions, ClaudePlanGenerator } from "../../src/plan/generator";
 import { MULTI_DAY_SYSTEM_PROMPT, MULTI_MACRO_SYSTEM_PROMPT } from "../../src/plan/multi/prompts";
 import { MultiDayPlanSchema } from "../../src/plan/multi/schemas";
-import { SYSTEM_PROMPT } from "../../src/plan/prompt";
-import { buildWeekUserMessage, WEEK_SYSTEM_PROMPT } from "../../src/plan/weekPrompt";
-import { context, goodWeek } from "./weekFixtures";
-import { goodPlan, snapshot } from "./fixtures";
-import { goodMacro, macroContext } from "./macroFixtures";
 
 const options: ClaudeOptions = { model: "claude-opus-5-5", timeoutMs: 75_000, macroTimeoutMs: 180_000, effort: "medium", serverFallback: true };
-const input = { snapshot: snapshot(), date: "2026-09-30" };
+const raw = { rationale: "Lockerer Tag.", sessions: [], coach_notes: [] };
+const MESSAGE = "Erstelle die Einheiten für heute.";
 
 function response(overrides: Record<string, unknown> = {}) {
   return {
     model: "claude-opus-5-5",
     stop_reason: "end_turn",
     stop_details: null,
-    content: [{ type: "text", text: JSON.stringify(goodPlan) }],
+    content: [{ type: "text", text: JSON.stringify(raw) }],
     usage: { input_tokens: 1800, output_tokens: 2500 },
     ...overrides
   };
@@ -29,33 +24,34 @@ function generatorWith(create: jest.Mock, custom: Partial<ClaudeOptions> = {}): 
   return new ClaudePlanGenerator(client, { ...options, ...custom });
 }
 
+const run = (generator: ClaudePlanGenerator, callOptions?: { macro?: boolean }) =>
+  generator.complete(MULTI_DAY_SYSTEM_PROMPT, MESSAGE, MultiDayPlanSchema, callOptions);
+
 function apiError(status: number, type: string, message = "fehler"): Error {
   return Anthropic.APIError.generate(status, { type: "error", error: { type, message } }, message, new Headers());
 }
 
 describe("ClaudePlanGenerator: Anfrage", () => {
-  it("sendet Modell, festen System-Prompt, strukturierte Ausgabe und Effort", async () => {
+  it("sendet Modell, festen System-Prompt, Nachricht, strukturierte Ausgabe und Effort", async () => {
     const create = jest.fn().mockResolvedValue(response());
 
-    await generatorWith(create).generate(input);
+    await run(generatorWith(create));
 
     const [body, requestOptions] = create.mock.calls[0];
     expect(body.model).toBe("claude-opus-5-5");
-    expect(body.system).toBe(SYSTEM_PROMPT);
+    expect(body.system).toBe(MULTI_DAY_SYSTEM_PROMPT);
+    expect(body.messages).toEqual([{ role: "user", content: MESSAGE }]);
     expect(body.thinking).toEqual({ type: "adaptive" });
     expect(body.output_config.effort).toBe("medium");
     expect(body.output_config.format.type).toBe("json_schema");
-    expect(body.output_config.format.schema.properties).toHaveProperty("sets");
-    expect(body.messages).toHaveLength(1);
-    expect(body.messages[0].role).toBe("user");
-    expect(body.messages[0].content).toContain("Mittwoch, 2026-09-30");
+    expect(body.output_config.format.schema.properties).toHaveProperty("sessions");
     expect(requestOptions).toEqual({ timeout: 75_000, maxRetries: 0 });
   });
 
   it("erzwingt kein Tool (forcierte Tool-Aufrufe sind auf diesem Modell verboten)", async () => {
     const create = jest.fn().mockResolvedValue(response());
 
-    await generatorWith(create).generate(input);
+    await run(generatorWith(create));
 
     expect(create.mock.calls[0][0].tool_choice).toBeUndefined();
     expect(create.mock.calls[0][0].tools).toBeUndefined();
@@ -64,7 +60,7 @@ describe("ClaudePlanGenerator: Anfrage", () => {
   it("schaltet den Server-Fallback bei Ablehnung standardmaessig ein", async () => {
     const create = jest.fn().mockResolvedValue(response());
 
-    await generatorWith(create).generate(input);
+    await run(generatorWith(create));
 
     const body = create.mock.calls[0][0];
     expect(body.fallbacks).toBe("default");
@@ -74,7 +70,7 @@ describe("ClaudePlanGenerator: Anfrage", () => {
   it("laesst den Server-Fallback weg, wenn er abgeschaltet ist", async () => {
     const create = jest.fn().mockResolvedValue(response());
 
-    await generatorWith(create, { serverFallback: false }).generate(input);
+    await run(generatorWith(create, { serverFallback: false }));
 
     const body = create.mock.calls[0][0];
     expect(body.fallbacks).toBeUndefined();
@@ -84,10 +80,20 @@ describe("ClaudePlanGenerator: Anfrage", () => {
   it("reicht Modell und Effort aus der Konfiguration durch", async () => {
     const create = jest.fn().mockResolvedValue(response());
 
-    await generatorWith(create, { model: "claude-sonnet-5-5", effort: "high" }).generate(input);
+    await run(generatorWith(create, { model: "claude-sonnet-5-5", effort: "high" }));
 
     expect(create.mock.calls[0][0].model).toBe("claude-sonnet-5-5");
     expect(create.mock.calls[0][0].output_config.effort).toBe("high");
+  });
+
+  it("gibt Gesamtplan und Ueberarbeitung das laengere Zeitlimit", async () => {
+    const create = jest.fn().mockResolvedValue(response());
+
+    await generatorWith(create).complete(MULTI_MACRO_SYSTEM_PROMPT, "x", MultiDayPlanSchema, { macro: true });
+    await generatorWith(create).complete(MULTI_DAY_SYSTEM_PROMPT, "x", MultiDayPlanSchema, {});
+
+    expect(create.mock.calls[0][1]).toEqual({ timeout: 180_000, maxRetries: 0 });
+    expect(create.mock.calls[1][1]).toEqual({ timeout: 75_000, maxRetries: 0 });
   });
 });
 
@@ -95,19 +101,15 @@ describe("ClaudePlanGenerator: Antwort", () => {
   it("liefert das geparste JSON, das tatsaechliche Modell und den Verbrauch", async () => {
     const create = jest.fn().mockResolvedValue(response({ model: "claude-opus-4-8" }));
 
-    const result = await generatorWith(create).generate(input);
+    const result = await run(generatorWith(create));
 
-    expect(result.raw).toEqual(goodPlan);
-    expect(result.model).toBe("claude-opus-4-8");
-    expect(result.usage).toEqual({ inputTokens: 1800, outputTokens: 2500 });
+    expect(result).toEqual({ raw, model: "claude-opus-4-8", usage: { inputTokens: 1800, outputTokens: 2500 } });
   });
 
   it("ueberspringt thinking-Bloecke und liest den Text-Block", async () => {
-    const create = jest.fn().mockResolvedValue(
-      response({ content: [{ type: "thinking", thinking: "" }, { type: "text", text: JSON.stringify(goodPlan) }] })
-    );
+    const create = jest.fn().mockResolvedValue(response({ content: [{ type: "thinking", thinking: "" }, { type: "text", text: JSON.stringify(raw) }] }));
 
-    expect((await generatorWith(create).generate(input)).raw).toEqual(goodPlan);
+    expect((await run(generatorWith(create))).raw).toEqual(raw);
   });
 
   it.each([
@@ -116,11 +118,11 @@ describe("ClaudePlanGenerator: Antwort", () => {
     ["leere Antwort", response({ content: [] }), "empty_response"],
     ["nur ein thinking-Block", response({ content: [{ type: "thinking", thinking: "" }] }), "empty_response"],
     ["Text ohne JSON", response({ content: [{ type: "text", text: "Hier ist dein Plan: viel Spaß!" }] }), "invalid_json"],
-    ["halb abgebrochenes JSON", response({ content: [{ type: "text", text: '{"session_type": "rest", ' }] }), "invalid_json"]
+    ["halb abgebrochenes JSON", response({ content: [{ type: "text", text: '{"rationale": "rest", ' }] }), "invalid_json"]
   ])("meldet %s als %s", async (_name, reply, reason) => {
     const create = jest.fn().mockResolvedValue(reply);
 
-    await expect(generatorWith(create).generate(input)).rejects.toMatchObject({ name: "PlanGenerationError", reason });
+    await expect(run(generatorWith(create))).rejects.toMatchObject({ name: "PlanGenerationError", reason });
   });
 });
 
@@ -138,7 +140,7 @@ describe("ClaudePlanGenerator: Fehlerfaelle der API", () => {
   ])("ordnet %s dem Grund %s zu", async (_name, error, reason) => {
     const create = jest.fn().mockRejectedValue(error);
 
-    const failure = await generatorWith(create).generate(input).catch((e: unknown) => e);
+    const failure = await run(generatorWith(create)).catch((e: unknown) => e);
 
     expect(failure).toBeInstanceOf(PlanGenerationError);
     expect((failure as PlanGenerationError).reason).toBe(reason);
@@ -148,99 +150,8 @@ describe("ClaudePlanGenerator: Fehlerfaelle der API", () => {
     const original = new Anthropic.APIConnectionTimeoutError();
     const create = jest.fn().mockRejectedValue(original);
 
-    const failure = (await generatorWith(create).generate(input).catch((e: unknown) => e)) as PlanGenerationError;
+    const failure = (await run(generatorWith(create)).catch((e: unknown) => e)) as PlanGenerationError;
 
     expect(failure.cause).toBe(original);
-  });
-});
-
-describe("ClaudePlanGenerator: Wochenplan", () => {
-  const weekInput = { snapshot: snapshot(), context: context() };
-
-  it("sendet den Wochen-Prompt, die Wochen-Nachricht und ein eigenes Ausgabeschema", async () => {
-    const create = jest.fn().mockResolvedValue(response({ content: [{ type: "text", text: JSON.stringify(goodWeek()) }] }));
-
-    const result = await generatorWith(create).generateWeek({ ...weekInput, wishes: "mehr Technik" });
-
-    const [body, requestOptions] = create.mock.calls[0];
-    expect(body.system).toBe(WEEK_SYSTEM_PROMPT);
-    expect(body.messages).toEqual([{ role: "user", content: buildWeekUserMessage(snapshot(), context(), "mehr Technik") }]);
-    expect(body.output_config.format.schema.properties.days).toBeDefined();
-    expect(body.output_config.format.schema.properties.sets).toBeUndefined();
-    expect(body.thinking).toEqual({ type: "adaptive" });
-    expect(requestOptions).toEqual({ timeout: 75_000, maxRetries: 0 });
-    expect(result.raw).toEqual(goodWeek());
-  });
-
-  it("klassifiziert Fehler wie beim Tagesplan", async () => {
-    const create = jest.fn().mockRejectedValue(apiError(429, "rate_limit_error"));
-
-    await expect(generatorWith(create).generateWeek(weekInput)).rejects.toMatchObject({ reason: "rate_limited" });
-  });
-
-  it("meldet eine abgeschnittene Antwort", async () => {
-    const create = jest.fn().mockResolvedValue(response({ stop_reason: "max_tokens" }));
-
-    await expect(generatorWith(create).generateWeek(weekInput)).rejects.toMatchObject({ reason: "truncated" });
-  });
-});
-
-describe("ClaudePlanGenerator: Gesamtplan", () => {
-  it("sendet den Gesamtplan-Prompt mit dem laengeren Zeitlimit", async () => {
-    const create = jest.fn().mockResolvedValue(response({ content: [{ type: "text", text: JSON.stringify(goodMacro()) }] }));
-
-    const result = await generatorWith(create).generateMacro({ snapshot: snapshot(), context: macroContext() });
-
-    const [body, requestOptions] = create.mock.calls[0];
-    expect(body.system).toBe(MACRO_SYSTEM_PROMPT);
-    expect(requestOptions).toEqual({ timeout: 180_000, maxRetries: 0 });
-    expect(result.raw).toEqual(goodMacro());
-  });
-});
-
-describe("ClaudePlanGenerator: Tagesvorgabe", () => {
-  it("nimmt die Vorgabe des Wochenplans in die Nutzernachricht auf", async () => {
-    const create = jest.fn().mockResolvedValue(response());
-
-    await generatorWith(create).generate({ ...input, dayTarget: { session_type: "technique", intensity: "easy", target_distance_meters: 1000, focus: "Technik" } });
-
-    expect(create.mock.calls[0][0].messages[0].content).toContain("Vorgabe aus dem Wochenplan für heute");
-  });
-});
-
-describe("ClaudePlanGenerator: freie Anfrage (Plan v2)", () => {
-  const raw = { rationale: "Lockerer Tag.", sessions: [], coach_notes: [] };
-
-  it("sendet den gegebenen System-Prompt, die Nachricht und das Schema und liefert das geparste JSON", async () => {
-    const create = jest.fn().mockResolvedValue(response({ content: [{ type: "text", text: JSON.stringify(raw) }] }));
-
-    const result = await generatorWith(create).complete(MULTI_DAY_SYSTEM_PROMPT, "Erstelle die Einheiten für heute.", MultiDayPlanSchema);
-
-    const [body, requestOptions] = create.mock.calls[0];
-    expect(body.system).toBe(MULTI_DAY_SYSTEM_PROMPT);
-    expect(body.messages).toEqual([{ role: "user", content: "Erstelle die Einheiten für heute." }]);
-    expect(body.model).toBe("claude-opus-5-5");
-    expect(body.thinking).toEqual({ type: "adaptive" });
-    expect(body.output_config.format.type).toBe("json_schema");
-    expect(body.output_config.format.schema.properties).toHaveProperty("sessions");
-    expect(body.output_config.format.schema.properties.sets).toBeUndefined();
-    expect(requestOptions).toEqual({ timeout: 75_000, maxRetries: 0 });
-    expect(result).toEqual({ raw, model: "claude-opus-5-5", usage: { inputTokens: 1800, outputTokens: 2500 } });
-  });
-
-  it("gibt Gesamtplan und Ueberarbeitung das laengere Zeitlimit", async () => {
-    const create = jest.fn().mockResolvedValue(response({ content: [{ type: "text", text: JSON.stringify(raw) }] }));
-
-    await generatorWith(create).complete(MULTI_MACRO_SYSTEM_PROMPT, "x", MultiDayPlanSchema, { macro: true });
-    await generatorWith(create).complete(MULTI_DAY_SYSTEM_PROMPT, "x", MultiDayPlanSchema, {});
-
-    expect(create.mock.calls[0][1]).toEqual({ timeout: 180_000, maxRetries: 0 });
-    expect(create.mock.calls[1][1]).toEqual({ timeout: 75_000, maxRetries: 0 });
-  });
-
-  it("klassifiziert Fehler wie beim Tagesplan", async () => {
-    const create = jest.fn().mockRejectedValue(new Anthropic.APIConnectionTimeoutError());
-
-    await expect(generatorWith(create).complete(MULTI_DAY_SYSTEM_PROMPT, "x", MultiDayPlanSchema)).rejects.toMatchObject({ name: "PlanGenerationError", reason: "timeout" });
   });
 });

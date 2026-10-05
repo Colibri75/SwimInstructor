@@ -1,7 +1,6 @@
-import { estimateCostUsd, formatLimits, formatPlan, formatWeekPlan } from "../../src/plan/report";
-import { dailyLimits } from "../../src/plan/sanity";
-import { goodPlan, plan, snapshot } from "./fixtures";
-import { day, goodWeek } from "./weekFixtures";
+import { estimateCostUsd, SESSION_TYPE_LABEL } from "../../src/plan/report";
+import { formatChecks } from "../../src/plan/evaluation";
+import { SESSION_TYPES } from "../../src/plan/vocabulary";
 
 describe("estimateCostUsd", () => {
   it("rechnet Token mit den Preisen pro Million (Opus 5.5: 4 Dollar ein, 20 Dollar aus)", () => {
@@ -20,54 +19,22 @@ describe("estimateCostUsd", () => {
   });
 });
 
-describe("formatPlan", () => {
-  it("zeigt das Equipment je Abschnitt in einer eigenen Spalte", () => {
-    const geared = plan({ sets: [{ ...goodPlan.sets[1], equipment: ["pull_buoy", "paddles"] }] });
-
-    expect(formatPlan(geared)).toContain("| Equipment |");
-    expect(formatPlan(geared)).toContain("| 30 s | pull_buoy, paddles |");
-  });
-
-  it("stellt Kopfzeile, Begruendung, Tabelle und Hinweise dar", () => {
-    const text = formatPlan(goodPlan);
-
-    expect(text).toContain("**Ausdauer**, moderat, 1600 m, ca. 45 min");
-    expect(text).not.toContain("endurance");
-    expect(text).toContain(goodPlan.rationale);
-    expect(text).toContain("| Hauptsatz | 6 × 200 m | 140 s/100 m | 30 s | – |");
-    expect(text).toContain("| Einschwimmen | 1 × 200 m | – | 0 s |");
-    expect(text).toContain("- Auf lockere Atmung achten.");
-  });
-
-  it("laesst bei einem Ruhetag die Tabelle weg", () => {
-    const text = formatPlan(plan({ session_type: "rest", intensity: "rest", sets: [], total_distance_meters: 0, coach_notes: [] }));
-
-    expect(text).toContain("Ruhetag");
-    expect(text).not.toContain("| Abschnitt |");
+describe("SESSION_TYPE_LABEL", () => {
+  it("nennt jeden Einheitentyp auf Deutsch, nie den Schluessel des Schemas", () => {
+    for (const type of SESSION_TYPES) expect(SESSION_TYPE_LABEL[type]).not.toBe(type);
+    expect(SESSION_TYPE_LABEL.technique).toBe("Technik");
+    expect(SESSION_TYPE_LABEL.intervals).toBe("Intervalle");
   });
 });
 
-describe("formatLimits", () => {
-  it("nennt Umfang und Pace, und die Intensitaet nur bei einer Einschraenkung", () => {
-    expect(formatLimits(dailyLimits(snapshot()))).toBe("höchstens 2400 m, Pace nicht schneller als 85 s/100 m");
-    expect(formatLimits(dailyLimits(snapshot({ flags: ["training_pause"] })))).toBe(
-      "höchstens 800 m, Intensität höchstens locker, Pace nicht schneller als 85 s/100 m"
-    );
-  });
+describe("formatChecks", () => {
+  it("setzt ein Haekchen je bestandener Pruefung", () => {
+    const text = formatChecks([
+      { name: "A", ok: true, detail: "ja" },
+      { name: "B", ok: false, detail: "nein" }
+    ]);
 
-  it("nennt einen Pflicht-Ruhetag mit Grund", () => {
-    expect(formatLimits(dailyLimits(snapshot({ flags: ["overreaching_risk"] })))).toContain("Pflicht-Ruhetag");
-  });
-});
-
-
-describe("formatWeekPlan", () => {
-  it("nennt die Einheitentypen auf Deutsch, nicht als Schluessel des Schemas", () => {
-    const text = formatWeekPlan(goodWeek({ days: [day("2026-09-30", { session_type: "technique" }), day("2026-10-01", { session_type: "intervals" }), day("2026-10-02", { session_type: "recovery" })] }));
-
-    expect(text).toContain("| Technik |");
-    expect(text).toContain("| Intervalle |");
-    expect(text).toContain("| Regeneration |");
-    expect(text).not.toMatch(/technique|intervals|recovery|endurance|threshold/);
+    expect(text).toBe("- [x] A: ja\n- [ ] B: nein");
+    expect(formatChecks([])).toContain("Keine automatischen Prüfungen");
   });
 });

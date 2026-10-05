@@ -1,5 +1,5 @@
 import { GoalKind, ScheduleDay, SnapshotV2 } from "../snapshot";
-import { weekdayIndex } from "../week";
+import { weekdayIndex } from "../calendar";
 import { sportName } from "./sports";
 
 /**

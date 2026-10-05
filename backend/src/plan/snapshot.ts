@@ -1,18 +1,14 @@
 import { z } from "zod";
 import { PERFORMANCE_SOURCES } from "../sports/performance";
-import { LEGACY_SPORT_ID, SPORTS } from "../sports/registry";
+import { SPORTS } from "../sports/registry";
 import { STEP_TARGETS } from "../sports/vocabulary";
 
 /**
- * Eingabe-Schema des Zustands-Snapshots (v1 und v2, siehe docs/AthleteStateSnapshot.md). Spiegelt das
- * JSON, das `AthleteStateSnapshot` in der App erzeugt.
+ * Eingabe-Schema des Zustands-Snapshots (Version 2, siehe docs/AthleteStateSnapshot.md). Spiegelt das JSON, das die
+ * App erzeugt: Ziel, Werte je Sportart, Gesamtlast und optional Leistungsprofil und selbst angegebenes Startniveau.
  *
  * Bewusst ohne Freitextfelder, nur Zahlen, Enums und Datumswerte: Was hier validiert durchkommt, geht
  * in den Prompt. Unbekannte Felder werden beim Parsen verworfen und erreichen Claude nie.
- *
- * v2 ist v1 plus Gesamtziel, Werte je Sportart und Gesamtlast. Ein v1-Snapshot bleibt unveraendert (gleicher
- * Prompt wie vor v2); was neuer Code aus v2 braucht, liefern `trainingGoalOf` und `sportStatesOf` auch fuer v1.
- * Optional dazu (T2b): Leistungswerte mit Herkunft und die Zonen, die die App daraus gerechnet hat (`performance`).
  */
 const distance = z.number().min(0).max(1_000_000);
 const count = z.number().int().min(0).max(10_000);
@@ -20,7 +16,7 @@ const pace = z.number().min(20).max(1_200); // Sekunden pro 100 m
 const days = z.number().int().min(0).max(100_000);
 const signed = z.number().min(-100_000).max(100_000);
 
-const v1Fields = {
+const baseFields = {
   generated_at: z.iso.datetime(),
   goal: z.object({
     distance_meters: z.number().min(25).max(100_000),
@@ -242,12 +238,10 @@ const StartingLevelSchema = z.object({
   reported_at: z.iso.datetime()
 });
 
-const SnapshotV1Schema = z.object({ schema_version: z.literal(1), ...v1Fields });
-
-const SnapshotV2Schema = z
+export const SnapshotSchema = z
   .object({
-    schema_version: z.literal(2),
-    ...v1Fields,
+    schema_version: z.literal(2, { error: "Plan v2 braucht Snapshot v2" }),
+    ...baseFields,
     training_goal: TrainingGoalSchema,
     sports: z.array(SportStateSchema).max(16),
     total_load: TotalLoadSchema,
@@ -261,51 +255,10 @@ const SnapshotV2Schema = z
     if (new Set(levels).size !== levels.length) ctx.addIssue({ code: "custom", path: ["starting_levels"], message: "Sportart doppelt" });
   });
 
-export const SnapshotSchema = z.discriminatedUnion("schema_version", [SnapshotV1Schema, SnapshotV2Schema]);
-
-export type Snapshot = z.infer<typeof SnapshotSchema>;
-export type SnapshotV2 = z.infer<typeof SnapshotV2Schema>;
+export type SnapshotV2 = z.infer<typeof SnapshotSchema>;
 export type TrainingGoal = SnapshotV2["training_goal"];
 export type ScheduleDay = NonNullable<TrainingGoal["weekly_schedule"]>[number];
 export type SportState = SnapshotV2["sports"][number];
 export type Performance = NonNullable<SnapshotV2["performance"]>;
 export type StartingLevel = NonNullable<SnapshotV2["starting_levels"]>[number];
-export type SnapshotFlag = Snapshot["flags"][number];
-
-
-/**
- * Das Gesamtziel als v2, auch fuer einen v1-Snapshot: Dort ist es das Schwimmziel aus `goal`, mit Schwerpunkt
- * 100 % auf dieser einen Sportart. Trainingstage und Stunden kennt v1 nicht, sie kommen aus dem bisherigen Verlauf.
- */
-export function trainingGoalOf(snapshot: Snapshot): TrainingGoal {
-  if (snapshot.schema_version === 2) return snapshot.training_goal;
-  const { goal, volume } = snapshot;
-  return {
-    target_date: goal.target_date,
-    days_until_goal: goal.days_until_goal,
-    training_days_per_week: Math.min(7, Math.max(1, Math.round(volume.sessions_last_four_weeks / 4))),
-    weekly_hours: Math.min(40, Math.max(0.5, Math.round(((volume.average_weekly_meters / 100) * (snapshot.pace.recent_pace_seconds_per_hundred_meters ?? goal.target_pace_seconds_per_hundred_meters)) / 360) / 10)),
-    disciplines: [{ sport: LEGACY_SPORT_ID, distance_meters: goal.distance_meters, target_duration_seconds: goal.target_duration_seconds }],
-    emphasis: [{ sport: LEGACY_SPORT_ID, percent: 100 }]
-  };
-}
-
-/**
- * Die Werte je Sportart als v2. Fuer einen v1-Snapshot nur die eine Sportart, ohne Minuten und Last (die kennt
- * v1 nicht): Sie fehlen dann als `undefined` statt geraten zu werden.
- */
-export function sportStatesOf(snapshot: Snapshot): Array<Partial<SportState> & Pick<SportState, "sport">> {
-  if (snapshot.schema_version === 2) return snapshot.sports;
-  const { volume, load } = snapshot;
-  return [
-    {
-      sport: LEGACY_SPORT_ID,
-      sessions_last_seven_days: volume.sessions_last_seven_days,
-      sessions_last_four_weeks: volume.sessions_last_four_weeks,
-      meters_last_seven_days: volume.last_seven_days_meters,
-      average_weekly_meters: volume.average_weekly_meters,
-      longest_session_meters: volume.longest_session_meters,
-      ...(load.days_since_last_workout !== undefined ? { days_since_last_session: load.days_since_last_workout } : {})
-    }
-  ];
-}
+export type SnapshotFlag = SnapshotV2["flags"][number];

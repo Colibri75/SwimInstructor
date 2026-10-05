@@ -1,15 +1,14 @@
-import { NextFunction, Request, Response, Router } from "express";
+import { Request, Response, Router } from "express";
 import { z } from "zod";
 import { PlanUnavailableError } from "../errors";
-import { isRealDate, weekdayIndex } from "../week";
-import { asV2, DayRequestV2Schema, MacroRequestV2Schema, MacroWeekTargetV2, ReviewRequestSchema, ReviseRequestSchema, WeekRequestV2Schema } from "./schemas";
+import { isRealDate, weekdayIndex } from "../calendar";
+import { DayRequestV2Schema, MacroRequestV2Schema, MacroWeekTargetV2, ReviewRequestSchema, ReviseRequestSchema, WeekRequestV2Schema } from "./schemas";
 import { DayResultV2, MacroResultV2, MultiPlanService, ReviewResult, ReviseResult, WeekResultV2 } from "./service";
 
 /**
- * Plan v2 auf den bisherigen Pfaden: Eine Anfrage mit `plan_version: 2` landet hier, jede andere geht unveraendert an
- * die Routen von v1 weiter (`next()`), so bekommt die alte App weiter ihre Antworten. Deshalb muessen diese Routen vor
- * denen von v1 haengen. Dazu `POST /v1/plan/macro/revise` (Feedback zum Gesamtplan) und `POST /v1/plan/macro/review`
- * (Fortschreibung alle zwei Wochen), nur v2.
+ * Die Routen der Planung (Plan v2, siehe docs/multisport-planning.md): `POST /v1/plan/today`, `/plan/week`, `/plan/macro`
+ * (der Pfad `/v1` ist die Version der HTTP-Schnittstelle) sowie `/plan/macro/revise` (Feedback zum Gesamtplan) und
+ * `/plan/macro/review` (Fortschreibung alle zwei Wochen). Jede Anfrage nennt `plan_version: 2`.
  */
 interface Detail {
   path: string;
@@ -38,8 +37,6 @@ function macroWeekProblems(weeks: MacroWeekTargetV2[] | undefined, prefix: strin
   return (weeks ?? []).flatMap((week, index) => (weekdayIndex(week.week_start) === 0 ? [] : [{ path: `${prefix}.${index}.week_start`, message: "muss ein Montag sein" }]));
 }
 
-const isV2 = (req: Request) => typeof req.body === "object" && req.body !== null && (req.body as { plan_version?: unknown }).plan_version === 2;
-
 async function answer<T>(res: Response, work: () => Promise<T>, toJson: (result: T) => unknown): Promise<void> {
   try {
     res.json(toJson(await work()));
@@ -54,8 +51,7 @@ async function answer<T>(res: Response, work: () => Promise<T>, toJson: (result:
 
 export function multiRoutes(service: MultiPlanService): (router: Router) => void {
   return (router) => {
-    router.post("/plan/today", async (req: Request, res: Response, next: NextFunction) => {
-      if (!isV2(req)) return next();
+    router.post("/plan/today", async (req: Request, res: Response) => {
       const parsed = DayRequestV2Schema.safeParse(req.body);
       if (!parsed.success) return invalid(res, issues(parsed.error));
       const data = parsed.data;
@@ -65,7 +61,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
         res,
         () =>
           service.planDay({
-            snapshot: asV2(data.snapshot),
+            snapshot: data.snapshot,
             regenerate: data.regenerate === true,
             wishes: data.wishes,
             dayTarget: data.day_plan,
@@ -77,8 +73,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
       );
     });
 
-    router.post("/plan/week", async (req: Request, res: Response, next: NextFunction) => {
-      if (!isV2(req)) return next();
+    router.post("/plan/week", async (req: Request, res: Response) => {
       const parsed = WeekRequestV2Schema.safeParse(req.body);
       if (!parsed.success) return invalid(res, issues(parsed.error));
       const data = parsed.data;
@@ -96,7 +91,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
         res,
         () =>
           service.planWeek({
-            snapshot: asV2(data.snapshot),
+            snapshot: data.snapshot,
             fromDate: data.from_date,
             today: data.today,
             unavailable: data.unavailable_dates ?? [],
@@ -110,14 +105,13 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
       );
     });
 
-    router.post("/plan/macro", async (req: Request, res: Response, next: NextFunction) => {
-      if (!isV2(req)) return next();
+    router.post("/plan/macro", async (req: Request, res: Response) => {
       const parsed = MacroRequestV2Schema.safeParse(req.body);
       if (!parsed.success) return invalid(res, issues(parsed.error));
       const data = parsed.data;
       const problems = dateProblems([["today", data.today]]);
       if (problems.length > 0) return invalid(res, problems);
-      await answer(res, () => service.planMacro({ snapshot: asV2(data.snapshot), today: data.today, testSettings: data.test_settings }), macroResponse);
+      await answer(res, () => service.planMacro({ snapshot: data.snapshot, today: data.today, testSettings: data.test_settings }), macroResponse);
     });
 
     router.post("/plan/macro/revise", async (req: Request, res: Response) => {
@@ -130,7 +124,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
         res,
         () =>
           service.reviseMacro({
-            snapshot: asV2(data.snapshot),
+            snapshot: data.snapshot,
             today: data.today,
             plan: data.plan,
             feedback: data.feedback,
@@ -156,7 +150,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
         res,
         () =>
           service.reviewMacro({
-            snapshot: asV2(data.snapshot),
+            snapshot: data.snapshot,
             today: data.today,
             plan: data.plan,
             actual: data.actual,

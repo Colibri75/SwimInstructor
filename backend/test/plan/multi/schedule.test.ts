@@ -1,4 +1,4 @@
-import { macroWeekStarts } from "../../../src/plan/macro";
+import { macroWeekStarts } from "../../../src/plan/calendar";
 import { dayLimits, phaseOf, taperWeeks, testBlackoutReason } from "../../../src/plan/multi/limits";
 import { sanitizeMacroV2 } from "../../../src/plan/multi/macroSanity";
 import { buildDayUserMessageV2, buildMacroUserMessageV2, buildWeekUserMessageV2, goalSectionV2 } from "../../../src/plan/multi/prompts";

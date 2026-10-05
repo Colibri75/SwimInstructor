@@ -1,8 +1,8 @@
 import { SportDefinition, SportStateValues, TrainingStatus } from "../../sports/types";
-import { daysBetween, MacroPhase, mondayOf } from "../macro";
-import { Intensity } from "../plan";
+import { daysBetween, MacroPhase, mondayOf } from "../calendar";
+import { Intensity } from "../vocabulary";
 import { SnapshotV2 } from "../snapshot";
-import { addDays } from "../week";
+import { addDays } from "../calendar";
 import { RecentTraining } from "./schemas";
 import { fixedSport, isFitnessGoal, scheduleDay, weeklyMinutes } from "./schedule";
 import { floorAmount, formatAmount, plannedSports, raceAmount, raceSeconds, sportName, stateAmounts, stateOf, trainingSpeed } from "./sports";

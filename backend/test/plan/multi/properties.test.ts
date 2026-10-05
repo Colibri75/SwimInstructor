@@ -1,5 +1,5 @@
 import fc from "fast-check";
-import { daysBetween, macroWeekStarts } from "../../../src/plan/macro";
+import { daysBetween, macroWeekStarts } from "../../../src/plan/calendar";
 import { sanitizeDayV2 } from "../../../src/plan/multi/daySanity";
 import { fixedSport, isFitnessGoal, scheduleDay, trainingDaysPerWeek, weeklyMinutes } from "../../../src/plan/multi/schedule";
 import { dayLimits, goalDayOf, MULTI_RULES, phaseOf, RANK, sportLimits, taperFactors, taperWeeks, testBlackoutReason, weeksToGoal } from "../../../src/plan/multi/limits";
@@ -7,7 +7,7 @@ import { macroSportLimits, sanitizeMacroV2 } from "../../../src/plan/multi/macro
 import { floorAmount, plannedSports, stateOf } from "../../../src/plan/multi/sports";
 import { entryTest, fitsToday, lastConfirmedTest, stepsTotals } from "../../../src/plan/multi/tests";
 import { sanitizeWeekV2, weekLimitsV2 } from "../../../src/plan/multi/weekSanity";
-import { addDays, windowDates } from "../../../src/plan/week";
+import { addDays, windowDates } from "../../../src/plan/calendar";
 import { SPORTS } from "../../../src/sports/registry";
 import { planningContext } from "../../../src/plan/multi/sports";
 import { dayPlanArb, macroPlanArb, recentArb, snapshotArb, testSettingsArb, weekPlanArb } from "./arbitraries";

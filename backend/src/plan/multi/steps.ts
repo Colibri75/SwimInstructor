@@ -1,6 +1,6 @@
 import { SessionStep, SportDefinition, SportPlanningContext } from "../../sports/types";
 import { StepTarget } from "../../sports/vocabulary";
-import { Intensity } from "../plan";
+import { Intensity } from "../vocabulary";
 import { MULTI_RULES } from "./limits";
 import { StepRaw } from "./schemas";
 

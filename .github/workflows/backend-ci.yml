@@ -81,7 +81,7 @@ jobs:
         run: |
           TOKEN=$(grep '^API_TOKEN=' /etc/swiminstructor/backend.env | cut -d= -f2)
           URL=http://127.0.0.1:3100/v1/plan/today
-          jq '{snapshot: .}' backend/scenarios/02-fortschritt.json > /tmp/body.json
+          jq '{plan_version: 2, snapshot: .}' contracts/wire/snapshot-v2.json > /tmp/body.json
 
           # Datenverzeichnis ist im schreibgeschuetzten Container beschreibbar
           docker exec swiminstructor-backend sh -c 'touch /data/.probe && rm /data/.probe'

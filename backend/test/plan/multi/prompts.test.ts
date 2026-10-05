@@ -1,5 +1,5 @@
-import { addDays, weekdayName } from "../../../src/plan/week";
-import { mondayOf } from "../../../src/plan/macro";
+import { addDays, weekdayName } from "../../../src/plan/calendar";
+import { mondayOf } from "../../../src/plan/calendar";
 import { MacroContextV2 } from "../../../src/plan/multi/macroSanity";
 import {
   actualWeekLine,

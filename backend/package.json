@@ -14,7 +14,6 @@
     "dev": "tsx watch src/server.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "jest --coverage",
-    "eval:scenarios": "tsx scripts/eval-scenarios.ts",
     "eval:multisport": "tsx scripts/eval-multisport.ts"
   },
   "dependencies": {

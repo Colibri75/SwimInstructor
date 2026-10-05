@@ -4,13 +4,6 @@ import { loadConfig, Config } from "./config";
 import { createLogger } from "./logger";
 import { GenerationBudget } from "./plan/budget";
 import { ClaudePlanGenerator } from "./plan/generator";
-import { planRoutes } from "./plan/routes";
-import { PlanService } from "./plan/service";
-import { macroRoutes } from "./plan/macroRoutes";
-import { MacroPlanService } from "./plan/macroService";
-import { weekRoutes } from "./plan/weekRoutes";
-import { WeekPlanService } from "./plan/weekService";
-import { FilePlanStore } from "./plan/store";
 import { multiRoutes } from "./plan/multi/routes";
 import { MultiPlanService } from "./plan/multi/service";
 import { FileDayPlanStoreV2 } from "./plan/multi/store";
@@ -40,19 +33,10 @@ const generator =
         serverFallback: config.claudeServerFallback
       });
 
-// Ein Budget fuer alle Plaene (v1 und v2): Jeder kostet einen Claude-Aufruf.
+// Ein Budget fuer alle Plaene: Jeder kostet einen Claude-Aufruf.
 const budget = new GenerationBudget(config.maxGenerationsPerHour, config.maxGenerationsPerDay);
 
-const planService = new PlanService({
-  generator,
-  store: new FilePlanStore(config.dataDir),
-  budget,
-  logger,
-  timezone: config.planTimezone
-});
-const weekService = new WeekPlanService({ generator, budget, logger });
-const macroService = new MacroPlanService({ generator, budget, logger });
-const multiService = new MultiPlanService({
+const planService = new MultiPlanService({
   generator,
   store: new FileDayPlanStoreV2(config.dataDir),
   budget,
@@ -60,19 +44,8 @@ const multiService = new MultiPlanService({
   timezone: config.planTimezone
 });
 
-const registerPlanRoutes = planRoutes(planService);
-const registerWeekRoutes = weekRoutes(weekService);
-const registerMacroRoutes = macroRoutes(macroService);
-const registerMultiRoutes = multiRoutes(multiService);
-const app = createApp(config, logger, {
-  registerV1Routes: (router) => {
-    // Plan v2 zuerst: Anfragen ohne plan_version 2 reicht er an die Routen von v1 weiter.
-    registerMultiRoutes(router);
-    registerPlanRoutes(router);
-    registerWeekRoutes(router);
-    registerMacroRoutes(router);
-  }
-});
+const registerPlanRoutes = multiRoutes(planService);
+const app = createApp(config, logger, { registerV1Routes: registerPlanRoutes });
 
 const server = app.listen(config.port, config.host, () => {
   logger.info({ host: config.host, port: config.port, env: config.env }, "server listening");

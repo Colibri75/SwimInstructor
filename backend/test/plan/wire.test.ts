@@ -3,8 +3,10 @@ import http from "node:http";
 import { AddressInfo } from "node:net";
 import { PlanGenerationError } from "../../src/plan/errors";
 import { ClaudePlanGenerator } from "../../src/plan/generator";
-import { SYSTEM_PROMPT } from "../../src/plan/prompt";
-import { goodPlan, snapshot } from "./fixtures";
+import { MULTI_DAY_SYSTEM_PROMPT } from "../../src/plan/multi/prompts";
+import { MultiDayPlanSchema } from "../../src/plan/multi/schemas";
+
+const raw = { rationale: "Lockerer Tag.", sessions: [], coach_notes: [] };
 
 /**
  * Das echte Anthropic-SDK spricht hier ueber HTTP mit einem lokalen Fake-Server. So pruefen wir das
@@ -63,7 +65,7 @@ beforeEach(() => {
   captured = null;
   respond = (_req, res) => {
     res.writeHead(200, { "content-type": "application/json" });
-    res.end(messageBody(JSON.stringify(goodPlan)));
+    res.end(messageBody(JSON.stringify(raw)));
   };
 });
 
@@ -75,11 +77,11 @@ const generator = (timeoutMs = 5_000, url = baseURL) =>
     effort: "medium",
     serverFallback: true
   });
-const input = { snapshot: snapshot(), date: "2026-09-30" };
+const generate = (g: ClaudePlanGenerator) => g.complete(MULTI_DAY_SYSTEM_PROMPT, "Erstelle die Einheiten für heute, Mittwoch, 2026-09-30.", MultiDayPlanSchema);
 
 describe("ClaudePlanGenerator ueber echtes HTTP: Anfrageformat", () => {
   it("sendet eine gueltige Messages-Anfrage mit Beta-Header, Schema und festem System-Prompt", async () => {
-    await generator().generate(input);
+    await generate(generator());
 
     expect(captured?.method).toBe("POST");
     expect(captured?.url).toContain("/v1/messages");
@@ -90,22 +92,20 @@ describe("ClaudePlanGenerator ueber echtes HTTP: Anfrageformat", () => {
     expect(body.model).toBe("claude-opus-5-5");
     expect(body.fallbacks).toBe("default");
     expect(body.thinking).toEqual({ type: "adaptive" });
-    expect(body.system).toBe(SYSTEM_PROMPT);
+    expect(body.system).toBe(MULTI_DAY_SYSTEM_PROMPT);
     expect(body.output_config.effort).toBe("medium");
     expect(body.output_config.format.type).toBe("json_schema");
     expect(body.output_config.format.schema.type).toBe("object");
-    expect(body.output_config.format.schema.properties.sets.type).toBe("array");
-    expect(body.output_config.format.schema.required).toEqual(
-      expect.arrayContaining(["session_type", "intensity", "rationale", "total_distance_meters", "sets"])
-    );
+    expect(body.output_config.format.schema.properties.sessions.type).toBe("array");
+    expect(body.output_config.format.schema.required).toEqual(expect.arrayContaining(["rationale", "sessions", "coach_notes"]));
     expect(body.tool_choice).toBeUndefined();
     expect(body.messages[0].content).toContain("Mittwoch, 2026-09-30");
   });
 
   it("liest die Antwort des Servers: Plan, Modell und Token-Verbrauch", async () => {
-    const result = await generator().generate(input);
+    const result = await generate(generator());
 
-    expect(result.raw).toEqual(goodPlan);
+    expect(result.raw).toEqual(raw);
     expect(result.model).toBe("claude-opus-5-5");
     expect(result.usage).toEqual({ inputTokens: 1800, outputTokens: 2500 });
   });
@@ -118,7 +118,7 @@ describe("ClaudePlanGenerator ueber echtes HTTP: Anfrageformat", () => {
       res.end(JSON.stringify({ type: "error", error: { type: "api_error", message: "kaputt" } }));
     };
 
-    await expect(generator().generate(input)).rejects.toMatchObject({ reason: "upstream_error" });
+    await expect(generate(generator())).rejects.toMatchObject({ reason: "upstream_error" });
     expect(requests).toBe(1);
   });
 });
@@ -141,7 +141,7 @@ describe("ClaudePlanGenerator ueber echtes HTTP: Fehlerfaelle", () => {
   ])("ordnet HTTP %i (%s) dem Grund %s zu", async (status, type, reason) => {
     failWith(status, type);
 
-    const failure = await generator().generate(input).catch((error: unknown) => error);
+    const failure = await generate(generator()).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(PlanGenerationError);
     expect((failure as PlanGenerationError).reason).toBe(reason);
@@ -153,7 +153,7 @@ describe("ClaudePlanGenerator ueber echtes HTTP: Fehlerfaelle", () => {
     const url = `http://127.0.0.1:${(closed.address() as AddressInfo).port}`;
     await new Promise<void>((resolve) => closed.close(() => resolve()));
 
-    const failure = await generator(5_000, url).generate(input).catch((error: unknown) => error);
+    const failure = await generate(generator(5_000, url)).catch((error: unknown) => error);
 
     expect((failure as PlanGenerationError).reason).toBe("unreachable");
   });
@@ -162,11 +162,11 @@ describe("ClaudePlanGenerator ueber echtes HTTP: Fehlerfaelle", () => {
     respond = (_req, res) => {
       setTimeout(() => {
         res.writeHead(200, { "content-type": "application/json" });
-        res.end(messageBody(JSON.stringify(goodPlan)));
+        res.end(messageBody(JSON.stringify(raw)));
       }, 1_500);
     };
 
-    const failure = await generator(150).generate(input).catch((error: unknown) => error);
+    const failure = await generate(generator(150)).catch((error: unknown) => error);
 
     expect((failure as PlanGenerationError).reason).toBe("timeout");
   });
@@ -177,7 +177,7 @@ describe("ClaudePlanGenerator ueber echtes HTTP: Fehlerfaelle", () => {
       res.end(messageBody("Heute schwimmst du 2 km, viel Erfolg!"));
     };
 
-    await expect(generator().generate(input)).rejects.toMatchObject({ reason: "invalid_json" });
+    await expect(generate(generator())).rejects.toMatchObject({ reason: "invalid_json" });
   });
 
   it("meldet 'refusal', wenn Claude ablehnt", async () => {
@@ -186,6 +186,6 @@ describe("ClaudePlanGenerator ueber echtes HTTP: Fehlerfaelle", () => {
       res.end(messageBody("", { content: [], stop_reason: "refusal", stop_details: { type: "refusal", category: "cyber", explanation: null } }));
     };
 
-    await expect(generator().generate(input)).rejects.toMatchObject({ reason: "refusal" });
+    await expect(generate(generator())).rejects.toMatchObject({ reason: "refusal" });
   });
 });

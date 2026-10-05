@@ -1,6 +1,6 @@
 import { SPORTS } from "../../sports/registry";
 import { LimitUnit, SessionStep, SportDefinition } from "../../sports/types";
-import { Intensity, SessionType } from "../plan";
+import { Intensity, SessionType } from "../vocabulary";
 import { SnapshotV2 } from "../snapshot";
 import { dayLimits, DayLimitsV2, lower, MULTI_RULES, RANK, sportLimits, SportLimitsNow } from "./limits";
 import { DaySessionRaw, MultiDayPlanRaw, RecentTraining, TestSettings } from "./schemas";

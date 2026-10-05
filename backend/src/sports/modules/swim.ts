@@ -1,5 +1,5 @@
 import { PerformanceMetricDefinition } from "../performance";
-import { EQUIPMENT_LABELS } from "../../plan/plan";
+import { EQUIPMENT_LABELS } from "../../plan/vocabulary";
 import { SportDefinition, SportPlanningContext, TargetRange } from "../types";
 import { StepTarget } from "../vocabulary";
 import { effortDistanceStep, paceRange, performanceValue, recentPaceSeconds } from "./shared";

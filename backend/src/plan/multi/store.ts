@@ -1,13 +1,13 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import { INTENSITIES, SESSION_TYPES } from "../plan";
+import { INTENSITIES, SESSION_TYPES } from "../vocabulary";
 import { DayPlanV2 } from "./daySanity";
 import { MultiDayPlanRaw, StepSchema } from "./schemas";
 
 /**
- * Der letzte gueltige Tagesplan v2, als Antwort-Cache und als Fallback bei Claude-Ausfall. Eigene Datei neben dem
- * Plan v1 (latest-plan.json): Alte und neue App koennen am selben Tag beide planen, ohne sich den Plan zu ueberschreiben.
+ * Der letzte gueltige Tagesplan v2, als Antwort-Cache und als Fallback bei Claude-Ausfall. Die Datei heisst `latest-plan-v2.json`;
+ * eine `latest-plan.json` aus der Zeit vor dem Triathlon-Umbau liest der Server nicht mehr.
  */
 const StoredSessionSchema = z.object({
   sport: z.string(),

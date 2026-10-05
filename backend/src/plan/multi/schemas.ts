@@ -1,15 +1,14 @@
 import { z } from "zod";
 import { SPORTS } from "../../sports/registry";
 import { STEP_TARGETS } from "../../sports/vocabulary";
-import { MACRO_PHASES } from "../macro";
-import { INTENSITIES, SESSION_TYPES } from "../plan";
-import { MAX_WISH_LENGTH } from "../routes";
-import { SnapshotSchema, SnapshotV2 } from "../snapshot";
-import { DATE_PATTERN } from "../week";
+import { MACRO_PHASES } from "../calendar";
+import { INTENSITIES, SESSION_TYPES } from "../vocabulary";
+import { SnapshotSchema } from "../snapshot";
+import { DATE_PATTERN } from "../calendar";
 
 /**
  * Schemas der Planung fuer mehrere Sportarten (Plan v2, docs/multisport-planning.md): was Claude liefert (ohne
- * Wertegrenzen, die prueft die Sicherheitsschicht) und was die App schickt (mit Grenzen, wie bei v1).
+ * Wertegrenzen, die prueft die Sicherheitsschicht) und was die App schickt (mit Grenzen).
  *
  * Umfaenge (`amount`) stehen immer in der Einheit der Sportart (`SportPlanning.limitUnit`): Meter beim Schwimmen,
  * Minuten bei Rad und Laufen. Die Nutzernachricht nennt die Einheit je Sportart.
@@ -178,13 +177,10 @@ export const MacroWeekTargetV2Schema = z.object({
   tests: z.array(z.object({ sport: KnownSport, test_id: Identifier })).max(8).optional()
 });
 
-const PlanVersion = z.literal(2);
+export const MAX_WISH_LENGTH = 500;
 
-function requireV2<T extends { snapshot: { schema_version: number } }>(request: T, ctx: z.RefinementCtx): void {
-  if (request.snapshot.schema_version !== 2) {
-    ctx.addIssue({ code: "custom", path: ["snapshot", "schema_version"], message: "Plan v2 braucht Snapshot v2" });
-  }
-}
+/** Jede Anfrage nennt `plan_version: 2`; fehlt es, ist die App veraltet (der Plan von Version 1 wird nicht mehr beantwortet). */
+const PlanVersion = z.literal(2, { error: "plan_version 2 erforderlich: Diese App-Version ist veraltet, bitte aktualisieren" });
 
 export const DayRequestV2Schema = z
   .object({
@@ -196,8 +192,7 @@ export const DayRequestV2Schema = z
     equipment: EquipmentV2Schema.optional(),
     recent_training: RecentTrainingSchema.optional(),
     test_settings: TestSettingsSchema.optional()
-  })
-  .superRefine(requireV2);
+  });
 
 export const WeekRequestV2Schema = z
   .object({
@@ -212,12 +207,10 @@ export const WeekRequestV2Schema = z
     wishes: z.string().max(MAX_WISH_LENGTH).optional(),
     equipment: EquipmentV2Schema.optional(),
     test_settings: TestSettingsSchema.optional()
-  })
-  .superRefine(requireV2);
+  });
 
 export const MacroRequestV2Schema = z
-  .object({ plan_version: PlanVersion, snapshot: SnapshotSchema, today: DateString, test_settings: TestSettingsSchema.optional() })
-  .superRefine(requireV2);
+  .object({ plan_version: PlanVersion, snapshot: SnapshotSchema, today: DateString, test_settings: TestSettingsSchema.optional() });
 
 export const MAX_FEEDBACK_LENGTH = 1000;
 
@@ -234,8 +227,7 @@ export const ReviseRequestSchema = z
       .max(5)
       .optional(),
     test_settings: TestSettingsSchema.optional()
-  })
-  .superRefine(requireV2);
+  });
 
 /** Anlass der Fortschreibung: alle 2 Wochen, nach einer gemeldeten Pause oder nach zwei schwachen Wochen. */
 export const REVIEW_REASONS = ["scheduled", "pause", "low_compliance"] as const;
@@ -271,8 +263,7 @@ export const ReviewRequestSchema = z
     feedback: z.string().trim().min(1).max(MAX_FEEDBACK_LENGTH).optional(),
     performance_changes: z.array(PerformanceChangeSchema).max(20).optional(),
     test_settings: TestSettingsSchema.optional()
-  })
-  .superRefine(requireV2);
+  });
 
 export type ReviewRequest = z.infer<typeof ReviewRequestSchema>;
 export type ActualWeek = z.infer<typeof ActualWeekSchema>;
@@ -285,8 +276,3 @@ export type TestSettings = z.infer<typeof TestSettingsSchema>;
 export type DayTargetV2 = z.infer<typeof DayTargetV2Schema>;
 export type MacroWeekTargetV2 = z.infer<typeof MacroWeekTargetV2Schema>;
 export type FeedbackRound = NonNullable<z.infer<typeof ReviseRequestSchema>["history"]>[number];
-
-/** Nach der Pruefung durch die Request-Schemas ist der Snapshot v2. */
-export function asV2(snapshot: z.infer<typeof SnapshotSchema>): SnapshotV2 {
-  return snapshot as SnapshotV2;
-}

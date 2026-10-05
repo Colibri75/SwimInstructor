@@ -4,10 +4,10 @@ import { GenerationBudget } from "../budget";
 import { EvalCheck } from "../evaluation";
 import { PlanGenerationError, PlanUnavailableError } from "../errors";
 import { CallOptions, GeneratedPlan, StructuredGenerator } from "../generator";
-import { mondayOf } from "../macro";
+import { mondayOf } from "../calendar";
 import { estimateCostUsd, SESSION_TYPE_LABEL } from "../report";
 import { SnapshotSchema, SnapshotV2 } from "../snapshot";
-import { addDays, weekdayName, windowDates } from "../week";
+import { addDays, weekdayName, windowDates } from "../calendar";
 import { SessionStep } from "../../sports/types";
 import { checkDayPlanV2, checkMacroPlanV2, checkRevisionV2, checkWeekPlanV2 } from "./evaluation";
 import { MacroPlanV2 } from "./macroSanity";
@@ -30,7 +30,7 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 export const MultiScenarioSchema = z.object({
   description: z.string().min(1),
   today: z.string().regex(DATE),
-  snapshot: SnapshotSchema.refine((snapshot) => snapshot.schema_version === 2, { message: "Szenarien brauchen Snapshot v2" }),
+  snapshot: SnapshotSchema,
   week_wishes: z.string().max(500).optional(),
   day_wishes: z.string().max(500).optional(),
   feedback: z.string().max(1000).optional(),

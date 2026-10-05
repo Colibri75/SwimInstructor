@@ -75,7 +75,7 @@ describe("FileDayPlanStoreV2", () => {
     expect(await readdir(dir)).toEqual([DAY_PLAN_V2_FILE]);
   });
 
-  it("legt eine eigene Datei neben dem Plan v1 an und das Datenverzeichnis, wenn es fehlt", async () => {
+  it("legt eine eigene Datei an und das Datenverzeichnis, wenn es fehlt", async () => {
     const nested = path.join(dir, "a", "b");
 
     await new FileDayPlanStoreV2(nested).save(record);

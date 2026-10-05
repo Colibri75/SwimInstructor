@@ -1,7 +1,7 @@
 import { EvalCheck } from "../evaluation";
-import { mondayOf } from "../macro";
+import { mondayOf } from "../calendar";
 import { SnapshotV2 } from "../snapshot";
-import { addDays } from "../week";
+import { addDays } from "../calendar";
 import { DayPlanV2 } from "./daySanity";
 import { realismGaps } from "./limits";
 import { MacroPlanV2 } from "./macroSanity";
@@ -11,8 +11,7 @@ import { lastConfirmedTest } from "./tests";
 import { WeekPlanV2 } from "./weekSanity";
 
 /**
- * Automatische Pruefungen fuer die Bewertung der Szenarien mit mehreren Sportarten (npm run eval:multisport). Wie bei
- * v1 (src/plan/evaluation.ts) Heuristiken, die zeigen, wo man hinschauen sollte: Verteilen die Plaene die Zeit nach den
+ * Automatische Pruefungen fuer die Bewertung der Szenarien (npm run eval:multisport). Heuristiken, die zeigen, wo man hinschauen sollte: Verteilen die Plaene die Zeit nach den
  * Schwerpunkten, kommen die Leistungstests, nennt die Begruendung das Ziel und ist sie ehrlich? Die harten Grenzen
  * prueft die Sicherheitsschicht.
  */

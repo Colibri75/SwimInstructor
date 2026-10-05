@@ -4,17 +4,10 @@ import request from "supertest";
 import { createLogger } from "../src/logger";
 import { GenerationBudget } from "../src/plan/budget";
 import { PlanGenerationError } from "../src/plan/errors";
-import { macroRoutes } from "../src/plan/macroRoutes";
-import { MacroPlanService } from "../src/plan/macroService";
 import { multiRoutes } from "../src/plan/multi/routes";
 import { MultiPlanService } from "../src/plan/multi/service";
 import { asRawDayPlan, MemoryDayPlanStoreV2 } from "../src/plan/multi/store";
-import { planRoutes } from "../src/plan/routes";
-import { PlanService } from "../src/plan/service";
 import { SnapshotSchema } from "../src/plan/snapshot";
-import { MemoryPlanStore } from "../src/plan/store";
-import { weekRoutes } from "../src/plan/weekRoutes";
-import { WeekPlanService } from "../src/plan/weekService";
 import { ATHLETE_METRICS } from "../src/sports/performance";
 import { SPORTS } from "../src/sports/registry";
 import { STEP_MEASURES, STEP_TARGETS } from "../src/sports/vocabulary";
@@ -97,136 +90,16 @@ function metricOf(metric: any) {
   return { id: metric.id, displayName: metric.display_name, unit: metric.unit, min: metric.min, max: metric.max };
 }
 
-describe("contracts/wire", () => {
-  const snapshot = contract("wire/snapshot-v1.json");
-
-  it("nimmt den Snapshot der App vollstaendig an (kein Feld wird verworfen)", () => {
+describe("contracts/wire, Snapshot", () => {
+  it.each(["wire/snapshot-v2.json", "wire/snapshot-v2-profile.json", "wire/snapshot-v2-starting-levels.json"])("nimmt %s der App vollstaendig an (kein Feld wird verworfen)", (file) => {
+    const snapshot = contract(file);
     const parsed = SnapshotSchema.safeParse(snapshot);
     expect(parsed.success).toBe(true);
     expect(sorted(keyPaths(parsed.data))).toEqual(sorted(keyPaths(snapshot)));
   });
-
-  it.each(["wire/snapshot-v2.json", "wire/snapshot-v2-profile.json", "wire/snapshot-v2-starting-levels.json"])("nimmt %s der App vollstaendig an (kein Feld wird verworfen)", (file) => {
-    const v2 = contract(file);
-    const parsed = SnapshotSchema.safeParse(v2);
-    expect(parsed.success).toBe(true);
-    expect(sorted(keyPaths(parsed.data))).toEqual(sorted(keyPaths(v2)));
-  });
-
-  it.each([
-    ["/v1/plan/today", (snapshot: unknown) => ({ snapshot })],
-    ["/v1/plan/week", (snapshot: unknown) => ({ snapshot, from_date: "2026-09-30", today: "2026-09-30" })],
-    ["/v1/plan/macro", (snapshot: unknown) => ({ snapshot, today: "2026-09-30" })]
-  ])("%s nimmt Snapshot v2 an", async (path, body) => {
-    const today = contract("wire/plan-today-response.json");
-    const week = contract("wire/plan-week-response.json");
-    const macro = contract("wire/plan-macro-response.json");
-    const deps = { budget: new GenerationBudget(100, 100), logger, now };
-    const app = buildApp({
-      registerV1Routes: (router) => {
-        planRoutes(new PlanService({ ...deps, generator: { generate: generated(today.plan) }, store: new MemoryPlanStore(), timezone: "Europe/Berlin" }))(router);
-        weekRoutes(new WeekPlanService({ ...deps, generator: { generateWeek: generated({ rationale: week.plan.rationale, days: week.plan.days }) } }))(router);
-        macroRoutes(
-          new MacroPlanService({
-            ...deps,
-            generator: { generateMacro: generated({ rationale: macro.plan.rationale, weeks: macro.plan.weeks.map(({ phase: _phase, ...w }: { phase: string }) => w) }) }
-          })
-        )(router);
-      }
-    });
-
-    const response = await request(app).post(path).set(auth).send(body(contract("wire/snapshot-v2.json")));
-
-    expect(response.status).toBe(200);
-  });
-
-  it("antwortet auf /v1/plan/today mit genau den Feldern des Vertrags", async () => {
-    const fixture = contract("wire/plan-today-response.json");
-    const service = new PlanService({
-      generator: { generate: generated(fixture.plan) },
-      store: new MemoryPlanStore(),
-      budget: new GenerationBudget(100, 100),
-      logger,
-      timezone: "Europe/Berlin",
-      now
-    });
-
-    const response = await request(buildApp({ registerV1Routes: planRoutes(service) }))
-      .post("/v1/plan/today")
-      .set(auth)
-      .send({ snapshot, wishes: fixture.wishes });
-
-    expect(response.status).toBe(200);
-    expect(sorted(keyPaths(response.body))).toEqual(sorted(keyPaths(fixture)));
-  });
-
-  it("antwortet bei Claude-Ausfall mit genau den Feldern des Fallback-Vertrags", async () => {
-    const fixture = contract("wire/plan-today-fallback-response.json");
-    const service = new PlanService({
-      generator: { generate: jest.fn().mockRejectedValue(new PlanGenerationError("timeout", "t")) },
-      store: new MemoryPlanStore({
-        date: fixture.date,
-        snapshotHash: "alt",
-        generatedAt: fixture.generated_at,
-        model: "claude-opus-5-5",
-        plan: fixture.plan,
-        adjustments: []
-      }),
-      budget: new GenerationBudget(100, 100),
-      logger,
-      timezone: "Europe/Berlin",
-      now
-    });
-
-    const response = await request(buildApp({ registerV1Routes: planRoutes(service) }))
-      .post("/v1/plan/today")
-      .set(auth)
-      .send({ snapshot });
-
-    expect(response.status).toBe(200);
-    expect(response.body).toMatchObject({ source: "fallback", stale: true, fallback_reason: "timeout" });
-    expect(sorted(keyPaths(response.body))).toEqual(sorted(keyPaths(fixture)));
-  });
-
-  it("antwortet auf /v1/plan/week mit genau den Feldern des Vertrags", async () => {
-    const fixture = contract("wire/plan-week-response.json");
-    const service = new WeekPlanService({
-      generator: { generateWeek: generated({ rationale: fixture.plan.rationale, days: fixture.plan.days }) },
-      budget: new GenerationBudget(100, 100),
-      logger,
-      now
-    });
-
-    const response = await request(buildApp({ registerV1Routes: weekRoutes(service) }))
-      .post("/v1/plan/week")
-      .set(auth)
-      .send({ snapshot, week_start: fixture.week_start, from_date: "2026-09-30", today: "2026-09-30", wishes: fixture.wishes });
-
-    expect(response.status).toBe(200);
-    expect(sorted(keyPaths(response.body))).toEqual(sorted(keyPaths(fixture)));
-  });
-
-  it("antwortet auf /v1/plan/macro mit genau den Feldern des Vertrags", async () => {
-    const fixture = contract("wire/plan-macro-response.json");
-    const weeks = fixture.plan.weeks.map(({ phase: _phase, ...week }: { phase: string }) => week);
-    const service = new MacroPlanService({
-      generator: { generateMacro: generated({ rationale: fixture.plan.rationale, weeks }) },
-      budget: new GenerationBudget(100, 100),
-      logger,
-      now
-    });
-
-    const response = await request(buildApp({ registerV1Routes: macroRoutes(service) }))
-      .post("/v1/plan/macro")
-      .set(auth)
-      .send({ snapshot, today: "2026-09-30" });
-
-    expect(response.status).toBe(200);
-    expect(sorted(keyPaths(response.body))).toEqual(sorted(keyPaths(fixture)));
-  });
 });
 
-describe("contracts/wire, Plan v2", () => {
+describe("contracts/wire, Plan", () => {
   // Wie die App ihren Snapshot schickt, mit Rad-Umfang und Abstand zur harten Einheit, die heute einen Test erlauben.
   const profile = contract("wire/snapshot-v2-profile.json");
   const snapshot = {

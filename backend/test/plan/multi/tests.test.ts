@@ -1,4 +1,4 @@
-import { macroWeekStarts } from "../../../src/plan/macro";
+import { macroWeekStarts } from "../../../src/plan/calendar";
 import { sportLimits } from "../../../src/plan/multi/limits";
 import { chooseTest, entryTest, fitsToday, lastConfirmedTest, preferredTest, scheduleMacroTests, stepsTotals, testOf, testRef, TestWeek } from "../../../src/plan/multi/tests";
 import { SnapshotV2 } from "../../../src/plan/snapshot";

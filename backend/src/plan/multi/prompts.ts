@@ -1,9 +1,9 @@
 import { SPORTS } from "../../sports/registry";
 import { SportDefinition } from "../../sports/types";
 import { StepTarget } from "../../sports/vocabulary";
-import { daysBetween, mondayOf } from "../macro";
+import { daysBetween, mondayOf } from "../calendar";
 import { SnapshotV2 } from "../snapshot";
-import { weekDates, weekdayName } from "../week";
+import { weekDates, weekdayName } from "../calendar";
 import { dayLimits, DayLimitsV2, dayMinutesCap, declaredLevelText, goalDayOf, MULTI_RULES, phaseOf, realismGaps, SportDayLimits, sportLimits, taperFactors, taperWeeks, testBlackoutReason, weeksToGoal } from "./limits";
 import { goalKind, isFitnessGoal, scheduleDayText, trainingDaysPerWeek, weeklyMinutes } from "./schedule";
 import { MacroContextV2, macroSportLimits } from "./macroSanity";
@@ -125,7 +125,7 @@ Antworte ausschließlich im vorgegebenen JSON-Format und auf Deutsch. ${BLOCKS_O
 
 // --- Bausteine der Nutzernachricht ---
 
-/** Der Snapshot fuer den Prompt: ohne die v1-Felder, die nur das Schwimmen beschreiben und hier verwirren wuerden. */
+/** Der Snapshot fuer den Prompt: ohne die Felder `goal`, `volume`, `pace` und `load`, die nur das Schwimmen beschreiben und hier verwirren wuerden (die Werte je Sportart stehen unter `sports`). */
 export function promptSnapshot(snapshot: SnapshotV2): Record<string, unknown> {
   return {
     schema_version: snapshot.schema_version,

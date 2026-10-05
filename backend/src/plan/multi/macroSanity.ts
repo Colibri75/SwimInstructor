@@ -1,7 +1,7 @@
 import { LimitUnit } from "../../sports/types";
-import { MacroPhase } from "../macro";
+import { MacroPhase } from "../calendar";
 import { SnapshotV2 } from "../snapshot";
-import { addDays } from "../week";
+import { addDays } from "../calendar";
 import { MULTI_RULES, phaseOf, sportLimits, SportLimitsNow, taperFactors, taperWeeks, weeksToGoal } from "./limits";
 import { trainingDaysPerWeek, weeklyMinutes } from "./schedule";
 import { MacroBlockRaw, MacroWeekRawV2, MacroWeeksRaw, TestSettings } from "./schemas";
@@ -9,7 +9,7 @@ import { amountToMeters, amountToMinutes, floorAmount, formatAmount, plannedSpor
 import { scheduleMacroTests, ScheduledTest } from "./tests";
 
 /**
- * Sicherheitsschicht fuer den Gesamtplan ueber mehrere Sportarten. Wie bei v1 reiner Code: korrigiert Claudes Plan
+ * Sicherheitsschicht fuer den Gesamtplan ueber mehrere Sportarten. Reiner Code ohne Netzwerk: korrigiert Claudes Plan
  * deterministisch oder blockt ihn.
  *
  * Je Sportart: die erste Woche in der Wochengrenze von heute, danach hoechstens der Wachstumsfaktor des Moduls (etwa

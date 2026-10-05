@@ -1,10 +1,10 @@
 import fc from "fast-check";
-import { INTENSITIES, SESSION_TYPES } from "../../../src/plan/plan";
+import { INTENSITIES, SESSION_TYPES } from "../../../src/plan/vocabulary";
 import { DaySessionRaw, MultiDayPlanRaw, MacroWeeksRaw, MultiWeekPlanRaw, RecentTraining, StepRaw, TestSettings } from "../../../src/plan/multi/schemas";
 import { SnapshotSchema, SnapshotV2, SportState } from "../../../src/plan/snapshot";
 import { SPORTS } from "../../../src/sports/registry";
 import { STEP_TARGETS } from "../../../src/sports/vocabulary";
-import { addDays } from "../../../src/plan/week";
+import { addDays } from "../../../src/plan/calendar";
 import { contractSnapshot, emptyState, TODAY } from "./fixtures";
 
 /**

@@ -4,10 +4,8 @@ import { z } from "zod";
 import { GenerationBudget } from "../budget";
 import { FallbackReason, PlanGenerationError, PlanUnavailableError } from "../errors";
 import { CallOptions, GeneratedPlan, StructuredGenerator } from "../generator";
-import { macroWeekStarts } from "../macro";
-import { localDate } from "../service";
+import { localDate, macroWeekStarts, windowDates } from "../calendar";
 import { SnapshotV2 } from "../snapshot";
-import { windowDates } from "../week";
 import { DayPlanV2, sanitizeDayV2 } from "./daySanity";
 import { goalDayOf, MULTI_RULES } from "./limits";
 import { expandMacroBlocks, MacroContextV2, MacroPlanV2, sanitizeMacroV2 } from "./macroSanity";
@@ -43,7 +41,7 @@ import { asRawDayPlan, DayPlanStoreV2, StoredDayV2 } from "./store";
 import { sanitizeWeekV2, WeekContextV2, WeekPlanV2 } from "./weekSanity";
 
 /**
- * Plan v2 fuer mehrere Sportarten: Tag, sieben Tage, Gesamtplan und Feedback zum Gesamtplan. Ablauf wie bei v1:
+ * Plan v2 fuer mehrere Sportarten: Tag, sieben Tage, Gesamtplan und Feedback zum Gesamtplan. Ablauf:
  * Claude fragen (mit Budget), das Ergebnis gegen das Schema und durch die Sicherheitsschicht. Nur der Tagesplan hat
  * Cache und Fallback auf den letzten gueltigen Plan; Woche und Gesamtplan haelt die App, sie behaelt bei einem Ausfall
  * ihren bisherigen.
@@ -321,7 +319,7 @@ export class MultiPlanService {
     );
   }
 
-  /** Wie bei v1: der letzte gueltige Tagesplan, noch einmal gegen den heutigen Zustand geprueft. */
+  /** Der letzte gueltige Tagesplan, noch einmal gegen den heutigen Zustand geprueft. */
   private fallback(
     reason: FallbackReason,
     snapshot: SnapshotV2,

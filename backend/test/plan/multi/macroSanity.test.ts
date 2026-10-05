@@ -1,4 +1,4 @@
-import { macroWeekStarts } from "../../../src/plan/macro";
+import { macroWeekStarts } from "../../../src/plan/calendar";
 import { expandMacroBlocks, MacroContextV2, macroSportLimits, sanitizeMacroV2 } from "../../../src/plan/multi/macroSanity";
 import { MacroBlockRaw, MacroWeeksRaw } from "../../../src/plan/multi/schemas";
 import { asBlocks, macroPlan, multiSnapshot, startingLevel, TODAY } from "./fixtures";

@@ -1,24 +1,14 @@
 import request from "supertest";
 import { GenerationBudget } from "../../../src/plan/budget";
 import { PlanGenerationError } from "../../../src/plan/errors";
-import { macroWeekStarts } from "../../../src/plan/macro";
-import { macroRoutes } from "../../../src/plan/macroRoutes";
-import { MacroPlanService } from "../../../src/plan/macroService";
+import { macroWeekStarts } from "../../../src/plan/calendar";
 import { sanitizeDayV2 } from "../../../src/plan/multi/daySanity";
 import { multiRoutes } from "../../../src/plan/multi/routes";
 import { MacroWeekTargetV2 } from "../../../src/plan/multi/schemas";
 import { MultiPlanService } from "../../../src/plan/multi/service";
 import { MemoryDayPlanStoreV2 } from "../../../src/plan/multi/store";
-import { planRoutes } from "../../../src/plan/routes";
-import { PlanService } from "../../../src/plan/service";
-import { MemoryPlanStore } from "../../../src/plan/store";
-import { weekRoutes } from "../../../src/plan/weekRoutes";
-import { WeekPlanService } from "../../../src/plan/weekService";
 import { createLogger } from "../../../src/logger";
 import { buildApp, TEST_TOKEN, testConfig } from "../../helpers";
-import { goodPlan, snapshot as snapshotV1 } from "../fixtures";
-import { goodMacro as goodMacroV1, MACRO_TODAY } from "../macroFixtures";
-import { goodWeek as goodWeekV1, WEEK_START } from "../weekFixtures";
 import { asBlocks, dayPlan, macroPlan, multiSnapshot, session, swimStep, TODAY, weekPlan, weekSession } from "./fixtures";
 
 const auth = { Authorization: `Bearer ${TEST_TOKEN}` };
@@ -26,6 +16,9 @@ const NOW_ISO = "2026-09-30T10:00:00.000Z";
 const GOAL_DAY = "2027-07-04";
 const WEEKS = macroWeekStarts(TODAY, GOAL_DAY);
 const TODAY_MONDAY = WEEKS[0];
+
+/** Ein Snapshot der alten Version 1: Plan v2 nimmt ihn nicht mehr an. */
+const snapshotV1 = (): unknown => ({ ...multiSnapshot(), schema_version: 1 });
 
 const claude = (raw: unknown) => jest.fn().mockResolvedValue({ raw, model: "claude-opus-5-5", usage: { inputTokens: 1, outputTokens: 1 } });
 const timeout = () => jest.fn().mockRejectedValue(new PlanGenerationError("timeout", "zu langsam"));
@@ -63,26 +56,14 @@ const reviewBody = (extra: Body = {}) => ({
 });
 const reviseBody = (extra: Body = {}) => ({ plan_version: 2, snapshot: multiSnapshot(), today: TODAY, plan: { weeks: currentWeeks }, feedback: "Bitte mehr Schwimmen", ...extra });
 
-/** Wie in server.ts: Plan v2 vor den Routen von v1 auf denselben Pfaden. */
+/** Wie in server.ts: die Routen der Planung hinter der Token-Pruefung. */
 function appWith(complete: jest.Mock | null, store = new MemoryDayPlanStoreV2()) {
   const logger = createLogger(testConfig);
   const budget = new GenerationBudget(100, 100);
   const now = () => new Date("2026-09-30T10:00:00Z");
-  const v1 = { generate: claude(goodPlan), generateWeek: claude(goodWeekV1()), generateMacro: claude(goodMacroV1()) };
 
-  const registerMultiRoutes = multiRoutes(new MultiPlanService({ generator: complete === null ? null : { complete }, store, budget, logger, timezone: "Europe/Berlin", now }));
-  const registerPlanRoutes = planRoutes(new PlanService({ generator: { generate: v1.generate }, store: new MemoryPlanStore(), budget, logger, timezone: "Europe/Berlin", now }));
-  const registerWeekRoutes = weekRoutes(new WeekPlanService({ generator: { generateWeek: v1.generateWeek }, budget, logger, now }));
-  const registerMacroRoutes = macroRoutes(new MacroPlanService({ generator: { generateMacro: v1.generateMacro }, budget, logger, now }));
-  const app = buildApp({
-    registerV1Routes: (router) => {
-      registerMultiRoutes(router);
-      registerPlanRoutes(router);
-      registerWeekRoutes(router);
-      registerMacroRoutes(router);
-    }
-  });
-  return { app, v1 };
+  const registerRoutes = multiRoutes(new MultiPlanService({ generator: complete === null ? null : { complete }, store, budget, logger, timezone: "Europe/Berlin", now }));
+  return { app: buildApp({ registerV1Routes: registerRoutes }) };
 }
 
 function detailPaths(body: { details?: Array<{ path: string }> }): string[] {
@@ -108,7 +89,7 @@ describe("Plan v2: Token", () => {
 describe("POST /v1/plan/today mit plan_version 2", () => {
   it("liefert den Tagesplan v2 im erwarteten Format", async () => {
     const complete = claude(goodDay());
-    const { app, v1 } = appWith(complete);
+    const { app } = appWith(complete);
 
     const response = await request(app).post("/v1/plan/today").set(auth).send(dayBody());
 
@@ -121,7 +102,6 @@ describe("POST /v1/plan/today mit plan_version 2", () => {
     expect(response.body).not.toHaveProperty("fallback_reason");
     expect(response.body).not.toHaveProperty("wishes");
     expect(complete).toHaveBeenCalledTimes(1);
-    expect(v1.generate).not.toHaveBeenCalled();
   });
 
   it("meldet den Wunsch zurueck und liefert beim zweiten Aufruf aus dem Cache", async () => {
@@ -147,9 +127,9 @@ describe("POST /v1/plan/today mit plan_version 2", () => {
     expect(response.body.plan.sessions[0].sport).toBe("swim");
   });
 
-  it("lehnt einen Snapshot v1 ab, statt an v1 weiterzureichen", async () => {
+  it("lehnt einen Snapshot v1 ab", async () => {
     const complete = claude(goodDay());
-    const { app, v1 } = appWith(complete);
+    const { app } = appWith(complete);
 
     const response = await request(app).post("/v1/plan/today").set(auth).send(dayBody({ snapshot: snapshotV1() }));
 
@@ -157,7 +137,6 @@ describe("POST /v1/plan/today mit plan_version 2", () => {
     expect(response.body.error).toBe("invalid_request");
     expect(response.body.details).toContainEqual({ path: "snapshot.schema_version", message: "Plan v2 braucht Snapshot v2" });
     expect(complete).not.toHaveBeenCalled();
-    expect(v1.generate).not.toHaveBeenCalled();
   });
 
   it("lehnt ein Datum im Verlauf ab, das es nicht gibt", async () => {
@@ -195,37 +174,30 @@ describe("POST /v1/plan/today mit plan_version 2", () => {
   });
 });
 
-describe("POST /v1/plan/today ohne plan_version 2 (alte App)", () => {
+describe("Anfragen ohne plan_version 2 (veraltete App)", () => {
   it.each([
-    ["ohne plan_version", {}],
-    ["mit plan_version 1", { plan_version: 1 }],
-    ['mit plan_version "2" als Text', { plan_version: "2" }]
-  ])("geht %s unveraendert an v1", async (_name, extra) => {
+    ["/v1/plan/today", () => dayBody()],
+    ["/v1/plan/week", () => weekBody()],
+    ["/v1/plan/macro", () => macroBody()]
+  ])("%s lehnt fehlendes oder falsches plan_version mit einem Hinweis ab", async (path, build) => {
     const complete = claude(goodDay());
-    const { app, v1 } = appWith(complete);
+    const app = appWith(complete).app;
 
-    const response = await request(app).post("/v1/plan/today").set(auth).send({ snapshot: snapshotV1(), ...extra });
+    for (const planVersion of [undefined, 1, "2"]) {
+      const response = await request(app).post(path).set(auth).send({ ...build(), plan_version: planVersion });
 
-    expect(response.status).toBe(200);
-    expect(response.body).toMatchObject({ source: "claude", date: TODAY, stale: false, plan: { session_type: "endurance", total_distance_meters: 1600 } });
-    expect(response.body.plan.sets).toHaveLength(3);
-    expect(response.body).not.toHaveProperty("plan_version");
-    expect(v1.generate).toHaveBeenCalledTimes(1);
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe("invalid_request");
+      expect(response.body.details).toContainEqual({ path: "plan_version", message: expect.stringContaining("veraltet") });
+    }
     expect(complete).not.toHaveBeenCalled();
-  });
-
-  it("liefert die Fehler von v1, nicht die von v2", async () => {
-    const response = await request(appWith(claude(goodDay())).app).post("/v1/plan/today").set(auth).send({ wishes: "x" });
-
-    expect(response.status).toBe(400);
-    expect(detailPaths(response.body)).toEqual(["snapshot"]);
   });
 });
 
 describe("POST /v1/plan/week mit plan_version 2", () => {
   it("liefert die sieben Tage ab from_date", async () => {
     const complete = claude(goodWeek());
-    const { app, v1 } = appWith(complete);
+    const { app } = appWith(complete);
 
     const response = await request(app).post("/v1/plan/week").set(auth).send(weekBody({ wishes: " Mehr Rad " }));
 
@@ -234,7 +206,6 @@ describe("POST /v1/plan/week mit plan_version 2", () => {
     expect(response.body.plan.days).toHaveLength(7);
     expect(response.body.plan.days[0]).toMatchObject({ date: TODAY, sessions: [{ sport: "swim", amount: 800, unit: "meters" }] });
     expect(response.body.plan.total_minutes).toBe(171);
-    expect(v1.generateWeek).not.toHaveBeenCalled();
   });
 
   it("nimmt die Vorgabe des Gesamtplans an, wenn die Woche an einem Montag beginnt", async () => {
@@ -279,25 +250,12 @@ describe("POST /v1/plan/week mit plan_version 2", () => {
     expect(detailPaths(response.body)).toContain("snapshot.schema_version");
   });
 
-  it("geht ohne plan_version unveraendert an v1", async () => {
-    const complete = claude(goodWeek());
-    const { app, v1 } = appWith(complete);
-
-    const response = await request(app).post("/v1/plan/week").set(auth).send({ snapshot: snapshotV1(), week_start: WEEK_START, from_date: TODAY, today: TODAY });
-
-    expect(response.status).toBe(200);
-    expect(response.body).toMatchObject({ week_start: WEEK_START, adjustments: [] });
-    expect(response.body.plan.total_distance_meters).toBe(3600);
-    expect(response.body).not.toHaveProperty("plan_version");
-    expect(v1.generateWeek).toHaveBeenCalledTimes(1);
-    expect(complete).not.toHaveBeenCalled();
-  });
 });
 
 describe("POST /v1/plan/macro mit plan_version 2", () => {
   it("liefert den Gesamtplan mit Phase, Sportarten und Leistungstests je Woche", async () => {
     const complete = claude(goodMacro());
-    const { app, v1 } = appWith(complete);
+    const { app } = appWith(complete);
 
     const response = await request(app).post("/v1/plan/macro").set(auth).send(macroBody());
 
@@ -315,7 +273,6 @@ describe("POST /v1/plan/macro mit plan_version 2", () => {
     }
     expect(weeks[0].sports.map((entry) => entry.sport)).toEqual(["swim", "bike", "run"]);
     expect(weeks.some((week) => week.tests.length > 0)).toBe(true);
-    expect(v1.generateMacro).not.toHaveBeenCalled();
   });
 
   it("lehnt ein unmoegliches Datum und einen Snapshot v1 ab", async () => {
@@ -330,21 +287,6 @@ describe("POST /v1/plan/macro mit plan_version 2", () => {
     expect(detailPaths(oldSnapshot.body)).toContain("snapshot.schema_version");
   });
 
-  it("geht ohne plan_version unveraendert an v1", async () => {
-    const complete = claude(goodMacro());
-    const { app, v1 } = appWith(complete);
-    const nearGoal = snapshotV1({ goal: { target_date: "2026-11-12T11:00:00Z", days_until_goal: 43 } });
-
-    const response = await request(app).post("/v1/plan/macro").set(auth).send({ snapshot: nearGoal, today: MACRO_TODAY });
-
-    expect(response.status).toBe(200);
-    expect(response.body).toMatchObject({ goal_day: "2026-11-12", adjustments: [] });
-    expect(response.body.plan.weeks).toHaveLength(7);
-    expect(response.body.plan.weeks[0]).toMatchObject({ week_start: "2026-09-28", target_meters: 3500 });
-    expect(response.body).not.toHaveProperty("plan_version");
-    expect(v1.generateMacro).toHaveBeenCalledTimes(1);
-    expect(complete).not.toHaveBeenCalled();
-  });
 });
 
 describe("POST /v1/plan/macro/revise", () => {
@@ -502,14 +444,12 @@ describe("Plan v2: Ausfall von Claude", () => {
   ];
 
   it.each(cases)("%s antwortet ohne Key 503 mit Grund not_configured", async (path, body) => {
-    const { app, v1 } = appWith(null);
+    const { app } = appWith(null);
 
     const response = await request(app).post(path).set(auth).send(body());
 
     expect(response.status).toBe(503);
     expect(response.body).toEqual({ error: "plan_unavailable", reason: "not_configured" });
-    expect(v1.generateWeek).not.toHaveBeenCalled();
-    expect(v1.generateMacro).not.toHaveBeenCalled();
   });
 
   it.each(cases)("%s antwortet bei Zeitueberschreitung 503 mit Grund timeout", async (path, body) => {

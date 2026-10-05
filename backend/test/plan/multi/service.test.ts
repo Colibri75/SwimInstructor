@@ -1,7 +1,7 @@
 import { GenerationBudget } from "../../../src/plan/budget";
 import { FallbackReason, PlanGenerationError, PlanUnavailableError } from "../../../src/plan/errors";
 import { GeneratedPlan } from "../../../src/plan/generator";
-import { macroWeekStarts } from "../../../src/plan/macro";
+import { macroWeekStarts } from "../../../src/plan/calendar";
 import { sanitizeDayV2 } from "../../../src/plan/multi/daySanity";
 import { MULTI_DAY_SYSTEM_PROMPT, MULTI_MACRO_SYSTEM_PROMPT, MULTI_REVISE_SYSTEM_PROMPT, MULTI_REVIEW_SYSTEM_PROMPT, MULTI_WEEK_SYSTEM_PROMPT } from "../../../src/plan/multi/prompts";
 import {

@@ -1,7 +1,7 @@
 import { LimitUnit, SportDefinition } from "../../sports/types";
-import { Intensity, SessionType } from "../plan";
+import { Intensity, SessionType } from "../vocabulary";
 import { SnapshotV2 } from "../snapshot";
-import { addDays, weekdayName } from "../week";
+import { addDays, weekdayName } from "../calendar";
 import { dayLimits, DayLimitsV2, dayMinutesCap, hardOn, lower, MULTI_RULES, RANK, sportLimits, SportLimitsNow, testBlackoutReason } from "./limits";
 import { MacroWeekTargetV2, MultiWeekPlanRaw, RecentTraining, TestSettings, WeekSessionRaw } from "./schemas";
 import { amountToMeters, amountToMinutes, floorAmount, formatAmount, plannedSports, roundAmount, sportName } from "./sports";

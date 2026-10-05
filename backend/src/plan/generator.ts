@@ -2,15 +2,6 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { PlanGenerationError } from "./errors";
-import { Equipment, TrainingPlanSchema } from "./plan";
-import { buildUserMessage, SYSTEM_PROMPT } from "./prompt";
-import { Snapshot } from "./snapshot";
-import { DayTarget, WeekPlanSchema } from "./week";
-import { WeekContext } from "./weekSanity";
-import { buildWeekUserMessage, WEEK_SYSTEM_PROMPT } from "./weekPrompt";
-import { MacroPlanSchema, MacroWeekTarget } from "./macro";
-import { MacroContext } from "./macroSanity";
-import { buildMacroUserMessage, MACRO_SYSTEM_PROMPT } from "./macroPrompt";
 
 export interface GeneratedPlan {
   /** Das geparste, aber noch nicht gegen das Plan-Schema geprueftes JSON von Claude. */
@@ -20,31 +11,9 @@ export interface GeneratedPlan {
   usage: { inputTokens: number; outputTokens: number };
 }
 
-/** Naht fuer Tests: Der Service kennt nur dieses Interface, nie das Anthropic-SDK. */
-export interface PlanGenerator {
-  generate(input: { snapshot: Snapshot; date: string; wishes?: string; dayTarget?: DayTarget; equipment?: readonly Equipment[] }): Promise<GeneratedPlan>;
-}
-
-/** Wie PlanGenerator, fuer den Wochenplan. */
-export interface WeekGenerator {
-  generateWeek(input: {
-    snapshot: Snapshot;
-    context: WeekContext;
-    wishes?: string;
-    equipment?: readonly Equipment[];
-    /** Was der Gesamtplan fuer die Wochen der geplanten Tage vorgibt. */
-    macroWeeks?: readonly MacroWeekTarget[];
-  }): Promise<GeneratedPlan>;
-}
-
-/** Wie PlanGenerator, fuer den Gesamtplan bis zum Zieltag. */
-export interface MacroGenerator {
-  generateMacro(input: { snapshot: Snapshot; context: MacroContext }): Promise<GeneratedPlan>;
-}
-
 /**
- * Ein Aufruf mit festem System-Prompt, Nutzernachricht und Ausgabe-Schema. Die Planung fuer mehrere Sportarten
- * (src/plan/multi/) baut Prompts und Schemas selbst und braucht vom Generator nur das.
+ * Naht fuer Tests: Der Service kennt nur dieses Interface, nie das Anthropic-SDK. Ein Aufruf besteht aus festem
+ * System-Prompt, Nutzernachricht und Ausgabe-Schema; Prompts und Schemas baut `src/plan/multi/`.
  */
 export interface StructuredGenerator {
   complete(system: string, user: string, schema: z.ZodType, options?: CallOptions): Promise<GeneratedPlan>;
@@ -68,23 +37,11 @@ export interface ClaudeOptions {
 
 const MAX_TOKENS = 16_000;
 
-export class ClaudePlanGenerator implements PlanGenerator, WeekGenerator, MacroGenerator, StructuredGenerator {
+export class ClaudePlanGenerator implements StructuredGenerator {
   constructor(
     private readonly client: Anthropic,
     private readonly options: ClaudeOptions
   ) {}
-
-  async generate({ snapshot, date, wishes, dayTarget, equipment }: Parameters<PlanGenerator["generate"]>[0]): Promise<GeneratedPlan> {
-    return this.call(SYSTEM_PROMPT, buildUserMessage(snapshot, date, wishes, dayTarget, equipment), TrainingPlanSchema, this.options.timeoutMs);
-  }
-
-  async generateWeek({ snapshot, context, wishes, equipment, macroWeeks }: Parameters<WeekGenerator["generateWeek"]>[0]): Promise<GeneratedPlan> {
-    return this.call(WEEK_SYSTEM_PROMPT, buildWeekUserMessage(snapshot, context, wishes, undefined, equipment, macroWeeks), WeekPlanSchema, this.options.timeoutMs);
-  }
-
-  async generateMacro({ snapshot, context }: Parameters<MacroGenerator["generateMacro"]>[0]): Promise<GeneratedPlan> {
-    return this.call(MACRO_SYSTEM_PROMPT, buildMacroUserMessage(snapshot, context), MacroPlanSchema, this.options.macroTimeoutMs);
-  }
 
   async complete(system: string, user: string, schema: z.ZodType, options: CallOptions = {}): Promise<GeneratedPlan> {
     return this.call(system, user, schema, options.macro === true ? this.options.macroTimeoutMs : this.options.timeoutMs);

@@ -1,9 +1,9 @@
 import { PerformanceTestDefinition } from "../../sports/performance";
 import { SessionStep, SportDefinition } from "../../sports/types";
-import { daysBetween, MacroPhase } from "../macro";
-import { Intensity } from "../plan";
+import { daysBetween, MacroPhase } from "../calendar";
+import { Intensity } from "../vocabulary";
 import { SnapshotV2 } from "../snapshot";
-import { addDays } from "../week";
+import { addDays } from "../calendar";
 import { goalDayOf, MULTI_RULES, SportLimitsNow, sportLimits } from "./limits";
 import { isFitnessGoal } from "./schedule";
 import { TestSettings } from "./schemas";

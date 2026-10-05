@@ -235,8 +235,9 @@ describe("Durchlauf und Generatoren", () => {
   });
 
   it("lehnt Szenarien mit Snapshot v1 ab", () => {
-    const v1 = JSON.parse(readFileSync(path.join(DIR, "..", "01-anfaenger.json"), "utf8"));
-    expect(() => parseScenario({ description: "alt", today: TODAY, snapshot: v1 })).toThrow("Szenarien brauchen Snapshot v2");
+    const first = readdirSync(DIR).filter((file) => file.endsWith(".json")).sort()[0];
+    const v1 = { ...JSON.parse(readFileSync(path.join(DIR, first), "utf8")).snapshot, schema_version: 1 };
+    expect(() => parseScenario({ description: "alt", today: TODAY, snapshot: v1 })).toThrow("Plan v2 braucht Snapshot v2");
   });
 
   it("baut das Training der letzten Tage aus dem Snapshot nach, mit der harten Einheit am richtigen Tag", () => {
