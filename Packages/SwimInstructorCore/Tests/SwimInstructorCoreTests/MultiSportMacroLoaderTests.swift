@@ -604,7 +604,8 @@ final class MultiSportMacroLoaderTests: XCTestCase {
         let swim = TestFixtures.workout(.swim, daysAgo: 12, minutes: 45, meters: 2_000)
         let run = TestFixtures.workout(.run, daysAgo: 8, minutes: 30, meters: 5_000)
 
-        let review = try XCTUnwrap(await loader.reviewIfDue(snapshot: TestFixtures.snapshot, workouts: [swim, run], pause: nil))
+        let result = await loader.reviewIfDue(snapshot: TestFixtures.snapshot, workouts: [swim, run], pause: nil)
+        let review = try XCTUnwrap(result)
 
         XCTAssertEqual(review.reason, .scheduled)
         XCTAssertEqual(review.weekStart, "2026-09-28")
@@ -626,7 +627,8 @@ final class MultiSportMacroLoaderTests: XCTestCase {
         XCTAssertFalse(loader.reviewDue)
 
         // Höchstens einmal am Tag je Anlass.
-        XCTAssertNil(await loader.reviewIfDue(snapshot: TestFixtures.snapshot, workouts: [], pause: nil))
+        let again = await loader.reviewIfDue(snapshot: TestFixtures.snapshot, workouts: [], pause: nil)
+        XCTAssertNil(again)
         XCTAssertEqual(provider.reviewRequests.count, 1)
     }
 
@@ -636,8 +638,10 @@ final class MultiSportMacroLoaderTests: XCTestCase {
         let reviewMarker = MemoryMarker()
         let loader = makeLoader(store: MemoryStore(plan), provider: provider, reviewMarker: reviewMarker)
 
-        XCTAssertNil(await loader.reviewIfDue(snapshot: TestFixtures.snapshot, workouts: [], pause: nil))
-        XCTAssertNil(await loader.reviewIfDue(snapshot: TestFixtures.snapshot, workouts: [], pause: nil))
+        let first = await loader.reviewIfDue(snapshot: TestFixtures.snapshot, workouts: [], pause: nil)
+        let second = await loader.reviewIfDue(snapshot: TestFixtures.snapshot, workouts: [], pause: nil)
+        XCTAssertNil(first)
+        XCTAssertNil(second)
 
         XCTAssertEqual(provider.reviewRequests.count, 1)
         XCTAssertEqual(loader.plan, plan)
@@ -651,9 +655,11 @@ final class MultiSportMacroLoaderTests: XCTestCase {
         XCTAssertTrue(plan.canGiveFeedback)
         let loader = makeLoader(store: MemoryStore(plan), provider: provider)
 
-        XCTAssertTrue(await loader.revise(feedback: "Mehr Laufen", snapshot: TestFixtures.snapshot))
+        let revised = await loader.revise(feedback: "Mehr Laufen", snapshot: TestFixtures.snapshot)
+        XCTAssertTrue(revised)
         XCTAssertEqual(loader.plan?.canGiveFeedback, false)
-        XCTAssertFalse(await loader.revise(feedback: "Noch mehr", snapshot: TestFixtures.snapshot))
+        let refused = await loader.revise(feedback: "Noch mehr", snapshot: TestFixtures.snapshot)
+        XCTAssertFalse(refused)
         XCTAssertEqual(provider.revisionRequests.count, 1)
         XCTAssertNotNil(loader.error)
 
