@@ -3,7 +3,7 @@ import SwiftUI
 import SwimInstructorCore
 
 /// Der Gesamtplan bis zum Ziel im Plan-Tab: Überblick je Sportart, alle Wochen (antippen öffnet die Woche im
-/// Wochenplan), Testtermine, die Fortschreibung mit Plan gegen Ist und darunter das Feedback mit der Liste der Änderungen
+/// Wochenplan), das Leistungsprofil, Testtermine, die Fortschreibung mit Plan gegen Ist und darunter das Feedback mit der Liste der Änderungen
 /// und dem Verlauf der Runden.
 struct MacroPlanSections: View {
     /// Öffnet die Woche (Montag) im Wochenplan.
@@ -25,8 +25,28 @@ struct MacroPlanSections: View {
         overviewSection
         if let plan = macroLoader.plan {
             weeksSection(plan)
+        }
+        profileSection
+        if let plan = macroLoader.plan {
             reviewSection(plan)
             feedbackSection(plan)
+        }
+    }
+
+    // MARK: - Leistungsprofil
+
+    /// Die Werte, nach denen Zonen, Tempo und Tests im Gesamtplan entstehen.
+    private var profileSection: some View {
+        Section {
+            NavigationLink {
+                ProfileView()
+            } label: {
+                Label("Leistungswerte und Tests", systemImage: "gauge.with.dots.needle.67percent")
+            }
+        } header: {
+            Text("Leistungsprofil")
+        } footer: {
+            Text("Danach richten sich Zonen und Tempo im Plan. Hier trägst du Werte von Hand oder nach einem Test ein und stellst ein, ob und wie oft die App Tests einplant.")
         }
     }
 
