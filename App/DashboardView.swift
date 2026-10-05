@@ -73,6 +73,7 @@ struct DashboardView: View {
                 }
             }
             .navigationTitle("Dashboard")
+            .settingsToolbar()
             .navigationDestination(item: $openedTileID) { id in
                 StatisticDetailView(dashboard: dashboard, tileID: id, input: statisticInput)
             }

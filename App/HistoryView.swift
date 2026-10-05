@@ -37,6 +37,7 @@ struct HistoryView: View {
                 }
             }
             .navigationTitle("Verlauf")
+            .settingsToolbar()
             .refreshable { await loader.refreshIfNeeded() }
         }
         .task { await loader.refreshIfNeeded() }

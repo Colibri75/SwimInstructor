@@ -41,22 +41,8 @@ struct TodayView: View {
             }
             .navigationTitle("Heute")
             .swipeClosesKeyboard()
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showsSettings = true
-                    } label: {
-                        Image(systemName: "gearshape")
-                    }
-                    .accessibilityLabel("Einstellungen")
-                }
-            }
+            .settingsToolbar(isPresented: $showsSettings)
             .refreshable { await loader.refresh() }
-            .sheet(isPresented: $showsSettings) {
-                SettingsView {
-                    Task { await loader.refresh() }
-                }
-            }
             .sheet(item: $resultTest) { target in
                 TestResultSheet(sport: target.sport, testID: target.testID, watchResult: target.watchResult)
             }
