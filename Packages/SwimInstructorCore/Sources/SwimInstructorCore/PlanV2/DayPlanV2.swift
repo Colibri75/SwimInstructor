@@ -171,7 +171,7 @@ public struct DayPlanV2: Codable, Equatable, Sendable {
 
 /// Antwort von `POST /v1/plan/today` mit `plan_version: 2`, so auch im Cache und im Verlauf auf dem Gerät.
 public struct DayPlanV2Response: Codable, Equatable, Sendable {
-    /// 2 für Pläne vom Server; 1 für umgewandelte Pläne aus der Zeit vor Plan v2 (nur im Verlauf).
+    /// Immer 2.
     public let planVersion: Int
     public let source: PlanSource
     /// Kalendertag des Plans als `yyyy-MM-dd` (Zeitzone des Servers).

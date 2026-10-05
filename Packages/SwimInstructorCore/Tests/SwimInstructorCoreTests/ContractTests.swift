@@ -206,32 +206,6 @@ final class ContractTests: XCTestCase {
 
     // MARK: - Was die App heute auf dem Gerät speichert
 
-    func testStoredLastPlanFromBeforeEquipmentStillLoads() throws {
-        let plan = try XCTUnwrap(FilePlanCache(fileURL: RepoPaths.contract("app-storage/last-plan.json")).load())
-        XCTAssertEqual(plan.plan.sets.count, 1)
-        XCTAssertEqual(plan.plan.sets.first?.equipment, [])
-        XCTAssertEqual(plan.plan.sets.first?.cue, "")
-        XCTAssertNil(plan.wishes)
-    }
-
-    func testStoredPlanHistoryLoads() {
-        let history = FilePlanHistory(fileURL: RepoPaths.contract("app-storage/plan-history.json")).load()
-        XCTAssertEqual(history.map(\.date), ["2026-09-28", "2026-09-29"])
-        XCTAssertEqual(history.last?.plan.equipmentNeeded, ["pull_buoy", "paddles"])
-    }
-
-    func testStoredSwimGoalFromBeforeT2BecomesTheTrainingGoal() throws {
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: "ContractTests-\(UUID().uuidString)"))
-        defaults.set(try RepoPaths.contractData("app-storage/goal-swim-v1.json"), forKey: UserDefaultsGoalStore.storageKey)
-
-        let goal = UserDefaultsTrainingGoalStore(defaults: defaults).goal()
-
-        XCTAssertEqual(goal.disciplines, [.init(sport: .swim, distanceMeters: 2000, targetDurationSeconds: 2700)])
-        XCTAssertEqual(goal.emphasis, [.init(sport: .swim, percent: 100)])
-        XCTAssertEqual(goal.targetDate, Date(timeIntervalSinceReferenceDate: 836_388_000))
-        XCTAssertEqual(goal.legacySwimGoal, try JSONDecoder().decode(AthleteGoal.self, from: RepoPaths.contractData("app-storage/goal-swim-v1.json")))
-    }
-
     func testStoredTrainingGoalLoads() throws {
         let defaults = try XCTUnwrap(UserDefaults(suiteName: "ContractTests-\(UUID().uuidString)"))
         defaults.set(try RepoPaths.contractData("app-storage/training-goal.json"), forKey: UserDefaultsTrainingGoalStore.storageKey)

@@ -97,7 +97,7 @@ final class MultiSportWeekLoaderTests: XCTestCase {
             requests.append(request)
             if let failure { throw failure }
             let data = try RepoPaths.contractData("wire/plan-v2-week-response.json")
-            return try PlanResponse.jsonDecoder().decode(WeekPlanV2Response.self, from: data)
+            return try PlanCoding.jsonDecoder().decode(WeekPlanV2Response.self, from: data)
         }
     }
 

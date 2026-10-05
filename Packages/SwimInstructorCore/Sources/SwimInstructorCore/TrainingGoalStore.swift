@@ -1,7 +1,6 @@
 import Foundation
 
-/// Speichert das Gesamtziel auf dem Gerät. Gibt es noch keins, gilt das bisher gespeicherte Schwimmziel
-/// (`UserDefaultsGoalStore`, vor dem Triathlon-Umbau), sonst das Standardziel.
+/// Speichert das Gesamtziel auf dem Gerät. Gibt es noch keins, gilt das Standardziel.
 public protocol TrainingGoalStoring {
     func goal() -> TrainingGoal
     /// Speichert ein gültiges Ziel mit Zieltag nach `now`; sonst bleibt das alte und es kommt `false`.
@@ -11,7 +10,7 @@ public protocol TrainingGoalStoring {
 
     // MARK: Zieländerung mit Entwurf (P3)
 
-    /// Zählt neue Ziele hoch; ein Gesamtplan gehört zu genau einer Version (`TrainingGoal.planKey` war es vor P3).
+    /// Zählt neue Ziele hoch; ein Gesamtplan gehört zu genau einer Version.
     var goalVersion: Int { get }
     /// Bis wann ein neues Ziel gesperrt ist; `nil`, wenn es jetzt übernommen werden kann.
     func lockedUntil(now: Date) -> Date?
@@ -47,8 +46,7 @@ public struct UserDefaultsTrainingGoalStore: TrainingGoalStoring {
            stored.problem() == nil {
             return stored
         }
-        // Umzug: das Schwimmziel aus den Einstellungen vor T2 (ungültig oder fehlend: das Standardziel).
-        return TrainingGoal(legacy: UserDefaultsGoalStore(defaults: defaults).goal())
+        return .default
     }
 
     /// Speichert ohne Sperre (Einrichtung beim ersten Start). Ein neues Ziel bekommt trotzdem eine neue Version.
@@ -64,7 +62,6 @@ public struct UserDefaultsTrainingGoalStore: TrainingGoalStoring {
 
     public func resetGoal() {
         defaults.removeObject(forKey: Self.storageKey)
-        UserDefaultsGoalStore(defaults: defaults).resetGoal()
         defaults.set(goalVersion + 1, forKey: Self.versionKey)
         defaults.removeObject(forKey: Self.pendingKey)
     }

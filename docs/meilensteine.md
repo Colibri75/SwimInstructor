@@ -8,7 +8,9 @@ Done; die Punkte "Für dich" sind die Prüfungen auf dem Gerät. Den aktuellen S
 > **Hinweis zum Stand:** Die Abschnitte M1 bis M8 und der Gesamtplan beschreiben, wie die Schwimm-App damals gebaut wurde.
 > Einiges davon gibt es nicht mehr: Am 05.10.2026 wurde die Planung nur für Schwimmen (Plan v1) aus Server und App
 > entfernt (Routen, Prompts, Sicherheitsschichten, `TodayPlanLoader`, `WeekPlanLoader`, `MacroPlanLoader`,
-> `TrainingStatistics`, das Bewertungsskript `eval:scenarios`). Es gilt Plan v2 für alle Sportarten
+> `TrainingStatistics`, das Bewertungsskript `eval:scenarios`) und kurz danach die Umwandlung alter Pläne, Verläufe und
+> Schwimmziele (`LegacyPlanBridge`, `FilePlanCache`, `FilePlanHistory`, `UserDefaultsGoalStore`), weil keine Geräte
+> mit Plan v1 mehr laufen. Es gilt Plan v2 für alle Sportarten
 > ([multisport-planning.md](multisport-planning.md)). Genannte Dateien und Befehle sind Geschichte, im Git-Verlauf
 > findest du sie wieder.
 

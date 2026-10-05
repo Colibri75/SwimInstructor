@@ -385,9 +385,7 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
         ))
     }
 
-    /// Schickt eine Anfrage von Plan v2. Anders als v1 ohne Rückfall auf Snapshot v1: Plan v2 braucht Snapshot v2. Ein
-    /// Server ohne Plan v2 antwortet mit einem Plan v1 (ohne `plan_version`) oder kennt den Pfad nicht (404); beides
-    /// heißt "Server aktualisieren".
+    /// Schickt eine Anfrage; ein Server, der den Pfad nicht kennt (404), heißt "Server aktualisieren".
     func postV2<Body: Encodable, Response: Decodable>(
         path: String,
         timeout: TimeInterval = PlanAPIClient.planTimeout,
@@ -396,12 +394,8 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
         let (data, response) = try await post(path: path, body: try AthleteStateSnapshot.jsonEncoder().encode(body), timeout: timeout)
         switch response.statusCode {
         case 200:
-            guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                throw PlanAPIError.invalidResponse("kein JSON-Objekt")
-            }
-            guard object["plan_version"] as? Int == Self.planVersion else { throw PlanAPIError.serverOutdated }
             do {
-                return try PlanResponse.jsonDecoder().decode(Response.self, from: data)
+                return try PlanCoding.jsonDecoder().decode(Response.self, from: data)
             } catch {
                 throw PlanAPIError.invalidResponse(String(describing: error))
             }

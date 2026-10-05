@@ -13,7 +13,7 @@ final class PlanV2DisplayTextTests: XCTestCase {
     func testStateTextNamesNoSport() {
         XCTAssertEqual(PlanV2Formatting.stateText(.missed), "nicht trainiert")
         XCTAssertEqual(PlanV2Formatting.stateText(.restBroken), "trotz Ruhetag trainiert")
-        // Alles andere wie in Plan v1.
+        // Alles andere wie in `PlanFormatting`.
         XCTAssertEqual(PlanV2Formatting.stateText(.followed), PlanFormatting.stateText(.followed))
         XCTAssertEqual(PlanV2Formatting.stateText(.skipped), "keine Zeit")
     }

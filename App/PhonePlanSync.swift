@@ -3,7 +3,7 @@ import Foundation
 import SwimInstructorCore
 import WatchConnectivity
 
-/// Schickt den Tagesplan an die Watch, mit allen Einheiten des Tages (Plan v2, dazu v1 für ältere Watch-Apps). Die Watch
+/// Schickt den Tagesplan an die Watch, mit allen Einheiten des Tages Die Watch
 /// hat kein eigenes Token, das iPhone ist die einzige Stelle, die mit dem Server spricht. In die andere Richtung kommen
 /// Testergebnisse der Watch; sie landen im Eingang (`WatchTestResultInbox`), bis der Athlet sie bestätigt.
 ///

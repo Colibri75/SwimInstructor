@@ -190,7 +190,7 @@ final class PlanV2FormattingTests: XCTestCase {
     }
 
     func testNoticeForAnOldPlanFromTheContract() throws {
-        let response = try PlanResponse.jsonDecoder().decode(
+        let response = try PlanCoding.jsonDecoder().decode(
             DayPlanV2Response.self, from: RepoPaths.contractData("wire/plan-v2-today-fallback-response.json")
         )
 

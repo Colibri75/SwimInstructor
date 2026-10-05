@@ -21,20 +21,8 @@ final class TrainingGoalStoreTests: XCTestCase {
         XCTAssertEqual(UserDefaultsTrainingGoalStore(defaults: makeDefaults()).goal(), .default)
     }
 
-    func testTheSwimGoalFromBeforeT2Moves() {
+    func testASavedGoalSurvivesARestart() {
         let defaults = makeDefaults()
-        let old = AthleteGoal(distanceMeters: 1500, targetDurationSeconds: 1800, targetDate: now.addingTimeInterval(100 * 86_400))
-        XCTAssertTrue(UserDefaultsGoalStore(defaults: defaults).setGoal(old))
-
-        let goal = UserDefaultsTrainingGoalStore(defaults: defaults).goal()
-
-        XCTAssertEqual(goal, TrainingGoal(legacy: old))
-        XCTAssertEqual(goal.legacySwimGoal, old)
-    }
-
-    func testASavedGoalSurvivesARestartAndWinsOverTheOldOne() {
-        let defaults = makeDefaults()
-        UserDefaultsGoalStore(defaults: defaults).setGoal(AthleteGoal(distanceMeters: 1500, targetDurationSeconds: 1800, targetDate: now))
         let store = UserDefaultsTrainingGoalStore(defaults: defaults, calendar: TestFixtures.utc)
 
         XCTAssertTrue(store.setGoal(olympic(), now: now))
@@ -67,9 +55,8 @@ final class TrainingGoalStoreTests: XCTestCase {
         XCTAssertEqual(UserDefaultsTrainingGoalStore(defaults: defaults).goal(), .default)
     }
 
-    func testResetRemovesNewAndOldGoal() {
+    func testResetGoesBackToTheDefaultGoal() {
         let defaults = makeDefaults()
-        UserDefaultsGoalStore(defaults: defaults).setGoal(AthleteGoal(distanceMeters: 1500, targetDurationSeconds: 1800, targetDate: now))
         let store = UserDefaultsTrainingGoalStore(defaults: defaults, calendar: TestFixtures.utc)
         store.setGoal(olympic(), now: now)
 

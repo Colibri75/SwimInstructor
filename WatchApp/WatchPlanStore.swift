@@ -15,11 +15,10 @@ final class WatchPlanStore: NSObject, ObservableObject {
     private let cache: DayPlanV2Caching
     private let session: WCSession?
 
-    /// - Parameter legacyCache: Der Plan v1 aus der Zeit vor T5, bis der erste Plan v2 ankommt.
-    init(cache: DayPlanV2Caching = FileDayPlanV2Cache.standard(), legacyCache: PlanCaching = FilePlanCache.standard()) {
+    init(cache: DayPlanV2Caching = FileDayPlanV2Cache.standard()) {
         self.cache = cache
         self.session = WCSession.isSupported() ? WCSession.default : nil
-        self.response = cache.load() ?? legacyCache.load().map(DayPlanV2Response.init(legacy:))
+        self.response = cache.load()
         super.init()
     }
 

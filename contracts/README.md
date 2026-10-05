@@ -12,7 +12,7 @@ gleichzeitig auf einem Gerät laufen müssen.
 | `wire/snapshot-v2-profile.json` | Snapshot v2 mit Leistungsprofil (`performance`: Werte mit Herkunft und Zonen) | App rechnet aus derselben Lage genau dieses Profil, Server nimmt es an |
 | `wire/snapshot-v2-starting-levels.json` | Snapshot v2 mit selbst angegebenem Startniveau (`starting_levels`: Wochenumfang, längste Einheit, Trainingsstand je Sportart) | App erzeugt aus den gespeicherten Angaben genau diese Felder, Server nimmt sie an |
 | `wire/plan-v2-*-response.json` | Antworten der Planung (`plan_version: 2`): Tag mit Leistungstest, Tag bei Claude-Ausfall, sieben Tage, Gesamtplan, Überarbeitung nach Feedback (`/v1/plan/macro/revise`), Fortschreibung mit Bilanz (`/v1/plan/macro/review`), siehe [`docs/multisport-planning.md`](../docs/multisport-planning.md) | Server erzeugt über die echten Routen genau diese Felder, die App dekodiert sie |
-| `app-storage/*.json` | Dateien und Einstellungen, die die App auf dem Gerät speichert, auch ältere Formen (`goal-swim-v1.json`: das Schwimmziel vor T2, `training-goal.json`: das Gesamtziel, `performance-profile.json`: bestätigte Leistungswerte mit Verlauf, `weekly-schedule.json`: der Wochenraster) | Jede neue App-Version muss sie weiter lesen |
+| `app-storage/*.json` | Dateien und Einstellungen, die die App auf dem Gerät speichert, `training-goal.json`: das Gesamtziel, `performance-profile.json`: bestätigte Leistungswerte mit Verlauf, `weekly-schedule.json`: der Wochenraster) | Eine neue App-Version muss sie weiter lesen, solange Geräte mit der Form unterwegs sein können |
 
 Regeln:
 

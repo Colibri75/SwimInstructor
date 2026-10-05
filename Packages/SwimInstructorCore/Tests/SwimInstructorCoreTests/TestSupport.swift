@@ -39,62 +39,6 @@ enum TestFixtures {
         workouts: [workout(daysAgo: 1, meters: 1500)],
         now: now
     )
-
-    static let responseJSON = """
-    {
-      "source": "claude",
-      "date": "2026-09-30",
-      "generated_at": "2026-09-30T10:00:00.000Z",
-      "stale": false,
-      "adjustments": ["Umfang von 4000 m auf 2400 m gekürzt (Grenze für heute: 2400 m)"],
-      "plan": {
-        "session_type": "endurance",
-        "intensity": "moderate",
-        "rationale": "Gute Erholung, maßvoll steigern.",
-        "total_distance_meters": 1600,
-        "estimated_duration_minutes": 45,
-        "sets": [
-          {
-            "name": "Einschwimmen",
-            "repetitions": 1,
-            "distance_meters": 400,
-            "target_pace_seconds_per_hundred_meters": null,
-            "rest_seconds": 0,
-            "instructions": "locker"
-          },
-          {
-            "name": "Hauptsatz",
-            "repetitions": 6,
-            "distance_meters": 200,
-            "target_pace_seconds_per_hundred_meters": 140,
-            "rest_seconds": 30,
-            "instructions": "gleichmäßig"
-          }
-        ],
-        "coach_notes": ["Auf lockere Atmung achten."]
-      }
-    }
-    """
-
-    static func response(date: String = "2026-09-30", source: PlanSource = .claude, stale: Bool = false) -> PlanResponse {
-        PlanResponse(
-            source: source,
-            date: date,
-            generatedAt: now,
-            stale: stale,
-            plan: TrainingPlan(
-                sessionType: .technique,
-                intensity: .easy,
-                rationale: "Test",
-                totalDistanceMeters: 800,
-                estimatedDurationMinutes: 25,
-                sets: [PlanSet(name: "Technik", repetitions: 8, distanceMeters: 100, targetPaceSecondsPerHundredMeters: nil, restSeconds: 20, instructions: "Abschlag")],
-                coachNotes: []
-            ),
-            adjustments: [],
-            fallbackReason: source == .fallback ? "timeout" : nil
-        )
-    }
 }
 
 /// Nimmt Anfragen entgegen und antwortet mit einer festen Antwort oder einem Fehler.

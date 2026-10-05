@@ -64,8 +64,8 @@ final class TestResultSyncTests: XCTestCase {
         // Die Coder der App wandeln Schlüssel um, auch die eines Wörterbuchs.
         let original = Self.result(sport: .run, testID: "threshold_30min", entries: ["threshold_heart_rate": 170, "threshold_pace_per_km": 278])
 
-        let data = try PlanResponse.jsonEncoder().encode(original)
-        let decoded = try PlanResponse.jsonDecoder().decode(WatchTestResult.self, from: data)
+        let data = try PlanCoding.jsonEncoder().encode(original)
+        let decoded = try PlanCoding.jsonDecoder().decode(WatchTestResult.self, from: data)
 
         XCTAssertEqual(decoded.entries, ["threshold_heart_rate": 170, "threshold_pace_per_km": 278])
         XCTAssertEqual(decoded.testID, "threshold_30min")

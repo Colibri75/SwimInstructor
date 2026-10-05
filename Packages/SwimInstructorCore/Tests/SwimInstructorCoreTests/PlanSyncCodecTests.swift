@@ -2,90 +2,50 @@ import XCTest
 @testable import SwimInstructorCore
 
 final class PlanSyncCodecTests: XCTestCase {
-    func testRoundTripKeepsWholeResponse() throws {
-        let original = try PlanResponse.jsonDecoder().decode(PlanResponse.self, from: Data(TestFixtures.responseJSON.utf8))
-
-        let context = try PlanSyncCodec.context(for: original)
-
-        XCTAssertEqual(PlanSyncCodec.response(from: context), original)
-    }
-
-    func testRoundTripKeepsFallbackReason() throws {
-        let original = TestFixtures.response(date: "2026-09-29", source: .fallback, stale: true)
-
-        let decoded = PlanSyncCodec.response(from: try PlanSyncCodec.context(for: original))
-
-        XCTAssertEqual(decoded, original)
-        XCTAssertEqual(decoded?.fallbackReason, "timeout")
-    }
-
-    func testContextContainsOnlyPropertyListTypes() throws {
-        // WatchConnectivity nimmt nur Property-List-Werte an, sonst wirft updateApplicationContext.
-        let context = try PlanSyncCodec.context(for: TestFixtures.response())
-
-        XCTAssertTrue(PropertyListSerialization.propertyList(context, isValidFor: .binary))
-    }
-
-    func testEmptyForeignOrBrokenContextYieldsNil() {
-        XCTAssertNil(PlanSyncCodec.response(from: [:]))
-        XCTAssertNil(PlanSyncCodec.response(from: ["plan": Data("kaputt".utf8), "version": 1]))
-        XCTAssertNil(PlanSyncCodec.response(from: ["plan": "kein Data", "version": 1]))
-    }
-
-    func testUnknownFormatVersionIsIgnored() throws {
-        var context = try PlanSyncCodec.context(for: TestFixtures.response())
-        context["version"] = 2
-
-        XCTAssertNil(PlanSyncCodec.response(from: context))
-    }
-
-    // MARK: - Tagesplan v2 (ab T5)
-
     private func dayPlan() throws -> DayPlanV2Response {
-        try PlanResponse.jsonDecoder().decode(DayPlanV2Response.self, from: RepoPaths.contractData("wire/plan-v2-today-response.json"))
+        try PlanCoding.jsonDecoder().decode(DayPlanV2Response.self, from: RepoPaths.contractData("wire/plan-v2-today-response.json"))
     }
 
-    func testDayPlanV2RoundTripKeepsAllSessions() throws {
+    func testRoundTripKeepsAllSessions() throws {
         let original = try dayPlan()
         XCTAssertEqual(original.plan.sessions.map(\.sport), [.swim, .bike])
 
         let context = try PlanSyncCodec.context(for: original)
 
         XCTAssertEqual(PlanSyncCodec.dayPlan(from: context), original)
+    }
+
+    func testContextContainsOnlyPropertyListTypes() throws {
+        // WatchConnectivity nimmt nur Property-List-Werte an, sonst wirft updateApplicationContext.
+        let context = try PlanSyncCodec.context(for: try dayPlan())
+
         XCTAssertTrue(PropertyListSerialization.propertyList(context, isValidFor: .binary))
     }
 
-    func testDayPlanV2ContextStillCarriesPlanV1ForOlderWatches() throws {
+    func testRoundTripKeepsFallbackReason() throws {
         let original = try dayPlan()
+        let fallback = DayPlanV2Response(
+            source: .fallback, date: original.date, generatedAt: original.generatedAt, stale: true, plan: original.plan,
+            adjustments: original.adjustments, fallbackReason: "timeout", wishes: original.wishes
+        )
 
-        let context = try PlanSyncCodec.context(for: original)
+        let decoded = PlanSyncCodec.dayPlan(from: try PlanSyncCodec.context(for: fallback))
 
-        XCTAssertEqual(PlanSyncCodec.response(from: context), original.watchPlan())
+        XCTAssertEqual(decoded, fallback)
+        XCTAssertEqual(decoded?.fallbackReason, "timeout")
     }
 
-    func testPlanV1FromAnOlderPhoneBecomesADayPlan() throws {
-        let legacy = TestFixtures.response()
-
-        let dayPlan = PlanSyncCodec.dayPlan(from: try PlanSyncCodec.context(for: legacy))
-
-        XCTAssertEqual(dayPlan, DayPlanV2Response(legacy: legacy))
-        XCTAssertEqual(dayPlan?.plan.sessions.map(\.sport), [.swim])
-    }
-
-    func testBrokenPlanV2FallsBackToPlanV1() throws {
-        let original = try dayPlan()
-        var context = try PlanSyncCodec.context(for: original)
-        context["plan_v2"] = Data("kaputt".utf8)
-
-        XCTAssertEqual(PlanSyncCodec.dayPlan(from: context), DayPlanV2Response(legacy: original.watchPlan()))
-    }
-
-    func testDayPlanIgnoresEmptyOrNewerContexts() throws {
+    func testEmptyForeignOrBrokenContextYieldsNil() {
         XCTAssertNil(PlanSyncCodec.dayPlan(from: [:]))
+        XCTAssertNil(PlanSyncCodec.dayPlan(from: ["plan_v2": Data("kaputt".utf8), "version": 1]))
+        XCTAssertNil(PlanSyncCodec.dayPlan(from: ["plan_v2": "kein Data", "version": 1]))
+    }
 
-        var newer = try PlanSyncCodec.context(for: try dayPlan())
-        newer["version"] = 2
-        XCTAssertNil(PlanSyncCodec.dayPlan(from: newer))
+    func testUnknownFormatVersionIsIgnored() throws {
+        var context = try PlanSyncCodec.context(for: try dayPlan())
+        context["version"] = 2
+
+        XCTAssertNil(PlanSyncCodec.dayPlan(from: context))
     }
 
     func testPlanRequestIsRecognized() {

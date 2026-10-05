@@ -34,7 +34,7 @@ private enum MacroLoaderV2Data {
 
     static func response(_ file: String) throws -> MacroPlanV2Response {
         let data = try RepoPaths.contractData("wire/\(file)")
-        return try PlanResponse.jsonDecoder().decode(MacroPlanV2Response.self, from: data)
+        return try PlanCoding.jsonDecoder().decode(MacroPlanV2Response.self, from: data)
     }
 
     /// Sechs Wochen ab dem 28.09. bis zum Ziel am 08.11.
@@ -56,7 +56,7 @@ private enum MacroLoaderV2Data {
         object.removeValue(forKey: "changes")
         object.removeValue(forKey: "feedback")
         let stripped = try JSONSerialization.data(withJSONObject: object)
-        return try PlanResponse.jsonDecoder().decode(MacroPlanV2Response.self, from: stripped)
+        return try PlanCoding.jsonDecoder().decode(MacroPlanV2Response.self, from: stripped)
     }
 
     /// Der Gesamtplan aus dem Vertragsbeispiel, wie die App ihn speichert.

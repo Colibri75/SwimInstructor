@@ -9,11 +9,11 @@ final class PlanV2ModelTests: XCTestCase {
     private static let contractGeneratedAt: Date = TestFixtures.now.addingTimeInterval(-2 * 3600)
 
     private static func contract<T: Decodable>(_ type: T.Type, _ file: String) throws -> T {
-        try PlanResponse.jsonDecoder().decode(type, from: RepoPaths.contractData("wire/\(file)"))
+        try PlanCoding.jsonDecoder().decode(type, from: RepoPaths.contractData("wire/\(file)"))
     }
 
     private static func decodeJSON<T: Decodable>(_ type: T.Type, _ json: String) throws -> T {
-        try PlanResponse.jsonDecoder().decode(type, from: Data(json.utf8))
+        try PlanCoding.jsonDecoder().decode(type, from: Data(json.utf8))
     }
 
     private static func weekSession(
@@ -465,8 +465,8 @@ final class PlanV2ModelTests: XCTestCase {
             isEdited: true
         )
 
-        let data = try PlanResponse.jsonEncoder().encode(day)
-        let decoded = try PlanResponse.jsonDecoder().decode(PlannedDay.self, from: data)
+        let data = try PlanCoding.jsonEncoder().encode(day)
+        let decoded = try PlanCoding.jsonDecoder().decode(PlannedDay.self, from: data)
 
         XCTAssertEqual(decoded, day)
         XCTAssertEqual(decoded.contentBeforeUnavailable?.sessions.first?.test?.id, "threshold_30min")

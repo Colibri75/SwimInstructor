@@ -63,13 +63,13 @@ public enum TestResultSyncCodec {
 
     /// Nur Property-List-Typen, wie WatchConnectivity sie verlangt.
     public static func userInfo(for result: WatchTestResult) throws -> [String: Any] {
-        [resultKey: try PlanResponse.jsonEncoder().encode(result), versionKey: formatVersion]
+        [resultKey: try PlanCoding.jsonEncoder().encode(result), versionKey: formatVersion]
     }
 
     /// `nil` bei leerem, fremdem oder kaputtem Inhalt (etwa einer anderen Übertragung).
     public static func result(from userInfo: [String: Any]) -> WatchTestResult? {
         guard userInfo[versionKey] as? Int == formatVersion, let data = userInfo[resultKey] as? Data else { return nil }
-        return try? PlanResponse.jsonDecoder().decode(WatchTestResult.self, from: data)
+        return try? PlanCoding.jsonDecoder().decode(WatchTestResult.self, from: data)
     }
 }
 

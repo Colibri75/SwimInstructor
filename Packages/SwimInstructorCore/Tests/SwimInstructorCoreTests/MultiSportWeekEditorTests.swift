@@ -182,7 +182,7 @@ final class MultiSportWeekEditorTests: XCTestCase {
     }
 
     func testSetRestOnARestDayOrAnUnavailableDayChangesNothing() {
-        // Anders als in Plan v1 bleibt ein Ruhetag dabei unverändert (nicht als geändert markiert).
+        // Ein Ruhetag bleibt dabei unverändert (nicht als geändert markiert).
         XCTAssertEqual(MultiSportWeekEditor.setRest(base, date: "2026-10-01"), base)
 
         let marked = MultiSportWeekEditor.markUnavailable(base, date: "2026-10-03")
@@ -665,8 +665,8 @@ final class MultiSportWeekEditorTests: XCTestCase {
         XCTAssertEqual(merged.day(on: "2026-09-30")?.sessions.map(\.sport), [SportID.bike])
     }
 
-    func testMergeReplacesEditedDaysFromTheStartDateOnLikeThePlanV1Editor() {
-        // Wie WeekPlanEditor.merge: Ab dem Starttag gilt der neue Plan, auch für von Hand geänderte Tage.
+    func testMergeReplacesEditedDaysFromTheStartDateOn() {
+        // Ab dem Starttag gilt der neue Plan, auch für von Hand geänderte Tage.
         let edited = MultiSportWeekEditor.addSession(base, date: "2026-10-01", sport: .swim)
         let new = Self.plan([Self.day("2026-10-01", "Neu Do", [Self.runSession(30, meters: 5000)])])
 

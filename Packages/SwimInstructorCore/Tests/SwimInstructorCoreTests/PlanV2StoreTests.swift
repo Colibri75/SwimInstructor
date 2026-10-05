@@ -102,7 +102,7 @@ final class PlanV2StoreTests: XCTestCase {
     }
 
     func testDayCacheKeepsTheLastPlanFromTheServer() throws {
-        let response = try PlanResponse.jsonDecoder().decode(
+        let response = try PlanCoding.jsonDecoder().decode(
             DayPlanV2Response.self, from: RepoPaths.contractData("wire/plan-v2-today-response.json")
         )
         // Unterordner, die noch fehlen, werden angelegt.
@@ -132,7 +132,7 @@ final class PlanV2StoreTests: XCTestCase {
 
     // MARK: - Verlauf
 
-    func testHistoryIsEmptyWithoutFileAndLegacy() {
+    func testHistoryIsEmptyWithoutFile() {
         XCTAssertEqual(FileDayPlanV2History(fileURL: file("plan-history-v2.json")).load(), [])
     }
 
@@ -189,46 +189,6 @@ final class PlanV2StoreTests: XCTestCase {
         try history.record(Self.response(date: "2026-09-30"))
 
         XCTAssertEqual(history.load().map(\.date), ["2026-09-30"])
-    }
-
-    func testLegacyHistoryFillsDaysWithoutAV2Plan() throws {
-        let legacy = FilePlanHistory(fileURL: file("plan-history.json"))
-        try legacy.record(TestFixtures.response(date: "2026-09-27"))
-        try legacy.record(TestFixtures.response(date: "2026-09-28"))
-        let ownURL = file("plan-history-v2.json")
-        let history = FileDayPlanV2History(fileURL: ownURL, legacy: legacy)
-
-        try history.record(Self.response(date: "2026-09-28"))
-        try history.record(Self.response(date: "2026-09-29"))
-        let loaded = history.load()
-
-        // Für den 28. gibt es beides: Der v2-Plan geht vor.
-        XCTAssertEqual(loaded.map(\.date), ["2026-09-27", "2026-09-28", "2026-09-29"])
-        XCTAssertEqual(loaded.map(\.planVersion), [1, 2, 2])
-        XCTAssertEqual(loaded[1], Self.response(date: "2026-09-28"))
-
-        // Der umgewandelte Plan v1: eine Schwimmeinheit.
-        let converted = loaded[0]
-        XCTAssertEqual(converted, DayPlanV2Response(legacy: TestFixtures.response(date: "2026-09-27")))
-        XCTAssertEqual(converted.plan.sessions.map(\.sport), [.swim])
-        XCTAssertEqual(converted.plan.sessions.first?.distanceMeters, 800)
-        XCTAssertEqual(converted.plan.sessions.first?.steps.first?.totalMeters, 800)
-
-        // Die umgewandelten Pläne landen nicht in der eigenen Datei, der alte Verlauf bleibt unverändert.
-        XCTAssertEqual(FileDayPlanV2History(fileURL: ownURL).load().map(\.date), ["2026-09-28", "2026-09-29"])
-        XCTAssertEqual(legacy.load().map(\.date), ["2026-09-27", "2026-09-28"])
-    }
-
-    func testLegacyHistoryAloneIsShownConverted() throws {
-        let legacy = FilePlanHistory(fileURL: file("plan-history.json"))
-        try legacy.record(TestFixtures.response(date: "2026-09-29"))
-        try legacy.record(TestFixtures.response(date: "2026-09-27"))
-
-        let loaded = FileDayPlanV2History(fileURL: file("plan-history-v2.json"), legacy: legacy).load()
-
-        XCTAssertEqual(loaded.map(\.date), ["2026-09-27", "2026-09-29"])
-        XCTAssertEqual(loaded.map(\.planVersion), [1, 1])
-        XCTAssertFalse(FileManager.default.fileExists(atPath: file("plan-history-v2.json").path))
     }
 
     // MARK: - Sieben Tage
@@ -309,7 +269,7 @@ final class PlanV2StoreTests: XCTestCase {
     }
 
     func testMacroStoreKeepsAPlanFromTheServer() throws {
-        let response = try PlanResponse.jsonDecoder().decode(
+        let response = try PlanCoding.jsonDecoder().decode(
             MacroPlanV2Response.self, from: RepoPaths.contractData("wire/plan-v2-macro-response.json")
         )
         let plan = response.macroPlan(goalKey: "ziel")

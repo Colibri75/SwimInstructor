@@ -13,13 +13,13 @@ enum PlanV2Files {
 
     static func write<Value: Encodable>(_ value: Value, to url: URL) throws {
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try PlanResponse.jsonEncoder().encode(value).write(to: url, options: .atomic)
+        try PlanCoding.jsonEncoder().encode(value).write(to: url, options: .atomic)
     }
 
     /// Eine fehlende, kaputte oder veraltete Datei ist kein Fehler, nur kein gespeicherter Wert.
     static func read<Value: Decodable>(_ type: Value.Type, from url: URL) -> Value? {
         guard let data = try? Data(contentsOf: url) else { return nil }
-        return try? PlanResponse.jsonDecoder().decode(type, from: data)
+        return try? PlanCoding.jsonDecoder().decode(type, from: data)
     }
 }
 
@@ -64,29 +64,23 @@ public struct FileDayPlanV2History: DayPlanV2HistoryStoring {
 
     private let fileURL: URL
     private let maxEntries: Int
-    /// Der Verlauf aus der Zeit vor Plan v2: Seine Tage erscheinen umgewandelt, solange es für sie keinen v2-Plan gibt.
-    private let legacy: PlanHistoryStoring?
 
-    public init(fileURL: URL, maxEntries: Int = FileDayPlanV2History.defaultMaxEntries, legacy: PlanHistoryStoring? = nil) {
+    public init(fileURL: URL, maxEntries: Int = FileDayPlanV2History.defaultMaxEntries) {
         self.fileURL = fileURL
         self.maxEntries = maxEntries
-        self.legacy = legacy
     }
 
-    /// `plan-history-v2.json`, dazu der bisherige Verlauf (`plan-history.json`).
+    /// `plan-history-v2.json`.
     public static func standard() -> FileDayPlanV2History {
-        FileDayPlanV2History(fileURL: PlanV2Files.url("plan-history-v2.json"), legacy: FilePlanHistory.standard())
+        FileDayPlanV2History(fileURL: PlanV2Files.url("plan-history-v2.json"))
     }
 
     public func load() -> [DayPlanV2Response] {
-        let own = stored()
-        let dates = Set(own.map(\.date))
-        let converted = (legacy?.load() ?? []).filter { !dates.contains($0.date) }.map(DayPlanV2Response.init(legacy:))
-        return (own + converted).sorted { $0.date < $1.date }
+        stored()
     }
 
     /// Pro Tag zählt der erste Plan (nach ihm konnte der Athlet sich richten); Fallback-Pläne sind nur Kopien älterer
-    /// und kommen nicht hinein. Wie `FilePlanHistory`.
+    /// und kommen nicht hinein.
     public func record(_ response: DayPlanV2Response) throws {
         guard response.source != .fallback else { return }
         var entries = stored()
