@@ -2,13 +2,14 @@ import { NextFunction, Request, Response, Router } from "express";
 import { z } from "zod";
 import { PlanUnavailableError } from "../errors";
 import { isRealDate, weekdayIndex } from "../week";
-import { asV2, DayRequestV2Schema, MacroRequestV2Schema, MacroWeekTargetV2, ReviseRequestSchema, WeekRequestV2Schema } from "./schemas";
-import { DayResultV2, MacroResultV2, MultiPlanService, ReviseResult, WeekResultV2 } from "./service";
+import { asV2, DayRequestV2Schema, MacroRequestV2Schema, MacroWeekTargetV2, ReviewRequestSchema, ReviseRequestSchema, WeekRequestV2Schema } from "./schemas";
+import { DayResultV2, MacroResultV2, MultiPlanService, ReviewResult, ReviseResult, WeekResultV2 } from "./service";
 
 /**
  * Plan v2 auf den bisherigen Pfaden: Eine Anfrage mit `plan_version: 2` landet hier, jede andere geht unveraendert an
  * die Routen von v1 weiter (`next()`), so bekommt die alte App weiter ihre Antworten. Deshalb muessen diese Routen vor
- * denen von v1 haengen. Dazu `POST /v1/plan/macro/revise` (Feedback zum Gesamtplan), nur v2.
+ * denen von v1 haengen. Dazu `POST /v1/plan/macro/revise` (Feedback zum Gesamtplan) und `POST /v1/plan/macro/review`
+ * (Fortschreibung alle zwei Wochen), nur v2.
  */
 interface Detail {
   path: string;
@@ -139,6 +140,34 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
         reviseResponse
       );
     });
+
+    router.post("/plan/macro/review", async (req: Request, res: Response) => {
+      const parsed = ReviewRequestSchema.safeParse(req.body);
+      if (!parsed.success) return invalid(res, issues(parsed.error));
+      const data = parsed.data;
+      const problems = [
+        ...dateProblems([["today", data.today]]),
+        ...dateProblems(data.pause ? [["pause.from", data.pause.from], ...(data.pause.to ? ([["pause.to", data.pause.to]] as Array<[string, string]>) : [])] : []),
+        ...macroWeekProblems(data.plan.weeks, "plan.weeks"),
+        ...dateProblems(data.actual.map((week, index): [string, string] => [`actual.${index}.week_start`, week.week_start]))
+      ];
+      if (problems.length > 0) return invalid(res, problems);
+      await answer(
+        res,
+        () =>
+          service.reviewMacro({
+            snapshot: asV2(data.snapshot),
+            today: data.today,
+            plan: data.plan,
+            actual: data.actual,
+            reason: data.reason,
+            pause: data.pause,
+            feedback: data.feedback,
+            testSettings: data.test_settings
+          }),
+        reviewResponse
+      );
+    });
   };
 }
 
@@ -173,4 +202,14 @@ function macroResponse(result: MacroResultV2) {
 
 function reviseResponse(result: ReviseResult) {
   return { ...macroResponse(result), changes: result.changes, feedback: result.feedback };
+}
+
+function reviewResponse(result: ReviewResult) {
+  return {
+    ...macroResponse(result),
+    summary: result.summary,
+    changes: result.changes,
+    reason: result.reason,
+    ...(result.feedback !== undefined ? { feedback: result.feedback } : {})
+  };
 }

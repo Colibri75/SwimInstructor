@@ -25,6 +25,7 @@ const auth = { Authorization: `Bearer ${TEST_TOKEN}` };
 const NOW_ISO = "2026-09-30T10:00:00.000Z";
 const GOAL_DAY = "2027-07-04";
 const WEEKS = macroWeekStarts(TODAY, GOAL_DAY);
+const TODAY_MONDAY = WEEKS[0];
 
 const claude = (raw: unknown) => jest.fn().mockResolvedValue({ raw, model: "claude-opus-5-5", usage: { inputTokens: 1, outputTokens: 1 } });
 const timeout = () => jest.fn().mockRejectedValue(new PlanGenerationError("timeout", "zu langsam"));
@@ -50,6 +51,16 @@ type Body = Record<string, unknown>;
 const dayBody = (extra: Body = {}) => ({ plan_version: 2, snapshot: multiSnapshot(), ...extra });
 const weekBody = (extra: Body = {}) => ({ plan_version: 2, snapshot: multiSnapshot(), from_date: TODAY, today: TODAY, ...extra });
 const macroBody = (extra: Body = {}) => ({ plan_version: 2, snapshot: multiSnapshot(), today: TODAY, ...extra });
+const pastWeek = "2026-09-21";
+const reviewBody = (extra: Body = {}) => ({
+  plan_version: 2,
+  snapshot: multiSnapshot(),
+  today: TODAY,
+  plan: { weeks: [{ ...currentWeeks[0], week_start: pastWeek }, ...currentWeeks] },
+  actual: [{ week_start: pastWeek, sports: [{ sport: "swim", amount: 2400, sessions: 2 }] }],
+  reason: "scheduled",
+  ...extra
+});
 const reviseBody = (extra: Body = {}) => ({ plan_version: 2, snapshot: multiSnapshot(), today: TODAY, plan: { weeks: currentWeeks }, feedback: "Bitte mehr Schwimmen", ...extra });
 
 /** Wie in server.ts: Plan v2 vor den Routen von v1 auf denselben Pfaden. */
@@ -397,11 +408,68 @@ describe("POST /v1/plan/macro/revise", () => {
   });
 });
 
+describe("POST /v1/plan/macro/review", () => {
+  const review = (changes: string[], summary = "Schwimmen 80 % erfüllt.") => ({ ...goodMacro(), changes, summary });
+
+  it("liefert den fortgeschriebenen Plan mit Bilanz, Aenderungen, Anlass und Feedback", async () => {
+    const complete = claude(review(["  Schwimmen vom Ist aus steigern ", ""], "  Schwimmen 80 % erfüllt.  "));
+
+    const response = await request(appWith(complete).app)
+      .post("/v1/plan/macro/review")
+      .set(auth)
+      .send(reviewBody({ reason: "pause", pause: { from: "2026-09-22", to: "2026-09-27", kind: "sick" }, feedback: "  Knie zwickt " }));
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      plan_version: 2,
+      goal_day: GOAL_DAY,
+      summary: "Schwimmen 80 % erfüllt.",
+      changes: ["Schwimmen vom Ist aus steigern"],
+      reason: "pause",
+      feedback: "Knie zwickt"
+    });
+    expect(response.body.plan.weeks[0].week_start).toBe(TODAY_MONDAY);
+    const user = complete.mock.calls[0][1];
+    expect(user).toContain("Gemeldete Pause: krank ab 2026-09-22 bis 2026-09-27.");
+    expect(user).toContain("Woche ab 2026-09-21: Schwimmen geplant 3000 m in 3 Einheiten, trainiert 2400 m in 2 (80 %); Radfahren geplant 90 min in 2 Einheiten, trainiert 0 min in 0 (0 %)");
+    expect(user).toContain(`Die laufende Woche ab ${TODAY_MONDAY} ist fest`);
+  });
+
+  it("laesst feedback ohne Feedback weg", async () => {
+    const response = await request(appWith(claude(review([]))).app).post("/v1/plan/macro/review").set(auth).send(reviewBody());
+
+    expect(response.status).toBe(200);
+    expect(response.body).not.toHaveProperty("feedback");
+    expect(response.body.reason).toBe("scheduled");
+  });
+
+  it.each([
+    ["unbekannter Anlass", { reason: "weil" }, "reason"],
+    ["Anlass fehlt", { reason: undefined }, "reason"],
+    ["Ist fehlt", { actual: undefined }, "actual"],
+    ["mehr als zwoelf Ist-Wochen", { actual: Array.from({ length: 13 }, () => ({ week_start: pastWeek, sports: [] })) }, "actual"],
+    ["Pause ohne Art", { pause: { from: "2026-09-22" } }, "pause.kind"],
+    ["Pause ohne Kalendertag", { pause: { from: "2026-02-30", kind: "sick" } }, "pause.from"],
+    ["Ist-Woche ohne Kalendertag", { actual: [{ week_start: "2026-02-30", sports: [] }] }, "actual.0.week_start"],
+    ["leeres Feedback", { feedback: "  " }, "feedback"],
+    ["Snapshot v1", { snapshot: snapshotV1() }, "snapshot.schema_version"]
+  ])("lehnt ab: %s", async (_name, extra, path) => {
+    const complete = claude(review([]));
+
+    const response = await request(appWith(complete).app).post("/v1/plan/macro/review").set(auth).send(reviewBody(extra));
+
+    expect(response.status).toBe(400);
+    expect(detailPaths(response.body)).toContain(path);
+    expect(complete).not.toHaveBeenCalled();
+  });
+});
+
 describe("Plan v2: Ausfall von Claude", () => {
   const cases: Array<[string, () => Body]> = [
     ["/v1/plan/week", weekBody],
     ["/v1/plan/macro", macroBody],
-    ["/v1/plan/macro/revise", reviseBody]
+    ["/v1/plan/macro/revise", reviseBody],
+    ["/v1/plan/macro/review", reviewBody]
   ];
 
   it.each(cases)("%s antwortet ohne Key 503 mit Grund not_configured", async (path, body) => {

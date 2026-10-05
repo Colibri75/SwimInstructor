@@ -55,6 +55,8 @@ export const MULTI_RULES = {
   maxEquipmentPerStep: 3,
   maxChanges: 8,
   maxChangeLength: 200,
+  /** Laenge der Bilanz einer Fortschreibung. */
+  maxSummaryLength: 600,
   maxAdjustmentLines: 12
 };
 

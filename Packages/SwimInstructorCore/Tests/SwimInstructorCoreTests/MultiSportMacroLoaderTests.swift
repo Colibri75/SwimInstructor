@@ -60,9 +60,16 @@ private enum MacroLoaderV2Data {
     }
 
     /// Der Gesamtplan aus dem Vertragsbeispiel, wie die App ihn speichert.
+    /// Mit früheren Runden auch mit einer Fortschreibung danach, damit wieder Feedback geht (P4).
     static func storedPlan(goalKey: String = MacroLoaderV2Data.sprintKey, rounds: [MacroFeedbackRound] = []) throws -> MacroPlanV2 {
-        try macroResponse().macroPlan(goalKey: goalKey, feedbackRounds: rounds)
+        var plan = try macroResponse().macroPlan(goalKey: goalKey, feedbackRounds: rounds)
+        if !rounds.isEmpty { plan.reviews = [laterReview] }
+        return plan
     }
+
+    static let laterReview = MacroReview(
+        reviewedAt: TestFixtures.date(daysAgo: 2, hour: 9), weekStart: "2026-09-28", reason: .scheduled, summary: "Alles nach Plan.", changes: []
+    )
 
     static let earlierRound = MacroFeedbackRound(
         feedback: "Weniger Rad unter der Woche", changes: ["Rad dienstags 10 Minuten kürzer"], revisedAt: TestFixtures.date(daysAgo: 3, hour: 9)
@@ -85,6 +92,7 @@ final class MultiSportMacroLoaderTests: XCTestCase {
     private final class FakeProvider: MacroPlanV2Providing, @unchecked Sendable {
         private(set) var macroRequests: [MacroPlanV2Request] = []
         private(set) var revisionRequests: [MacroRevisionRequest] = []
+        private(set) var reviewRequests: [MacroReviewRequest] = []
         let macro: MacroPlanV2Response
         let revised: MacroPlanV2Response
         let failure: Error?
@@ -105,6 +113,12 @@ final class MultiSportMacroLoaderTests: XCTestCase {
             revisionRequests.append(request)
             if let failure { throw failure }
             return revised
+        }
+
+        func reviewMacroPlan(_ request: MacroReviewRequest) async throws -> MacroPlanV2Response {
+            reviewRequests.append(request)
+            if let failure { throw failure }
+            return try MacroLoaderV2Data.response("plan-v2-review-response.json")
         }
     }
 
@@ -130,7 +144,9 @@ final class MultiSportMacroLoaderTests: XCTestCase {
         provider: FakeProvider?,
         goal: @escaping @MainActor () -> TrainingGoal = { MacroLoaderV2Data.sprint() },
         goalVersion: (@MainActor () -> Int)? = nil,
-        marker: MemoryMarker = MemoryMarker()
+        marker: MemoryMarker = MemoryMarker(),
+        reviewMarker: MemoryMarker = MemoryMarker(),
+        now: Date = TestFixtures.now
     ) -> MultiSportMacroLoader {
         MultiSportMacroLoader(
             store: store,
@@ -138,7 +154,8 @@ final class MultiSportMacroLoaderTests: XCTestCase {
             goal: goal,
             goalVersion: goalVersion,
             attemptMarker: marker,
-            now: { TestFixtures.now },
+            reviewMarker: reviewMarker,
+            now: { now },
             calendar: TestFixtures.utc
         )
     }
@@ -535,11 +552,164 @@ final class MultiSportMacroLoaderTests: XCTestCase {
         let provider = try makeProvider()
         let loader = makeLoader(store: MemoryStore(plan), provider: provider)
         let before = loader.revisionStamp
-        XCTAssertEqual(before, "\(plan.generatedAt.timeIntervalSince1970)|0")
+        XCTAssertEqual(before, "\(plan.generatedAt.timeIntervalSince1970)|0|0")
 
         await loader.revise(feedback: "Mehr Laufen", snapshot: TestFixtures.snapshot)
 
         XCTAssertNotEqual(loader.revisionStamp, before)
-        XCTAssertTrue(loader.revisionStamp.hasSuffix("|1"))
+        XCTAssertTrue(loader.revisionStamp.hasSuffix("|1|0"))
+    }
+
+    // MARK: - Fortschreibung (P4)
+
+    /// Der Plan aus dem Vertrag mit zwei vergangenen Wochen davor (14. und 21.09.), erstellt am 14.09.
+    private func planWithPast() throws -> MacroPlanV2 {
+        let plan = try MacroLoaderV2Data.storedPlan()
+        let first = try XCTUnwrap(plan.weeks.first)
+        let past = ["2026-09-14", "2026-09-21"].map { start in
+            MacroWeekV2(weekStart: start, phase: first.phase, deload: false, focus: "Vorher", totalMinutes: first.totalMinutes, load: first.load, sports: first.sports, tests: [])
+        }
+        return MacroPlanV2(
+            goalKey: plan.goalKey, goalDay: plan.goalDay, generatedAt: TestFixtures.date(daysAgo: 16, hour: 8),
+            rationale: plan.rationale, weeks: past + plan.weeks
+        )
+    }
+
+    func testTheScheduledReviewIsDueTwoWeeksAfterTheLastOne() throws {
+        let plan = try planWithPast()
+        let loader = makeLoader(store: MemoryStore(plan), provider: nil)
+        XCTAssertEqual(loader.nextReviewWeekStart, "2026-09-28")
+        XCTAssertTrue(loader.reviewDue)
+        XCTAssertEqual(loader.pendingReviewReason(pause: nil), .scheduled)
+        XCTAssertEqual(loader.reviewedPastWeekStarts, ["2026-09-14", "2026-09-21"])
+
+        var reviewed = plan
+        reviewed.reviews = [MacroReview(reviewedAt: TestFixtures.now, weekStart: "2026-09-28", reason: .scheduled, summary: "", changes: [])]
+        let after = makeLoader(store: MemoryStore(reviewed), provider: nil)
+        XCTAssertEqual(after.nextReviewWeekStart, "2026-10-12")
+        XCTAssertFalse(after.reviewDue)
+        XCTAssertNil(after.pendingReviewReason(pause: nil))
+        let pause = PauseReport(kind: .sick, from: "2026-09-20", to: "2026-09-27", reportedAt: TestFixtures.now)
+        XCTAssertEqual(after.pendingReviewReason(pause: pause), .pause)
+
+        // Ein frischer Plan ist noch nicht dran.
+        XCTAssertFalse(makeLoader(store: MemoryStore(try MacroLoaderV2Data.storedPlan()), provider: nil).reviewDue)
+    }
+
+    func testReviewSendsPlanAndActualAndKeepsPastAndRunningWeeks() async throws {
+        let plan = try planWithPast()
+        let store = MemoryStore(plan)
+        let provider = try makeProvider()
+        let loader = makeLoader(store: store, provider: provider)
+        let swim = TestFixtures.workout(.swim, daysAgo: 12, minutes: 45, meters: 2_000)
+        let run = TestFixtures.workout(.run, daysAgo: 8, minutes: 30, meters: 5_000)
+
+        let result = await loader.reviewIfDue(snapshot: TestFixtures.snapshot, workouts: [swim, run], pause: nil)
+        let review = try XCTUnwrap(result)
+
+        XCTAssertEqual(review.reason, .scheduled)
+        XCTAssertEqual(review.weekStart, "2026-09-28")
+        XCTAssertEqual(review.summary, "Schwimmen 96 % erfüllt, Radfahren 88 %, Laufen 70 %. In der zweiten Woche fielen zwei Läufe aus.")
+        let request = try XCTUnwrap(provider.reviewRequests.first)
+        XCTAssertEqual(request.reason, .scheduled)
+        XCTAssertNil(request.pause)
+        XCTAssertEqual(request.actual.map(\.weekStart), ["2026-09-14", "2026-09-21"])
+        XCTAssertEqual(request.actual[0].amount(of: .swim), 2_000)
+        XCTAssertEqual(request.actual[1].amount(of: .run), 30)
+
+        let stored = try XCTUnwrap(store.stored)
+        XCTAssertEqual(stored.reviews, [review])
+        XCTAssertEqual(stored.generatedAt, plan.generatedAt)
+        XCTAssertEqual(stored.week(starting: "2026-09-14")?.focus, "Vorher")
+        XCTAssertEqual(stored.week(starting: "2026-09-28"), plan.week(starting: "2026-09-28"), "laufende Woche bleibt")
+        let reviewed = try MacroLoaderV2Data.response("plan-v2-review-response.json")
+        XCTAssertEqual(stored.week(starting: "2026-10-05"), reviewed.plan.weeks.first { $0.weekStart == "2026-10-05" })
+        XCTAssertFalse(loader.reviewDue)
+
+        // Höchstens einmal am Tag je Anlass.
+        let again = await loader.reviewIfDue(snapshot: TestFixtures.snapshot, workouts: [], pause: nil)
+        XCTAssertNil(again)
+        XCTAssertEqual(provider.reviewRequests.count, 1)
+    }
+
+    func testAFailedReviewKeepsThePlanAndTriesAgainOnlyTomorrow() async throws {
+        let plan = try planWithPast()
+        let provider = try makeProvider(failure: PlanAPIError.planUnavailable(reason: "timeout"))
+        let reviewMarker = MemoryMarker()
+        let loader = makeLoader(store: MemoryStore(plan), provider: provider, reviewMarker: reviewMarker)
+
+        let first = await loader.reviewIfDue(snapshot: TestFixtures.snapshot, workouts: [], pause: nil)
+        let second = await loader.reviewIfDue(snapshot: TestFixtures.snapshot, workouts: [], pause: nil)
+        XCTAssertNil(first)
+        XCTAssertNil(second)
+
+        XCTAssertEqual(provider.reviewRequests.count, 1)
+        XCTAssertEqual(loader.plan, plan)
+        XCTAssertNotNil(loader.error)
+        XCTAssertFalse(loader.isReviewing)
+    }
+
+    func testFeedbackOnceAfterANewPlanAndOnceAfterEachReview() async throws {
+        let provider = try makeProvider()
+        let plan = try MacroLoaderV2Data.storedPlan()
+        XCTAssertTrue(plan.canGiveFeedback)
+        let loader = makeLoader(store: MemoryStore(plan), provider: provider)
+
+        let revised = await loader.revise(feedback: "Mehr Laufen", snapshot: TestFixtures.snapshot)
+        XCTAssertTrue(revised)
+        XCTAssertEqual(loader.plan?.canGiveFeedback, false)
+        let refused = await loader.revise(feedback: "Noch mehr", snapshot: TestFixtures.snapshot)
+        XCTAssertFalse(refused)
+        XCTAssertEqual(provider.revisionRequests.count, 1)
+        XCTAssertNotNil(loader.error)
+
+        var reviewed = try XCTUnwrap(loader.plan)
+        reviewed.reviews = [MacroReview(reviewedAt: TestFixtures.now.addingTimeInterval(60), weekStart: "2026-09-28", reason: .scheduled, summary: "", changes: [])]
+        XCTAssertTrue(reviewed.canGiveFeedback)
+    }
+
+    func testActualWeeksUseThePlanUnitAndFindTwoWeakWeeks() throws {
+        let calculator = MacroActualCalculator(calendar: TestFixtures.utc)
+        let swim = TestFixtures.workout(.swim, daysAgo: 12, minutes: 45, meters: 2_000)
+        let bike = TestFixtures.workout(.bike, daysAgo: 11, minutes: 90, meters: 40_000)
+        let actual = calculator.actualWeeks(["2026-09-14", "2026-09-21"], workouts: [swim, bike, swim])
+        XCTAssertEqual(actual[0].sports, [.init(sport: .swim, amount: 2_000, sessions: 1), .init(sport: .bike, amount: 90, sessions: 1)])
+        XCTAssertEqual(actual[1].sports, [])
+
+        let plan = try planWithPast()
+        // Laufen geplant, aber in beiden Wochen nichts gelaufen; Schwimmen in der zweiten Woche auch nicht.
+        let weak = calculator.lowComplianceSports(plan: plan, actual: actual, currentWeekStart: "2026-09-28")
+        XCTAssertTrue(weak.contains(.run))
+        XCTAssertTrue(weak.contains(.swim))
+        XCTAssertEqual(MacroActualCalculator.percent(planned: 4_000, actual: 3_800), 95)
+        XCTAssertNil(MacroActualCalculator.percent(planned: 0, actual: 10))
+        // Ohne zwei vergangene Wochen kein Vorschlag.
+        XCTAssertEqual(calculator.lowComplianceSports(plan: try MacroLoaderV2Data.storedPlan(), actual: [], currentWeekStart: "2026-09-28"), [])
+    }
+
+    func testPauseReportsTriggerOnceFromSevenDays() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "PauseTests-\(UUID().uuidString)"))
+        let store = UserDefaultsPauseReportStore(defaults: defaults)
+        XCTAssertNil(store.pendingReviewReport(calendar: TestFixtures.utc))
+
+        let short = PauseReport(kind: .vacation, from: "2026-09-21", to: "2026-09-26", reportedAt: TestFixtures.now)
+        XCTAssertEqual(short.days(calendar: TestFixtures.utc), 6)
+        store.setReport(short)
+        XCTAssertNil(store.pendingReviewReport(calendar: TestFixtures.utc))
+
+        let week = PauseReport(kind: .sick, from: "2026-09-21", to: "2026-09-27", reportedAt: TestFixtures.now)
+        store.setReport(week)
+        XCTAssertEqual(store.pendingReviewReport(calendar: TestFixtures.utc), week)
+        store.markReviewed(week.id)
+        XCTAssertNil(store.pendingReviewReport(calendar: TestFixtures.utc))
+
+        // Eine laufende Pause zählt sofort; eine mit Ende vor dem Anfang wird nicht gespeichert.
+        let ongoing = PauseReport(kind: .injury, from: "2026-09-29", to: nil, reportedAt: TestFixtures.now)
+        store.setReport(ongoing)
+        XCTAssertEqual(store.pendingReviewReport(calendar: TestFixtures.utc), ongoing)
+        store.setReport(PauseReport(kind: .other, from: "2026-09-29", to: "2026-09-20", reportedAt: TestFixtures.now))
+        XCTAssertEqual(store.report(), ongoing)
+        store.setReport(nil)
+        XCTAssertNil(store.report())
     }
 }

@@ -136,6 +136,24 @@ der Sperre lässt sich der Entwurf vormerken; die App übernimmt ihn beim ersten
 Sperre. Der Gesamtplan gehört zu einer Zielversion (`goal-vN`) statt zu `planKey`; ein Plan von vor P3 bekommt die
 Version, solange er zu `planKey` passt. Die Einrichtung beim ersten Start speichert direkt und sperrt nichts.
 
+## Fortschreibung (P4)
+
+Der Gesamtplan entsteht nur beim Start und bei einem neuen Ziel neu; "Neu berechnen" gibt es nicht mehr. Danach schreibt
+die App ihn fort (`POST /v1/plan/macro/review`, Timeout wie der Gesamtplan):
+
+| Anlass | Wann | Wie |
+|---|---|---|
+| `scheduled` | alle 14 Tage ab dem Montag der Woche der Erstellung bzw. der letzten Fortschreibung | automatisch beim ersten Öffnen, im Hintergrund |
+| `pause` | gemeldete Pause (Einstellungen → Pause melden) von mindestens 7 Tagen, eine laufende zählt sofort | automatisch, einmal je Meldung |
+| `low_compliance` | zwei abgeschlossene Wochen nacheinander unter 60 % des Plans in einer Sportart | die App schlägt es im Tab Plan vor, der Athlet bestätigt |
+
+Die App schickt den Plan ab vier Wochen vor der laufenden Woche, das Ist dieser Wochen je Sportart in der Planeinheit
+(`MacroActualCalculator`), Anlass, Pause und optional Feedback. Claude antwortet mit Bilanz (`summary`), Änderungen und
+den Wochen; die App behält die vergangenen Wochen und die laufende Woche des bisherigen Plans und ersetzt nur die
+Wochen danach. Jede Fortschreibung hängt als `MacroReview` am Plan; danach geht wieder genau eine Feedback-Runde
+(`canGiveFeedback`). Ein Fehlschlag lässt den Plan stehen; versucht wird höchstens einmal am Tag je Anlass. Nach einer
+Fortschreibung stimmt die App die sieben Tage neu ab und meldet sich mit einer Mitteilung.
+
 ## Übergreifende Regeln
 
 **Tag:** höchstens zwei Einheiten, höchstens eine harte. Ein Tag hat höchstens die Hälfte der Wochenstunden des

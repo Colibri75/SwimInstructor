@@ -1,0 +1,243 @@
+{
+  "plan_version": 2,
+  "goal_day": "2026-11-08",
+  "generated_at": "2026-09-30T10:00:00.000Z",
+  "plan": {
+    "rationale": "Fortschreibung nach zwei Wochen: Schwimmen lief wie geplant, Laufen blieb darunter. Die nächsten Wochen steigen beim Laufen vom Ist aus. Hinweis: Zur Sicherheit an 2 Stellen angepasst, die Wochen zeigen die geprüften Umfänge.",
+    "weeks": [
+      {
+        "week_start": "2026-09-28",
+        "phase": "specific",
+        "deload": false,
+        "focus": "Wettkampfnah",
+        "total_minutes": 209,
+        "load": 189,
+        "sports": [
+          {
+            "sport": "swim",
+            "unit": "meters",
+            "amount": 3200,
+            "minutes": 64,
+            "distance_meters": 3200,
+            "sessions": 2
+          },
+          {
+            "sport": "bike",
+            "unit": "minutes",
+            "amount": 100,
+            "minutes": 100,
+            "distance_meters": 45900,
+            "sessions": 2
+          },
+          {
+            "sport": "run",
+            "unit": "minutes",
+            "amount": 45,
+            "minutes": 45,
+            "distance_meters": 7550,
+            "sessions": 2
+          }
+        ],
+        "tests": [
+          {
+            "sport": "bike",
+            "test_id": "threshold_30min",
+            "display_name": "30-Minuten-Test"
+          }
+        ]
+      },
+      {
+        "week_start": "2026-10-05",
+        "phase": "specific",
+        "deload": false,
+        "focus": "Wettkampfnah",
+        "total_minutes": 226,
+        "load": 204,
+        "sports": [
+          {
+            "sport": "swim",
+            "unit": "meters",
+            "amount": 3300,
+            "minutes": 66,
+            "distance_meters": 3300,
+            "sessions": 2
+          },
+          {
+            "sport": "bike",
+            "unit": "minutes",
+            "amount": 110,
+            "minutes": 110,
+            "distance_meters": 50450,
+            "sessions": 2
+          },
+          {
+            "sport": "run",
+            "unit": "minutes",
+            "amount": 50,
+            "minutes": 50,
+            "distance_meters": 8400,
+            "sessions": 2
+          }
+        ],
+        "tests": [
+          {
+            "sport": "run",
+            "test_id": "entry_easy_25min",
+            "display_name": "Einstiegstest locker"
+          }
+        ]
+      },
+      {
+        "week_start": "2026-10-12",
+        "phase": "specific",
+        "deload": true,
+        "focus": "Entlastung",
+        "total_minutes": 151,
+        "load": 136,
+        "sports": [
+          {
+            "sport": "swim",
+            "unit": "meters",
+            "amount": 2300,
+            "minutes": 46,
+            "distance_meters": 2300,
+            "sessions": 2
+          },
+          {
+            "sport": "bike",
+            "unit": "minutes",
+            "amount": 75,
+            "minutes": 75,
+            "distance_meters": 34400,
+            "sessions": 2
+          },
+          {
+            "sport": "run",
+            "unit": "minutes",
+            "amount": 30,
+            "minutes": 30,
+            "distance_meters": 5050,
+            "sessions": 2
+          }
+        ],
+        "tests": []
+      },
+      {
+        "week_start": "2026-10-19",
+        "phase": "specific",
+        "deload": false,
+        "focus": "Wettkampfnah",
+        "total_minutes": 242,
+        "load": 218,
+        "sports": [
+          {
+            "sport": "swim",
+            "unit": "meters",
+            "amount": 3600,
+            "minutes": 72,
+            "distance_meters": 3600,
+            "sessions": 2
+          },
+          {
+            "sport": "bike",
+            "unit": "minutes",
+            "amount": 120,
+            "minutes": 120,
+            "distance_meters": 55050,
+            "sessions": 2
+          },
+          {
+            "sport": "run",
+            "unit": "minutes",
+            "amount": 50,
+            "minutes": 50,
+            "distance_meters": 8400,
+            "sessions": 2
+          }
+        ],
+        "tests": []
+      },
+      {
+        "week_start": "2026-10-26",
+        "phase": "taper",
+        "deload": false,
+        "focus": "Frisch werden",
+        "total_minutes": 143,
+        "load": 129,
+        "sports": [
+          {
+            "sport": "swim",
+            "unit": "meters",
+            "amount": 2150,
+            "minutes": 43,
+            "distance_meters": 2150,
+            "sessions": 2
+          },
+          {
+            "sport": "bike",
+            "unit": "minutes",
+            "amount": 70,
+            "minutes": 70,
+            "distance_meters": 32100,
+            "sessions": 2
+          },
+          {
+            "sport": "run",
+            "unit": "minutes",
+            "amount": 30,
+            "minutes": 30,
+            "distance_meters": 5050,
+            "sessions": 2
+          }
+        ],
+        "tests": []
+      },
+      {
+        "week_start": "2026-11-02",
+        "phase": "goal_week",
+        "deload": false,
+        "focus": "Frisch werden",
+        "total_minutes": 121,
+        "load": 109,
+        "sports": [
+          {
+            "sport": "swim",
+            "unit": "meters",
+            "amount": 1800,
+            "minutes": 36,
+            "distance_meters": 1800,
+            "sessions": 2
+          },
+          {
+            "sport": "bike",
+            "unit": "minutes",
+            "amount": 60,
+            "minutes": 60,
+            "distance_meters": 27550,
+            "sessions": 2
+          },
+          {
+            "sport": "run",
+            "unit": "minutes",
+            "amount": 25,
+            "minutes": 25,
+            "distance_meters": 4200,
+            "sessions": 1
+          }
+        ],
+        "tests": []
+      }
+    ]
+  },
+  "adjustments": [
+    "Woche ab 12.10.: Schwimmen von 2500 m auf 2300 m begrenzt (Entlastungswoche)",
+    "Woche ab 19.10.: Schwimmen von 3800 m auf 3600 m begrenzt (höchstens 10 % mehr als die letzte Woche ohne Entlastung)"
+  ],
+  "summary": "Schwimmen 96 % erfüllt, Radfahren 88 %, Laufen 70 %. In der zweiten Woche fielen zwei Läufe aus.",
+  "changes": [
+    "Laufen startet nächste Woche mit 35 statt 45 Minuten",
+    "Rad bleibt wie geplant"
+  ],
+  "reason": "scheduled",
+  "feedback": "Laufen bitte vorsichtig, das Knie zwickt."
+}

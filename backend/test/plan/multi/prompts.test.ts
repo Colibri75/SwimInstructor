@@ -2,6 +2,8 @@ import { addDays, weekdayName } from "../../../src/plan/week";
 import { mondayOf } from "../../../src/plan/macro";
 import { MacroContextV2 } from "../../../src/plan/multi/macroSanity";
 import {
+  actualWeekLine,
+  compliancePercent,
   buildDayUserMessageV2,
   buildMacroUserMessageV2,
   buildReviseUserMessage,

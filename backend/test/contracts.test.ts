@@ -328,6 +328,21 @@ describe("contracts/wire, Plan v2", () => {
     expect(response.body.plan.weeks.map((week: { phase: string }) => week.phase)).toEqual(["specific", "specific", "specific", "specific", "taper", "goal_week"]);
   });
 
+  it("antwortet auf /v1/plan/macro/review mit genau den Feldern des Vertrags", async () => {
+    const before = contract("wire/plan-v2-macro-response.json");
+    const fixture = contract("wire/plan-v2-review-response.json");
+    const raw = { rationale: fixture.plan.rationale, summary: fixture.summary, changes: fixture.changes, blocks: rawBlocks(fixture.plan.weeks) };
+    await expectContract("wire/plan-v2-review-response.json", appWith(generated(raw)), "/v1/plan/macro/review", {
+      plan_version: 2,
+      snapshot: near,
+      today: "2026-09-30",
+      plan: { rationale: before.plan.rationale, weeks: targets(before.plan.weeks) },
+      actual: [{ week_start: "2026-09-21", sports: [{ sport: "swim", amount: 3400, sessions: 2 }] }],
+      reason: fixture.reason,
+      feedback: fixture.feedback
+    });
+  });
+
   it("antwortet auf /v1/plan/macro/revise mit genau den Feldern des Vertrags", async () => {
     const before = contract("wire/plan-v2-macro-response.json");
     const fixture = contract("wire/plan-v2-revise-response.json");

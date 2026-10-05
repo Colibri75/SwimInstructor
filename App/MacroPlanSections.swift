@@ -2,8 +2,8 @@ import Charts
 import SwiftUI
 import SwimInstructorCore
 
-/// Der Gesamtplan bis zum Ziel im Plan-Tab: Überblick je Sportart, alle Wochen, Testtermine und darunter das Feedback mit
-/// der Liste der Änderungen und dem Verlauf der Runden.
+/// Der Gesamtplan bis zum Ziel im Plan-Tab: Überblick je Sportart, alle Wochen, Testtermine, die Fortschreibung mit Plan
+/// gegen Ist und darunter das Feedback mit der Liste der Änderungen und dem Verlauf der Runden.
 struct MacroPlanSections: View {
     @EnvironmentObject private var macroLoader: MultiSportMacroLoader
     @EnvironmentObject private var todayLoader: MultiSportTodayLoader
@@ -16,11 +16,73 @@ struct MacroPlanSections: View {
     var body: some View {
         overviewSection
         if let plan = macroLoader.plan {
+            reviewSection(plan)
             feedbackSection(plan)
         }
     }
 
-    // MARK: - Überblick
+    /// Die letzte Fortschreibung: Anlass, Bilanz und Änderungen.
+private struct ReviewView: View {
+    let review: MacroReview
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(review.reason.title)
+                    .font(.subheadline.weight(.semibold))
+                Spacer()
+                Text(review.reviewedAt.formatted(date: .abbreviated, time: .omitted))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            if !review.summary.isEmpty {
+                Text(review.summary)
+                    .font(.footnote)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            ForEach(review.changes, id: \.self) { change in
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("•")
+                    Text(change)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .font(.footnote)
+            }
+            AdjustmentsDisclosure(adjustments: review.adjustments)
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+/// Eine vergangene Woche: je Sportart trainiert gegen geplant, mit Prozent.
+private struct ActualWeekRow: View {
+    let planned: MacroWeekV2
+    let actual: MacroActualWeek
+
+    private let registry = SportRegistry.standard
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Woche ab \(PlanFormatting.shortGermanDate(planned.weekStart))")
+                .font(.caption.weight(.semibold))
+            ForEach(planned.sports, id: \.sport) { volume in
+                line(volume)
+            }
+        }
+    }
+
+    private func line(_ volume: MacroSportVolume) -> some View {
+        let done = actual.amount(of: volume.sport)
+        let percent = MacroActualCalculator.percent(planned: volume.amount, actual: done)
+        let suffix = percent.map { " (\($0) %)" } ?? ""
+        let isWeak = (percent ?? 100) < MacroActualCalculator.lowCompliancePercent
+        return Text("\(registry.displayName(for: volume.sport)): \(PlanV2Formatting.amount(done, unit: volume.unit)) von \(PlanV2Formatting.amount(volume.amount, unit: volume.unit))\(suffix)")
+            .font(.caption2)
+            .foregroundStyle(isWeak ? Color.orange : Color.secondary)
+    }
+}
+
+// MARK: - Überblick
 
     private var overviewSection: some View {
         Section {
@@ -40,21 +102,24 @@ struct MacroPlanSections: View {
                 Text("Noch kein Gesamtplan. Er legt die Wochen bis zu deinem Ziel für alle Sportarten fest, die nächsten sieben Tage richten sich danach.")
                     .foregroundStyle(.secondary)
             }
-            Button {
-                guard let snapshot = todayLoader.reading?.snapshot else { return }
-                errorFromFeedback = false
-                Task { await macroLoader.regenerate(snapshot: snapshot) }
-            } label: {
-                if macroLoader.isLoading {
-                    HStack(spacing: 12) {
-                        ProgressView()
-                        Text("Claude plant bis zum Ziel …")
+            // Neu berechnet wird nur ohne gültigen Plan; sonst schreibt die App ihn alle zwei Wochen fort.
+            if macroLoader.plan == nil || !macroLoader.isCurrent || macroLoader.isLoading {
+                Button {
+                    guard let snapshot = todayLoader.reading?.snapshot else { return }
+                    errorFromFeedback = false
+                    Task { await macroLoader.regenerate(snapshot: snapshot) }
+                } label: {
+                    if macroLoader.isLoading {
+                        HStack(spacing: 12) {
+                            ProgressView()
+                            Text("Claude plant bis zum Ziel …")
+                        }
+                    } else {
+                        Text("Gesamtplan erstellen")
                     }
-                } else {
-                    Text(macroLoader.plan == nil ? "Gesamtplan erstellen" : "Gesamtplan neu berechnen")
                 }
+                .disabled(isBusy || todayLoader.reading == nil || !settings.hasToken)
             }
-            .disabled(macroLoader.isLoading || macroLoader.isRevising || todayLoader.reading == nil || !settings.hasToken)
             if let error = macroLoader.error, !errorFromFeedback {
                 Label(error, systemImage: "exclamationmark.triangle")
                     .font(.footnote)
@@ -63,7 +128,78 @@ struct MacroPlanSections: View {
         } header: {
             Text("Gesamtplan bis zum Ziel")
         } footer: {
-            Text("Der Gesamtplan entsteht beim Start und bei einer Zieländerung. Neu berechnen beginnt von vorn und verwirft die Feedback-Runden; für einzelne Wünsche ist das Feedback darunter gedacht.")
+            Text("Der Gesamtplan entsteht beim Start und bei einem neuen Ziel. Danach schreibt die App ihn alle zwei Wochen mit deinem Ist fort; vergangene Wochen bleiben stehen.")
+        }
+    }
+
+    private var isBusy: Bool {
+        macroLoader.isLoading || macroLoader.isRevising || macroLoader.isReviewing
+    }
+
+    // MARK: - Fortschreibung
+
+    private func reviewSection(_ plan: MacroPlanV2) -> some View {
+        let calculator = MacroActualCalculator()
+        let actual = calculator.actualWeeks(macroLoader.reviewedPastWeekStarts, workouts: todayLoader.reading?.allWorkouts ?? [])
+        let weak = calculator.lowComplianceSports(plan: plan, actual: actual, currentWeekStart: macroLoader.currentWeekStart)
+        let reviewedThisWeek = plan.reviews.last?.weekStart == macroLoader.currentWeekStart
+        return Section {
+            if macroLoader.isReviewing {
+                HStack(spacing: 12) {
+                    ProgressView()
+                    Text("Claude schreibt den Gesamtplan fort …")
+                }
+            }
+            if let review = plan.reviews.last {
+                ReviewView(review: review)
+            }
+            if let next = macroLoader.nextReviewWeekStart {
+                LabeledContent("Nächste Fortschreibung", value: "Montag, \(PlanFormatting.germanDate(next))")
+                    .font(.footnote)
+            }
+            if !weak.isEmpty, !reviewedThisWeek, macroLoader.isCurrent {
+                lowComplianceBanner(weak)
+            }
+            if !actual.isEmpty {
+                DisclosureGroup("Plan gegen Ist (\(actual.count) Wochen)") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(actual, id: \.weekStart) { week in
+                            if let planned = plan.week(starting: week.weekStart) {
+                                ActualWeekRow(planned: planned, actual: week)
+                            }
+                        }
+                    }
+                    .padding(.top, 4)
+                }
+            }
+        } header: {
+            Text("Fortschreibung")
+        } footer: {
+            Text("Alle zwei Wochen vergleicht Claude Plan und Ist und passt die Wochen ab der nächsten an. Die laufende Woche bleibt. Nach einer gemeldeten Pause (Einstellungen) passiert das sofort.")
+        }
+    }
+
+    /// Zwei schwache Wochen: Die App schlägt die Fortschreibung vor, der Athlet bestätigt.
+    private func lowComplianceBanner(_ weak: [SportID]) -> some View {
+        let names = weak.map { SportRegistry.standard.displayName(for: $0) }.joined(separator: ", ")
+        return VStack(alignment: .leading, spacing: 8) {
+            Label(
+                "Zwei Wochen unter \(MacroActualCalculator.lowCompliancePercent) % des Plans: \(names). Soll die App den Gesamtplan jetzt an dein Ist anpassen?",
+                systemImage: "chart.line.downtrend.xyaxis"
+            )
+            .font(.footnote)
+            .foregroundStyle(.orange)
+            .fixedSize(horizontal: false, vertical: true)
+            Button("Jetzt fortschreiben") {
+                guard let reading = todayLoader.reading else { return }
+                errorFromFeedback = false
+                Task {
+                    if await macroLoader.review(reason: .lowCompliance, snapshot: reading.snapshot, workouts: reading.allWorkouts) != nil {
+                        await todayLoader.refreshIfNeeded()
+                    }
+                }
+            }
+            .disabled(isBusy || !settings.hasToken)
         }
     }
 
@@ -101,8 +237,13 @@ struct MacroPlanSections: View {
             }
             .disabled(
                 feedback.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                    || macroLoader.isRevising || macroLoader.isLoading || todayLoader.reading == nil || !settings.hasToken
+                    || !plan.canGiveFeedback || isBusy || todayLoader.reading == nil || !settings.hasToken
             )
+            if !plan.canGiveFeedback {
+                Text("Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung. Die nächste Gelegenheit kommt mit der nächsten Fortschreibung.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
             if let error = macroLoader.error, errorFromFeedback {
                 Label(error, systemImage: "exclamationmark.triangle")
                     .font(.footnote)
@@ -125,7 +266,7 @@ struct MacroPlanSections: View {
         } header: {
             Text("Feedback zum Gesamtplan")
         } footer: {
-            Text("Schreib, was am Gesamtplan anders sein soll. Claude überarbeitet ihn und listet, was sich ändert; die Sicherheitsgrenzen gelten weiter. Die nächsten sieben Tage passen sich danach an. Jede Runde ist ein größerer Claude-Aufruf.")
+            Text("Schreib, was am Gesamtplan anders sein soll. Claude überarbeitet ihn und listet, was sich ändert; die Sicherheitsgrenzen gelten weiter. Die nächsten sieben Tage passen sich danach an.")
         }
     }
 }
