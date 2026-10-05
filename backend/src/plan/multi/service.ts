@@ -32,7 +32,9 @@ import {
   MultiDayPlanSchema,
   MultiMacroPlanSchema,
   MultiWeekPlanSchema,
+  MissedSession,
   PauseReport,
+  ReplanReason,
   PerformanceChange,
   RecentTraining,
   ReviewReason,
@@ -94,7 +96,10 @@ export interface WeekInputV2 {
   fromDate: string;
   today: string;
   unavailable: string[];
+  /** Training der Tage davor; Eintraege ab `fromDate` (heute schon trainiert) zaehlen nur mit ihren Beschwerden. */
   recent: RecentTraining[];
+  missed?: MissedSession[];
+  reason?: ReplanReason;
   macroWeeks?: MacroWeekTargetV2[];
   wishes?: string;
   equipment?: readonly string[];
@@ -239,6 +244,9 @@ export class MultiPlanService {
       dates: windowDates(input.fromDate, 7),
       unavailable: input.unavailable,
       recent: input.recent.filter((entry) => entry.date < input.fromDate),
+      reports: input.recent.filter((entry) => (entry.pain ?? 0) > 0),
+      ...(input.missed !== undefined && input.missed.length > 0 ? { missed: input.missed } : {}),
+      ...(input.reason !== undefined ? { reason: input.reason } : {}),
       ...(input.macroWeeks !== undefined && input.macroWeeks.length > 0 ? { macroWeeks: input.macroWeeks } : {}),
       ...(input.testSettings !== undefined ? { testSettings: input.testSettings } : {})
     };

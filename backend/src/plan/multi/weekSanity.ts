@@ -2,8 +2,8 @@ import { LimitUnit, SportDefinition } from "../../sports/types";
 import { Intensity, SessionType } from "../vocabulary";
 import { SnapshotV2 } from "../snapshot";
 import { addDays, weekdayName } from "../calendar";
-import { dayLimits, DayLimitsV2, dayMinutesCap, hardOn, lower, MULTI_RULES, RANK, sportLimits, SportLimitsNow, testBlackoutReason } from "./limits";
-import { MacroWeekTargetV2, MultiWeekPlanRaw, RecentTraining, TestSettings, WeekSessionRaw } from "./schemas";
+import { dayLimits, DayLimitsV2, dayMinutesCap, hardOn, lower, MULTI_RULES, painRestriction, RANK, sportLimits, SportLimitsNow, testBlackoutReason } from "./limits";
+import { MacroWeekTargetV2, MissedSession, MultiWeekPlanRaw, RecentTraining, ReplanReason, TestSettings, WeekSessionRaw } from "./schemas";
 import { amountToMeters, amountToMinutes, floorAmount, formatAmount, plannedSports, roundAmount, sportName } from "./sports";
 import { fixedSport, scheduleDay, trainingDaysPerWeek, weeklyMinutes } from "./schedule";
 import { chooseTest, TestPlan, TestRef, testRef } from "./tests";
@@ -25,6 +25,15 @@ export interface WeekContextV2 {
   unavailable: string[];
   /** Training vor dem ersten geplanten Tag (Information fuer Claude, harte Einheiten zaehlen fuer "nie hintereinander"). */
   recent: RecentTraining[];
+  /**
+   * Rueckmeldungen mit Beschwerden, auch von heute (vom ersten geplanten Tag): Sie bremsen die Sportart fuer einige Tage
+   * (`painRestriction`). Fehlt das Feld, gelten die Beschwerden aus `recent`.
+   */
+  reports?: RecentTraining[];
+  /** Geplante Einheiten der letzten Tage, die ausgefallen sind (Information fuer Claude). */
+  missed?: MissedSession[];
+  /** Anlass der Neuplanung. */
+  reason?: ReplanReason;
   macroWeeks?: MacroWeekTargetV2[];
   testSettings?: TestSettings;
 }
@@ -174,8 +183,12 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
   });
   if (unplanned.size > 0) notes.push(`Einheiten von Sportarten ohne Schwerpunkt entfernt (${[...unplanned].map(sportName).join(", ")})`);
 
-  // 4. Je Einheit: Grenze der Sportart, Wiedereinstieg locker, kleinste sinnvolle Einheit.
-  days = days.map((day) => ({ ...day, sessions: day.sessions.flatMap((draft) => limitSession(draft, day.date, notes)) }));
+  // 4. Je Einheit: Beschwerden der letzten Tage, Grenze der Sportart, Wiedereinstieg locker, kleinste sinnvolle Einheit.
+  const reports = context.reports ?? context.recent;
+  days = days.map((day) => ({
+    ...day,
+    sessions: day.sessions.flatMap((draft) => applyPain(draft, day.date, reports, notes)).flatMap((draft) => limitSession(draft, day.date, notes))
+  }));
 
   // 5. Leistungstests (fuer heute mit den Grenzen von heute), danach die Grenzen fuer heute fuer alle anderen Einheiten.
   days = placeTests(days, snapshot, context, week, notes);
@@ -289,6 +302,30 @@ function toDraft(session: WeekSessionRaw, week: WeekLimitsV2, unplanned: Set<str
       test: null
     }
   ];
+}
+
+/** Beschwerden nach einer Einheit: Sportart pausiert, nur locker oder kuerzer (siehe `painRestriction`). */
+function applyPain(draft: Draft, date: string, reports: readonly RecentTraining[], notes: string[]): Draft[] {
+  const pain = painRestriction(reports, draft.sport.id, date);
+  if (pain === null) return [draft];
+  const sport = draft.sport;
+  if (pain.blocked) {
+    notes.push(`${label(date)}: ${sport.displayName} gestrichen (${pain.reason})`);
+    return [];
+  }
+  let result = draft;
+  if (RANK[result.intensity] > RANK[pain.maxIntensity]) {
+    notes.push(`${label(date)}: ${sport.displayName} auf "${pain.maxIntensity}" gesenkt (${pain.reason})`);
+    result = soften(result, pain.maxIntensity);
+  }
+  if (pain.amountFactor < 1 && result.test === null) {
+    const cap = floorAmount(sport, draft.limits.sessionCap * pain.amountFactor);
+    if (result.amount > cap) {
+      notes.push(`${label(date)}: ${sport.displayName} von ${formatAmount(sport, result.amount)} auf ${formatAmount(sport, cap)} gekürzt (${pain.reason})`);
+      result = { ...result, amount: cap };
+    }
+  }
+  return [result];
 }
 
 function limitSession(draft: Draft, date: string, notes: string[]): Draft[] {

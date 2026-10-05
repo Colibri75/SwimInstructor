@@ -140,10 +140,41 @@ const KnownSport = z.string().refine((id) => SPORTS.get(id) !== undefined, { mes
 const Identifier = z.string().regex(/^[a-z][a-z0-9_]{1,39}$/);
 const Amount = z.number().min(0).max(1_000_000);
 
-/** Was der Athlet in den Tagen vor dem Plan trainiert hat (je Einheit), mit `hard` fuer eine harte Einheit. */
+/** Wo der Athlet nach einer Einheit Beschwerden hatte (Rueckmeldung in der App). */
+export const PAIN_AREAS = ["knee", "shin", "achilles", "foot", "hip", "back", "shoulder", "other"] as const;
+export type PainArea = (typeof PAIN_AREAS)[number];
+
+/**
+ * Was der Athlet in den Tagen vor dem Plan trainiert hat (je Einheit), mit `hard` fuer eine harte Einheit, der gefuehlten
+ * Anstrengung (0 bis 10, aus Health oder vom Athleten) und Beschwerden (0 keine, 1 leicht, 2 deutlich, 3 stark).
+ */
 export const RecentTrainingSchema = z
-  .array(z.object({ date: DateString, sport: KnownSport, minutes: z.number().min(0).max(1440), meters: Amount, hard: z.boolean().optional() }))
+  .array(
+    z.object({
+      date: DateString,
+      sport: KnownSport,
+      minutes: z.number().min(0).max(1440),
+      meters: Amount,
+      hard: z.boolean().optional(),
+      effort: z.number().min(0).max(10).optional(),
+      pain: z.number().int().min(0).max(3).optional(),
+      pain_area: z.enum(PAIN_AREAS).optional()
+    })
+  )
   .max(40);
+
+/** Eine geplante Einheit der letzten Tage, die der Athlet nicht gemacht hat. */
+export const MissedSessionSchema = z.object({
+  date: DateString,
+  sport: KnownSport,
+  session_type: z.enum(SESSION_TYPES),
+  intensity: z.enum(INTENSITIES),
+  amount: Amount
+});
+
+/** Warum die App die sieben Tage neu plant: taeglich, nach verpassten Einheiten, nach sehr harter Einheit, Beschwerden, von Hand. */
+export const REPLAN_REASONS = ["daily", "missed", "effort", "pain", "manual"] as const;
+export type ReplanReason = (typeof REPLAN_REASONS)[number];
 
 /** Leistungstests: angeboten (Standard ja), Abstand fuer die Wiederholung (Standard 6 Wochen), bevorzugter Test je Sportart. */
 export const TestSettingsSchema = z.object({
@@ -203,6 +234,8 @@ export const WeekRequestV2Schema = z
     today: DateString,
     unavailable_dates: z.array(DateString).max(7).optional(),
     recent_training: RecentTrainingSchema.optional(),
+    missed_sessions: z.array(MissedSessionSchema).max(14).optional(),
+    reason: z.enum(REPLAN_REASONS).optional(),
     macro_weeks: z.array(MacroWeekTargetV2Schema).max(3).optional(),
     wishes: z.string().max(MAX_WISH_LENGTH).optional(),
     equipment: EquipmentV2Schema.optional(),
@@ -272,6 +305,7 @@ export type PauseReport = NonNullable<ReviewRequest["pause"]>;
 export type PerformanceChange = z.infer<typeof PerformanceChangeSchema>;
 
 export type RecentTraining = z.infer<typeof RecentTrainingSchema>[number];
+export type MissedSession = z.infer<typeof MissedSessionSchema>;
 export type TestSettings = z.infer<typeof TestSettingsSchema>;
 export type DayTargetV2 = z.infer<typeof DayTargetV2Schema>;
 export type MacroWeekTargetV2 = z.infer<typeof MacroWeekTargetV2Schema>;

@@ -89,7 +89,8 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
           ["from_date", data.from_date],
           ["today", data.today],
           ...(data.unavailable_dates ?? []).map((date, index): [string, string] => [`unavailable_dates.${index}`, date]),
-          ...recentDates(data.recent_training)
+          ...recentDates(data.recent_training),
+          ...(data.missed_sessions ?? []).map((entry, index): [string, string] => [`missed_sessions.${index}.date`, entry.date])
         ]),
         ...macroWeekProblems(data.macro_weeks, "macro_weeks")
       ];
@@ -104,6 +105,8 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
             today: data.today,
             unavailable: data.unavailable_dates ?? [],
             recent: data.recent_training ?? [],
+            missed: data.missed_sessions,
+            reason: data.reason,
             macroWeeks: data.macro_weeks,
             wishes: data.wishes,
             equipment: data.equipment,

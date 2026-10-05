@@ -3,7 +3,7 @@ import { daysBetween, MacroPhase, mondayOf } from "../calendar";
 import { Intensity } from "../vocabulary";
 import { SnapshotV2 } from "../snapshot";
 import { addDays } from "../calendar";
-import { RecentTraining } from "./schemas";
+import { PainArea, RecentTraining } from "./schemas";
 import { fixedSport, isFitnessGoal, scheduleDay, weeklyMinutes } from "./schedule";
 import { floorAmount, formatAmount, plannedSports, raceAmount, raceSeconds, sportName, stateAmounts, stateOf, trainingSpeed } from "./sports";
 
@@ -68,7 +68,17 @@ export const MULTI_RULES = {
   maxChangeLength: 200,
   /** Laenge der Bilanz einer Fortschreibung. */
   maxSummaryLength: 600,
-  maxAdjustmentLines: 12
+  maxAdjustmentLines: 12,
+  /** Ab dieser gefuehlten Anstrengung (0 bis 10) zaehlt eine Einheit als hart, auch wenn sie nicht hart geplant war. */
+  hardEffort: 8,
+  /**
+   * Beschwerden nach einer Einheit (Rueckmeldung des Athleten) bremsen diese Sportart fuer einige Tage, den Tag der
+   * Meldung eingeschlossen: leicht 1 Tag ohne harte Einheit, deutlich 2 Tage nur locker und hoechstens die Haelfte,
+   * stark 3 Tage Pause in dieser Sportart. Vorsichtige Trainerpraxis, keine Diagnose; der Prompt raet bei anhaltenden
+   * Beschwerden zu aerztlichem Rat.
+   */
+  painDays: [0, 1, 2, 3] as readonly number[],
+  painModerateAmountFactor: 0.5
 };
 
 export const RANK: Record<Intensity, number> = { rest: 0, easy: 1, moderate: 2, hard: 3 };
@@ -238,9 +248,64 @@ export interface DayLimitsV2 {
   testBlockedReason: string | null;
 }
 
-/** War der Tag vor `date` laut Verlauf hart? */
+/** Hart laut Plan und Puls oder nach der gefuehlten Anstrengung. */
+export function isHardEntry(entry: RecentTraining): boolean {
+  return entry.hard === true || (entry.effort ?? 0) >= MULTI_RULES.hardEffort;
+}
+
+/** War der Tag `date` laut Verlauf hart? */
 export function hardOn(recent: readonly RecentTraining[], date: string): boolean {
-  return recent.some((entry) => entry.date === date && entry.hard === true);
+  return recent.some((entry) => entry.date === date && isHardEntry(entry));
+}
+
+const PAIN_AREA_TEXT: Record<PainArea, string> = {
+  knee: "Knie",
+  shin: "Schienbein",
+  achilles: "Achillessehne",
+  foot: "Fuß",
+  hip: "Hüfte",
+  back: "Rücken",
+  shoulder: "Schulter",
+  other: "sonstige"
+};
+
+const PAIN_TEXT = ["", "leichte", "deutliche", "starke"] as const;
+
+export function painAreaText(area: PainArea | undefined): string {
+  return area === undefined ? "" : PAIN_AREA_TEXT[area];
+}
+
+/** Was Beschwerden nach einer Einheit fuer eine Sportart an einem Tag bedeuten. */
+export interface PainRestriction {
+  /** Stark: diese Sportart an dem Tag gar nicht. */
+  blocked: boolean;
+  maxIntensity: Intensity;
+  /** Anteil der Tagesgrenze, der bleibt. */
+  amountFactor: number;
+  /** Lesbar, z. B. "deutliche Beschwerden (Knie) nach Laufen am 04.10." */
+  reason: string;
+  /** Letzter Tag, an dem die Bremse gilt. */
+  until: string;
+}
+
+/** Die staerkste Bremse aus den Beschwerden der letzten Tage fuer `sportId` an `date`, sonst `null`. */
+export function painRestriction(recent: readonly RecentTraining[], sportId: string, date: string): PainRestriction | null {
+  let worst: { entry: RecentTraining; level: number } | null = null;
+  for (const entry of recent) {
+    const level = entry.pain ?? 0;
+    if (entry.sport !== sportId || level <= 0 || entry.date > date) continue;
+    const until = addDays(entry.date, MULTI_RULES.painDays[level] - 1);
+    if (until < date) continue;
+    if (worst === null || level > worst.level || (level === worst.level && entry.date > worst.entry.date)) worst = { entry, level };
+  }
+  if (worst === null) return null;
+  const { entry, level } = worst;
+  const area = entry.pain_area !== undefined ? ` (${PAIN_AREA_TEXT[entry.pain_area]})` : "";
+  const reason = `${PAIN_TEXT[level]} Beschwerden${area} nach ${sportName(entry.sport)} am ${entry.date.slice(8, 10)}.${entry.date.slice(5, 7)}.`;
+  const until = addDays(entry.date, MULTI_RULES.painDays[level] - 1);
+  if (level >= 3) return { blocked: true, maxIntensity: "easy", amountFactor: 0, reason, until };
+  if (level === 2) return { blocked: false, maxIntensity: "easy", amountFactor: MULTI_RULES.painModerateAmountFactor, reason, until };
+  return { blocked: false, maxIntensity: "moderate", amountFactor: 1, reason, until };
 }
 
 export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly RecentTraining[] = []): DayLimitsV2 {
@@ -264,7 +329,7 @@ export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly 
   if (hardOn(recent, today) || hardOn(recent, addDays(today, -1)) || (hardDaysAgo !== undefined && hardDaysAgo <= 1)) {
     cap("moderate", "gestern oder heute schon eine harte Einheit");
   } else {
-    const hardDays = new Set(recent.filter((entry) => entry.hard === true && entry.date < today && entry.date >= addDays(today, -6)).map((entry) => entry.date));
+    const hardDays = new Set(recent.filter((entry) => isHardEntry(entry) && entry.date < today && entry.date >= addDays(today, -6)).map((entry) => entry.date));
     if (hardDays.size >= MULTI_RULES.maxHardDaysPerWeek) cap("moderate", `schon ${hardDays.size} harte Tage in den letzten 7 Tagen`);
   }
 
@@ -273,6 +338,8 @@ export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly 
     const limits = sportLimits(snapshot, sport);
     let maxAmount = Math.min(limits.sessionCap, limits.weeklyCap - limits.lastSeven);
     if (poor) maxAmount *= MULTI_RULES.recoveryPoorFactor;
+    const pain = painRestriction(recent, sport.id, today);
+    if (pain !== null) maxAmount *= pain.amountFactor;
     maxAmount = floorAmount(sport, Math.max(maxAmount, 0));
     const reasons = [...intensityReasons];
     let sportMax = maxIntensity;
@@ -280,9 +347,15 @@ export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly 
       sportMax = lower(sportMax, "easy");
       reasons.push("Wiedereinstieg nach Pause");
     }
+    if (pain !== null && !pain.blocked && RANK[pain.maxIntensity] < RANK[sportMax]) {
+      sportMax = pain.maxIntensity;
+      reasons.push(pain.reason);
+    }
     const blockedReason =
       fixed !== undefined && fixed !== sport.id
         ? `laut Wochenraster heute nur ${sportName(fixed)}`
+        : pain?.blocked === true
+        ? `${pain.reason}: Pause bis ${pain.until.slice(8, 10)}.${pain.until.slice(5, 7)}.`
         : maxAmount < sport.planning.limits.minSession
         ? limits.weeklyCap - limits.lastSeven < sport.planning.limits.minSession
           ? "Wochenumfang ausgeschöpft"
