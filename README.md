@@ -1,7 +1,7 @@
-# TriCoach
+# Peaksmith
 
 > Das Repo, die Targets und die Bundle-IDs heißen weiter **SwimInstructor**, damit TestFlight, die Health-Freigaben und
-> die gespeicherten Daten bleiben. Nur der Name unter dem Symbol ist TriCoach (`APP_DISPLAY_NAME` in `project.yml`).
+> die gespeicherten Daten bleiben. Nur der Name unter dem Symbol ist Peaksmith (`APP_DISPLAY_NAME` in `project.yml`).
 
 iOS- und watchOS-App für das Training im Triathlon: Sie liest Einheiten und Vitaldaten aus Apple Health, Claude plant
 daraus über einen eigenen Server Gesamtplan, die nächsten sieben Tage und den Tag, und die Watch führt durch die Einheit.
