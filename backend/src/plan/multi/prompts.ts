@@ -7,7 +7,7 @@ import { weekDates, weekdayName } from "../week";
 import { dayLimits, DayLimitsV2, dayMinutesCap, declaredLevelText, goalDayOf, MULTI_RULES, phaseOf, realismGaps, SportDayLimits, sportLimits, taperFactors, taperWeeks, testBlackoutReason, weeksToGoal } from "./limits";
 import { goalKind, isFitnessGoal, scheduleDayText, trainingDaysPerWeek, weeklyMinutes } from "./schedule";
 import { MacroContextV2, macroSportLimits } from "./macroSanity";
-import { ActualWeek, DayTargetV2, FeedbackRound, MacroWeekTargetV2, PauseReport, RecentTraining, ReviewReason, TestSettings } from "./schemas";
+import { ActualWeek, DayTargetV2, FeedbackRound, MacroWeekTargetV2, PauseReport, PerformanceChange, RecentTraining, ReviewReason, TestSettings } from "./schemas";
 import { emphasisOf, formatAmount, planningContext, plannedSports, raceAmount, raceSeconds, sportName } from "./sports";
 import { chooseTest, lastConfirmedTest, preferredTest, scheduleMacroTests } from "./tests";
 import { WeekContextV2, weekLimitsV2 } from "./weekSanity";
@@ -651,6 +651,17 @@ export interface ReviewPromptInput {
   reason: ReviewReason;
   pause?: PauseReport;
   feedback?: string;
+  performanceChanges?: readonly PerformanceChange[];
+}
+
+/** Ein neuer Leistungswert seit dem letzten Stand in einer Zeile, mit dem Wert davor ("CSS-Pace 1:50 → 1:44 pro 100 m"). */
+export function performanceChangeLine(change: PerformanceChange): string {
+  const definition = SPORTS.metric(change.sport, change.metric);
+  const format = (value: number) => (definition !== undefined ? formatMetricValue(value, definition.unit) : String(value));
+  const name = definition?.displayName ?? change.metric;
+  const where = change.sport !== undefined ? sportName(change.sport) : "Alle Sportarten";
+  const values = change.previous !== undefined ? `${format(change.previous)} → ${format(change.value)}` : `${format(change.value)} (vorher keiner bestätigt)`;
+  return `${where}: ${name} ${values} (${SOURCE_LABEL[change.source]}, ${change.measured_at.slice(0, 10)})`;
 }
 
 /** Plan gegen Ist einer vergangenen Woche in einer Zeile, je Sportart mit Prozent. */
@@ -688,6 +699,13 @@ export function buildReviewUserMessage(input: ReviewPromptInput): string {
     for (const week of input.actual) {
       lines.push(`- ${actualWeekLine(input.plan.weeks.find((planned) => planned.week_start === week.week_start), week)}`);
     }
+  }
+  if (input.performanceChanges !== undefined && input.performanceChanges.length > 0) {
+    lines.push("", "Neue Leistungswerte seit dem letzten Stand des Plans (vom Athleten bestätigt):");
+    for (const change of input.performanceChanges) lines.push(`- ${performanceChangeLine(change)}`);
+    lines.push(
+      "Tempo-, Watt- und Pulsziele der Einheiten richten sich schon nach den neuen Werten. Ändere Umfänge nur, wenn ein Wert zeigt, dass der Athlet deutlich stärker oder schwächer ist als bisher angenommen; nenne den Wert dann in summary und changes."
+    );
   }
   if (input.feedback !== undefined && input.feedback.trim() !== "") {
     lines.push(

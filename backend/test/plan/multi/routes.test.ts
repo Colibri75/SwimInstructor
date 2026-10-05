@@ -435,6 +435,30 @@ describe("POST /v1/plan/macro/review", () => {
     expect(user).toContain(`Die laufende Woche ab ${TODAY_MONDAY} ist fest`);
   });
 
+  it("nennt neue Leistungswerte seit dem letzten Stand mit dem Wert davor", async () => {
+    const complete = claude(review([]));
+    const performance_changes = [
+      { sport: "swim", metric: "css_pace_per_100m", previous: 110, value: 104, source: "tested", measured_at: "2026-09-26T08:00:00Z" },
+      { metric: "max_heart_rate", value: 186, source: "manual", measured_at: "2026-09-27T08:00:00Z" }
+    ];
+
+    const response = await request(appWith(complete).app).post("/v1/plan/macro/review").set(auth).send(reviewBody({ performance_changes }));
+
+    expect(response.status).toBe(200);
+    const user = complete.mock.calls[0][1];
+    expect(user).toContain("Neue Leistungswerte seit dem letzten Stand des Plans (vom Athleten bestätigt):");
+    expect(user).toContain("- Schwimmen: CSS-Pace 1:50 pro 100 m → 1:44 pro 100 m (getestet, 2026-09-26)");
+    expect(user).toContain("- Alle Sportarten: Maximalpuls 186 bpm (vorher keiner bestätigt) (selbst eingegeben, 2026-09-27)");
+  });
+
+  it("laesst den Abschnitt ohne neue Leistungswerte weg", async () => {
+    const complete = claude(review([]));
+
+    await request(appWith(complete).app).post("/v1/plan/macro/review").set(auth).send(reviewBody());
+
+    expect(complete.mock.calls[0][1]).not.toContain("Neue Leistungswerte");
+  });
+
   it("laesst feedback ohne Feedback weg", async () => {
     const response = await request(appWith(claude(review([]))).app).post("/v1/plan/macro/review").set(auth).send(reviewBody());
 
@@ -452,6 +476,11 @@ describe("POST /v1/plan/macro/review", () => {
     ["Pause ohne Kalendertag", { pause: { from: "2026-02-30", kind: "sick" } }, "pause.from"],
     ["Ist-Woche ohne Kalendertag", { actual: [{ week_start: "2026-02-30", sports: [] }] }, "actual.0.week_start"],
     ["leeres Feedback", { feedback: "  " }, "feedback"],
+    [
+      "geschaetzter Leistungswert als Aenderung",
+      { performance_changes: [{ metric: "max_heart_rate", value: 186, source: "estimated", measured_at: "2026-09-27T08:00:00Z" }] },
+      "performance_changes.0.source"
+    ],
     ["Snapshot v1", { snapshot: snapshotV1() }, "snapshot.schema_version"]
   ])("lehnt ab: %s", async (_name, extra, path) => {
     const complete = claude(review([]));

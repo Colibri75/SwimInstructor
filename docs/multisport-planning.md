@@ -154,6 +154,10 @@ Wochen danach. Jede Fortschreibung hängt als `MacroReview` am Plan; danach geht
 (`canGiveFeedback`). Ein Fehlschlag lässt den Plan stehen; versucht wird höchstens einmal am Tag je Anlass. Nach einer
 Fortschreibung stimmt die App die sieben Tage neu ab und meldet sich mit einer Mitteilung.
 
+Neue bestätigte Leistungswerte seit dem letzten Stand (Test oder Eingabe, `PerformanceProfile.changes(since:)`) gehen
+als `performance_changes` mit dem Wert davor mit ("CSS-Pace 1:50 → 1:44 pro 100 m"). Die Zonen der Tagespläne richten
+sich schon ab dem Übernehmen danach; Umfänge ändert Claude nur, wenn ein Wert deutlich vom Bisherigen abweicht.
+
 ## Übergreifende Regeln
 
 **Tag:** höchstens zwei Einheiten, höchstens eine harte. Ein Tag hat höchstens die Hälfte der Wochenstunden des

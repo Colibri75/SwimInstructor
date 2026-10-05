@@ -603,6 +603,12 @@ final class MultiSportMacroLoaderTests: XCTestCase {
         let loader = makeLoader(store: store, provider: provider)
         let swim = TestFixtures.workout(.swim, daysAgo: 12, minutes: 45, meters: 2_000)
         let run = TestFixtures.workout(.run, daysAgo: 8, minutes: 30, meters: 5_000)
+        let change = PerformanceChange(sport: .swim, metric: "css_pace_per_100m", previous: 110, value: 104, source: .tested, measuredAt: TestFixtures.now)
+        var changesSince: Date?
+        loader.performanceChangesProvider = { date in
+            changesSince = date
+            return [change]
+        }
 
         let result = await loader.reviewIfDue(snapshot: TestFixtures.snapshot, workouts: [swim, run], pause: nil)
         let review = try XCTUnwrap(result)
@@ -613,6 +619,8 @@ final class MultiSportMacroLoaderTests: XCTestCase {
         let request = try XCTUnwrap(provider.reviewRequests.first)
         XCTAssertEqual(request.reason, .scheduled)
         XCTAssertNil(request.pause)
+        XCTAssertEqual(request.performanceChanges, [change])
+        XCTAssertEqual(changesSince, plan.generatedAt, "seit dem letzten Stand: hier die Erstellung")
         XCTAssertEqual(request.actual.map(\.weekStart), ["2026-09-14", "2026-09-21"])
         XCTAssertEqual(request.actual[0].amount(of: .swim), 2_000)
         XCTAssertEqual(request.actual[1].amount(of: .run), 30)

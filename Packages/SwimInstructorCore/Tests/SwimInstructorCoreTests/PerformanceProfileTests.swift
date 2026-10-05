@@ -150,4 +150,33 @@ final class PerformanceProfileTests: XCTestCase {
         XCTAssertEqual(summary.sports.first?.zones.map(\.target), [.heartRateZone])
         XCTAssertEqual(summary.sports.last?.values.map(\.value), [160])
     }
+
+    func testChangesSinceListTheNewestConfirmedValueWithThePreviousOne() {
+        let since = TestFixtures.date(daysAgo: 14, hour: 12)
+        let profile = PerformanceProfile()
+            .recording(perf(.criticalSwimPace, 110, .tested, .swim, 40))
+            .recording(perf(.criticalSwimPace, 107, .tested, .swim, 5))
+            .recording(perf(.criticalSwimPace, 104, .tested, .swim, 2))
+            .recording(perf(.maxHeartRate, 186, .manual, nil, 3))
+            .recording(perf(.maxHeartRate, 191, .manual, nil, 30))
+
+        let changes = profile.changes(since: since)
+
+        XCTAssertEqual(changes.count, 2)
+        let css = changes.first { $0.metric == .criticalSwimPace }
+        XCTAssertEqual(css?.previous, 110)
+        XCTAssertEqual(css?.value, 104)
+        XCTAssertEqual(css?.sport, .swim)
+        XCTAssertEqual(changes.first { $0.metric == .maxHeartRate }?.previous, 191)
+
+        // Nichts Neues seit gestern bzw. derselbe Wert noch einmal: keine Änderung.
+        XCTAssertEqual(profile.changes(since: TestFixtures.date(daysAgo: 1, hour: 12)), [])
+        let same = PerformanceProfile()
+            .recording(perf(.criticalSwimPace, 104, .tested, .swim, 40))
+            .recording(perf(.criticalSwimPace, 104, .tested, .swim, 2))
+        XCTAssertEqual(same.changes(since: since), [])
+        // Ohne bestätigten Wert davor fehlt `previous`.
+        let first = PerformanceProfile().recording(perf(.criticalSwimPace, 104, .tested, .swim, 2)).changes(since: since)
+        XCTAssertEqual(first.map(\.previous), [nil])
+    }
 }

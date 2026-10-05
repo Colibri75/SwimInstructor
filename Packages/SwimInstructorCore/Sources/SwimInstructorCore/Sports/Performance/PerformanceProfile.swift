@@ -75,6 +75,45 @@ public struct PerformanceProfile: Codable, Equatable, Sendable {
     }
 }
 
+/// Ein bestätigter Leistungswert, der seit einem Zeitpunkt neu ist (Test oder Eingabe), mit dem Wert, der davor galt.
+/// Geht an die Fortschreibung des Gesamtplans, damit Claude sieht, was sich seit dem letzten Stand getan hat.
+public struct PerformanceChange: Equatable, Sendable {
+    public let sport: SportID?
+    public let metric: PerformanceMetric
+    /// Der bestätigte Wert zum Zeitpunkt; `nil`, wenn es keinen gab.
+    public let previous: Double?
+    public let value: Double
+    public let source: PerformanceOrigin
+    public let measuredAt: Date
+
+    public init(sport: SportID?, metric: PerformanceMetric, previous: Double?, value: Double, source: PerformanceOrigin, measuredAt: Date) {
+        self.sport = sport
+        self.metric = metric
+        self.previous = previous
+        self.value = value
+        self.source = source
+        self.measuredAt = measuredAt
+    }
+}
+
+public extension PerformanceProfile {
+    /// Je Sportart und Leistungswert der neueste bestätigte Wert nach `date`, mit dem Wert, der an `date` galt. Hat sich
+    /// der Wert nicht geändert, fehlt er.
+    func changes(since date: Date) -> [PerformanceChange] {
+        var seen = Set<String>()
+        let keys = values.filter { seen.insert("\($0.sport?.rawValue ?? "")|\($0.metric.rawValue)").inserted }
+        return keys.compactMap { key -> PerformanceChange? in
+            let history = self.history(of: key.metric, sport: key.sport).filter(\.source.isConfirmed)
+            guard let latest = history.last, latest.measuredAt > date else { return nil }
+            let previous = history.last { $0.measuredAt <= date }?.value
+            guard previous != latest.value else { return nil }
+            return PerformanceChange(
+                sport: latest.sport, metric: latest.metric, previous: previous, value: latest.value, source: latest.source, measuredAt: latest.measuredAt
+            )
+        }
+    }
+}
+
 /// Der gültige Wert je Sportart und Leistungswert, aus bestätigten Werten und Schätzungen.
 ///
 /// Regeln: Bestätigtes (Test, Eingabe) geht vor Geschätztem, Geschätztes vor Faustformel; bei gleicher Herkunft

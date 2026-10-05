@@ -16,6 +16,8 @@ public final class MultiSportMacroLoader: ObservableObject {
     @Published public private(set) var needsConfiguration = false
 
     public var testSettingsProvider: @MainActor () -> TestSettings? = { nil }
+    /// Bestätigte Leistungswerte seit einem Zeitpunkt (dem letzten Stand des Plans), für die Fortschreibung.
+    public var performanceChangesProvider: @MainActor (Date) -> [PerformanceChange] = { _ in [] }
 
     private let store: MacroPlanV2Storing
     private let planProvider: @MainActor () -> MacroPlanV2Providing?
@@ -289,6 +291,7 @@ public final class MultiSportMacroLoader: ObservableObject {
                 reason: reason,
                 pause: pause,
                 feedback: feedback,
+                performanceChanges: performanceChangesProvider(current.lastRevisionDate),
                 testSettings: testSettingsProvider()
             ))
             let review = MacroReview(

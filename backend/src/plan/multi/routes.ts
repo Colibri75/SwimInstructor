@@ -163,6 +163,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
             reason: data.reason,
             pause: data.pause,
             feedback: data.feedback,
+            performanceChanges: data.performance_changes,
             testSettings: data.test_settings
           }),
         reviewResponse

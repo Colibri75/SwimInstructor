@@ -247,6 +247,17 @@ const ActualWeekSchema = z.object({
   sports: z.array(z.object({ sport: KnownSport, amount: Amount, sessions: z.number().int().min(0).max(30) })).max(16)
 });
 
+/** Ein vom Athleten bestaetigter Leistungswert (Test oder Eingabe), der seit dem letzten Stand des Gesamtplans neu ist. */
+const PerformanceChangeSchema = z.object({
+  sport: KnownSport.optional(),
+  metric: Identifier,
+  /** Der Wert, der beim letzten Stand galt; fehlt, wenn es keinen bestaetigten gab. */
+  previous: z.number().positive().max(100_000).optional(),
+  value: z.number().positive().max(100_000),
+  source: z.enum(["tested", "manual"]),
+  measured_at: z.iso.datetime()
+});
+
 /** Fortschreibung des Gesamtplans (P4): der Plan, wie die App ihn haelt, das Ist der letzten Wochen, der Anlass. */
 export const ReviewRequestSchema = z
   .object({
@@ -258,6 +269,7 @@ export const ReviewRequestSchema = z
     reason: z.enum(REVIEW_REASONS),
     pause: z.object({ from: DateString, to: DateString.optional(), kind: z.enum(PAUSE_KINDS) }).optional(),
     feedback: z.string().trim().min(1).max(MAX_FEEDBACK_LENGTH).optional(),
+    performance_changes: z.array(PerformanceChangeSchema).max(20).optional(),
     test_settings: TestSettingsSchema.optional()
   })
   .superRefine(requireV2);
@@ -266,6 +278,7 @@ export type ReviewRequest = z.infer<typeof ReviewRequestSchema>;
 export type ActualWeek = z.infer<typeof ActualWeekSchema>;
 export type ReviewReason = (typeof REVIEW_REASONS)[number];
 export type PauseReport = NonNullable<ReviewRequest["pause"]>;
+export type PerformanceChange = z.infer<typeof PerformanceChangeSchema>;
 
 export type RecentTraining = z.infer<typeof RecentTrainingSchema>[number];
 export type TestSettings = z.infer<typeof TestSettingsSchema>;
