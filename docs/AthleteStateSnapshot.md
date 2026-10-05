@@ -138,7 +138,8 @@ schickt v2, sobald ein Gesamtziel eingestellt ist (immer, seit T2). Vollständig
   nimmt, wenn vorhanden, den Wochenraster.
 - `sports`: je Sportart mit Training in den letzten 4 Wochen oder mit Schwerpunkt/Disziplin: Einheiten, Minuten
   und Meter der letzten 7 Tage, Wochenschnitt der letzten 4 Wochen, längste Einheit (Meter und Minuten), Last
-  (`TrainingLoadCalculator`: TRIMP mit Puls, sonst Minuten, mal Faktor des Moduls) und Tage seit der letzten Einheit.
+  (`TrainingLoadCalculator`, Session-RPE: Minuten × Anstrengung 0 bis 10 ÷ 4, mal Faktor des Moduls; die Anstrengung
+  kommt aus Health (eigene Bewertung, sonst Apples Schätzung, ab iOS 18), sonst aus der Herzfrequenzreserve, sonst 4) und Tage seit der letzten Einheit.
 - `total_load`: Minuten und Last über alle Sportarten (7 Tage und Wochenschnitt) und `acute_chronic_ratio`
   (7-Tage-Last durch Wochenschnitt; fehlt ohne Vergleichswert). Nur ein Hinweis für die Planung, keine harte Grenze.
 
@@ -173,7 +174,7 @@ Woher die Startwerte ohne Test kommen (App, `PerformanceEstimator` und Sport-Mod
 Werte außerhalb der Grenzen aus `contracts/sports.json` verwirft die App, der Server lehnt sie ab. Die Zonen rechnet
 die App aus den Anteilen im Modul (`ZoneScheme`: Puls nach Friel in % des Schwellenpulses, Rad-Leistung nach Coggan
 in % der FTP, Pace in % der Schwellengeschwindigkeit, Schwimm-Puls in % des Maximalpulses); der Server übernimmt sie.
-Sobald ein Leistungsprofil da ist, rechnet die Last mit Ruhe- und Maximalpuls (TRIMP).
+Sobald ein Leistungsprofil da ist, schätzt die Last die Anstrengung aus Ruhe- und Maximalpuls, wenn Health keine kennt.
 
 ### Startniveau (P1, optional)
 

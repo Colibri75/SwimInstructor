@@ -248,9 +248,9 @@ describe("Phasen und Testsperre", () => {
     const long = multiSnapshot({ goal: { disciplines: [{ sport: "bike", distance_meters: 180_000, target_duration_seconds: 6 * 3600 }] } });
 
     expect(taperWeeks(olympic)).toBe(1);
-    expect(taperFactors(olympic)).toEqual([0.6]);
+    expect(taperFactors(olympic)).toEqual([0.55]);
     expect(taperWeeks(long)).toBe(2);
-    expect(taperFactors(long)).toEqual([0.75, 0.55]);
+    expect(taperFactors(long)).toEqual([0.6, 0.45]);
   });
 
   it("ordnet jeder Woche ihre Phase zu", () => {

@@ -16,7 +16,7 @@ import { chooseTest, TestPlan, TestRef, testRef } from "./tests";
  * nach einem harten Tag vor dem Plan, Tests mit Vollbelastung zaehlen als harter Tag und gehen vor); Leistungstests nur,
  * wenn sie passen, hoechstens einer je Tag und je Sportart, nie an zwei Tagen hintereinander; jeder Tag hoechstens die
  * Haelfte der Wochenstunden (mit Wochenraster: dessen Minuten); Ruhetage und feste Sportarten des Wochenrasters; nicht
- * mehr Trainingstage als im Ziel; mindestens ein Ruhetag; hoechstens die Wochenstunden.
+ * mehr Trainingstage als im Ziel; mindestens ein Ruhetag; hoechstens die Wochenstunden; etwa 80 % der Zeit locker.
  */
 export interface WeekContextV2 {
   today: string;
@@ -236,6 +236,9 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
     days = scaleSessions(days, () => true, week.maxMinutes, minutesOf);
   }
 
+  // 11. Etwa 80 % locker: zu viel Intensitaet senkt mittlere Einheiten auf locker, die laengsten zuerst.
+  days = limitIntensity(days, notes);
+
   const result = days.map(finalizeDay);
   const adjustments = notes.slice(0, MULTI_RULES.maxAdjustmentLines);
   if (notes.length > MULTI_RULES.maxAdjustmentLines) adjustments.push(`… und ${notes.length - MULTI_RULES.maxAdjustmentLines} weitere Korrekturen`);
@@ -416,6 +419,34 @@ function placeTests(days: DraftDay[], snapshot: SnapshotV2, context: WeekContext
     const kept = sessions.filter((draft) => draft.amount >= draft.sport.planning.limits.minSession || draft.test !== null);
     return { ...day, focus: focusWithoutTest(day.focus, kept), sessions: kept };
   });
+}
+
+/** Intensive Minuten einer Woche: der Hauptteil jeder mittleren oder harten Einheit (`MULTI_RULES.intenseShareOfSession`). */
+export function intenseMinutes(sessions: readonly { intensity: Intensity; minutes: number }[]): number {
+  return sessions.reduce((sum, session) => sum + (RANK[session.intensity] >= RANK.moderate ? session.minutes * MULTI_RULES.intenseShareOfSession : 0), 0);
+}
+
+/**
+ * Hoechstens `maxIntenseShareOfWeek` der Wochenminuten intensiv. Darueber werden mittlere Einheiten (keine Tests)
+ * locker, die laengsten zuerst; harte Einheiten regelt schon die Zahl der harten Tage. Erst ab
+ * `minSessionsForIntensityShare` Einheiten: Bei ein oder zwei Einheiten sagt ein Anteil wenig.
+ */
+function limitIntensity(days: DraftDay[], notes: string[]): DraftDay[] {
+  if (days.reduce((sum, day) => sum + day.sessions.length, 0) < MULTI_RULES.minSessionsForIntensityShare) return days;
+  const measure = () => {
+    const all = days.flatMap((day) => day.sessions.map((draft) => ({ intensity: draft.intensity, minutes: minutesOf(draft) })));
+    return { intense: intenseMinutes(all), total: all.reduce((sum, entry) => sum + entry.minutes, 0) };
+  };
+  const candidates = days
+    .flatMap((day) => day.sessions.filter((draft) => draft.intensity === "moderate" && draft.test === null).map((draft) => ({ day, draft })))
+    .sort((a, b) => minutesOf(b.draft) - minutesOf(a.draft));
+  for (const { day, draft } of candidates) {
+    const { intense, total } = measure();
+    if (total <= 0 || intense <= total * MULTI_RULES.maxIntenseShareOfWeek) break;
+    notes.push(`${label(day.date)}: ${draft.sport.displayName} auf "easy" gesenkt (etwa ${Math.round((1 - MULTI_RULES.maxIntenseShareOfWeek) * 100)} % der Woche locker)`);
+    days = days.map((other) => (other.date === day.date ? { ...other, sessions: other.sessions.map((item) => (item === draft ? soften(item, "easy") : item)) } : other));
+  }
+  return days;
 }
 
 function dayMinutes(day: DraftDay): number {

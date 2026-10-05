@@ -120,7 +120,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
     /// rechnen mit dem Schwimmteil des Ziels (`legacySwimGoal`) genau wie bisher.
     ///
     /// Mit `performanceRepository` kommen Leistungswerte und Zonen dazu: bestätigte aus `profileProvider`, sonst
-    /// geschätzt aus Health. Die Last rechnet dann mit Ruhe- und Maximalpuls (TRIMP).
+    /// geschätzt aus Health. Die Last schätzt dann die Anstrengung aus Ruhe- und Maximalpuls, wenn Health keine kennt.
     ///
     /// `startingLevelsProvider` liefert das selbst angegebene Startniveau (bei jedem Durchlauf neu); gültige Angaben
     /// für Sportarten im Snapshot gehen mit. `weeklyScheduleProvider` liefert den Wochenraster; er geht mit und

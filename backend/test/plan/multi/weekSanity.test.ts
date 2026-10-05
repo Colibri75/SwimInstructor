@@ -182,6 +182,31 @@ describe("sanitizeWeekV2", () => {
     });
   });
 
+  describe("Intensitaetsverteilung", () => {
+    const moderate = (sport: string, amount: number) => ({ ...weekSession(sport, amount), intensity: "moderate" as const });
+
+    it("senkt mittlere Einheiten auf locker, wenn mehr als 20 % der Woche intensiv sind (laengste zuerst)", () => {
+      const raw = weekPlan([[moderate("bike", 60)], [], [moderate("swim", 1500)], [], [moderate("bike", 50)], [weekSession("swim", 1000)]]);
+      const result = sanitizeWeekV2(raw, multiSnapshot(rested), context());
+
+      const intensities = result.plan.days.flatMap((day) => day.sessions.map((session) => [session.sport, session.minutes, session.intensity]));
+      const intense = result.plan.days.flatMap((day) => day.sessions).filter((session) => session.intensity !== "easy").reduce((sum, session) => sum + session.minutes / 2, 0);
+      expect(intense).toBeLessThanOrEqual(result.plan.total_minutes * 0.2);
+      // Die laengste mittlere Einheit (Rad 60 min) wird zuerst locker, das Schwimmen bleibt mittel.
+      expect(intensities[0][2]).toBe("easy");
+      expect(intensities[1]).toEqual(["swim", expect.any(Number), "moderate"]);
+      expect(result.adjustments.some((note) => note.includes('auf "easy" gesenkt (etwa 80 % der Woche locker)'))).toBe(true);
+    });
+
+    it("laesst eine lockere Woche mit einer mittleren Einheit, wie sie ist", () => {
+      const raw = weekPlan([[weekSession("bike", 60)], [], [moderate("bike", 40)], [], [weekSession("swim", 1500)], [weekSession("swim", 1000)]]);
+      const result = sanitizeWeekV2(raw, multiSnapshot(rested), context());
+
+      expect(result.plan.days[2].sessions[0].intensity).toBe("moderate");
+      expect(result.adjustments).toEqual([]);
+    });
+  });
+
   describe("Leistungstests", () => {
     const fresh = multiSnapshot({ ...rested, sports: { ...rested.sports, run: RUNNER } });
 
@@ -197,7 +222,9 @@ describe("sanitizeWeekV2", () => {
         focus: "30-Minuten-Test",
         test: { id: "threshold_30min", display_name: "30-Minuten-Test", maximal_effort: true, produces: ["threshold_heart_rate", "threshold_power"] }
       });
-      expect(result.plan.days[2].sessions[0].intensity).toBe("moderate");
+      // Der Tag nach dem Test ist nicht hart; danach senkt die 80/20-Regel die kurze Woche ganz auf locker.
+      expect(result.adjustments.some((note) => note.includes('harte Einheit auf "moderate" gesenkt (nicht an zwei Tagen nacheinander)'))).toBe(true);
+      expect(result.plan.days[2].sessions[0].intensity).toBe("easy");
     });
 
     it("gibt einem Test Vorrang vor einer harten Einheit am Tag davor", () => {

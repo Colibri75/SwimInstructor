@@ -26,7 +26,7 @@ Eine weitere Sportart: [Neue Sportart hinzufügen](docs/neue-sportart.md) (acht 
 |---|---|---|
 | Vertrag | Kennung, Name, Maße, Ziele, Zieltempo, Lastfaktor, Plan-Einheit, Trainingstempo, Leistungswerte und Tests, wie in [`contracts/sports.json`](contracts/sports.json) | dasselbe |
 | Health | Workout-Arten, Strecke, weitere Messwerte (`health`) | |
-| Belastung | `loadFactor` für die Trainingslast (TRIMP, sonst Minuten) | `loadFactor` |
+| Belastung | `loadFactor` für die Trainingslast (Session-RPE: Minuten × Anstrengung aus Health oder Puls) | `loadFactor` |
 | Leistungsprofil | Werte, Tests mit Eingabe und Auswertung, Zonen, Schätzung ohne Test | Werte und Tests |
 | Planung | | Grenzen (`limits`), Schrittraster, erlaubte Zielbereiche, Testeinheiten, Regeln für Claude (`promptRules`) |
 | Watch | Orte, Live-Werte, Glättung des Tempos (`recording`) | |

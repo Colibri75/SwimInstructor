@@ -27,6 +27,9 @@ public extension WorkoutMetric {
     static let averageCadence: WorkoutMetric = "average_cadence"
     /// Höhenmeter bergauf.
     static let elevationGain: WorkoutMetric = "elevation_gain"
+    /// Gefühlte Anstrengung der ganzen Einheit, 0 bis 10 (Session-RPE), aus Health: die eigene Bewertung oder, ohne sie,
+    /// Apples Schätzung (ab iOS 18 / watchOS 11).
+    static let effort: WorkoutMetric = "effort"
 }
 
 /// Eine Trainingseinheit irgendeiner Sportart, wie sie aus Health kommt. Was nur eine Sportart misst, steht in

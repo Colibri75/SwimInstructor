@@ -494,7 +494,7 @@ describe("Nutzernachricht des Gesamtplans", () => {
       '- Radfahren (sport "bike", amount in Minuten, Schwerpunkt 35 %): erste Woche höchstens 120 min, danach höchstens 10 % mehr als die letzte Woche ohne Entlastung, je Woche höchstens 4 Einheiten, jede mindestens 20 min. Schnitt der letzten 4 Wochen: 85 min.',
       '- Laufen (sport "run", amount in Minuten, Schwerpunkt 25 %): erste Woche höchstens 60 min (Wiedereinstieg), danach höchstens 10 % mehr als die letzte Woche ohne Entlastung, je Woche höchstens 4 Einheiten, jede mindestens 15 min. Schnitt der letzten 4 Wochen: 0 min.',
       "- Entlastungswoche höchstens 70 % der letzten normalen Woche, spätestens nach 3 Belastungswochen.",
-      "- Zuspitzen: je Sportart höchstens 60 % des Höhepunkts; Zielwoche höchstens 50 % des Höhepunkts (der Wettkampf selbst bleibt erlaubt).",
+      "- Zuspitzen: je Sportart höchstens 55 % des Höhepunkts, so viele Einheiten wie in der letzten Belastungswoche; Zielwoche höchstens 50 % des Höhepunkts (der Wettkampf selbst bleibt erlaubt).",
       "- Über alle Sportarten höchstens 450 min pro Woche (Wochenstunden des Ziels) und höchstens 10 Einheiten."
     ]);
   });
@@ -512,7 +512,7 @@ describe("Nutzernachricht des Gesamtplans", () => {
     const text = buildMacroUserMessageV2(ironman, context);
 
     expect(text).toContain("Wettkampf insgesamt etwa 12 h 00 min, daher 2 Wochen Zuspitzen.");
-    expect(text).toContain("- Zuspitzen: je Sportart höchstens 75 %, dann 55 % des Höhepunkts;");
+    expect(text).toContain("- Zuspitzen: je Sportart höchstens 60 %, dann 45 % des Höhepunkts,");
     expect(section(text, "Zu planende Wochen")).toContain("- 2027-06-14: taper, noch 2 Wochen");
   });
 

@@ -19,6 +19,14 @@ export const MULTI_RULES = {
   maxHardSessionsPerDay: 1,
   /** Harte Tage ueber alle Sportarten in 7 Tagen, nie zwei hintereinander. */
   maxHardDaysPerWeek: 2,
+  /**
+   * Intensitaetsverteilung (Seiler, Drei-Zonen-Modell: etwa 80 % der Zeit locker): hoechstens dieser Anteil der
+   * Wochenminuten ist intensiv. Von einer mittleren oder harten Einheit zaehlt `intenseShareOfSession` als intensiv,
+   * Ein- und Auslaufen und Pausen sind locker.
+   */
+  maxIntenseShareOfWeek: 0.2,
+  intenseShareOfSession: 0.5,
+  minSessionsForIntensityShare: 3,
   /** Schlechte Erholung: Umfang heute hoechstens so viel der Grenze. */
   recoveryPoorFactor: 0.5,
   /** Ein Tag hat hoechstens diesen Anteil der Wochenstunden des Ziels, mindestens aber `minDayMinutesCap`. */
@@ -28,10 +36,13 @@ export const MULTI_RULES = {
   deloadFactor: 0.7,
   /** Nach so vielen Belastungswochen hintereinander kommt eine Entlastungswoche. */
   maxLoadingWeeks: 3,
-  /** Zuspitzen (Bosquet 2007: etwa 2 Wochen, Umfang 41 bis 60 % weniger, Intensitaet bleibt). */
+  /**
+   * Zuspitzen (Bosquet 2007: etwa 2 Wochen, Umfang 41 bis 60 % weniger, Intensitaet und Haeufigkeit bleiben):
+   * hoechstens dieser Anteil des Hoehepunkts, bei langen Wettkaempfen erst 40 %, dann 55 % weniger.
+   */
   longRaceSeconds: 4 * 3600,
-  taperFactorsLong: [0.75, 0.55] as readonly number[],
-  taperFactorsShort: [0.6] as readonly number[],
+  taperFactorsLong: [0.6, 0.45] as readonly number[],
+  taperFactorsShort: [0.55] as readonly number[],
   /** Aufbauphase (zielspezifisch) vor dem Zuspitzen, in Wochen. */
   specificWeeks: 8,
   /** Zielwoche: hoechstens dieser Anteil des Hoehepunkts, mindestens aber das 1,2-Fache des Wettkampfs. */

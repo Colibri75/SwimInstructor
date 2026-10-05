@@ -169,7 +169,9 @@ Wochengrenze.
 **Sieben Tage:** genau die angefragten Tage; ein Tag ohne Zeit wird Ruhetag. Höchstens zwei harte Tage über alle
 Sportarten, nie hintereinander, auch nicht direkt nach einem harten Tag vor dem Plan. Nicht mehr Trainingstage als im
 Ziel, mindestens ein Ruhetag, insgesamt höchstens die Wochenstunden. Je Sportart Einheiten- und Wochengrenze und die
-Zahl der Einheiten. Was nicht passt, wird gekürzt, leichter oder gestrichen; jede Korrektur steht in `adjustments`
+Zahl der Einheiten. Etwa 80 % der Zeit locker (Drei-Zonen-Modell): Von jeder mittleren oder harten Einheit zählt die
+Hälfte als intensiv (Ein- und Auslaufen, Pausen); sind ab drei Einheiten mehr als 20 % der Wochenminuten intensiv,
+werden mittlere Einheiten locker, die längsten zuerst (Tests und harte Einheiten bleiben). Was nicht passt, wird gekürzt, leichter oder gestrichen; jede Korrektur steht in `adjustments`
 und als Hinweis in der Begründung.
 
 **Gesamtplan:** Claude liefert ihn in Abschnitten von einer bis sechs Wochen: je Sportart den Umfang der ersten und
@@ -179,7 +181,9 @@ Umfang. Der Server rechnet die Abschnitte in Wochen um und prüft dann jede Woch
 Die Phase setzt der Code (Aufbau, zielspezifisch in den 8 Wochen vor dem Zuspitzen, Zuspitzen,
 Zielwoche, nach dem Ziel erhalten). Je Sportart steigt der Umfang höchstens um 10 % über die letzte Woche ohne
 Entlastung; spätestens nach drei Belastungswochen kommt eine Entlastungswoche mit höchstens 70 %. Zuspitzen: bei
-Wettkämpfen ab vier Stunden zwei Wochen (75 % und 55 % des Höhepunkts), sonst eine (60 %). Die Zielwoche hat höchstens
+Wettkämpfen ab vier Stunden zwei Wochen (60 % und 45 % des Höhepunkts), sonst eine (55 %), jeweils mit so vielen
+Einheiten wie in der letzten Belastungswoche (Bosquet 2007: Umfang 41 bis 60 % weniger, Intensität und Häufigkeit
+bleiben). Die Zielwoche hat höchstens
 die Hälfte des Höhepunkts, mindestens aber das 1,2-Fache des Wettkampfs. Über alle Sportarten höchstens die
 Wochenstunden. Reicht die Zeit für eine Disziplin nicht, um mit 10 % pro Woche die Wettkampfstrecke aufzubauen, sagt
 der Prompt das, und Claude soll es ehrlich in der Begründung sagen.
