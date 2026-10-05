@@ -104,15 +104,15 @@ struct TodayView: View {
         Section {
             if loader.isPreparing {
                 HStack(spacing: 12) {
-                    ProgressView()
-                    Text("Claude passt deinen Plan für die nächsten Tage an …")
+                    ForgeAnimation()
+                    Text("Dein Coach passt deinen Plan für die nächsten Tage an …")
                         .foregroundStyle(.secondary)
                 }
             }
             if loader.isLoadingPlan {
                 HStack(spacing: 12) {
-                    ProgressView()
-                    Text("Claude schreibt deinen Plan …")
+                    ForgeAnimation()
+                    Text("Dein Coach schreibt deinen Plan …")
                         .foregroundStyle(.secondary)
                 }
             }
@@ -207,7 +207,10 @@ struct TodayView: View {
                 Task { await loader.replan(withWish: wishDraft) }
             } label: {
                 if loader.isLoadingPlan {
-                    Text("Claude schreibt …")
+                    HStack(spacing: 12) {
+                        ForgeAnimation()
+                        Text("Dein Coach schreibt …")
+                    }
                 } else {
                     Text(wishDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                          ? "Plan ohne Wunsch neu erstellen"
@@ -218,7 +221,7 @@ struct TodayView: View {
         } header: {
             Text("Dein Wunsch für heute")
         } footer: {
-            Text("Gilt nur für heute. Claude berücksichtigt ihn, soweit er in die Sicherheitsgrenzen passt (Umfang, Intensität, Ruhetag). Er wird beim Tippen gespeichert, Ziehen zum Aktualisieren nutzt ihn ebenfalls. Steht er nach dem Erstellen über dem Plan, ist er beim Server angekommen.")
+            Text("Gilt nur für heute. Dein Coach berücksichtigt ihn, soweit er in die Sicherheitsgrenzen passt (Umfang, Intensität, Ruhetag). Er wird beim Tippen gespeichert, Ziehen zum Aktualisieren nutzt ihn ebenfalls. Steht er nach dem Erstellen über dem Plan, ist er beim Server angekommen.")
         }
         .onAppear { wishDraft = loader.wish }
         .onChange(of: loader.wish) { old, new in

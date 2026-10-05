@@ -161,8 +161,8 @@ private struct ActualWeekRow: View {
                 } label: {
                     if macroLoader.isLoading {
                         HStack(spacing: 12) {
-                            ProgressView()
-                            Text("Claude plant bis zum Ziel …")
+                            ForgeAnimation()
+                            Text("Dein Coach plant bis zum Ziel …")
                         }
                     } else {
                         Text("Gesamtplan erstellen")
@@ -196,8 +196,8 @@ private struct ActualWeekRow: View {
         return Section {
             if macroLoader.isReviewing {
                 HStack(spacing: 12) {
-                    ProgressView()
-                    Text("Claude schreibt den Gesamtplan fort …")
+                    ForgeAnimation()
+                    Text("Dein Coach schreibt den Gesamtplan fort …")
                 }
             }
             if let review = plan.reviews.last {
@@ -225,7 +225,7 @@ private struct ActualWeekRow: View {
         } header: {
             Text("Fortschreibung")
         } footer: {
-            Text("Alle zwei Wochen vergleicht Claude Plan und Ist und passt die Wochen ab der nächsten an. Die laufende Woche bleibt. Nach einer gemeldeten Pause (Einstellungen) passiert das sofort.")
+            Text("Alle zwei Wochen vergleicht dein Coach Plan und Ist und passt die Wochen ab der nächsten an. Die laufende Woche bleibt. Nach einer gemeldeten Pause (Einstellungen) passiert das sofort.")
         }
     }
 
@@ -278,8 +278,8 @@ private struct ActualWeekRow: View {
             } label: {
                 if macroLoader.isRevising {
                     HStack(spacing: 12) {
-                        ProgressView()
-                        Text("Claude überarbeitet den Gesamtplan …")
+                        ForgeAnimation()
+                        Text("Dein Coach überarbeitet den Gesamtplan …")
                     }
                 } else {
                     Text("Gesamtplan anpassen")
@@ -316,7 +316,7 @@ private struct ActualWeekRow: View {
         } header: {
             Text("Feedback zum Gesamtplan")
         } footer: {
-            Text("Schreib, was am Gesamtplan anders sein soll. Claude überarbeitet ihn und listet, was sich ändert; die Sicherheitsgrenzen gelten weiter. Die nächsten sieben Tage passen sich danach an.")
+            Text("Schreib, was am Gesamtplan anders sein soll. Dein Coach überarbeitet ihn und listet, was sich ändert; die Sicherheitsgrenzen gelten weiter. Die nächsten sieben Tage passen sich danach an.")
         }
     }
 }
@@ -343,7 +343,7 @@ private struct FeedbackRoundView: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             if round.changes.isEmpty {
-                Text("Claude hat nichts geändert.")
+                Text("Dein Coach hat nichts geändert.")
                     .font(.footnote)
             } else {
                 VStack(alignment: .leading, spacing: 3) {

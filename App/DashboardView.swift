@@ -55,7 +55,7 @@ struct DashboardView: View {
                     GoalSection(snapshot: reading.snapshot)
                 } else if loader.isLoadingHealth {
                     HStack(spacing: 12) {
-                        ProgressView()
+                        ForgeAnimation()
                         Text("Lese Health-Daten …").foregroundStyle(.secondary)
                     }
                 } else if let error = loader.healthError {

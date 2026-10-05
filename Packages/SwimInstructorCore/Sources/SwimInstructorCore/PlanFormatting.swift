@@ -116,11 +116,11 @@ public enum PlanFormatting {
     static func fallbackReason(_ reason: String?) -> String {
         switch reason {
         case "budget_exceeded": return "Das Tageslimit für neue Pläne ist erreicht."
-        case "not_configured": return "Auf dem Server ist Claude nicht eingerichtet."
+        case "not_configured": return "Auf dem Server ist der Coach nicht eingerichtet."
         case "unreachable", "timeout", "rate_limited", "upstream_error":
-            return "Claude war gerade nicht erreichbar."
+            return "Dein Coach war gerade nicht erreichbar."
         case "sanity_blocked": return "Der neue Plan hat die Sicherheitsprüfung nicht bestanden."
-        default: return "Claude hat keinen neuen Plan geliefert."
+        default: return "Dein Coach hat keinen neuen Plan geliefert."
         }
     }
 

@@ -236,7 +236,7 @@ struct DayEditSheet: View {
             } header: {
                 Text("Nachholen")
             } footer: {
-                Text("Das Verpasste landet auf dem gewählten Ruhetag. Wer lieber neu planen will, nutzt im Plan-Tab \"Nächste 7 Tage neu planen\": Claude berücksichtigt, was du schon trainiert hast.")
+                Text("Das Verpasste landet auf dem gewählten Ruhetag. Wer lieber neu planen will, nutzt im Plan-Tab \"Nächste 7 Tage neu planen\": Dein Coach berücksichtigt, was du schon trainiert hast.")
             }
         }
     }

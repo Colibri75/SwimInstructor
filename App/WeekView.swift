@@ -256,8 +256,8 @@ struct WeekView: View {
             } label: {
                 if weekLoader.isLoading {
                     HStack(spacing: 12) {
-                        ProgressView()
-                        Text("Claude plant die nächsten Tage …")
+                        ForgeAnimation()
+                        Text("Dein Coach plant die nächsten Tage …")
                     }
                 } else {
                     Text("Nächste 7 Tage neu planen")

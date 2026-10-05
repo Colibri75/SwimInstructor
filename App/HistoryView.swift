@@ -63,7 +63,10 @@ extension HistoryView {
     fileprivate var workoutsSection: some View {
         Section("Letzte Einheiten") {
             if loader.isLoadingHealth && loader.reading == nil {
-                ProgressView()
+                HStack(spacing: 12) {
+                    ForgeAnimation()
+                    Text("Lese Health-Daten …").foregroundStyle(.secondary)
+                }
             } else if let error = loader.healthError {
                 Text("Health: \(error)").foregroundStyle(.red)
             } else if let workouts = loader.reading?.allWorkouts, !workouts.isEmpty {

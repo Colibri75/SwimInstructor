@@ -76,7 +76,10 @@ struct WorkoutDetailView: View {
                     Text("Puls: \(heartRateError)")
                         .foregroundStyle(.red)
                 } else {
-                    ProgressView()
+                    HStack(spacing: 12) {
+                        ForgeAnimation()
+                        Text("Lese Pulswerte …").foregroundStyle(.secondary)
+                    }
                 }
             }
         }

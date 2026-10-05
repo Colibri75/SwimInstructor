@@ -244,7 +244,7 @@ private struct WorkoutControlsView: View {
     var body: some View {
         VStack(spacing: 8) {
             if workoutManager.phase == .saving || workoutManager.phase == .starting {
-                ProgressView()
+                ForgeAnimation(size: 32)
                 Text(workoutManager.phase == .saving ? "Speichert …" : "Startet …")
                     .font(.footnote)
             } else {

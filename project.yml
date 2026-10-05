@@ -22,6 +22,7 @@ targets:
     platform: iOS
     sources:
       - path: App
+      - path: Shared
     dependencies:
       - package: SwimInstructorCore
       - target: SwimInstructorWatch
@@ -56,6 +57,7 @@ targets:
     platform: watchOS
     sources:
       - path: WatchApp
+      - path: Shared
     dependencies:
       - package: SwimInstructorCore
     settings:
