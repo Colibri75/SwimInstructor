@@ -163,7 +163,7 @@ Woher die Startwerte ohne Test kommen (App, `PerformanceEstimator` und Sport-Mod
 
 | Wert | Schätzung | Faustformel |
 |---|---|---|
-| Maximalpuls | höchster Puls der letzten 182 Tage | 208 − 0,7 × Alter (Tanaka) |
+| Maximalpuls | zweithöchster Tageshöchstwert der letzten 182 Tage, höchstens 20 über und nur über der Faustformel | 208 − 0,7 × Alter (Tanaka) |
 | Ruhepuls | Schnitt der letzten 7 Tage mit Messung | – |
 | CSS (Schwimmen) | schnellste Durchschnittspace einer Einheit ab 400 m (mit Pausen, also eher zu langsam) | – |
 | Schwellenpuls Rad | – | 85 % des Maximalpulses |

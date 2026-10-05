@@ -205,12 +205,12 @@ public struct SnapshotBuilder: SnapshotBuilding {
     private func resolvePerformance(workouts: [Workout], vitals: [DailyVitals], now: Date) async -> ResolvedPerformance? {
         guard let performanceRepository else { return nil }
         let start = calendar.date(byAdding: .day, value: -PerformanceEstimator.maximumHeartRateWindowDays, to: now) ?? now
-        let observed = try? await performanceRepository.fetchMaximumHeartRate(from: start)
+        let observed = (try? await performanceRepository.fetchDailyMaximumHeartRates(from: start)) ?? []
         let input = PerformanceEstimationInput(
             now: now,
             workouts: WorkoutDeduplicator.deduplicate(workouts).filter { $0.startDate <= now },
             vitals: vitals,
-            observedMaximumHeartRate: observed,
+            dailyMaximumHeartRates: observed,
             age: performanceRepository.age(now: now)
         )
         return PerformanceEstimator().resolve(profile: profileProvider(), input: input)

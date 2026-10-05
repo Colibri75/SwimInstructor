@@ -5,13 +5,13 @@ final class PerformanceEstimatorTests: XCTestCase {
     private let now = TestFixtures.now
 
     private func input(
-        workouts: [Workout] = [], resting: [Double?] = [], observed: Double? = nil, age: Int? = nil
+        workouts: [Workout] = [], resting: [Double?] = [], observed: [Double] = [], age: Int? = nil
     ) -> PerformanceEstimationInput {
         // resting[0] ist heute, resting[1] gestern ...
         let vitals = resting.enumerated().map { day, value in
             DailyVitals(date: TestFixtures.date(daysAgo: day, hour: 0), restingHeartRate: value)
         }
-        return PerformanceEstimationInput(now: now, workouts: workouts, vitals: vitals, observedMaximumHeartRate: observed, age: age)
+        return PerformanceEstimationInput(now: now, workouts: workouts, vitals: vitals, dailyMaximumHeartRates: observed, age: age)
     }
 
     /// Lauf über 30 Minuten mit Puls 90 über einem Ruhepuls von 52.
@@ -23,7 +23,7 @@ final class PerformanceEstimatorTests: XCTestCase {
 
     func testMaximumHeartRateMeasuredAndByFormulaAndRestingHeartRateOfTheLastSevenMeasuredDays() {
         let estimates = PerformanceEstimator().athleteEstimates(input(
-            resting: [50, 52, 54, nil, 56, 58, 60, 62, 64, 66], observed: 191.4, age: 40
+            resting: [50, 52, 54, nil, 56, 58, 60, 62, 64, 66], observed: [175, 193, 191.4], age: 40
         ))
         XCTAssertEqual(estimates, [
             PerformanceEstimate(metric: .maxHeartRate, value: 191, source: .estimated),
@@ -32,6 +32,29 @@ final class PerformanceEstimatorTests: XCTestCase {
             // Tage 0 bis 7 ohne den Tag ohne Messung: 50 bis 62 im Schnitt.
             PerformanceEstimate(metric: .restingHeartRate, value: 56, source: .estimated)
         ])
+    }
+
+    func testASingleSpikeOfTheSensorIsNoMaximumHeartRate() {
+        // Ein Tag mit 230 (Ausreißer), sonst höchstens 186.
+        let maxima: [Double] = [230, 186, 184, 150, 120]
+        XCTAssertEqual(PerformanceEstimator.observedMaximumHeartRate(dailyMaxima: maxima, age: nil), 186, "zweithöchster Tag")
+        XCTAssertNil(PerformanceEstimator.observedMaximumHeartRate(dailyMaxima: [230], age: nil), "ein Tag reicht nicht")
+    }
+
+    func testMeasuredMaximumHeartRateFarAboveTheFormulaIsDropped() {
+        // 40 Jahre: Faustformel 180, gemessen zählt bis 200.
+        let maxima: [Double] = [230, 228, 199, 196]
+        XCTAssertEqual(PerformanceEstimator.observedMaximumHeartRate(dailyMaxima: maxima, age: 40), 196)
+        let resolved = PerformanceEstimator().resolve(profile: .empty, input: input(observed: [230, 229, 225], age: 40))
+        XCTAssertEqual(resolved.value(.maxHeartRate)?.value, 180)
+        XCTAssertEqual(resolved.value(.maxHeartRate)?.source, .formula)
+    }
+
+    func testMeasuredMaximumHeartRateBelowTheFormulaKeepsTheFormula() {
+        // Nie am Anschlag trainiert: 170 ist nur eine Untergrenze, die Faustformel (180) bleibt.
+        XCTAssertNil(PerformanceEstimator.observedMaximumHeartRate(dailyMaxima: [172, 170], age: 40))
+        let resolved = PerformanceEstimator().resolve(profile: .empty, input: input(observed: [172, 170], age: 40))
+        XCTAssertEqual(resolved.value(.maxHeartRate)?.value, 180)
     }
 
     func testWithoutHealthDataThereIsNothingToEstimate() {
@@ -83,7 +106,7 @@ final class PerformanceEstimatorTests: XCTestCase {
     func testRunThresholdPaceFromHeartRateAndSpeedOfRuns() {
         let resolved = PerformanceEstimator().resolve(
             profile: .empty,
-            input: input(workouts: [run(meters: 4944), run(meters: 4944, daysAgo: 6)], resting: [52], observed: 188)
+            input: input(workouts: [run(meters: 4944), run(meters: 4944, daysAgo: 6)], resting: [52], observed: [188, 188])
         )
         XCTAssertEqual(resolved.value(.thresholdHeartRate, sport: .run)?.value, 165)
         // 4944 m in 30 min bei 90 über Ruhe; am Schwellenpuls 113 über Ruhe: 3,45 m/s, also 4:50 pro km.
@@ -95,7 +118,7 @@ final class PerformanceEstimatorTests: XCTestCase {
         let profile = PerformanceProfile(values: [TestFixtures.performance(.thresholdHeartRate, 170, .tested, sport: .run, daysAgo: 20)])
         let resolved = PerformanceEstimator().resolve(
             profile: profile,
-            input: input(workouts: [run(meters: 4944), run(meters: 4944, daysAgo: 6)], resting: [52], observed: 188)
+            input: input(workouts: [run(meters: 4944), run(meters: 4944, daysAgo: 6)], resting: [52], observed: [188, 188])
         )
         XCTAssertEqual(resolved.value(.thresholdHeartRate, sport: .run)?.value, 170)
         XCTAssertEqual(resolved.value(.thresholdPacePerKilometer, sport: .run)?.value, 278)

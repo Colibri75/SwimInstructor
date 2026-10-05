@@ -46,16 +46,16 @@ public struct PerformanceEstimationInput: Sendable {
     public let workouts: [Workout]
     /// Tageswerte; der Ruhepuls ist der Schnitt der letzten sieben Tage mit Messung.
     public let vitals: [DailyVitals]
-    /// Höchster gemessener Puls der letzten sechs Monate.
-    public let observedMaximumHeartRate: Double?
+    /// Höchster gemessener Puls je Tag der letzten sechs Monate.
+    public let dailyMaximumHeartRates: [Double]
     /// Alter in Jahren, für die Faustformel des Maximalpulses.
     public let age: Int?
 
-    public init(now: Date, workouts: [Workout], vitals: [DailyVitals], observedMaximumHeartRate: Double?, age: Int?) {
+    public init(now: Date, workouts: [Workout], vitals: [DailyVitals], dailyMaximumHeartRates: [Double], age: Int?) {
         self.now = now
         self.workouts = workouts
         self.vitals = vitals
-        self.observedMaximumHeartRate = observedMaximumHeartRate
+        self.dailyMaximumHeartRates = dailyMaximumHeartRates
         self.age = age
     }
 }
@@ -92,14 +92,38 @@ public struct PerformanceEstimator: Sendable {
         return ResolvedPerformance(profile: profile, estimates: estimates, registry: registry)
     }
 
-    /// Maximalpuls gemessen und nach Tanaka (208 − 0,7 × Alter), Ruhepuls als Schnitt der letzten sieben Messtage.
+    /// So weit darf ein gemessener Maximalpuls über der Faustformel liegen (gut zwei Standardabweichungen von Tanaka).
+    /// Höher ist fast immer ein Messfehler des Sensors.
+    public static let maximumHeartRateAboveFormula = 20.0
+
+    /// Maximalpuls nach Tanaka (208 − 0,7 × Alter).
+    static func formulaMaximumHeartRate(age: Int?) -> Double? {
+        guard let age, age > 0 else { return nil }
+        return (208 - 0.7 * Double(age)).rounded()
+    }
+
+    /// Der gemessene Maximalpuls aus den Tageshöchstwerten, robust gegen Ausreißer des Sensors:
+    /// - Werte mehr als `maximumHeartRateAboveFormula` über der Faustformel fallen weg.
+    /// - Es zählt der zweithöchste Tag: Ein Wert muss an zwei Tagen erreicht sein, eine einzelne Spitze reicht nicht.
+    /// - Unter der Faustformel ist eine Messung nur eine Untergrenze (man war nie am Anschlag) und kein Maximalpuls.
+    static func observedMaximumHeartRate(dailyMaxima: [Double], age: Int?) -> Double? {
+        let formula = formulaMaximumHeartRate(age: age)
+        let ceiling = formula.map { $0 + maximumHeartRateAboveFormula } ?? PerformanceMetricDefinition.maxHeartRate.plausibleRange.upperBound
+        let plausible = dailyMaxima.filter { $0 <= ceiling }.sorted(by: >)
+        guard plausible.count >= 2 else { return nil }
+        let observed = plausible[1].rounded()
+        if let formula, observed <= formula { return nil }
+        return observed
+    }
+
+    /// Maximalpuls gemessen (`observedMaximumHeartRate`) und nach Tanaka, Ruhepuls als Schnitt der letzten sieben Messtage.
     func athleteEstimates(_ input: PerformanceEstimationInput) -> [PerformanceEstimate] {
         var estimates: [PerformanceEstimate] = []
-        if let observed = input.observedMaximumHeartRate {
-            estimates.append(PerformanceEstimate(metric: .maxHeartRate, value: observed.rounded(), source: .estimated))
+        if let observed = Self.observedMaximumHeartRate(dailyMaxima: input.dailyMaximumHeartRates, age: input.age) {
+            estimates.append(PerformanceEstimate(metric: .maxHeartRate, value: observed, source: .estimated))
         }
-        if let age = input.age, age > 0 {
-            estimates.append(PerformanceEstimate(metric: .maxHeartRate, value: (208 - 0.7 * Double(age)).rounded(), source: .formula))
+        if let formula = Self.formulaMaximumHeartRate(age: input.age) {
+            estimates.append(PerformanceEstimate(metric: .maxHeartRate, value: formula, source: .formula))
         }
         let resting = input.vitals
             .filter { $0.restingHeartRate != nil }

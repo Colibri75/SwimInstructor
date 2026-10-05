@@ -175,7 +175,7 @@ final class SnapshotBuilderTests: XCTestCase {
 
     func testPerformanceProfileGoesIntoTheSnapshotAndLoadUsesHeartRate() async throws {
         let ride = TestFixtures.workout(.bike, daysAgo: 2, minutes: 60, meters: 30_000, heartRate: 150)
-        let repository = FakePerformanceRepository(maximumHeartRate: 190, age: 40)
+        let repository = FakePerformanceRepository(dailyMaximumHeartRates: [150, 190, 191, 120], age: 40)
         let profile = PerformanceProfile(values: [TestFixtures.performance(.criticalSwimPace, 105, .tested, sport: .swim, daysAgo: 5)])
         let vitals = [DailyVitals(date: TestFixtures.date(daysAgo: 0, hour: 0), restingHeartRate: 50)]
 
