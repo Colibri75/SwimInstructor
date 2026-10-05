@@ -2,7 +2,7 @@
   "name": "swiminstructor-backend",
   "version": "0.1.0",
   "private": true,
-  "description": "Backend-Proxy fuer SwimInstructor: Auth, Claude-Aufrufe, Trainingsplaene",
+  "description": "Backend-Proxy fuer Peaksmith: Auth, Claude-Aufrufe, Trainingsplaene",
   "license": "UNLICENSED",
   "engines": {
     "node": ">=20"

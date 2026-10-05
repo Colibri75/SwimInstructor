@@ -1,7 +1,12 @@
 # Peaksmith
 
-> Das Repo, die Targets und die Bundle-IDs heißen weiter **SwimInstructor**, damit TestFlight, die Health-Freigaben und
-> die gespeicherten Daten bleiben. Nur der Name unter dem Symbol ist Peaksmith (`APP_DISPLAY_NAME` in `project.yml`).
+**Namen:** Die App heißt **Peaksmith** (Anzeigename unter dem Symbol auf iPhone und Watch, in den Health-Hinweisen und im
+Onboarding; `APP_DISPLAY_NAME` in `project.yml`). Alles Technische heißt weiter **SwimInstructor**, weil sonst
+TestFlight, die Health-Freigaben und die gespeicherten Daten verloren gingen:
+
+| Peaksmith | SwimInstructor (bleibt) |
+|---|---|
+| Name der App und in allen Texten | Repo, Xcode-Targets und Scheme, Bundle-IDs (`com.kellner.SwimInstructor`), Swift-Package `SwimInstructorCore`, Ordner auf dem Gerät (`Application Support/SwimInstructor/`), Server (Hostname, Container, `/etc/swiminstructor/`) |
 
 iOS- und watchOS-App für das Training im Triathlon: Sie liest Einheiten und Vitaldaten aus Apple Health, Claude plant
 daraus über einen eigenen Server Gesamtplan, die nächsten sieben Tage und den Tag, und die Watch führt durch die Einheit.
@@ -92,7 +97,7 @@ TestFlight-App – kein manuelles Signieren, kein eigener Mac im Alltag.
    - `com.kellner.SwimInstructor.watchkitapp`
 3. **App Store Connect:** neuen App-Eintrag anlegen – Bundle-ID
    `com.kellner.SwimInstructor` (muss exakt zu `project.yml` passen),
-   Name z.B. "SwimInstructor", SKU frei wählbar. Kein Store-Release nötig, nur
+   Name z. B. "Peaksmith" (der Name der App im Store, unabhängig von der Bundle-ID), SKU frei wählbar. Kein Store-Release nötig, nur
    für TestFlight. Die Watch-App braucht **keinen** eigenen
    App-Store-Connect-Eintrag – sie hängt am iOS-Eintrag und wird als Teil
    desselben Builds mit hochgeladen.
