@@ -58,6 +58,7 @@ struct WeekView: View {
             }
             .navigationTitle(part == .week ? "Wochenplan" : "Gesamtplan")
             .navigationBarTitleDisplayMode(.inline)
+            .settingsToolbar()
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Picker("Ansicht", selection: $part) {
