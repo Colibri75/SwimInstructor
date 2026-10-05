@@ -66,6 +66,12 @@ public struct SessionFeedback: Codable, Equatable, Sendable, Identifiable {
 
     public static let effortRange: ClosedRange<Int> = 1...10
 
+    // `workoutId`: Die Datei wird in snake_case geschrieben und zurückgelesen ("workout_id").
+    enum CodingKeys: String, CodingKey {
+        case workoutID = "workoutId"
+        case date, sport, effort, pain, painArea, recordedAt
+    }
+
     public init(workoutID: UUID, date: String, sport: SportID, effort: Int?, pain: PainLevel, painArea: PainArea?, recordedAt: Date) {
         self.workoutID = workoutID
         self.date = date
