@@ -2,50 +2,40 @@ import Charts
 import SwiftUI
 import SwimInstructorCore
 
-/// Die Kacheln der Statistik. Tippen: die Kachel groß mit allen Werten (`StatisticDetailView`). Lange drücken: Sportart,
-/// Kennzahl und Zeitraum wählen oder die Kachel entfernen. Ziehen auf eine andere Kachel: Reihenfolge ändern. Gespeichert
-/// wird auf dem Gerät (`StatisticDashboard`).
-struct StatisticTilesGrid: View {
+/// Die Kacheln der Statistik, jede eine eigene Zeile der Liste. Tippen: die Kachel groß mit allen Werten
+/// (`StatisticDetailView`). Lange drücken: Sportart, Kennzahl und Zeitraum wählen oder die Kachel entfernen. Nach links
+/// wischen: entfernen. Mit "Bearbeiten" entfernen und umsortieren. Gespeichert wird auf dem Gerät (`StatisticDashboard`).
+struct StatisticTileRows: View {
     @ObservedObject var dashboard: StatisticDashboard
     let input: StatisticInput
-    /// Öffnet das Detail einer Kachel. Die Navigation hängt am Dashboard, nicht in dieser (faulen) Liste.
+    /// Öffnet das Detail einer Kachel. Die Navigation hängt am Dashboard, nicht in dieser Liste.
     let onOpen: (StatisticTile) -> Void
 
     private let calculator = StatisticCalculator()
 
     var body: some View {
-        let results = calculator.results(for: dashboard.tiles, input: input)
-        if results.isEmpty {
-            Text("Keine Kacheln. Über + kommt eine dazu.")
-                .foregroundStyle(.secondary)
-                .padding()
-        } else {
-            // Eine Kachel pro Zeile: Zwei nebeneinander waren auf dem iPhone zu klein zum Lesen.
-            LazyVStack(spacing: 12) {
-                ForEach(results) { result in
-                    StatisticTileView(result: result)
-                        .contentShape(RoundedRectangle(cornerRadius: 14))
-                        .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 14))
-                        .onTapGesture { onOpen(result.tile) }
-                        .accessibilityAddTraits(.isButton)
-                        .accessibilityAction { onOpen(result.tile) }
-                        .contextMenu {
-                            StatisticTileMenu(dashboard: dashboard, tile: result.tile)
-                        }
-                        .draggable(result.tile.id.uuidString) {
-                            StatisticTileView(result: result)
-                                .frame(width: 320)
-                        }
-                        .dropDestination(for: String.self) { items, _ in
-                            guard let id = items.first.flatMap(UUID.init(uuidString:)) else { return false }
-                            withAnimation { dashboard.move(id, to: result.tile.id) }
-                            return true
-                        }
-                        .accessibilityAction(named: "Nach vorn") { dashboard.move(result.tile.id, by: -1) }
-                        .accessibilityAction(named: "Nach hinten") { dashboard.move(result.tile.id, by: 1) }
-                        .accessibilityAction(named: "Kachel entfernen") { dashboard.remove(result.tile.id) }
+        ForEach(calculator.results(for: dashboard.tiles, input: input)) { result in
+            StatisticTileView(result: result)
+                .contentShape(RoundedRectangle(cornerRadius: 14))
+                .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 14))
+                .onTapGesture { onOpen(result.tile) }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction { onOpen(result.tile) }
+                .contextMenu {
+                    StatisticTileMenu(dashboard: dashboard, tile: result.tile)
                 }
-            }
+                .accessibilityAction(named: "Nach vorn") { dashboard.move(result.tile.id, by: -1) }
+                .accessibilityAction(named: "Nach hinten") { dashboard.move(result.tile.id, by: 1) }
+                .accessibilityAction(named: "Kachel entfernen") { dashboard.remove(result.tile.id) }
+                .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+        }
+        .onDelete { offsets in
+            withAnimation { dashboard.remove(atOffsets: offsets) }
+        }
+        .onMove { source, destination in
+            dashboard.move(fromOffsets: source, toOffset: destination)
         }
     }
 }

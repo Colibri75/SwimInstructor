@@ -35,15 +35,22 @@ struct DashboardView: View {
             List {
                 if let reading = loader.reading {
                     Section {
-                        StatisticTilesGrid(dashboard: dashboard, input: statisticInput) { tile in
+                        if dashboard.tiles.isEmpty {
+                            Text("Keine Kacheln.")
+                                .foregroundStyle(.secondary)
+                        }
+                        StatisticTileRows(dashboard: dashboard, input: statisticInput) { tile in
                             openedTileID = tile.id
                         }
-                            .listRowInsets(EdgeInsets())
-                            .listRowBackground(Color.clear)
+                        Button {
+                            showsAddTile = true
+                        } label: {
+                            Label("Kachel hinzufügen", systemImage: "plus.circle.fill")
+                        }
                     } header: {
                         Text("Statistik")
                     } footer: {
-                        Text("Tippen: Details mit allen Werten. Lange drücken: Sportart, Kennzahl und Zeitraum wählen. Auf eine andere Kachel ziehen: Reihenfolge ändern.")
+                        Text("Tippen: Details mit allen Werten. Lange drücken: Sportart, Kennzahl und Zeitraum wählen. Nach links wischen: entfernen. \"Bearbeiten\": entfernen und Reihenfolge ändern.")
                     }
                     Section("Diese Woche") {
                         WeekStatsRows(
@@ -71,6 +78,11 @@ struct DashboardView: View {
                 StatisticDetailView(dashboard: dashboard, tileID: id, input: statisticInput)
             }
             .toolbar {
+                if loader.reading != nil {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        EditButton()
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Button {

@@ -11,6 +11,8 @@ struct StatisticDetailView: View {
 
     /// Start des gewählten Abschnitts; ohne Auswahl der jüngste mit Wert.
     @State private var selectedStart: Date?
+    @State private var confirmsRemove = false
+    @Environment(\.dismiss) private var dismiss
 
     private let calculator = StatisticCalculator()
 
@@ -64,6 +66,21 @@ struct StatisticDetailView: View {
         }
         .navigationTitle(result.definition.displayName)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(role: .destructive) {
+                    confirmsRemove = true
+                } label: {
+                    Label("Kachel entfernen", systemImage: "trash")
+                }
+            }
+        }
+        .confirmationDialog("Diese Kachel entfernen?", isPresented: $confirmsRemove, titleVisibility: .visible) {
+            Button("Kachel entfernen", role: .destructive) {
+                dashboard.remove(tileID)
+                dismiss()
+            }
+        }
     }
 
     /// Abschnitte bis heute; kommende Tage der Woche haben noch nichts dahinter.

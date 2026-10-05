@@ -281,6 +281,29 @@ final class StatisticLayoutTests: XCTestCase {
     }
 
     @MainActor
+    func testSwipeToDeleteAndMoveInTheList() {
+        let tiles = (0..<4).map { StatisticTile(sport: nil, metric: StatisticDefinition.overall[$0].metric, period: .fourWeeks) }
+        let store = MemoryStore()
+        store.stored = StatisticLayout(tiles: tiles, knownSports: ["swim", "bike", "run"])
+        let dashboard = StatisticDashboard(store: store, registry: Self.triathlon)
+        let ids = tiles.map(\.id)
+
+        // Wie List.onMove: die erste ans Ende (Ziel 4), dann die letzte an den Anfang.
+        dashboard.move(fromOffsets: IndexSet(integer: 0), toOffset: 4)
+        XCTAssertEqual(dashboard.tiles.map(\.id), [ids[1], ids[2], ids[3], ids[0]])
+        dashboard.move(fromOffsets: IndexSet(integer: 3), toOffset: 0)
+        XCTAssertEqual(dashboard.tiles.map(\.id), ids)
+        dashboard.move(fromOffsets: IndexSet([0, 1]), toOffset: 3)
+        XCTAssertEqual(dashboard.tiles.map(\.id), [ids[2], ids[0], ids[1], ids[3]])
+        dashboard.move(fromOffsets: IndexSet(integer: 9), toOffset: 0)
+
+        dashboard.remove(atOffsets: IndexSet([0, 3]))
+        XCTAssertEqual(dashboard.tiles.map(\.id), [ids[0], ids[1]])
+        XCTAssertEqual(store.stored, dashboard.layout)
+        XCTAssertEqual(store.saves, 4)
+    }
+
+    @MainActor
     func testDraggingATileOntoAnother() {
         let tiles = (0..<4).map { StatisticTile(sport: nil, metric: StatisticDefinition.overall[$0].metric, period: .fourWeeks) }
         let store = MemoryStore()

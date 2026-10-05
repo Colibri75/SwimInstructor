@@ -55,6 +55,25 @@ public final class StatisticDashboard: ObservableObject {
         save(layout)
     }
 
+    /// Entfernt die Kacheln an diesen Stellen (Wischen zum Löschen in der Liste).
+    public func remove(atOffsets offsets: IndexSet) {
+        var layout = self.layout
+        layout.tiles = layout.tiles.enumerated().filter { !offsets.contains($0.offset) }.map(\.element)
+        save(layout)
+    }
+
+    /// Verschiebt Kacheln wie `List.onMove`: `destination` ist die Stelle vor dem Verschieben, an die sie kommen.
+    public func move(fromOffsets source: IndexSet, toOffset destination: Int) {
+        let moving = source.filter { tiles.indices.contains($0) }
+        guard !moving.isEmpty else { return }
+        var layout = self.layout
+        let tiles = moving.map { layout.tiles[$0] }
+        let remaining = layout.tiles.enumerated().filter { !moving.contains($0.offset) }.map(\.element)
+        let index = min(max(destination - moving.filter { $0 < destination }.count, 0), remaining.count)
+        layout.tiles = Array(remaining[..<index]) + tiles + Array(remaining[index...])
+        save(layout)
+    }
+
     /// Zieht eine Kachel auf den Platz einer anderen: Nach vorn gezogen landet sie davor, nach hinten dahinter.
     public func move(_ id: UUID, to target: UUID) {
         guard let from = tiles.firstIndex(where: { $0.id == id }),
