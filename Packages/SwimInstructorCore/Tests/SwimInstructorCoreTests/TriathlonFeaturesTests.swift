@@ -332,6 +332,7 @@ final class TriathlonFeaturesTests: XCTestCase {
         XCTAssertNil(Adaptation.signal(feedback: [feedback(for: run, pain: .light)], missed: [], workouts: [run], today: "2026-09-30", handled: [], calendar: TestFixtures.utc))
     }
 
+    @MainActor
     func testTheFeedbackBookListsWorkoutsOfYesterdayAndTodayWithoutAnswer() {
         let book = SessionFeedbackBook(store: MemoryFeedbackStore(), calendar: TestFixtures.utc)
         let today = workout(.run, daysAgo: 0, hour: 8)

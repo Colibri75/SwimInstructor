@@ -308,7 +308,7 @@ public final class RacePlanLoader: ObservableObject {
     }
 
     /// Uhrzeit eines Eintrags im Ablauf bei Start um `startTime` ("HH:MM"), sonst "-90 min" bzw. "+30 min".
-    public static func clock(minutesFromStart: Int, startTime: String?) -> String {
+    public nonisolated static func clock(minutesFromStart: Int, startTime: String?) -> String {
         let parts = startTime?.split(separator: ":").compactMap { Int($0) } ?? []
         guard parts.count == 2 else {
             if minutesFromStart == 0 { return "Start" }
