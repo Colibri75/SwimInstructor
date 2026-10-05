@@ -151,116 +151,51 @@ Push auf `main`: Tests → Build → Sign → TestFlight-Upload.
 ## Projektstruktur
 
 ```
-App/                                # iOS-App
-  SwimInstructorApp.swift            # App-Einstiegspunkt, verdrahtet Health, Einstellungen, Loader für Plan v2 und Profil
-  PhonePlanSync.swift                # Schickt den Tagesplan an die Watch, empfängt Testergebnisse (M7, T5)
-  RootView.swift                     # Tabs: Heute, Plan, Dashboard, Verlauf
-  TodayView.swift                    # Heute: Testergebnis der Watch, Eintrag aus dem Plan, Karte je Einheit, Wunsch
-  SessionCardView.swift              # Tagesplan v2: Kopf, Karte je Einheit mit Schritten, Test-Knopf
-  TestResultSheet.swift              # Testergebnis eintragen, Vergleich, Übernehmen oder Verwerfen (T4)
-  WeekView.swift                     # Plan: Woche je Sportart, Tage mit bis zu zwei Einheiten, Planen
-  DayEditSheet.swift                 # Tag anpassen: Umfang, Sportart tauschen, Einheit dazu oder weg, Tage tauschen
-  MacroPlanSections.swift            # Gesamtplan je Sportart, Testtermine, Feedback mit Änderungen und Runden
-  ProfileView.swift                  # Leistungsprofil: Werte, Herkunft, Verlauf, Eingabe von Hand, Testeinstellungen
-  StatsViews.swift                   # Woche je Sportart und Erholung (Dashboard), Einheiten-Zeile aller Sportarten (Verlauf)
-  DashboardView.swift                # Kacheln der Statistik, Woche gegen den Plan, Ziel (M8, T6)
-  StatisticTilesView.swift           # Kachel, Verlauf (Swift Charts), Auswahl per langem Drücken, Ziehen, Hinzufügen (T6)
-  HistoryView.swift                  # Verlauf geplant gegen tatsächlich je Sportart
-  GoalAssistantView.swift            # Ziel mit Disziplinen, Zieltag, Stunden und Schwerpunkten (T2)
-  SettingsView.swift                 # Server-Adresse, Token, Verbindung testen
-  Info.plist                         # Anzeigename und Health-Hinweise aus APP_DISPLAY_NAME
-  SwimInstructor.entitlements        # HealthKit-Capability
-WatchApp/                           # watchOS Companion-App
-  SwimInstructorWatchApp.swift       # App-Einstiegspunkt, wechselt zwischen Plan, Einheit, Zusammenfassung
-  WatchTodayView.swift               # Einheiten des Tages, freies Training, Start mit Sportart, Ort, Bahnlänge (T5)
-  WatchWorkoutView.swift             # Laufende Einheit und Zusammenfassung mit Testergebnis (T5)
-  WatchPlanStore.swift               # Plan vom iPhone, Testergebnisse ans iPhone (M7, T5)
-  WorkoutManager.swift               # HKWorkoutSession für jede Sportart, Stand im Plan, Testauswertung (T5)
-  RouteRecorder.swift                # GPS-Strecke und Höhenmeter draußen (T5)
-  Announcer.swift                    # Ansagen der Schritte (T5)
-  Info.plist                         # inkl. WKCompanionAppBundleIdentifier, Hintergrundmodus Workout
-  SwimInstructorWatch.entitlements   # HealthKit-Capability
-Packages/SwimInstructorCore/        # Von iOS + Watch geteilte Logik
+App/                                 # iOS-App (SwiftUI): Tabs Heute, Plan, Dashboard, Verlauf, dazu Einstellungen,
+                                     # Ziel-Assistent, Leistungsprofil, Testergebnis, Onboarding; SwimInstructorApp.swift
+                                     # verdrahtet Health, Einstellungen und die Loader
+WatchApp/                            # watchOS-App: Einheiten des Tages, Aufzeichnung (WorkoutManager, RouteRecorder),
+                                     # Ansagen, Plan vom iPhone (WatchPlanStore)
+Shared/                              # Code für iPhone und Watch, der nicht ins Package gehört (Ladeanimation)
+Packages/SwimInstructorCore/         # Die gemeinsame Logik von iPhone und Watch, plattformunabhängig, mit eigener Test-Suite
   Sources/SwimInstructorCore/
-    HealthKitManager.swift           # Autorisierung
-    SwimWorkout.swift                # Domain-Modell (Pace, SWOLF-Näherung)
-    SwimWorkoutRepository.swift      # Liest Workouts aus HealthKit + Mapping
-    SwimWorkoutDeduplicator.swift    # Entfernt doppelte Einheiten aus mehreren Quellen
-    AthleteGoal.swift                # Ziel (Standard 3,8 km < 60 min bis 04.07.2027), Prüfung der Eingabe
-    GoalStore.swift                  # eingestelltes Ziel dauerhaft speichern (Einstellungen)
-    DailyVitals.swift                # Tageswerte Ruhepuls/HRV/Schlaf
-    AthleteStateSnapshot.swift       # Snapshot-Modell + JSON-Encoder (Schema v1)
-    AthleteStateCalculator.swift     # Berechnung Workouts/Vitals -> Snapshot
-    DailyVitalsRepository.swift      # Liest Ruhepuls, HRV, Schlaf aus HealthKit (M6)
-    DailyVitalsAggregator.swift      # Schlaf pro Nacht, Tageswerte zusammenführen (M6)
-    SnapshotBuilder.swift            # Health -> Snapshot (M6)
-    TrainingPlan.swift               # Plan-Antwort des Servers (M6)
-    PlanAPIClient.swift              # POST /v1/plan/today, GET /v1/status (M6)
-    PlanCache.swift                  # Letzter Plan offline (M6)
-    BackendSettings.swift            # Server-Adresse + Token im Schlüsselbund (M6)
-    PlanFormatting.swift             # Texte für die Plananzeige (M6)
-    TodayPlanLoader.swift            # Ablauf des Heute-Bildschirms (M6)
-    PlanSync.swift                   # Format der Plan-Übertragung iPhone -> Watch (M7)
-    PlanProgress.swift               # Stand im Plan nach geschwommenen Metern (M7)
-    LiveSwimMetrics.swift            # Live-Werte und Beckenlänge der Watch (M7)
-    TrainingStatistics.swift         # Wochenumfang und Pace je Einheit beim Schwimmen (M8, seit T6 nicht mehr angezeigt)
-    PlanHistory.swift                # Gespeicherte Tagespläne der letzten Wochen (M8)
-    PlanAdherence.swift              # Geplant gegen geschwommen, Zusammenfassung (M8)
-    WeekPlan.swift                   # Wochenplan: Tage, Vorgabe für den Tagesplan
-    MacroPlan.swift                  # Gesamtplan bis zum Zieltag (Wochen, Phasen), Speicher
-    MacroPlanLoader.swift            # Gesamtplan holen/erneuern (einmal am Tag je Ziel)
-    WeekCalendar.swift               # Wochen von Montag bis Sonntag, Kalendertage
-    WeekPlanEditor.swift             # Änderungen des Athleten, Zusammenführen nach dem Neuplanen
-    WeekProgress.swift               # Status je Tag aus Health gegen den Plan
-    WeekPlanStore.swift              # Wochenpläne auf dem Gerät
-    WeekPlanLoader.swift             # Ablauf des Wochen-Tabs (Plan v1, von der App seit T4 nicht mehr genutzt)
-    PerformanceProfileLoader.swift   # Leistungsprofil: Werte, Eingabe von Hand, Testergebnis nach Bestätigung (T4)
-    SessionProgress.swift            # Stand in der Einheit nach Strecke, Zeit oder von Hand (T5)
-    ProgressFormatting.swift         # Texte und Ansagen zum Stand in der Einheit (T5)
-    LiveWorkoutMetrics.swift         # Live-Werte jeder Sportart, aktuelle Geschwindigkeit, Höhenmeter (T5)
-    WorkoutRecording.swift           # Messreihen der Watch für die Testauswertung (T5)
-    TestResultSync.swift             # Testergebnis Watch -> iPhone, Eingang bis zur Bestätigung (T5)
-    PlanV2/                          # Plan v2 für alle Sportarten (T4): Modelle, Client, Speicher, Anzeige-Texte,
-                                     # Loader für Heute, sieben Tage und Gesamtplan mit Feedback, Plan gegen Ist
-    Statistics/                      # Kennzahlen, Zeiträume, Rechnung, Texte und gespeicherte Kacheln (T6)
-    Sports/                          # Registry, Health-Zuordnung, Leistungswerte, Zonen, Tests, Aufzeichnung, Kennzahlen
-    Sports/Modules/                  # Ein Modul je Sportart: SwimModule, BikeModule, RunModule
-  Tests/SwimInstructorCoreTests/
-    HealthKitManagerTests.swift
-    SwimWorkoutRepositoryTests.swift
-    SwimWorkoutDeduplicatorTests.swift
-    AthleteStateCalculatorTests.swift  # 5 Szenarien + Randfaelle + Schema
-backend/                            # Node/TypeScript-Server (Proxy fuer Claude, ab M5)
-  src/                               # app.ts, auth.ts, config.ts, logger.ts, server.ts
-  src/plan/                          # Plan-Erzeugung (M5): Claude-Aufruf, Sicherheitsschicht, Fallback
-  src/plan/multi/                    # Plan v2 für mehrere Sportarten (T3): Grenzen, Sicherheitsschicht, Tests, Prompts
-  src/sports/                        # Registry (SPORTS), Wortschatz, Leistungswerte; modules/: ein Modul je Sportart
-  scenarios/                         # die 5 Snapshots aus M3 (Eingabe für npm run eval:scenarios)
-  scenarios/multisport/              # 9 Szenarien für Plan v2, recorded/: aufgezeichnete Antworten
-  scripts/eval-scenarios.ts          # echter Lauf gegen die Claude-API zur manuellen Bewertung
-  scripts/eval-multisport.ts         # Bewertung Plan v2: Claude, mit Aufzeichnung oder Wiedergabe
-  test/                              # Jest + supertest
-  Dockerfile, compose.yaml           # Container-Image und Start auf dem Server
-  deploy/                            # Caddyfile-Vorlage, deploy.sh
+    Sports/                          #   Registry, Module (SwimModule, BikeModule, RunModule), Health-Zuordnung,
+                                     #   Leistungswerte, Zonen, Tests, Aufzeichnung, Kennzahlen, Brücke zu alten Plänen
+    PlanV2/                          #   Plan für alle Sportarten: Modelle, Client, Speicher, Anzeige-Texte, Loader für
+                                     #   Heute, sieben Tage und Gesamtplan mit Feedback, Plan gegen Ist
+    Statistics/                      #   Kennzahlen, Zeiträume, Rechnung und gespeicherte Kacheln des Dashboards
+    (Dateien im Hauptordner)         #   Health lesen (Repositories, Deduplizierung), Zustand und Snapshot (Calculator,
+                                     #   Builder), Ziel und Zielspeicher, Backend-Einstellungen, Fortschritt in der
+                                     #   Einheit (SessionProgress), Texte (PlanFormatting), Übertragung iPhone <-> Watch
+  Tests/SwimInstructorCoreTests/     #   Unit-Tests, dazu ContractTests und Lint (SportLintTests)
+backend/                             # Node/TypeScript-Server zwischen App und Claude: Token, Budget, Sicherheitsschicht
+  src/                               #   app.ts, auth.ts, config.ts, logger.ts, server.ts
+  src/plan/                          #   Gemeinsames der Planung: Claude-Aufruf (generator), Budget, Fehler, Snapshot-Schema,
+                                     #   Kalender (calendar), Wortschatz (vocabulary), Kosten (report)
+  src/plan/multi/                    #   Gesamtplan, sieben Tage, Tag: Routen, Service, Prompts, Grenzen, Sicherheitsschichten
+  src/sports/                        #   Registry (SPORTS), Wortschatz, Leistungswerte; modules/: ein Modul je Sportart
+  scenarios/multisport/              #   9 Szenarien zur Bewertung, recorded/: aufgezeichnete Antworten
+  scripts/eval-multisport.ts         #   Bewertung der Pläne: Claude, mit Aufzeichnung oder Wiedergabe
+  scripts/eval-in-docker.sh          #   dasselbe auf dem Server ohne Node
+  test/                              #   Jest + supertest
+  Dockerfile, compose.yaml           #   Container-Image und Start auf dem Server
+  deploy/                            #   Caddyfile-Vorlage, deploy.sh
 contracts/                           # Verträge App <-> Server, von Swift- und Jest-Tests gelesen
 docs/
-  AthleteStateSnapshot.md            # JSON-Schema, Definitionen, Schwellenwerte
-  backend-deploy.md                  # Server-Einrichtung Schritt fuer Schritt
-  plan-generation.md                 # /v1/plan/today: Ablauf, Regeln, Kosten, Konfiguration
-  multisport-planning.md             # Plan v2: Endpunkte, Einheiten, Grenzen, Leistungstests, Bewertung
-  plan-eval.md                       # Bewertung der Pläne von Plan v1
+  AthleteStateSnapshot.md            # JSON-Schema des Snapshots, Definitionen, Schwellenwerte
+  backend-deploy.md                  # Server-Einrichtung Schritt für Schritt
+  plan-generation.md                 # Ablauf der Plan-Erzeugung, Ausfallgründe, Kosten, Konfiguration
+  multisport-planning.md             # Endpunkte, Einheiten, Grenzen, Leistungstests, Bewertung
   neue-sportart.md                   # Anleitung: neue Sportart hinzufügen
-  meilensteine.md                    # M1 bis M8 und T0 bis T7 mit Definition of Done
-  Package.swift
+  meilensteine.md                    # M1 bis M8, T0 bis T7 mit Definition of Done, Roadmap
+  eval-runs/                         # Rohausgaben der Bewertungsläufe
+  logo/                              # SVG-Quellen des Symbols
 project.yml                          # XcodeGen-Konfiguration (beide Targets + Package, Anzeigename APP_DISPLAY_NAME)
-fastlane/
-  Appfile                             # Bundle-ID, Apple-ID, Team-ID
-  Matchfile                           # Zertifikats-Repo-Konfiguration (iOS + Watch Bundle-IDs)
-  Fastfile                            # Lanes: test, beta (TestFlight-Upload, inkl. Watch-App)
-Gemfile                               # Ruby-Abhängigkeit: fastlane
+fastlane/                            # Appfile, Matchfile, Fastfile (Lanes test und beta: TestFlight inkl. Watch-App)
+Gemfile                              # Ruby-Abhängigkeit: fastlane
 .github/workflows/
-  ios-ci.yml                          # Test- und TestFlight-Deploy-Pipeline
-  backend-ci.yml                      # Backend: Typecheck, Build, Tests, npm audit, Docker-Smoke-Test
+  ios-ci.yml                         # Test- und TestFlight-Deploy-Pipeline
+  backend-ci.yml                     # Backend: Typecheck, Build, Tests, npm audit, Docker-Smoke-Test
 ```
 
 ## Entstehung

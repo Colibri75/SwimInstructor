@@ -1,10 +1,11 @@
-# Planung für mehrere Sportarten (Plan v2, T3)
+# Planung für mehrere Sportarten
 
 Der Server plant Schwimmen, Rad und Laufen gemeinsam: einen Gesamtplan bis zum Ziel, die nächsten sieben Tage und
-den Tag mit allen Schritten. Plan v2 läuft neben v1 auf denselben Pfaden. Die App wählt ihn mit `plan_version: 2`
-im Body; ohne das Feld (oder mit `1`) antworten die Routen von v1 genau wie bisher, alte Apps merken nichts.
+den Tag mit allen Schritten. Jede Anfrage nennt `plan_version: 2` im Body (so heißt die Version des Formats; die frühere
+Planung nur für Schwimmen, Plan v1, gibt es nicht mehr, eine Anfrage ohne das Feld ist ein Fehler 400 mit dem Hinweis,
+dass die App veraltet ist).
 
-Ablauf wie bei v1 (siehe [plan-generation.md](plan-generation.md)): Snapshot prüfen, Claude mit festem
+Ablauf (Konfiguration, Kosten und Ausfallgründe: [plan-generation.md](plan-generation.md)): Snapshot prüfen, Claude mit festem
 System-Prompt und strukturierter Ausgabe, Antwort gegen das Schema prüfen, Sicherheitsschicht korrigiert oder blockt.
 Dieselben Grenzen gehen vorher an Claude und prüfen danach den Plan; beide lesen sie aus einer Quelle
 (`backend/src/plan/multi/limits.ts` und die Module in `backend/src/sports/modules/`).
@@ -12,7 +13,7 @@ Dieselben Grenzen gehen vorher an Claude und prüfen danach den Plan; beide lese
 ## Endpunkte
 
 Alle mit `Authorization: Bearer <Token>` und Snapshot v2 (siehe [AthleteStateSnapshot.md](AthleteStateSnapshot.md)).
-Ein Snapshot v1 mit `plan_version: 2` ist ein Fehler 400. Die Antworten stehen als Beispiele in
+Ein Snapshot v1 (nur Schwimmen) ist ein Fehler 400. Die Antworten stehen als Beispiele in
 `contracts/wire/plan-v2-*-response.json`; App und Server prüfen sie.
 
 | Pfad | Body (zusätzlich zu `plan_version: 2` und `snapshot`) | Antwort |
@@ -20,15 +21,15 @@ Ein Snapshot v1 mit `plan_version: 2` ist ein Fehler 400. Die Antworten stehen a
 | `POST /v1/plan/today` | `wishes` (bis 500 Zeichen), `day_plan` (Vorgabe aus dem Wochenplan: Einheiten mit Sportart, Typ, Intensität, Umfang, `test_id`), `equipment`, `recent_training`, `test_settings`, `regenerate` | `plan.sessions[]` mit Schritten, `source` (`claude`, `cache`, `fallback`), `stale`, `adjustments`, bei Ausfall `fallback_reason` |
 | `POST /v1/plan/week` | `from_date`, `today`, `unavailable_dates`, `recent_training`, `macro_weeks` (bis 3 Wochen des Gesamtplans), `wishes`, `equipment`, `test_settings` | `plan.days[]` mit 0 bis 2 Einheiten je Tag, `adjustments` |
 | `POST /v1/plan/macro` | `today`, `test_settings` | `goal_day`, `plan.weeks[]` mit Phase, Entlastung, Umfang je Sportart und Testterminen |
-| `POST /v1/plan/macro/revise` | `today`, `plan` (der Gesamtplan, wie die App ihn hält), `feedback` (1 bis 1000 Zeichen), `history` (bis 5 frühere Runden), `test_settings`; `plan_version` ist hier optional, den Pfad gibt es nur in v2 | wie `/plan/macro`, dazu `changes` (was sich ändert) und `feedback` |
+| `POST /v1/plan/macro/revise` | `today`, `plan` (der Gesamtplan, wie die App ihn hält), `feedback` (1 bis 1000 Zeichen), `history` (bis 5 frühere Runden), `test_settings`; `plan_version` ist hier optional | wie `/plan/macro`, dazu `changes` (was sich ändert) und `feedback` |
 
 `recent_training` sind die Einheiten der letzten Tage (`date`, `sport`, `minutes`, `meters`, `hard`). Sie zählen für
 "nie zwei harte Tage hintereinander" und für die Grenzen von heute. `test_settings`: `offer` (Tests anbieten,
 Standard ja), `interval_weeks` (4 bis 12, Standard 6), `preferred` (bevorzugter Test je Sportart).
 
-Fehlerfälle wie bei v1: Zeitüberschreitung, ungültiges JSON, Budget aufgebraucht, kein API-Key oder ein Plan, den die
-Sicherheitsschicht blockt. Der Tagesplan liefert dann den letzten gespeicherten Plan (`latest-plan-v2.json`, getrennt
-von v1, vorher gegen den heutigen Zustand geprüft), sonst 503 mit Grund. Woche, Gesamtplan und Überarbeitung antworten
+Fehlerfälle: Zeitüberschreitung, ungültiges JSON, Budget aufgebraucht, kein API-Key oder ein Plan, den die
+Sicherheitsschicht blockt. Der Tagesplan liefert dann den letzten gespeicherten Plan (`latest-plan-v2.json`, vorher
+gegen den heutigen Zustand geprüft), sonst 503 mit Grund. Woche, Gesamtplan und Überarbeitung antworten
 mit 503 und Grund.
 
 ## Einheiten

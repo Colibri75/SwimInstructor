@@ -5,6 +5,13 @@ Triathlon-App (T0 bis T7). Jeder Abschnitt beschreibt, was der Schritt gebaut ha
 Done; die Punkte "Für dich" sind die Prüfungen auf dem Gerät. Den aktuellen Stand nach Sport-Modulen beschreibt die
 [README](../README.md).
 
+> **Hinweis zum Stand:** Die Abschnitte M1 bis M8 und der Gesamtplan beschreiben, wie die Schwimm-App damals gebaut wurde.
+> Einiges davon gibt es nicht mehr: Am 05.10.2026 wurde die Planung nur für Schwimmen (Plan v1) aus Server und App
+> entfernt (Routen, Prompts, Sicherheitsschichten, `TodayPlanLoader`, `WeekPlanLoader`, `MacroPlanLoader`,
+> `TrainingStatistics`, das Bewertungsskript `eval:scenarios`). Es gilt Plan v2 für alle Sportarten
+> ([multisport-planning.md](multisport-planning.md)). Genannte Dateien und Befehle sind Geschichte, im Git-Verlauf
+> findest du sie wieder.
+
 ## M1 – Projekt-Setup & HealthKit-Berechtigung
 
 Dieses Repo enthält kein eingechecktes `.xcodeproj` (siehe `.gitignore`) –
@@ -177,7 +184,7 @@ Details zu Ablauf, Antwortformat, Regeln, Kosten und Konfiguration:
 ```bash
 cd backend
 npm test                   # Sicherheitsschicht, Fehlerfälle, Route, Szenarien (ohne echte API)
-ANTHROPIC_API_KEY=... npm run eval:scenarios > ../docs/eval-runs/plan-eval-$(date +%F).md   # echter Lauf, kostet Geld
+ANTHROPIC_API_KEY=... npm run eval:multisport > ../docs/eval-runs/multisport-$(date +%F).md   # echter Lauf, kostet Geld
 backend/scripts/eval-in-docker.sh   # dasselbe auf dem Server ohne Node (nur Docker nötig)
 ```
 
@@ -187,7 +194,7 @@ backend/scripts/eval-in-docker.sh   # dasselbe auf dem Server ohne Node (nur Doc
       (30.09.2026 auf dem Server verifiziert: fünf echte Aufrufe, 6 bis 19 s, rund 4 Cent pro Plan)
 - [x] Für alle 5 Testszenarien aus M3 liefert Claude plausible Pläne, manuell bewertet und
       dokumentiert. Lauf 2 (30.09.) mit allen fünf Plänen als "sinnvoll" bewertet. Offener Wunsch aus der
-      Bewertung (Übungen erklären) ist per Prompt umgesetzt, siehe [`docs/plan-eval.md`](plan-eval.md)
+      Bewertung (Übungen erklären) ist per Prompt umgesetzt (die Bewertungsdokumente von Plan v1 sind entfernt)
 - [x] Sanity-Layer korrigiert oder blockt gefährliche Vorschläge
 - [x] Fallback bei Claude-Ausfall: letzter gültiger Plan statt Absturz oder leerer Antwort
 - [x] Kostenkalkulation dokumentiert und gemessen (rund $0,038 pro Plan, siehe `docs/plan-generation.md`)
@@ -780,20 +787,23 @@ Schritt bleibt sie fürs Schwimmen voll nutzbar.
 - [ ] **Für dich:** mehrere Wochen echtes Training (Betatest, siehe README). Danach justieren wir die Grenzen,
       besonders fürs Laufen, die Testabstände und die Sprunggrenze für neue Testwerte.
 
-## Roadmap (Stand vor dem Triathlon-Umbau)
+## Roadmap (Stand 05.10.2026)
 
-M1 bis M8 sind umgesetzt (die manuellen Prüfungen stehen jeweils in der Definition of Done des
-Meilensteins). Offen:
+Umgesetzt: M1 bis M8, Gesamtplan und sieben Tage, der Umbau zur Triathlon-App (T0 bis T7), die Planung nach dem Konzept
+"Planerstellung" (P1 Startniveau, P2 Zielarten und Wochenraster, P3 Zieländerung mit Entwurf, P4 Fortschreibung), die
+Umbenennung zu Peaksmith und das Aufräumen von Plan v1. Die manuellen Prüfungen stehen jeweils in der Definition of Done
+des Abschnitts. Offen:
 
-- **M9 – Automatisierung: bewusst gestrichen.** Eine Erinnerung zur Uhrzeit und ein Plan im Hintergrund
-  brächten wenig: Bei gesperrtem iPhone kann die App Health nicht lesen (Apple schützt die Daten), und
-  wann iOS Hintergrundläufe erlaubt, lässt sich nicht erzwingen. Stattdessen entsteht der Plan, **wenn du
-  die App morgens öffnest** (dauert rund 15 Sekunden, danach liegt er auch auf der Watch). Das geschieht
-  nur beim ersten Öffnen des Tages. **Ziehen zum Aktualisieren** holt dagegen immer einen neuen Plan von
-  Claude, auch bei unverändertem Zustand (rund 4 Cent, der Server begrenzt auf 5 Pläne pro Stunde und
-  20 pro Tag).
-  Der verworfene Entwurf steht in PR #25.
-- **Gesamtplan und Plan der nächsten sieben Tage:** umgesetzt (Abschnitt "Gesamtplan und Plan der nächsten sieben Tage"), Prüfpunkte stehen dort.
-- **M10 – Realer Betatest:** Mehrere Wochen im echten Training, Planqualität und Zahlen gegenprüfen.
-- **M11 – Feinschliff:** Fehlermeldungen, Barrierefreiheit, UI-Tests, Übungslexikon statt wiederholter
-  Erklärungen im Plan.
+- **M10 – Realer Betatest:** Mehrere Wochen im echten Training, Planqualität und Zahlen gegenprüfen. Alle Punkte "Für dich"
+  oben und die Stellschrauben in der [README](../README.md#betatest) sind noch nicht auf dem Gerät geprüft: Wassersperre
+  und Crown im Becken, Rad mit und ohne Sensor, Intervalllauf mit GPS, Testauswertung auf der Uhr.
+- **M11 – Feinschliff:** Fehlermeldungen, Barrierefreiheit, UI-Tests, Übungslexikon statt wiederholter Erklärungen im Plan.
+- **M9 – Automatisierung: bewusst gestrichen.** Eine Erinnerung zur Uhrzeit und ein Plan im Hintergrund brächten wenig: Bei
+  gesperrtem iPhone kann die App Health nicht lesen (Apple schützt die Daten), und wann iOS Hintergrundläufe erlaubt, lässt
+  sich nicht erzwingen. Stattdessen entsteht der Plan, **wenn du die App morgens öffnest**; das geschieht nur beim ersten
+  Öffnen des Tages. **Ziehen zum Aktualisieren** holt immer einen neuen Plan von Claude, auch bei unverändertem Zustand
+  (der Server begrenzt auf 5 Pläne pro Stunde und 20 pro Tag). Der verworfene Entwurf steht in PR #25.
+
+Ideen, noch nicht geplant: der Plan reagiert von selbst auf verpasste oder zu harte Einheiten; Einheiten als Workouts in
+der Workout-App der Uhr (WorkoutKit); Erinnerungen, Widgets und Complications; Koppeltraining (Rad direkt vor Laufen),
+Kraft und Mobilität; Monitoring von Fehlerquote und Tageskosten auf dem Server.

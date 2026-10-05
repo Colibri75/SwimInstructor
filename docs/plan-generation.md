@@ -1,190 +1,32 @@
-# Plan-Erzeugung (`POST /v1/plan/today`)
+# Plan-Erzeugung auf dem Server
 
-Die App schickt den Zustands-Snapshot (siehe [AthleteStateSnapshot.md](AthleteStateSnapshot.md)),
-der Server lässt Claude daraus einen Tagesplan schreiben, prüft ihn mit einer Sicherheitsschicht
-und liefert ihn zurück. Fällt Claude aus, bekommt die App den letzten gültigen Plan.
+Die App schickt den Zustands-Snapshot (siehe [AthleteStateSnapshot.md](AthleteStateSnapshot.md)), der Server lässt
+Claude daraus Gesamtplan, die nächsten sieben Tage oder den Tag schreiben, prüft das Ergebnis mit einer Sicherheitsschicht
+und liefert es zurück. Fällt Claude aus, bekommt die App beim Tagesplan den letzten gültigen Plan. Welche Pfade es gibt,
+was sie annehmen, die Grenzen je Sportart und die Regeln der Sicherheitsschicht stehen in
+[multisport-planning.md](multisport-planning.md). Dieses Dokument beschreibt den Ablauf, Ausfallgründe, Kosten und
+Konfiguration, die für alle Pläne gleich sind.
 
 ## Ablauf
 
 ```
-App ──POST {snapshot}──▶ Server
-                          1. Snapshot prüfen (Schema, Wertebereiche, unbekannte Felder verwerfen)
-                          2. Gleicher Zustand heute schon geplant?  ──ja──▶ gespeicherten Plan liefern (source: cache)
-                          3. Aufrufbudget frei und API-Key da?      ──nein─▶ Fallback
+App ──POST {plan_version: 2, snapshot, …}──▶ Server
+                          1. Anfrage prüfen (Schema, Wertebereiche, unbekannte Felder verwerfen)
+                          2. Tagesplan: gleicher Zustand heute schon geplant?  ──ja──▶ gespeicherten Plan liefern (source: cache)
+                          3. Aufrufbudget frei und API-Key da?      ──nein─▶ Fallback bzw. 503
                           4. Claude aufrufen (fester System-Prompt, strukturierte JSON-Ausgabe,
-                             dazu die berechneten Grenzen für heute)
-                          5. Antwort gegen das Plan-Schema prüfen   ──Fehler─▶ Fallback
-                          6. Sicherheitsschicht: korrigieren oder blocken   ──blockiert─▶ Fallback
-                          7. Plan speichern, liefern (source: claude)
+                             dazu die berechneten Grenzen für den Plan)
+                          5. Antwort gegen das Schema prüfen        ──Fehler─▶ Fallback bzw. 503
+                          6. Sicherheitsschicht: korrigieren oder blocken   ──blockiert─▶ Fallback bzw. 503
+                          7. Tagesplan speichern, liefern (source: claude)
 
-Fallback = letzter gespeicherter Plan, vorher erneut durch die Sicherheitsschicht gegen den
-heutigen Zustand geprüft (source: fallback). Gibt es keinen, antwortet der Server mit 503.
+Fallback (nur Tagesplan) = letzter gespeicherter Plan, vorher erneut durch die Sicherheitsschicht gegen den heutigen
+Zustand geprüft (source: fallback). Gibt es keinen, und bei Woche, Gesamtplan und Überarbeitung immer: 503 mit Grund.
+Die App behält dann ihren bisherigen Plan und kann es später erneut versuchen.
 ```
 
-## Wochenplan: `POST /v1/plan/week`
-
-Claude plant die Woche als **Gerüst**: je Tag Typ, Intensität, Umfang, Dauer und ein kurzer Schwerpunkt. Die
-Abschnitte einer Einheit (Wiederholungen, Pausen, Equipment) entstehen erst am Tag selbst über
-`POST /v1/plan/today`, passend zur Vorgabe der Woche. Der Wochenplan ist kurz (rund 1.000 Token Ausgabe).
-
-Anfrage (`Authorization: Bearer <Token>`, Body JSON):
-
-| Feld | Bedeutung |
-|---|---|
-| `snapshot` | der Zustand (wie beim Tagesplan) |
-| `week_start` | Montag der Woche, `YYYY-MM-DD` |
-| `from_date` | erster zu planender Tag: heute (laufende Woche neu planen) oder `week_start` (kommende Woche) |
-| `today` | heute beim Athleten |
-| `unavailable_dates` | Tage ohne Zeit (werden Ruhetage), optional |
-| `swum_this_week` | `[{date, meters}]`: was vor `from_date` schon geschwommen wurde, optional |
-| `wishes` | Wunsch für die Woche, höchstens 500 Zeichen, optional (steht im Prompt als JSON-String, ändert Grenzen nie) |
-
-Ungültige Daten (kein Montag, `from_date` außerhalb der Woche, unmögliche Kalendertage) lehnt der Server mit
-`400` und `details` je Feld ab. Antwort `200`:
-
-```json
-{
-  "week_start": "2026-09-28",
-  "generated_at": "2026-09-30T10:00:00.000Z",
-  "plan": {
-    "rationale": "…",
-    "total_distance_meters": 3600,
-    "days": [
-      { "date": "2026-09-30", "session_type": "endurance", "intensity": "moderate",
-        "target_distance_meters": 1200, "estimated_duration_minutes": 40, "focus": "Ausdauer" }
-    ]
-  },
-  "adjustments": ["Samstag, 03.10.: harte Einheit auf \"moderate\" gesenkt (…)"],
-  "wishes": "mehr Technik"
-}
-```
-
-`days` enthält genau die Tage ab `from_date` bis Sonntag. Der Server **speichert den Wochenplan nicht**: Die App
-hält ihn und die Änderungen des Athleten selbst. Scheitert Claude, antwortet der Server `503` mit
-`reason` (wie beim Tagesplan, ohne Ersatzplan), die App behält ihren bisherigen Wochenplan. Jeder Aufruf zählt
-gegen dasselbe Budget wie ein Tagesplan.
-
-**Sicherheitsschicht** (`weekSanity.ts`, die Grenzen gehen vorab auch an Claude): genau die angefragten Tage
-(fehlende werden Ruhetage, fremde und doppelte verworfen), Tage ohne Zeit sind Ruhetage, die Grenzen für heute
-gelten für den heutigen Tag, keine Einheit über dem Einheiten-Limit (längste Einheit mal 1,25, höchstens 4.500 m),
-höchstens zwei harte Tage und nie an aufeinanderfolgenden Tagen, höchstens fünf Einheiten pro Woche (schon
-geschwommene Tage zählen mit), Wochenumfang höchstens Wochenschnitt mal 1,3 abzüglich Geschwommenem (bei schlechter
-Erholung, Umfangsspitze und Trainingspause gekürzt, aber nur für die laufende Woche), in einer vollen Woche
-mindestens ein Ruhetag. Eine Einheit hat mindestens 400 m: Eine halbe (200 bis 375 m) wird auf 400 m angehoben, alles
-darunter wird ein Ruhetag. **Zuspitzen:** 8 bis 14 Tage vor dem Ziel höchstens 85 % des Wochenschnitts, in den letzten
-7 Tagen höchstens 70 %, mindestens aber das 1,2-Fache der Zieldistanz, damit der Versuch am Zieltag hineinpasst.
-Korrekturen stehen in `adjustments` und an der Begründung.
-
-**Vorgabe für den Tagesplan:** `POST /v1/plan/today` nimmt optional `day_plan` (`session_type`, `intensity`,
-`target_distance_meters`, `focus`). Claude hält sich daran, soweit die Grenzen es erlauben, ein Wunsch geht der
-Vorgabe vor. Die Vorgabe gehört zum Cache-Schlüssel.
-
-## Anfrage und Antwort
-
-Anfrage: `Authorization: Bearer <Token>` und als Body `{"snapshot": { ... }}` (das JSON aus
-`AthleteStateSnapshot`). Ungültige Snapshots lehnt der Server mit `400` ab. Unbekannte Felder
-werden verworfen und erreichen Claude nie.
-
-Optional `"wishes": "…"`: Freitext des Athleten für heute (höchstens 500 Zeichen, die App sendet bis 300,
-leer oder nur Leerraum zählt als kein Wunsch). Er steht in der Nutzernachricht als JSON-String und als Daten
-gekennzeichnet, kann die Grenzen für heute nie ändern und gehört zum Cache-Schlüssel: Ein anderer Wunsch bei
-gleichem Zustand ergibt einen neuen Plan. Zu lang oder kein String: `400`. Die Antwort enthält den Wunsch als `wishes`, wenn der Plan mit einem erzeugt wurde, und das Log die Länge als `wishChars`.
-
-Optional `"regenerate": true`: Der Server überspringt dann seinen Cache und fragt Claude auch bei
-unverändertem Zustand neu (die App schickt das beim Ziehen zum Aktualisieren). Das zählt gegen das
-Budget, bei Ausfall oder erschöpftem Budget kommt wie sonst der letzte Plan. Kein Boolean: `400`.
-
-Antwort `200`:
-
-```json
-{
-  "source": "claude",
-  "date": "2026-09-30",
-  "generated_at": "2026-09-30T10:00:00.000Z",
-  "stale": false,
-  "adjustments": ["Umfang von 4000 m auf 2400 m gekürzt (Grenze für heute: 2400 m)"],
-  "plan": {
-    "session_type": "endurance",
-    "intensity": "moderate",
-    "rationale": "…",
-    "total_distance_meters": 1600,
-    "estimated_duration_minutes": 45,
-    "sets": [
-      {
-        "name": "Hauptsatz",
-        "repetitions": 6,
-        "distance_meters": 200,
-        "target_pace_seconds_per_hundred_meters": 140,
-        "rest_seconds": 30,
-        "instructions": "gleichmäßig",
-        "equipment": ["pull_buoy", "paddles"]
-      }
-    ],
-    "coach_notes": ["Auf lockere Atmung achten."]
-  }
-}
-```
-
-| Feld | Bedeutung |
-|---|---|
-| `source` | `claude` frisch erzeugt, `cache` heute schon für denselben Zustand erzeugt, `fallback` letzter gültiger Plan |
-| `date` | Tag, für den der Plan erstellt wurde |
-| `stale` | `true`, wenn der Plan nicht von heute ist (nur bei `fallback`) |
-| `fallback_reason` | Nur bei `fallback`, warum Claude nicht geantwortet hat (siehe unten) |
-| `adjustments` | Korrekturen der Sicherheitsschicht auf Deutsch, die App kann sie anzeigen |
-| `plan.session_type` | `rest`, `recovery`, `technique`, `endurance`, `threshold`, `intervals`, `test` |
-| `plan.intensity` | `rest`, `easy`, `moderate`, `hard` |
-
-Ein Ruhetag hat `session_type: "rest"`, keine `sets` und `total_distance_meters: 0`.
-
-**Equipment:** Jeder Abschnitt hat `equipment`, eine Liste aus `pull_buoy`, `paddles`, `fins`, `snorkel`,
-`kickboard`, `ankle_band` (leer, wenn nichts gebraucht wird). Die Sicherheitsschicht entfernt Doppelte und
-begrenzt auf drei je Abschnitt. Pläne, die vor dieser Änderung gespeichert wurden, haben das Feld nicht: Der
-Server liest sie mit leerer Liste (`StoredTrainingPlanSchema`), die App ebenso. Ein unbekanntes Hilfsmittel in
-einem gespeicherten Plan macht ihn ungültig (kein Fallback darauf). Claude soll Hilfsmittel sparsam einsetzen,
-Wünsche des Athleten dazu berücksichtigen und bei Abschnitten mit Hilfsmitteln keine Zielpace vorgeben.
-
-**Gesamtziel:** Das Ziel (Distanz, Zielzeit, Zieltag) stellt der Athlet in der App ein ("Mein Ziel" in den
-Einstellungen, Standard 3,8 km in 60 Minuten bis 04.07.2027, dauerhaft gespeichert, jederzeit änderbar). Es reist
-im Snapshot (`goal`) mit jeder Anfrage. Die Nutzernachricht des Tages- und des Wochenplans enthält daraus den
-Abschnitt "Gesamtziel" (`src/plan/goal.ts`), berechnet aus den Zahlen und nie Freitext: Distanz, Zielzeit, Zielpace,
-Zieltag, Wochen bis dahin, längste Einheit in Prozent der Zieldistanz, Lücke zur Zielpace und die **Phase**
-(`base` über 12 Wochen, `specific` bis 12 Wochen, `taper` die letzten zwei Wochen, `peak_week` die letzte Woche,
-`past` nach dem Zieltag). Ist die Zieldistanz mit etwa 10 % Steigerung pro Woche in der Restzeit nicht sicher
-erreichbar (Realismus-Hinweis), soll Claude das ehrlich in einem Satz sagen. Das Ziel hebt nie die Grenzen auf:
-Umfang, Intensität und Ruhetage prüft weiter die Sicherheitsschicht, ein ferneres oder ehrgeizigeres Ziel macht die
-Einheit von heute also nicht länger.
-
-**Gesamtplan (`POST /v1/plan/macro`):** Request `{ snapshot, today }`. Der Server rechnet die Wochen vom Montag der
-Woche von heute bis zum Montag der Zielwoche (`macroWeekStarts`, höchstens 80 Wochen; nach dem Zieltag nur die
-laufende Woche) und fragt Claude nach Wochenumfang, Zahl der Einheiten (2 bis 5), Entlastung (`deload`) und
-Schwerpunkt je Woche. Die **Phase** (`base` über 12 Wochen vor der Zielwoche, `specific`, `taper` die zwei Wochen davor,
-`goal_week`, `maintain` nach dem Zieltag) setzt der Code (`macroPhase`), nicht Claude. Antwort:
-`{ goal_day, generated_at, plan: { rationale, weeks[{ week_start, target_meters, sessions, deload, focus, phase }] }, adjustments }`.
-`macroSanity.ts`: genau die angefragten Wochen (fehlende werden mit dem Umfang der Vorwoche ergänzt), erste Woche
-höchstens die Wochengrenze von heute (Erholung, Pause, Wochenschnitt), jede weitere höchstens etwa 10 % mehr als die
-letzte Woche ohne Entlastung, Entlastung höchstens 85 % und nie in der ersten Woche, beim Zuspitzen höchstens
-85 % und 70 % des Höhepunkts, Zielwoche höchstens die Hälfte des Höhepunkts, aber mindestens das 1,2-Fache der
-Zieldistanz (diese Versuchs-Woche ist von der Wachstumsgrenze ausgenommen, wenn die längste Einheit schon mindestens 70 %
-der Zieldistanz ist; hat die Sicherheitsschicht den Höhepunkt um mehr als 5 % gekürzt, nennt die Begründung den echten), 2 bis 5 Einheiten und je Einheit mindestens 400 m (eine Woche mit Training hat daher mindestens 800 m,
-sonst hebt der Code sie an, soweit die Grenze es erlaubt). Der Server speichert nichts, die App hält den Plan.
-
-**Rollender Plan der nächsten sieben Tage (`POST /v1/plan/week`):** Ohne `week_start` plant der Server die sieben
-Tage ab `from_date` (statt einer Kalenderwoche bis Sonntag). Die App ruft das jeden Tag beim ersten Öffnen auf.
-Zusätzliche Felder: `recent_swim` (Meter je Tag in den 7 Tagen davor, die Vorwoche, nur Information für den Prompt, sie
-schmälert das Budget nicht) und `macro_weeks` (was der Gesamtplan für die Wochen dieser Tage vorgibt, höchstens 3).
-Der Prompt nennt die Vorgabe als Richtung ("feinjustieren, nicht stur abschreiben", Regel 11). Mit `week_start` bleibt
-alles wie vorher (Kalenderwoche, schon Geschwommenes zählt zum Budget).
-
-**Vorhandenes Equipment:** `POST /v1/plan/today` und `POST /v1/plan/week` nehmen optional `equipment`, die Liste
-der Hilfsmittel, die der Athlet hat (Einstellungen der App). Fehlt das Feld, ist jedes erlaubt; eine leere Liste
-heißt "keins". Die Nutzernachricht nennt die vorhandenen Hilfsmittel, die Sicherheitsschicht entfernt alle
-anderen aus den Abschnitten und schreibt das in `adjustments` ("Hilfsmittel entfernt, die du nicht hast: …").
-Die Auswahl gehört (sortiert) zum Cache-Schlüssel des Tagesplans: Ändert sie sich, entsteht ein neuer Plan. Beim
-Wochenplan (nur Gerüst) wählt Claude keinen Schwerpunkt, der Hilfsmittel verlangt, die fehlen.
-
-Fehlerantworten: `400 invalid_request` (mit `details` je fehlerhaftem Feld), `401 unauthorized`,
-`503 plan_unavailable` (mit `reason`, wenn Claude ausfällt und noch kein Plan existiert).
+Der Server wiederholt Claude-Aufrufe nicht selbst: Eine Wiederholung nach einem Zeitlimit würde doppelt kosten und über
+das Zeitlimit des Reverse-Proxys laufen.
 
 ### `fallback_reason`
 
@@ -201,147 +43,72 @@ Fehlerantworten: `400 invalid_request` (mit `details` je fehlerhaftem Feld), `40
 
 ## Sicherheitsschicht
 
-Reiner Code ohne Netzwerk (`backend/src/plan/sanity.ts`). Sie korrigiert deterministisch und
-schreibt jede Korrektur in `adjustments`. Die Schwellen stehen in `DEFAULT_LIMITS`.
-
-**Zwei Schutzebenen mit denselben Zahlen.** `dailyLimits` berechnet aus dem Zustand die Grenzen für
-heute: Umfang, höchste Intensität, schnellste Zielpace oder einen Pflicht-Ruhetag. Diese Grenzen gehen
-**vorher** als verbindliche Vorgabe an Claude, damit der Plan von Anfang an hineinpasst. Die Prüfung
-**nachher** setzt dieselben Grenzen durch, falls Claude sie trotzdem überschreitet. Das Vorab-Nennen war
-die Konsequenz aus dem ersten echten Lauf: Wenn die Prüfung einen Plan erst hinterher kürzt, verliert die
-Einheit ihre Struktur (aus 4 × 200 m im Hauptsatz wurde ein einzelner 200er).
-
-| Regel | Wirkung |
-|---|---|
-| Übertrainingsrisiko (Flag `overreaching_risk`) | Ruhetag erzwungen |
-| 5 oder mehr Einheiten in 7 Tagen | Ruhetag erzwungen |
-| Wochenumfang ausgeschöpft (über dem 1,3-Fachen des Wochenschnitts) | Ruhetag erzwungen |
-| Schlechte Erholung (`recovery_poor`) | höchstens `easy`, Umfang halbiert |
-| Mäßige Erholung | höchstens `moderate` |
-| Trainingspause (`training_pause`) | höchstens `easy`, höchstens 800 m |
-| Umfangsspitze (`volume_spike`) | höchstens `moderate`, Umfang auf 60 Prozent |
-| Harte Einheit gestern oder heute | höchstens `moderate` (nie zwei harte hintereinander) |
-| Einheit länger als die längste der letzten 4 Wochen mal 1,25 | Umfang gekürzt (mindestens 1000 m Spielraum, höchstens 4500 m) |
-| Zielpace unrealistisch schnell | auf das schnellste erlaubte Tempo begrenzt |
-| Falsche Summe der Abschnitte | Gesamtdistanz neu berechnet |
-| Satz (Wiederholung) kein Vielfaches von 50 m oder unter 50 m, z. B. 4 × 25 m oder 4 × 75 m | auf Vielfache von 50 m gebracht (4 × 25 m wird 2 × 50 m, 4 × 75 m wird 3 × 100 m), Strecke bleibt etwa gleich; passt für 25-m- und 50-m-Becken |
-| Formalien (Pausen über 10 min, zu lange Texte) | stillschweigend normalisiert |
-
-Beim Kürzen schrumpft der größte Abschnitt zuerst, Ein- und Ausschwimmen bleiben meist erhalten.
-Eine Herabstufung der Intensität entfernt die Zielzeiten, weil sie zur härteren Einheit gehörten.
-Bei einem erzwungenen Ruhetag ersetzt die Sicherheitsschicht auch die Begründung, weil die von
-Claude zu einem anderen Plan gehörte. Bei allen anderen inhaltlichen Korrekturen hängt sie einen
-Hinweis an die Begründung ("Hinweis: Zur Sicherheit angepasst (...)"), damit die Begründung nicht den
-alten Umfang behauptet. Rein rechnerische Korrekturen (falsche Summe) erscheinen dort nicht.
-
-**Geblockt** (nicht korrigiert) wird ein Plan bei unmöglichen Werten (negative oder nicht endliche
-Zahlen), fehlender Begründung, Trainingstag ohne Abschnitte, mehr als 20 Abschnitten oder einem
-Umfang von über 13,5 km. Dann greift der Fallback.
-
-Die Pace im Snapshot enthält Pausen (siehe Grenzen in der
-[Snapshot-Doku](AthleteStateSnapshot.md)). Die Obergrenze für das Tempo ist deshalb locker
-gewählt und fängt nur Unsinn ab, sie ist keine Trainingsempfehlung.
+Reiner Code ohne Netzwerk (`backend/src/plan/multi/`): Dieselben Grenzen gehen vorab an Claude (Nutzernachricht) und
+prüfen danach den Plan. Sie korrigiert deterministisch (Umfang kürzen, Intensität senken, Sätze auf Vielfache von 50 m
+bringen, Ruhetage erzwingen) und hängt jede inhaltliche Korrektur an die Begründung und an `adjustments`, damit Plan und
+Text zusammenpassen. Was nicht mehr zu retten ist, blockt sie (`sanity_blocked`). Regeln, Zahlen und Quellen:
+[multisport-planning.md](multisport-planning.md#grenzen-je-sportart) und
+[Übergreifende Regeln](multisport-planning.md#übergreifende-regeln).
 
 ## Kostenbremse
 
 Der Server ruft Claude höchstens 5-mal pro Stunde und 20-mal pro Tag auf (`PLAN_MAX_GENERATIONS_PER_HOUR`,
-`PLAN_MAX_GENERATIONS_PER_DAY`). Darüber liefert er den letzten gültigen Plan
-(`fallback_reason: budget_exceeded`). Ein durchgesickerter Token kann so nur begrenzt Kosten
-erzeugen. Der Zähler liegt im Speicher und beginnt nach einem Neustart neu. Zusätzlich wird derselbe
-Zustand am selben Tag nur einmal geplant (Cache), außer die Anfrage verlangt `regenerate`.
+`PLAN_MAX_GENERATIONS_PER_DAY`), alle Pläne zählen zusammen. Darüber liefert er den letzten gültigen Tagesplan
+(`fallback_reason: budget_exceeded`) bzw. 503. Ein durchgesickerter Token kann so nur begrenzt Kosten erzeugen. Der
+Zähler liegt im Speicher und beginnt nach einem Neustart neu. Zusätzlich wird derselbe Zustand am selben Tag nur einmal
+geplant (Cache), außer die Anfrage verlangt `regenerate`.
 
 Setze außerdem in der Anthropic Console unter *Limits* ein monatliches Ausgabenlimit.
 
 ## Kosten (gemessen)
 
-Standardmodell ist `claude-opus-5-5` ($4 pro Million Eingabe-Token, $20 pro Million Ausgabe-Token).
-Gemessen im ersten echten Lauf am 30.09.2026 (fünf Szenarien, Effort `medium`, siehe
-[plan-eval.md](plan-eval.md)):
+Standardmodell ist `claude-opus-5-5` ($4 pro Million Eingabe-Token, $20 pro Million Ausgabe-Token), Effort `high`.
+Gemessen in den Bewertungsläufen vom 03. und 04.10.2026 (siehe `docs/eval-runs/`):
 
-| | Eingabe-Token | Ausgabe-Token | Dauer | Kosten |
+| Plan | Eingabe-Token | Ausgabe-Token | Dauer | Kosten |
 |---|---|---|---|---|
-| Durchschnitt | rund 3.400 | rund 1.250 | rund 15 s | rund $0,038 |
-| Spanne | 3.318 bis 3.474 | 458 bis 1.731 | 6 bis 19 s | $0,023 bis $0,048 |
+| Tag | rund 8.500 bis 9.600 | rund 1.700 bis 3.700 | rund 20 bis 40 s | rund $0,07 bis 0,11 |
+| Gesamtplan (24 bis 40 Wochen, drei Sportarten) | rund 12.000 bis 16.500 | rund 9.000 bis 10.000 | rund 85 bis 105 s | rund $0,25 |
 
-Ein Ruhetag ist am günstigsten (wenig Text). Die Eingabe ist größer als der reine Prompt (System-Prompt
-rund 1.000, Nutzernachricht rund 400 Token): Der Rest von rund 2.000 Token entfällt vermutlich auf das
-JSON-Schema der strukturierten Ausgabe. Die Ausgabe enthält das adaptive Denken, es fiel bei `medium`
-geringer aus als zuerst geschätzt.
+Die Woche liegt dazwischen. Ein Bewertungslauf aller Szenarien (29 Anfragen) kostet rund $4. Die Eingabe ist größer als
+der Prompt allein: Das JSON-Schema der strukturierten Ausgabe zählt mit. Die Ausgabe enthält das adaptive Denken.
 
-Bei ein bis zwei Plänen pro Tag sind das etwa $1 bis $3 im Monat. Die Kostenbremse deckelt den Worst
-Case bei 20 Aufrufen pro Tag, das wären rund $1 pro Tag (rund $29 im Monat).
-
-Das Modell lässt sich per `PLAN_MODEL` wechseln (z. B. `claude-sonnet-5-5`, halber Preis), die Denktiefe
-per `PLAN_EFFORT` (`low` bis `max`, Standard `high`; die Kosten und Zeiten in diesem Dokument stammen aus Läufen mit
-`medium`, mit `high` fallen sie höher aus). Jeder Aufruf schreibt Modell, Token und Dauer
-ins Server-Log (`docker logs swiminstructor-backend`, Eintrag "plan generated").
+Die Kostenbremse deckelt den Worst Case bei 20 Aufrufen pro Tag. Das Modell lässt sich per `PLAN_MODEL` wechseln
+(z. B. `claude-sonnet-5-5`, halber Preis), die Denktiefe per `PLAN_EFFORT` (`low` bis `max`). Jeder Aufruf schreibt
+Modell, Token und Dauer ins Server-Log (`docker logs swiminstructor-backend`).
 
 ## Datenschutz
 
-An Anthropic geht nur der Snapshot: aggregierte Zahlen (Umfänge, Pace, Erholungsabweichungen,
-Flags), keine Namen, keine einzelnen Workouts, keine Rohdaten aus Health. Der Server speichert nur
-den letzten Plan, den Snapshot selbst nicht.
+An Anthropic geht nur der Snapshot: aggregierte Zahlen (Umfänge, Tempo, Erholungsabweichungen, Warnhinweise, Leistungswerte
+und Zonen), keine Namen, keine einzelnen Workouts, keine Rohdaten aus Health. Dazu kommen die Angaben, die der Athlet
+selbst macht (Ziel, Wünsche, Feedback). Der Server speichert nur den letzten Tagesplan, den Snapshot selbst nicht.
 
 ## Konfiguration
 
 | Variable | Standard | Bedeutung |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | (leer) | Ohne Key startet der Server trotzdem, der Plan-Endpunkt liefert dann nur Cache und Fallback |
+| `ANTHROPIC_API_KEY` | (leer) | Ohne Key startet der Server trotzdem, die Plan-Endpunkte liefern dann nur Cache und Fallback bzw. 503 |
 | `PLAN_MODEL` | `claude-opus-5-5` | Modell für die Pläne |
 | `PLAN_EFFORT` | `high` | Denktiefe: `low`, `medium`, `high`, `xhigh`, `max` |
 | `PLAN_TIMEOUT_MS` | `75000` | Zeitlimit für Tages- und Wochenpläne (1.000 bis 85.000, bleibt unter den 95 s der App) |
 | `PLAN_MACRO_TIMEOUT_MS` | `180000` | Zeitlimit für Gesamtplan und Überarbeitung (1.000 bis 230.000, bleibt unter den 240 s von Caddy und den 245 s der App) |
 | `PLAN_SERVER_FALLBACK` | `true` | Bei Ablehnung durch Claudes Sicherheitsklassifikatoren automatisch ein anderes Modell versuchen |
-| `DATA_DIR` | `./data` (im Container `/data`) | Hier liegt der letzte Plan |
+| `DATA_DIR` | `./data` (im Container `/data`) | Hier liegt der letzte Tagesplan (`latest-plan-v2.json`) |
 | `PLAN_TIMEZONE` | `Europe/Berlin` | Zeitzone für "heute" |
 | `PLAN_MAX_GENERATIONS_PER_HOUR` | `5` | Kostenbremse |
 | `PLAN_MAX_GENERATIONS_PER_DAY` | `20` | Kostenbremse |
 
-Der Server wiederholt Claude-Aufrufe nicht selbst: Eine Wiederholung nach einem Zeitlimit würde
-doppelt kosten und über das Zeitlimit des Reverse-Proxys laufen. Bei einem Ausfall liefert er sofort
-den letzten Plan, die App kann es später noch einmal versuchen.
+## Bewertung der Pläne
 
-## Die Szenarien bewerten (Definition of Done M5)
+Wie echte Läufe gegen die Claude-API ausgewertet werden (Szenarien, automatische Prüfungen, Aufzeichnung und
+Wiedergabe): [multisport-planning.md, Abschnitt Bewertung](multisport-planning.md#bewertung). Auf dem Server, ohne
+Node: `backend/scripts/eval-in-docker.sh`.
 
-Die Szenarien liegen als Snapshots in `backend/scenarios/`: die fünf aus M3 und vier zum Gesamtziel (06 Ziel
-unrealistisch, 07 Zieltag vorbei, 08 eigenes Ziel, 09 Zielwoche). Je Szenario läuft ein **Tagesplan**, ein **Plan der
-nächsten 7 Tage** und ein **Gesamtplan bis zum Zieltag** gegen die echte API, das sind 27 Anfragen (geschätzt rund
-$1,50; nur eine Art: `EVAL_SCOPE=day`, `EVAL_SCOPE=week` oder `EVAL_SCOPE=macro`). Es gibt zwei Wege, je nachdem, wo du bist.
+## Woher die Regeln kommen
 
-**Auf dem Server (kein Node nötig).** Der Produktionsserver hat nur Docker. Das Hilfsskript startet
-einen Wegwerf-Container, liest den Key aus `/etc/swiminstructor/backend.env` (er wird nie
-angezeigt), fragt vorher die Kosten ab und schreibt das Ergebnis nach
-`docs/eval-runs/plan-eval-<Datum-Uhrzeit>.md` (das gepflegte Dokument `docs/plan-eval.md` bleibt unberührt):
-
-```bash
-cd /opt/stack/swiminstructor && git pull --ff-only origin main
-backend/scripts/eval-in-docker.sh
-cat docs/eval-runs/plan-eval-*.md | less      # oder den neuesten Lauf: ls -t docs/eval-runs | head -1
-```
-
-**Auf einem Rechner mit Node 22:**
-
-```bash
-cd backend
-npm ci
-mkdir -p ../docs/eval-runs
-ANTHROPIC_API_KEY=sk-ant-... npm run eval:scenarios > ../docs/eval-runs/plan-eval-$(date +%F).md
-```
-
-Das Skript druckt oben eine Übersichtstabelle und je Szenario den Snapshot, Claudes Rohplan, die Korrekturen der
-Sicherheitsschicht, den korrigierten Plan, die **automatische Zielprüfung** (`src/plan/evaluation.ts`) sowie Token,
-Dauer und Kosten. Die Zielprüfung ist eine Heuristik und ersetzt dein Urteil nicht: Sie zeigt, ob die Begründung das
-Ziel nennt, ob bei unrealistischem Ziel ehrlich darauf hingewiesen wird, ob nach dem Zieltag erhaltend geplant und auf
-ein neues Ziel verwiesen wird, ob die Zielwoche kurz und ohne harte Einheit bleibt, ob der Umfang beim Zuspitzen sinkt
-und ob die zielspezifische Phase Abschnitte nahe der Zielpace enthält. Beim Gesamtplan zusätzlich: reicht er bis zur
-Zielwoche, sinkt der Umfang beim Zuspitzen, gibt es Entlastungswochen, und trägt der Höhepunkt die Zieldistanz
-mehrfach pro Woche. Du bewertest jeden Plan
-von Hand. Deine Bewertung kommt in die Tabelle am Ende von `docs/plan-eval.md` (am einfachsten sagst du sie Claude im Chat, der trägt sie ein). Orientierung:
-
-| Szenario | Ein sinnvoller Plan ... |
-|---|---|
-| 01 Anfänger | ist kurz (unter 1.000 m), locker, technikorientiert, ohne ehrgeizige Zielzeiten |
-| 02 Fortschritt | steigert maßvoll, nutzt die gute Erholung, geht nicht an die Grenze nach der harten Einheit von gestern |
-| 03 Trainingspause | ist ein kurzer, lockerer Wiedereinstieg |
-| 04 Zieldatum nah | ist zielpace-spezifisch und reduziert den Umfang (Tapering) |
-| 05 Übertraining | ist ein Ruhetag oder eine sehr kurze, lockere Einheit, mit Hinweis auf Erholung |
+Die ersten Bewertungsläufe (September und Oktober 2026, damals nur Schwimmen) haben die Regeln geprägt, die heute in
+den Modulen stehen: Claude bekommt die Grenzen vorab, weil ein nachträgliches Kürzen die Einheit zerschneidet; die
+Begründung nennt nach einer Korrektur die neuen Zahlen; Technikübungen werden erklärt; jede Einheit hat eine
+Mindestlänge und jeder Schwimmsatz ist ein Vielfaches von 50 m (passt für 25- und 50-m-Becken); beim Zuspitzen sinkt der
+Umfang als harte Grenze, die Zielwoche trägt aber den Versuch auf die Zieldistanz. Die Rohausgaben der Läufe von Plan v2
+liegen in `docs/eval-runs/`.

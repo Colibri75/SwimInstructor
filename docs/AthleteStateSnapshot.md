@@ -1,4 +1,4 @@
-# Athleten-Zustands-Snapshot (Schema v1 und v2)
+# Athleten-Zustands-Snapshot (Schema v2, mit den Basisfeldern von v1)
 
 Der Snapshot fasst Workouts, Erholungswerte und Ziel in einem kompakten JSON zusammen. Die App
 berechnet ihn lokal (`AthleteStateCalculator` in `SwimInstructorCore`) und schickt ihn ans
@@ -196,8 +196,7 @@ nimmt.
 
 **Verträglichkeit:**
 
-- Der Server nimmt v1 und v2 an. Ein v1-Snapshot ergibt Zeichen für Zeichen dieselben Prompts wie vor v2
-  (Golden-Test `backend/test/golden/v1Prompts.test.ts`). `trainingGoalOf` und `sportStatesOf` liefern die v2-Sicht
-  auch für v1.
-- Kennt der Server v2 noch nicht (400 auf `snapshot.schema_version`), schickt die App dieselbe Anfrage einmal mit dem
-  v1-Teil (`PlanAPIClient.postSnapshot`).
+- Der Server nimmt nur noch v2 an. Ein v1-Snapshot (nur Schwimmen, ohne Gesamtziel und Sportarten) lehnt er mit
+  `400` auf `snapshot.schema_version` ab ("Plan v2 braucht Snapshot v2"). Die Basisfelder von v1 (`goal`, `volume`,
+  `pace`, `load`, `recovery`, `flags`) gehören weiter zu v2, beschreiben aber nur das Schwimmen; für den Prompt zählen die
+  Werte je Sportart.
