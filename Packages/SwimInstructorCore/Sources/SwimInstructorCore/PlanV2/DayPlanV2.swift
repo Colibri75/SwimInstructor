@@ -106,6 +106,10 @@ public struct DaySession: Codable, Equatable, Sendable {
     public let unit: PlanUnit
     public let distanceMeters: Double
     public let durationMinutes: Double
+    /// Schließt direkt an die erste Einheit des Tages an (Koppeltraining, etwa Laufen direkt nach dem Rad).
+    public let brick: Bool
+    /// Drinnen (Rolle, Laufband).
+    public let indoor: Bool
     public let steps: [PlanStep]
 
     public init(
@@ -118,6 +122,8 @@ public struct DaySession: Codable, Equatable, Sendable {
         unit: PlanUnit,
         distanceMeters: Double,
         durationMinutes: Double,
+        brick: Bool = false,
+        indoor: Bool = false,
         steps: [PlanStep]
     ) {
         self.sport = sport
@@ -129,7 +135,30 @@ public struct DaySession: Codable, Equatable, Sendable {
         self.unit = unit
         self.distanceMeters = distanceMeters
         self.durationMinutes = durationMinutes
+        self.brick = brick
+        self.indoor = indoor
         self.steps = steps
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case sport, sessionType, intensity, focus, test, amount, unit, distanceMeters, durationMinutes, brick, indoor, steps
+    }
+
+    /// Gespeicherte Pläne und ältere Server ohne `brick` und `indoor` bleiben lesbar.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        sport = try container.decode(SportID.self, forKey: .sport)
+        sessionType = try container.decode(SessionType.self, forKey: .sessionType)
+        intensity = try container.decode(PlanIntensity.self, forKey: .intensity)
+        focus = try container.decode(String.self, forKey: .focus)
+        test = try container.decodeIfPresent(PlannedTest.self, forKey: .test)
+        amount = try container.decode(Double.self, forKey: .amount)
+        unit = try container.decode(PlanUnit.self, forKey: .unit)
+        distanceMeters = try container.decode(Double.self, forKey: .distanceMeters)
+        durationMinutes = try container.decode(Double.self, forKey: .durationMinutes)
+        brick = try container.decodeIfPresent(Bool.self, forKey: .brick) ?? false
+        indoor = try container.decodeIfPresent(Bool.self, forKey: .indoor) ?? false
+        steps = try container.decode([PlanStep].self, forKey: .steps)
     }
 
     /// Alle Hilfsmittel der Einheit, ohne Doppelte, in der Reihenfolge, in der sie gebraucht werden.
@@ -144,12 +173,28 @@ public struct DayPlanV2: Codable, Equatable, Sendable {
     public let rationale: String
     /// Leer an einem Ruhetag.
     public let sessions: [DaySession]
+    /// Kraft- und Mobilitätsblöcke mit Übungen.
+    public let extras: [DayExtra]
     public let coachNotes: [String]
 
-    public init(rationale: String, sessions: [DaySession], coachNotes: [String] = []) {
+    public init(rationale: String, sessions: [DaySession], extras: [DayExtra] = [], coachNotes: [String] = []) {
         self.rationale = rationale
         self.sessions = sessions
+        self.extras = extras
         self.coachNotes = coachNotes
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case rationale, sessions, extras, coachNotes
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        rationale = try container.decode(String.self, forKey: .rationale)
+        sessions = try container.decode([DaySession].self, forKey: .sessions)
+        // Blöcke einer Art, die diese App-Version nicht kennt, fallen weg.
+        extras = (try container.decodeIfPresent([DayExtra].self, forKey: .extras) ?? []).filter { $0.kind != .unknown }
+        coachNotes = try container.decodeIfPresent([String].self, forKey: .coachNotes) ?? []
     }
 
     public var isRestDay: Bool { sessions.isEmpty }

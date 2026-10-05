@@ -8,10 +8,12 @@ struct TodayView: View {
     @EnvironmentObject private var weekLoader: MultiSportWeekLoader
     @EnvironmentObject private var settings: BackendSettings
     @EnvironmentObject private var testResultInbox: WatchTestResultInbox
+    @EnvironmentObject private var feedbackBook: SessionFeedbackBook
     @Environment(\.scenePhase) private var scenePhase
     @State private var showsSettings = false
     @State private var wishDraft = ""
     @State private var resultTest: TestResultTarget?
+    @State private var feedbackWorkout: Workout?
 
     private let onShowWeek: () -> Void
     private let progress = MultiSportWeekProgressCalculator()
@@ -35,8 +37,11 @@ struct TodayView: View {
         NavigationStack {
             List {
                 watchResultSection
+                adaptationSection
+                feedbackSection
                 weekTodaySection
                 planSection
+                extrasSections
                 wishSection
             }
             .navigationTitle("Heute")
@@ -45,6 +50,13 @@ struct TodayView: View {
             .refreshable { await loader.refresh() }
             .sheet(item: $resultTest) { target in
                 TestResultSheet(sport: target.sport, testID: target.testID, watchResult: target.watchResult)
+            }
+            .sheet(item: $feedbackWorkout) { workout in
+                SessionFeedbackSheet(workout: workout) { feedback in
+                    feedbackBook.record(feedback)
+                    // Beschwerden oder eine sehr harte Einheit: Die sieben Tage und heute passen sich sofort an.
+                    Task { await loader.refreshIfNeeded() }
+                }
             }
         }
         .task { await loader.refreshIfNeeded() }
@@ -78,6 +90,7 @@ struct TodayView: View {
                         ForEach(Array(entry.sessions.enumerated()), id: \.offset) { _, session in
                             PlannedSessionLine(session: session)
                         }
+                        WeekExtrasLine(extras: entry.extras)
                     }
                     if !entry.focus.isEmpty, !entry.isRestDay, !entry.isUnavailable {
                         Text(entry.focus)
@@ -133,12 +146,76 @@ struct TodayView: View {
         if let response = loader.response {
             ForEach(Array(response.plan.sessions.enumerated()), id: \.offset) { index, session in
                 Section {
-                    SessionCardView(session: session, onEnterResult: resultAction(for: session))
+                    SessionCardView(
+                        session: session,
+                        previousSport: index > 0 ? response.plan.sessions[index - 1].sport : nil,
+                        onEnterResult: resultAction(for: session)
+                    )
                 } header: {
                     if response.plan.sessions.count > 1 {
                         Text("Einheit \(index + 1) von \(response.plan.sessions.count)")
                     }
                 }
+            }
+        }
+    }
+
+    /// Kraft- und Mobilitätsblöcke des Tages, je ein eigener Abschnitt nach den Einheiten.
+    @ViewBuilder
+    private var extrasSections: some View {
+        if let response = loader.response {
+            ForEach(Array(response.plan.extras.enumerated()), id: \.offset) { _, extra in
+                Section {
+                    ExtraCardView(extra: extra)
+                } header: {
+                    Text("Ergänzung")
+                }
+            }
+        }
+    }
+
+    /// Nach einer Anpassung außer der Reihe: warum der Plan anders aussieht.
+    @ViewBuilder
+    private var adaptationSection: some View {
+        if let signal = weekLoader.lastAdaptation, let notice = PlanV2Formatting.adaptationNotice(signal.reason) {
+            Section {
+                Label(notice, systemImage: "arrow.triangle.2.circlepath")
+                    .font(.footnote)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    /// Einheiten von gestern und heute ohne Rückmeldung: Ein Tipp öffnet "Wie war's?".
+    @ViewBuilder
+    private var feedbackSection: some View {
+        let pending = feedbackBook.pending(workouts: loader.reading?.allWorkouts ?? [], now: Date())
+        if !pending.isEmpty {
+            Section {
+                ForEach(pending) { workout in
+                    Button {
+                        feedbackWorkout = workout
+                    } label: {
+                        HStack {
+                            Image(systemName: SportRegistry.standard.symbolName(for: workout.sport))
+                                .frame(width: 22)
+                                .accessibilityHidden(true)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(SportRegistry.standard.displayName(for: workout.sport))
+                                Text(workout.startDate.formatted(.dateTime.weekday(.wide).hour().minute()))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Text("Wie war's?")
+                                .font(.subheadline.weight(.semibold))
+                        }
+                    }
+                }
+            } header: {
+                Text("Rückmeldung")
+            } footer: {
+                Text("Anstrengung und Beschwerden: Der Plan der nächsten Tage richtet sich von selbst danach.")
             }
         }
     }
@@ -259,6 +336,18 @@ struct PlannedSessionLine: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
+            if session.brick {
+                Image(systemName: "link")
+                    .font(.caption)
+                    .foregroundStyle(.tint)
+                    .accessibilityLabel("Koppeltraining")
+            }
+            if session.indoor {
+                Image(systemName: "house")
+                    .font(.caption)
+                    .foregroundStyle(.tint)
+                    .accessibilityLabel("Drinnen")
+            }
         }
         .accessibilityElement(children: .combine)
     }

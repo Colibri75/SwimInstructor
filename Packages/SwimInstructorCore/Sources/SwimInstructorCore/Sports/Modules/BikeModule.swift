@@ -31,6 +31,10 @@ public struct BikeModule: SportModule {
     public let planUnit = PlanUnit.minutes
     /// 25 km/h.
     public let typicalSpeedMetersPerSecond: Double = 7
+    /// Koppeltraining Schwimmen und direkt danach Rad (Wechsel 1).
+    public let brickAfter: [SportID] = [.swim]
+    public let weatherSensitive = true
+    public let indoorEquipment: IndoorEquipment? = IndoorEquipment(id: "indoor_trainer", displayName: "Rolle")
 
     public let recording = SportRecording(
         locations: [.outdoor, .indoor],

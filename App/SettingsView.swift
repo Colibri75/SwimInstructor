@@ -6,6 +6,8 @@ import SwimInstructorCore
 struct SettingsView: View {
     @EnvironmentObject private var settings: BackendSettings
     @EnvironmentObject private var healthKitManager: HealthKitManager
+    @EnvironmentObject private var locationProvider: LocationProvider
+    @EnvironmentObject private var calendarProvider: CalendarAvailabilityProvider
     @Environment(\.dismiss) private var dismiss
 
     /// Wird nach dem Speichern aufgerufen, damit der Heute-Bildschirm gleich einen Plan holt.
@@ -26,6 +28,10 @@ struct SettingsView: View {
     private let scheduleStore = UserDefaultsWeeklyScheduleStore()
     @State private var pauseReport: PauseReport?
     private let pauseStore = UserDefaultsPauseReportStore()
+    @State private var planning = PlanningPreferences.standard
+    private let planningStore = UserDefaultsPlanningPreferencesStore()
+    @State private var indoorOwned: Set<String> = []
+    private let indoorStore = UserDefaultsIndoorEquipmentStore()
 
     init(onSave: @escaping () -> Void = {}) {
         self.onSave = onSave
@@ -45,7 +51,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Server")
                 } footer: {
-                    Text("Das Token ist der Wert von API_TOKEN auf dem Server. Es wird nur im Schlüsselbund dieses iPhones gespeichert.")
+                    Text("Dein persönlicher Token vom Server (beim Besitzer der Wert von API_TOKEN, sonst von ihm angelegt). Er wird nur im Schlüsselbund dieses iPhones gespeichert.")
                 }
 
                 Section {
@@ -85,14 +91,19 @@ struct SettingsView: View {
                     Text("Danach richten sich Zonen und Tempo im Plan. Hier trägst du Werte von Hand oder nach einem Test ein und stellst ein, ob und wie oft die App Tests einplant.")
                 }
 
+                planningSection
+
                 Section {
                     ForEach(EquipmentItem.allCases) { item in
                         Toggle(item.title, isOn: equipmentBinding(for: item))
                     }
+                    ForEach(SportRegistry.standard.indoorEquipment, id: \.id) { item in
+                        Toggle(item.displayName, isOn: indoorBinding(for: item.id))
+                    }
                 } header: {
                     Text("Mein Equipment")
                 } footer: {
-                    Text("Der Plan nutzt nur, was hier an ist. Die Auswahl gilt ab dem nächsten Plan (zum Aktualisieren auf Heute nach unten ziehen). Ohne Auswahl plant dein Coach ganz ohne Hilfsmittel.")
+                    Text("Der Plan nutzt nur, was hier an ist. Mit Rolle oder Laufband plant er bei Unwetter drinnen. Die Auswahl gilt ab dem nächsten Plan (zum Aktualisieren auf Heute nach unten ziehen). Ohne Auswahl plant dein Coach ganz ohne Hilfsmittel.")
                 }
 
                 Section("Apple Health") {
@@ -125,8 +136,91 @@ struct SettingsView: View {
             .onAppear {
                 urlText = settings.baseURL.absoluteString
                 ownedEquipment = Set(equipmentStore.ownedEquipment().compactMap(EquipmentItem.init(rawValue:)))
+                indoorOwned = Set(indoorStore.ownedIndoorEquipment())
+                planning = planningStore.preferences()
             }
         }
+    }
+
+    // MARK: - Planung
+
+    private var planningSection: some View {
+        Section {
+            Stepper(value: planningBinding(\.supplements.strengthPerWeek), in: Supplements.strengthRange) {
+                LabeledContent("Kraft", value: planning.supplements.strengthPerWeek == 0 ? "aus" : "\(planning.supplements.strengthPerWeek)× pro Woche")
+            }
+            Stepper(value: planningBinding(\.supplements.mobilityPerWeek), in: Supplements.mobilityRange) {
+                LabeledContent("Mobilität", value: planning.supplements.mobilityPerWeek == 0 ? "aus" : "\(planning.supplements.mobilityPerWeek)× pro Woche")
+            }
+            Toggle("Wetter berücksichtigen", isOn: Binding(
+                get: { planning.usesWeather },
+                set: { isOn in
+                    updatePlanning { $0.usesWeather = isOn }
+                    if isOn { locationProvider.refresh() } else { locationProvider.forget() }
+                }
+            ))
+            if planning.usesWeather, locationProvider.isDenied {
+                Text("Ohne Ortsfreigabe gibt es kein Wetter. Erlaube sie in den Einstellungen des iPhones unter Datenschutz > Ortungsdienste.")
+                    .font(.footnote)
+                    .foregroundStyle(.orange)
+            }
+            Toggle("Kalender berücksichtigen", isOn: Binding(
+                get: { planning.usesCalendar },
+                set: { isOn in
+                    updatePlanning { $0.usesCalendar = isOn }
+                    if isOn { Task { await calendarProvider.requestAccess() } }
+                }
+            ))
+            if planning.usesCalendar {
+                if calendarProvider.isDenied {
+                    Text("Ohne Kalenderzugriff zählt die freie Zeit nicht. Erlaube ihn in den Einstellungen des iPhones unter Datenschutz > Kalender.")
+                        .font(.footnote)
+                        .foregroundStyle(.orange)
+                }
+                Stepper(value: planningBinding(\.calendarStartHour), in: 0...(planning.calendarEndHour - 1)) {
+                    LabeledContent("Training ab", value: "\(planning.calendarStartHour) Uhr")
+                }
+                Stepper(value: planningBinding(\.calendarEndHour), in: (planning.calendarStartHour + 1)...24) {
+                    LabeledContent("Training bis", value: "\(planning.calendarEndHour) Uhr")
+                }
+            }
+        } header: {
+            Text("Planung")
+        } footer: {
+            Text("Kraft und Mobilität kommen als kurze Blöcke in die Woche, mit Übungen am Tag. Mit Wetter weicht der Plan bei Gewitter, Sturm oder Glätte nach drinnen aus (dein Ort geht auf etwa 10 km gerundet zum Server). Mit Kalender plant er an vollen Tagen weniger: Es zählt der längste freie Block im Trainingsfenster, Termine selbst bleiben auf dem iPhone.")
+        }
+    }
+
+    private func planningBinding(_ keyPath: WritableKeyPath<PlanningPreferences, Int>) -> Binding<Int> {
+        Binding(
+            get: { planning[keyPath: keyPath] },
+            set: { value in updatePlanning { $0[keyPath: keyPath] = value } }
+        )
+    }
+
+    /// Ändert die Einstellungen der Planung und speichert sofort (über den Initialisierer, der die Bereiche einhält).
+    private func updatePlanning(_ change: (inout PlanningPreferences) -> Void) {
+        var copy = planning
+        change(&copy)
+        let checked = PlanningPreferences(
+            supplements: Supplements(strengthPerWeek: copy.supplements.strengthPerWeek, mobilityPerWeek: copy.supplements.mobilityPerWeek),
+            usesWeather: copy.usesWeather,
+            usesCalendar: copy.usesCalendar,
+            calendarStartHour: copy.calendarStartHour,
+            calendarEndHour: copy.calendarEndHour
+        )
+        planning = checked
+        planningStore.save(checked)
+    }
+
+    private func indoorBinding(for id: String) -> Binding<Bool> {
+        Binding(
+            get: { indoorOwned.contains(id) },
+            set: { isOn in
+                if isOn { indoorOwned.insert(id) } else { indoorOwned.remove(id) }
+                indoorStore.setOwnedIndoorEquipment(indoorOwned)
+            }
+        )
     }
 
     // MARK: - Gesamtziel

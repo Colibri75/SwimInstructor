@@ -56,7 +56,12 @@ public enum PlanV2Formatting {
 
     /// Das Ziel eines Schritts: "2:05 /100 m", "5:30 /km", "Zone 2", "220 W", "28 km/h", "90 /min", "Anstrengung 6 von 10".
     public static func target(_ step: PlanStep) -> String? {
-        guard let type = step.targetType, let value = step.targetValue else { return nil }
+        target(type: step.targetType, value: step.targetValue)
+    }
+
+    /// Ein Ziel mit Wert, wie bei einem Schritt; `nil` ohne Ziel.
+    public static func target(type: StepTarget?, value: Double?) -> String? {
+        guard let type, let value else { return nil }
         switch type {
         case .pacePerHundredMeters: return "\(PlanFormatting.pace(value)) /100 m"
         case .pacePerKilometer: return "\(PlanFormatting.pace(value)) /km"
@@ -186,5 +191,94 @@ public enum PlanV2Formatting {
             return "Letzter gültiger Plan vom \(PlanFormatting.germanDate(response.date)). \(reason)"
         }
         return "Früherer Plan von heute. \(reason)"
+    }
+}
+
+// MARK: - Koppeltraining, drinnen, Kraft und Mobilität, Anpassung
+
+public extension PlanV2Formatting {
+    /// Hinweise zu einer Einheit: "Koppeltraining: direkt nach dem Radfahren", "Drinnen (Rolle)".
+    static func sessionHints(brick: Bool, indoor: Bool, sport: SportID, previous: SportID?, registry: SportRegistry = .standard) -> [String] {
+        var hints: [String] = []
+        if brick, let previous {
+            hints.append("Koppeltraining: direkt nach \(registry.displayName(for: previous))")
+        }
+        if indoor {
+            if let equipment = registry.module(for: sport)?.indoorEquipment {
+                hints.append("Drinnen (\(equipment.displayName))")
+            } else {
+                hints.append("Drinnen")
+            }
+        }
+        return hints
+    }
+
+    /// "Kraft · 30 min".
+    static func extraTitle(kind: ExtraKind, minutes: Double) -> String {
+        "\(kind.displayName) · \(duration(minutes: minutes))"
+    }
+
+    /// Was nach einer Anpassung außer der Reihe über dem Plan steht.
+    static func adaptationNotice(_ reason: ReplanReason) -> String? {
+        switch reason {
+        case .pain: return "Dein Plan wurde angepasst, weil du Beschwerden gemeldet hast: Die betroffene Sportart ist ein paar Tage gebremst."
+        case .effort: return "Dein Plan wurde angepasst, weil eine Einheit deutlich anstrengender war als geplant: Jetzt kommt erst etwas Lockeres."
+        case .missed: return "Dein Plan wurde angepasst, weil gestern eine geplante Einheit ausgefallen ist. Sie wird nicht nachgeholt, wichtige Inhalte wandern in die nächsten Tage."
+        case .daily, .manual: return nil
+        }
+    }
+
+    /// "Anstrengung 7 von 10, leichte Beschwerden (Knie)".
+    static func feedbackSummary(_ feedback: SessionFeedback) -> String {
+        var parts: [String] = []
+        if let effort = feedback.effort { parts.append("Anstrengung \(effort) von 10") }
+        if feedback.pain != .none {
+            let area = feedback.painArea.map { " (\($0.displayName))" } ?? ""
+            parts.append("\(feedback.pain.adjective) Beschwerden\(area)")
+        } else {
+            parts.append("keine Beschwerden")
+        }
+        return parts.joined(separator: ", ")
+    }
+}
+
+/// Die Rückmeldungen zu den Einheiten für die Oberfläche: welche Einheit noch eine braucht und was schon gesagt ist.
+@MainActor
+public final class SessionFeedbackBook: ObservableObject {
+    @Published public private(set) var entries: [SessionFeedback]
+
+    private let store: SessionFeedbackStoring
+    private let registry: SportRegistry
+    private let calendar: Calendar
+
+    public init(store: SessionFeedbackStoring, registry: SportRegistry = .standard, calendar: Calendar = .current) {
+        self.store = store
+        self.registry = registry
+        self.calendar = calendar
+        self.entries = store.all()
+    }
+
+    public func feedback(for workoutID: UUID) -> SessionFeedback? {
+        entries.last { $0.workoutID == workoutID }
+    }
+
+    /// Speichert die Rückmeldung (eine je Einheit, die neue gilt).
+    public func record(_ feedback: SessionFeedback) {
+        try? store.save(feedback)
+        entries = store.all()
+    }
+
+    /// Einheiten von gestern und heute (vorbei, bekannte Sportart), zu denen es noch keine Rückmeldung gibt; neueste zuerst.
+    public func pending(workouts: [Workout], now: Date) -> [Workout] {
+        let today = PlanFormatting.isoDay(now, calendar: calendar)
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: now).map { PlanFormatting.isoDay($0, calendar: calendar) } ?? today
+        let answered = Set(entries.map(\.workoutID))
+        return workouts
+            .filter { $0.endDate <= now && registry.module(for: $0.sport) != nil && !answered.contains($0.id) }
+            .filter {
+                let day = PlanFormatting.isoDay($0.startDate, calendar: calendar)
+                return day == today || day == yesterday
+            }
+            .sorted { $0.startDate > $1.startDate }
     }
 }

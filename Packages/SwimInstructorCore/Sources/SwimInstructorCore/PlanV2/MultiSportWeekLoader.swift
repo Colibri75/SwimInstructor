@@ -27,6 +27,9 @@ public final class MultiSportWeekLoader: ObservableObject {
     @Published public private(set) var needsConfiguration = false
     /// Die Woche, die der Plan-Tab zeigt (Montag, `yyyy-MM-dd`).
     @Published public var selectedWeekStart: String
+    /// Warum die sieben Tage zuletzt außer der Reihe neu geplant wurden (Beschwerden, sehr harte Einheit, Ausfall);
+    /// `nil`, wenn es die tägliche Abstimmung war.
+    @Published public private(set) var lastAdaptation: AdaptationSignal?
 
     /// Liefert Zustand und Einheiten; wird nach dem Anlegen gesetzt, weil es vom Heute-Bildschirm abhängt.
     public var contextProvider: @MainActor () -> PlanningContext? = { nil }
@@ -37,9 +40,14 @@ public final class MultiSportWeekLoader: ObservableObject {
     public var testSettingsProvider: @MainActor () -> TestSettings? = { nil }
     /// Die letzte Woche des Gesamtplans (Montag); bis dorthin lässt sich im Plan-Tab vorblättern. `nil` ohne Gesamtplan.
     public var lastWeekStartProvider: @MainActor () -> String? = { nil }
+    /// Die Rückmeldungen des Athleten zu seinen Einheiten (Anstrengung, Beschwerden).
+    public var feedbackProvider: @MainActor () -> [SessionFeedback] = { [] }
+    /// Kraft und Mobilität, Ort und freie Zeit für die angefragten Tage.
+    public var extrasProvider: @MainActor ([String]) -> PlanningExtras = { _ in .none }
 
     private let store: WeekPlanV2Storing
     private let dailyMarker: DailyRefreshMarking
+    private let adaptationMarker: AdaptationMarking
     private let planProvider: @MainActor () -> WeekPlanV2Providing?
     private let registry: SportRegistry
     private let now: () -> Date
@@ -51,12 +59,14 @@ public final class MultiSportWeekLoader: ObservableObject {
         store: WeekPlanV2Storing,
         planProvider: @escaping @MainActor () -> WeekPlanV2Providing?,
         dailyMarker: DailyRefreshMarking = UserDefaultsDailyRefreshMarker(key: "plan.lastWeekRefreshV2"),
+        adaptationMarker: AdaptationMarking = UserDefaultsAdaptationMarker(),
         registry: SportRegistry = .standard,
         now: @escaping () -> Date = { Date() },
         calendar: Calendar = .current
     ) {
         self.store = store
         self.dailyMarker = dailyMarker
+        self.adaptationMarker = adaptationMarker
         self.planProvider = planProvider
         self.registry = registry
         self.now = now
@@ -112,6 +122,7 @@ public final class MultiSportWeekLoader: ObservableObject {
             before: end,
             plannedHard: { [weak self] date, sport in self?.plannedHard(on: date, sport: sport) ?? false },
             maximumHeartRate: snapshot.performance?.athlete.first(where: { $0.metric == .maxHeartRate })?.value,
+            feedback: feedbackProvider(),
             registry: registry,
             calendar: calendar
         )
@@ -126,10 +137,29 @@ public final class MultiSportWeekLoader: ObservableObject {
 
     // MARK: - Planen
 
+    /// Geplante Einheiten der letzten Tage, die ausgefallen sind.
+    public func missedSessions(workouts: [Workout]) -> [MissedSession] {
+        Adaptation.missedSessions(weeks: weeks, workouts: workouts.filter { $0.startDate <= now() }, today: todayKey, calendar: calendar)
+    }
+
+    /// Ein neuer Anlass, die Tage sofort neu abzustimmen (Beschwerden, sehr harte Einheit, Ausfall gestern), sonst `nil`.
+    public func pendingAdaptation() -> AdaptationSignal? {
+        guard let context = contextProvider() else { return nil }
+        let workouts = context.workouts.filter { $0.startDate <= now() }
+        return Adaptation.signal(
+            feedback: feedbackProvider(),
+            missed: missedSessions(workouts: workouts),
+            workouts: workouts,
+            today: todayKey,
+            handled: adaptationMarker.handled(),
+            calendar: calendar
+        )
+    }
+
     /// Plant die nächsten sieben Tage ab heute neu, abgestimmt auf Zustand, bisheriges Training und Gesamtplan. Tage ohne
     /// Zeit bleiben Ruhetage. Liefert `true`, wenn der Plan erneuert wurde.
     @discardableResult
-    public func planNextDays(wishes: String? = nil) async -> Bool {
+    public func planNextDays(wishes: String? = nil, reason: ReplanReason = .manual) async -> Bool {
         guard !isLoading else { return false }
         guard let context = contextProvider() else {
             error = "Die Health-Daten sind noch nicht geladen. Öffne zuerst den Tab Heute."
@@ -150,16 +180,21 @@ public final class MultiSportWeekLoader: ObservableObject {
             fromDate: fromDate,
             today: fromDate,
             unavailableDates: unavailable.sorted(),
+            // Mit heute: Beschwerden nach einer Einheit von heute bremsen schon die nächsten Tage (der Server zählt
+            // heutige Einheiten nur dafür, nicht für die Grenzen davor).
             recentTraining: recentTraining(
                 from: weekCalendar.addingDays(-Self.windowDays, to: fromDate) ?? fromDate,
-                before: fromDate,
+                before: weekCalendar.addingDays(1, to: fromDate) ?? fromDate,
                 snapshot: context.snapshot,
                 workouts: context.workouts
             ),
             macroWeeks: macroProvider(dates),
             wishes: wishes,
             equipment: equipmentProvider(),
-            testSettings: testSettingsProvider()
+            testSettings: testSettingsProvider(),
+            missedSessions: missedSessions(workouts: context.workouts),
+            reason: reason,
+            extras: extrasProvider(dates)
         )
 
         isLoading = true
@@ -177,11 +212,19 @@ public final class MultiSportWeekLoader: ObservableObject {
 
     /// Einmal am Tag, beim ersten Öffnen: die nächsten sieben Tage neu abstimmen. Schlägt es fehl, gilt der Tag nicht als
     /// erledigt. Ändert sich `stamp` (etwa mit dem Ziel oder dem Gesamtplan), gilt der Tag wieder als offen.
+    ///
+    /// Außer der Reihe, auch mehrmals am Tag: Hat der Athlet Beschwerden gemeldet, war eine Einheit sehr hart oder ist
+    /// gestern eine geplante Einheit ausgefallen, plant die App sofort neu (jeder Anlass einmal).
     public func refreshDaily(wishes: String? = nil, stamp: String = "") async {
         let marker = "\(todayKey)|\(stamp)"
-        guard dailyMarker.lastDay() != marker else { return }
-        if await planNextDays(wishes: wishes) {
+        let signal = pendingAdaptation()
+        guard dailyMarker.lastDay() != marker || signal != nil else { return }
+        if await planNextDays(wishes: wishes, reason: signal?.reason ?? .daily) {
             dailyMarker.setLastDay(marker)
+            if let signal {
+                adaptationMarker.markHandled(signal.key)
+                lastAdaptation = signal
+            }
         }
     }
 

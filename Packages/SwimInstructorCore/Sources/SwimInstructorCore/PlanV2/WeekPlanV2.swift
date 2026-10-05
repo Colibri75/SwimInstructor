@@ -11,28 +11,50 @@ public struct DayTargetV2: Codable, Equatable, Sendable {
         public let focus: String
         /// Kennung des Tests, wenn die Einheit ein Leistungstest ist.
         public let testID: String?
+        /// Koppeltraining (direkt nach der ersten Einheit), nur gesetzt, wenn ja.
+        public let brick: Bool?
+        /// Drinnen, nur gesetzt, wenn ja.
+        public let indoor: Bool?
 
-        public init(sport: SportID, sessionType: SessionType, intensity: PlanIntensity, amount: Double, focus: String, testID: String? = nil) {
+        public init(sport: SportID, sessionType: SessionType, intensity: PlanIntensity, amount: Double, focus: String, testID: String? = nil, brick: Bool = false, indoor: Bool = false) {
             self.sport = sport
             self.sessionType = sessionType
             self.intensity = intensity
             self.amount = amount
             self.focus = focus
             self.testID = testID
+            self.brick = brick ? true : nil
+            self.indoor = indoor ? true : nil
         }
 
         private enum CodingKeys: String, CodingKey {
-            case sport, sessionType, intensity, amount, focus
+            case sport, sessionType, intensity, amount, focus, brick, indoor
             case testID = "testId"
+        }
+    }
+
+    /// Ein Kraft- oder Mobilitätsblock der Vorgabe.
+    public struct Extra: Codable, Equatable, Sendable {
+        public let kind: ExtraKind
+        public let minutes: Int
+        public let focus: String
+
+        public init(kind: ExtraKind, minutes: Int, focus: String) {
+            self.kind = kind
+            self.minutes = minutes
+            self.focus = focus
         }
     }
 
     public let focus: String?
     public let sessions: [Session]
+    /// Fehlt ohne Blöcke (nicht leer), damit die Vorgabe wie vor Kraft und Mobilität aussieht.
+    public let extras: [Extra]?
 
-    public init(focus: String?, sessions: [Session]) {
+    public init(focus: String?, sessions: [Session], extras: [Extra] = []) {
         self.focus = focus
         self.sessions = sessions
+        self.extras = extras.isEmpty ? nil : extras
     }
 }
 
@@ -50,6 +72,10 @@ public struct WeekSession: Codable, Equatable, Sendable {
     public var focus: String
     /// Gesetzt bei einem Leistungstest.
     public var test: PlannedTest?
+    /// Schließt direkt an die erste Einheit des Tages an (Koppeltraining).
+    public var brick: Bool
+    /// Drinnen (Rolle, Laufband).
+    public var indoor: Bool
 
     public init(
         sport: SportID,
@@ -60,7 +86,9 @@ public struct WeekSession: Codable, Equatable, Sendable {
         minutes: Double,
         distanceMeters: Double,
         focus: String,
-        test: PlannedTest? = nil
+        test: PlannedTest? = nil,
+        brick: Bool = false,
+        indoor: Bool = false
     ) {
         self.sport = sport
         self.sessionType = sessionType
@@ -71,6 +99,28 @@ public struct WeekSession: Codable, Equatable, Sendable {
         self.distanceMeters = distanceMeters
         self.focus = focus
         self.test = test
+        self.brick = brick
+        self.indoor = indoor
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case sport, sessionType, intensity, amount, unit, minutes, distanceMeters, focus, test, brick, indoor
+    }
+
+    /// Gespeicherte Wochen und ältere Server ohne `brick` und `indoor` bleiben lesbar.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        sport = try container.decode(SportID.self, forKey: .sport)
+        sessionType = try container.decode(SessionType.self, forKey: .sessionType)
+        intensity = try container.decode(PlanIntensity.self, forKey: .intensity)
+        amount = try container.decode(Double.self, forKey: .amount)
+        unit = try container.decode(PlanUnit.self, forKey: .unit)
+        minutes = try container.decode(Double.self, forKey: .minutes)
+        distanceMeters = try container.decode(Double.self, forKey: .distanceMeters)
+        focus = try container.decode(String.self, forKey: .focus)
+        test = try container.decodeIfPresent(PlannedTest.self, forKey: .test)
+        brick = try container.decodeIfPresent(Bool.self, forKey: .brick) ?? false
+        indoor = try container.decodeIfPresent(Bool.self, forKey: .indoor) ?? false
     }
 
     /// Hart im Sinne der Planung: harte Intensität oder ein Test mit Vollbelastung.
@@ -80,7 +130,7 @@ public struct WeekSession: Codable, Equatable, Sendable {
     public var target: DayTargetV2.Session {
         DayTargetV2.Session(
             sport: sport, sessionType: sessionType, intensity: intensity, amount: amount,
-            focus: String(focus.prefix(DayTargetV2Limits.focusLength)), testID: test?.id
+            focus: String(focus.prefix(DayTargetV2Limits.focusLength)), testID: test?.id, brick: brick, indoor: indoor
         )
     }
 }
@@ -121,6 +171,8 @@ public struct PlannedDay: Codable, Equatable, Sendable, Identifiable {
     public var contentBeforeUnavailable: PlannedDayContent?
     /// Der Athlet hat diesen Tag von Hand geändert.
     public var isEdited: Bool
+    /// Kraft- und Mobilitätsblöcke (vom Server).
+    public var extras: [WeekExtra]
 
     public var id: String { date }
 
@@ -129,7 +181,8 @@ public struct PlannedDay: Codable, Equatable, Sendable, Identifiable {
         content: PlannedDayContent,
         isUnavailable: Bool = false,
         contentBeforeUnavailable: PlannedDayContent? = nil,
-        isEdited: Bool = false
+        isEdited: Bool = false,
+        extras: [WeekExtra] = []
     ) {
         self.date = date
         self.focus = content.focus
@@ -137,10 +190,11 @@ public struct PlannedDay: Codable, Equatable, Sendable, Identifiable {
         self.isUnavailable = isUnavailable
         self.contentBeforeUnavailable = contentBeforeUnavailable
         self.isEdited = isEdited
+        self.extras = extras
     }
 
     private enum CodingKeys: String, CodingKey {
-        case date, focus, sessions, isUnavailable, contentBeforeUnavailable, isEdited
+        case date, focus, sessions, isUnavailable, contentBeforeUnavailable, isEdited, extras
     }
 
     public init(from decoder: Decoder) throws {
@@ -151,6 +205,7 @@ public struct PlannedDay: Codable, Equatable, Sendable, Identifiable {
         isUnavailable = try container.decodeIfPresent(Bool.self, forKey: .isUnavailable) ?? false
         contentBeforeUnavailable = try container.decodeIfPresent(PlannedDayContent.self, forKey: .contentBeforeUnavailable)
         isEdited = try container.decodeIfPresent(Bool.self, forKey: .isEdited) ?? false
+        extras = (try container.decodeIfPresent([WeekExtra].self, forKey: .extras) ?? []).filter { $0.kind != .unknown }
     }
 
     public var content: PlannedDayContent {
@@ -166,11 +221,14 @@ public struct PlannedDay: Codable, Equatable, Sendable, Identifiable {
     /// Geplante Minuten aller Einheiten des Tages.
     public var totalMinutes: Double { sessions.reduce(0) { $0 + $1.minutes } }
 
-    /// Die Vorgabe für den Tagesplan. Ein Tag ohne Zeit ist ein Ruhetag.
+    /// Die Vorgabe für den Tagesplan. Ein Tag ohne Zeit ist ein Ruhetag, ohne Kraft und Mobilität.
     public var target: DayTargetV2 {
         DayTargetV2(
             focus: focus.isEmpty ? nil : String(focus.prefix(DayTargetV2Limits.focusLength)),
-            sessions: isUnavailable ? [] : sessions.map(\.target)
+            sessions: isUnavailable ? [] : sessions.map(\.target),
+            extras: isUnavailable ? [] : extras.map {
+                DayTargetV2.Extra(kind: $0.kind, minutes: Int($0.minutes.rounded()), focus: String($0.focus.prefix(DayTargetV2Limits.focusLength)))
+            }
         )
     }
 }

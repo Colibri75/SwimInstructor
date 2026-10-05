@@ -30,6 +30,10 @@ public struct RunModule: SportModule {
     public let planUnit = PlanUnit.minutes
     /// Knapp 6:00 pro km.
     public let typicalSpeedMetersPerSecond: Double = 2.8
+    /// Der Koppellauf direkt nach dem Rad (Wechsel 2).
+    public let brickAfter: [SportID] = [.bike]
+    public let weatherSensitive = true
+    public let indoorEquipment: IndoorEquipment? = IndoorEquipment(id: "treadmill", displayName: "Laufband")
 
     public let recording = SportRecording(
         locations: [.outdoor, .indoor],

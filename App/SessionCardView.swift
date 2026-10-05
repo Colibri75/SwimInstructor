@@ -56,6 +56,8 @@ struct DayPlanHeaderView: View {
 /// darunter der Knopf zum Eintragen des Ergebnisses.
 struct SessionCardView: View {
     let session: DaySession
+    /// Die Sportart der Einheit davor (für "Koppeltraining: direkt nach …"), `nil` bei der ersten.
+    var previousSport: SportID?
     /// Öffnet die Eingabe des Testergebnisses; `nil` blendet den Knopf aus.
     var onEnterResult: (() -> Void)?
 
@@ -64,6 +66,9 @@ struct SessionCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             header
+            SessionHintsView(hints: PlanV2Formatting.sessionHints(
+                brick: session.brick, indoor: session.indoor, sport: session.sport, previous: previousSport, registry: registry
+            ))
             if !session.focus.isEmpty {
                 Text(session.focus)
                     .font(.subheadline)

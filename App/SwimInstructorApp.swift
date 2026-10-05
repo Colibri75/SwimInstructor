@@ -14,6 +14,10 @@ struct SwimInstructorApp: App {
     @StateObject private var testResultInbox: WatchTestResultInbox
     @StateObject private var statisticDashboard: StatisticDashboard
     @StateObject private var reviewRunner: MacroReviewRunner
+    @StateObject private var feedbackBook: SessionFeedbackBook
+    @StateObject private var raceLoader: RacePlanLoader
+    @StateObject private var locationProvider: LocationProvider
+    @StateObject private var calendarProvider: CalendarAvailabilityProvider
 
     init() {
         let healthKitManager = HealthKitManager()
@@ -41,6 +45,24 @@ struct SwimInstructorApp: App {
             weeklyScheduleProvider: { scheduleStore.schedule(for: goalStore.goal()) }
         )
         let ownedEquipment = UserDefaultsOwnedEquipmentStore()
+        let indoorEquipment = UserDefaultsIndoorEquipmentStore()
+        // Schwimm-Hilfsmittel und Rolle oder Laufband für drinnen: eine Liste für den Server.
+        let equipment: @MainActor () -> [String]? = { ownedEquipment.ownedEquipment() + indoorEquipment.ownedIndoorEquipment() }
+        let planningStore = UserDefaultsPlanningPreferencesStore()
+        let feedbackBook = SessionFeedbackBook(store: FileSessionFeedbackStore.standard())
+        let locationProvider = LocationProvider()
+        let calendarProvider = CalendarAvailabilityProvider()
+        // Was außer Zustand und Training mitgeht: Kraft und Mobilität, Ort fürs Wetter, freie Zeit laut Kalender.
+        let planningExtras: @MainActor ([String]) -> PlanningExtras = { [weak locationProvider, weak calendarProvider] dates in
+            let preferences = planningStore.preferences()
+            return PlanningExtras(
+                supplements: preferences.supplements.isEmpty ? nil : preferences.supplements,
+                location: preferences.usesWeather ? locationProvider?.point : nil,
+                availability: preferences.usesCalendar
+                    ? calendarProvider?.availability(for: dates, startHour: preferences.calendarStartHour, endHour: preferences.calendarEndHour) ?? []
+                    : []
+            )
+        }
         let weekLoader = MultiSportWeekLoader(
             store: FileWeekPlanV2Store.standard(),
             planProvider: { [weak settings] in
@@ -72,17 +94,20 @@ struct SwimInstructorApp: App {
             // Der Tagesplan richtet sich nach der Vorgabe der sieben Tage für heute.
             dayTarget: { [weak weekLoader] in weekLoader?.todayTarget },
             // Nur das Equipment, das der Athlet in den Einstellungen angegeben hat.
-            equipment: { ownedEquipment.ownedEquipment() },
+            equipment: equipment,
             // Das Training der letzten sieben Tage und von heute, mit "hart" aus Plan und Puls.
             recentTraining: { [weak weekLoader] reading in
                 weekLoader?.recentTrainingForToday(snapshot: reading.snapshot, workouts: reading.allWorkouts) ?? []
             },
             testSettings: { testSettingsStore.settings() },
+            extras: { planningExtras([PlanFormatting.isoDay(Date())]) },
             // Beim ersten Öffnen am Tag, nach dem Lesen von Health und vor dem Tagesplan: Gesamtplan sicherstellen und
             // die nächsten sieben Tage neu abstimmen. Nach einer Überarbeitung des Gesamtplans gilt der Tag wieder als
             // offen, damit die Tage zum neuen Gesamtplan passen.
-            prepare: { [weak macroLoader, weak weekLoader, weak reviewRunner] reading in
+            prepare: { [weak macroLoader, weak weekLoader, weak reviewRunner, weak locationProvider] reading in
                 guard let macroLoader, let weekLoader else { return }
+                // Den Ort für das Wetter auffrischen; bis er da ist, gilt der gemerkte.
+                if planningStore.preferences().usesWeather { locationProvider?.refresh() }
                 await macroLoader.ensureCurrent(snapshot: reading.snapshot)
                 // Läuft nebenher; danach stimmt `onReviewed` die Tage neu ab.
                 reviewRunner?.startIfDue(reading: reading)
@@ -94,7 +119,10 @@ struct SwimInstructorApp: App {
             }
         )
         reviewRunner.onReviewed = { [weak loader] in await loader?.refreshIfNeeded() }
-        weekLoader.equipmentProvider = { ownedEquipment.ownedEquipment() }
+        weekLoader.equipmentProvider = equipment
+        weekLoader.extrasProvider = planningExtras
+        // Beschwerden und Anstrengung aus den Rückmeldungen: Der Plan reagiert darauf von selbst.
+        weekLoader.feedbackProvider = { [weak feedbackBook] in feedbackBook?.entries ?? [] }
         weekLoader.testSettingsProvider = { testSettingsStore.settings() }
         // Die nächsten sieben Tage richten sich nach den Wochen des Gesamtplans.
         weekLoader.macroProvider = { [weak macroLoader] dates in macroLoader?.weeks(overlapping: dates) ?? [] }
@@ -129,6 +157,14 @@ struct SwimInstructorApp: App {
         _testResultInbox = StateObject(wrappedValue: testResultInbox)
         // Die Kacheln der Statistik, gespeichert auf dem Gerät.
         _reviewRunner = StateObject(wrappedValue: reviewRunner)
+        _feedbackBook = StateObject(wrappedValue: feedbackBook)
+        _locationProvider = StateObject(wrappedValue: locationProvider)
+        _calendarProvider = StateObject(wrappedValue: calendarProvider)
+        // Der Plan für den Wettkampftag, auf dem Gerät gespeichert.
+        _raceLoader = StateObject(wrappedValue: RacePlanLoader(
+            store: FileRacePlanStore.standard(),
+            planProvider: { [weak settings] in settings?.configuration.map { PlanAPIClient(configuration: $0) } }
+        ))
         _statisticDashboard = StateObject(wrappedValue: StatisticDashboard(store: UserDefaultsStatisticLayoutStore()))
     }
 
@@ -144,6 +180,10 @@ struct SwimInstructorApp: App {
                 .environmentObject(testResultInbox)
                 .environmentObject(statisticDashboard)
                 .environmentObject(reviewRunner)
+                .environmentObject(feedbackBook)
+                .environmentObject(raceLoader)
+                .environmentObject(locationProvider)
+                .environmentObject(calendarProvider)
         }
     }
 }

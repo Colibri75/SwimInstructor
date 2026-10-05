@@ -26,6 +26,10 @@
 	<string>$(APP_DISPLAY_NAME) liest deine Trainings und Vitaldaten aus Health, um dir einen tagesaktuellen Trainingsplan zu erstellen.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>$(APP_DISPLAY_NAME) speichert deine Trainings in Health.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>$(APP_DISPLAY_NAME) nutzt deinen ungefähren Ort (etwa 10 km genau) nur für die Wettervorhersage, damit dein Plan bei Gewitter, Sturm oder Glätte nach drinnen ausweicht.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>$(APP_DISPLAY_NAME) liest, wann deine Termine liegen, und plant an vollen Tagen weniger. Titel und Inhalte der Termine bleiben auf dem iPhone.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UIApplicationSceneManifest</key>

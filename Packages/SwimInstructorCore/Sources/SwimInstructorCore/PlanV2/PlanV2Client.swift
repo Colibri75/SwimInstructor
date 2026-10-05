@@ -87,13 +87,21 @@ public struct RecentTrainingEntry: Codable, Equatable, Sendable {
     public let minutes: Double
     public let meters: Double
     public let hard: Bool
+    /// Gefühlte Anstrengung 0 bis 10: die Rückmeldung des Athleten, sonst Health; `nil` ohne Angabe.
+    public let effort: Double?
+    /// Beschwerden nach der Einheit (1 leicht bis 3 stark), `nil` ohne Beschwerden.
+    public let pain: Int?
+    public let painArea: PainArea?
 
-    public init(date: String, sport: SportID, minutes: Double, meters: Double, hard: Bool) {
+    public init(date: String, sport: SportID, minutes: Double, meters: Double, hard: Bool, effort: Double? = nil, pain: Int? = nil, painArea: PainArea? = nil) {
         self.date = date
         self.sport = sport
         self.minutes = minutes
         self.meters = meters
         self.hard = hard
+        self.effort = effort
+        self.pain = pain
+        self.painArea = painArea
     }
 }
 
@@ -113,9 +121,11 @@ public enum RecentTraining {
         before end: String,
         plannedHard: (String, SportID) -> Bool = { _, _ in false },
         maximumHeartRate: Double? = nil,
+        feedback: [SessionFeedback] = [],
         registry: SportRegistry = .standard,
         calendar: Calendar = .current
     ) -> [RecentTrainingEntry] {
+        let rated = Dictionary(feedback.map { ($0.workoutID, $0) }, uniquingKeysWith: { _, last in last })
         let entries = workouts
             .sorted { $0.startDate < $1.startDate }
             .compactMap { workout -> RecentTrainingEntry? in
@@ -125,12 +135,18 @@ public enum RecentTraining {
                 if let heartRate = workout.averageHeartRate, let maximumHeartRate {
                     heartRateHard = heartRate >= maximumHeartRate * Self.hardHeartRateShare
                 }
+                let own = rated[workout.id]
+                let effort = own?.effort.map(Double.init) ?? workout[.effort].map { min(max($0, 0), 10) }
+                let pain = (own?.pain ?? PainLevel.none) == .none ? nil : own?.pain
                 return RecentTrainingEntry(
                     date: date,
                     sport: workout.sport,
                     minutes: min(max(workout.duration / 60, 0), 1440).rounded(),
                     meters: min(max(workout.distanceMeters ?? 0, 0), 1_000_000).rounded(),
-                    hard: plannedHard(date, workout.sport) || heartRateHard
+                    hard: plannedHard(date, workout.sport) || heartRateHard || (effort ?? 0) >= Double(Adaptation.hardEffort),
+                    effort: effort.map { ($0 * 10).rounded() / 10 },
+                    pain: pain?.rawValue,
+                    painArea: pain == nil ? nil : own?.painArea
                 )
             }
         return Array(entries.suffix(maximumEntries))
@@ -150,6 +166,8 @@ public struct DayPlanV2Request: Equatable, Sendable {
     public var equipment: [String]?
     public var recentTraining: [RecentTrainingEntry]
     public var testSettings: TestSettings?
+    /// Kraft und Mobilität, Ort für das Wetter, freie Zeit heute.
+    public var extras: PlanningExtras
 
     public init(
         snapshot: AthleteStateSnapshot,
@@ -158,7 +176,8 @@ public struct DayPlanV2Request: Equatable, Sendable {
         dayPlan: DayTargetV2? = nil,
         equipment: [String]? = nil,
         recentTraining: [RecentTrainingEntry] = [],
-        testSettings: TestSettings? = nil
+        testSettings: TestSettings? = nil,
+        extras: PlanningExtras = .none
     ) {
         self.snapshot = snapshot
         self.regenerate = regenerate
@@ -167,6 +186,7 @@ public struct DayPlanV2Request: Equatable, Sendable {
         self.equipment = equipment
         self.recentTraining = recentTraining
         self.testSettings = testSettings
+        self.extras = extras
     }
 }
 
@@ -184,6 +204,12 @@ public struct WeekPlanV2Request: Equatable, Sendable {
     public var wishes: String?
     public var equipment: [String]?
     public var testSettings: TestSettings?
+    /// Geplante Einheiten der letzten Tage, die ausgefallen sind.
+    public var missedSessions: [MissedSession]
+    /// Anlass der Neuplanung.
+    public var reason: ReplanReason?
+    /// Kraft und Mobilität, Ort für das Wetter, freie Zeit je Tag.
+    public var extras: PlanningExtras
 
     public init(
         snapshot: AthleteStateSnapshot,
@@ -194,7 +220,10 @@ public struct WeekPlanV2Request: Equatable, Sendable {
         macroWeeks: [MacroWeekV2] = [],
         wishes: String? = nil,
         equipment: [String]? = nil,
-        testSettings: TestSettings? = nil
+        testSettings: TestSettings? = nil,
+        missedSessions: [MissedSession] = [],
+        reason: ReplanReason? = nil,
+        extras: PlanningExtras = .none
     ) {
         self.snapshot = snapshot
         self.fromDate = fromDate
@@ -205,6 +234,9 @@ public struct WeekPlanV2Request: Equatable, Sendable {
         self.wishes = wishes
         self.equipment = equipment
         self.testSettings = testSettings
+        self.missedSessions = missedSessions
+        self.reason = reason
+        self.extras = extras
     }
 }
 
@@ -315,7 +347,11 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
             dayPlan: request.dayPlan,
             equipment: request.equipment,
             recentTraining: request.recentTraining.isEmpty ? nil : request.recentTraining,
-            testSettings: request.testSettings
+            testSettings: request.testSettings,
+            supplements: request.extras.supplements.flatMap { $0.isEmpty ? nil : $0 },
+            location: request.extras.location,
+            // Beim Tagesplan steht in `availability` nur heute.
+            availableMinutes: request.extras.availability.first?.minutes
         ))
     }
 
@@ -330,7 +366,12 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
             macroWeeks: request.macroWeeks.isEmpty ? nil : Array(request.macroWeeks.prefix(3)),
             wishes: Self.cleaned(request.wishes),
             equipment: request.equipment,
-            testSettings: request.testSettings
+            testSettings: request.testSettings,
+            missedSessions: request.missedSessions.isEmpty ? nil : Array(request.missedSessions.suffix(14)),
+            reason: request.reason?.rawValue,
+            supplements: request.extras.supplements.flatMap { $0.isEmpty ? nil : $0 },
+            location: request.extras.location,
+            availability: request.extras.availability.isEmpty ? nil : Array(request.extras.availability.prefix(14))
         ))
     }
 
@@ -422,6 +463,9 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
         let equipment: [String]?
         let recentTraining: [RecentTrainingEntry]?
         let testSettings: TestSettings?
+        let supplements: Supplements?
+        let location: GeoPoint?
+        let availableMinutes: Int?
     }
 
     private struct WeekBody: Encodable {
@@ -435,6 +479,11 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
         let wishes: String?
         let equipment: [String]?
         let testSettings: TestSettings?
+        let missedSessions: [MissedSession]?
+        let reason: String?
+        let supplements: Supplements?
+        let location: GeoPoint?
+        let availability: [DayAvailability]?
     }
 
     private struct MacroBody: Encodable {

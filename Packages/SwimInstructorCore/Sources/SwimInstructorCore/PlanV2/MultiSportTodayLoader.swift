@@ -31,6 +31,7 @@ public final class MultiSportTodayLoader: ObservableObject {
     private let equipment: @MainActor () -> [String]?
     private let recentTraining: @MainActor (AthleteStateReading) -> [RecentTrainingEntry]
     private let testSettings: @MainActor () -> TestSettings?
+    private let extras: @MainActor () -> PlanningExtras
     private let prepare: @MainActor (AthleteStateReading) async -> Void
     private let now: () -> Date
     private let calendar: Calendar
@@ -51,6 +52,7 @@ public final class MultiSportTodayLoader: ObservableObject {
         equipment: @escaping @MainActor () -> [String]? = { nil },
         recentTraining: @escaping @MainActor (AthleteStateReading) -> [RecentTrainingEntry] = { _ in [] },
         testSettings: @escaping @MainActor () -> TestSettings? = { nil },
+        extras: @escaping @MainActor () -> PlanningExtras = { .none },
         prepare: @escaping @MainActor (AthleteStateReading) async -> Void = { _ in },
         now: @escaping () -> Date = { Date() },
         calendar: Calendar = .current
@@ -65,6 +67,7 @@ public final class MultiSportTodayLoader: ObservableObject {
         self.equipment = equipment
         self.recentTraining = recentTraining
         self.testSettings = testSettings
+        self.extras = extras
         self.prepare = prepare
         self.now = now
         self.calendar = calendar
@@ -174,7 +177,8 @@ public final class MultiSportTodayLoader: ObservableObject {
                 dayPlan: target,
                 equipment: equipment(),
                 recentTraining: recentTraining(reading),
-                testSettings: testSettings()
+                testSettings: testSettings(),
+                extras: extras()
             ))
             fresh.requestedTarget = target
             response = fresh

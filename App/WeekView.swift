@@ -48,6 +48,7 @@ struct WeekView: View {
                     weekList
                 case .macro:
                     List {
+                        RacePlanLinkSection()
                         MacroPlanSections { start in
                             // Eine Woche aus dem Gesamtplan im Wochenplan öffnen.
                             if weekLoader.selectWeek(containing: start) { part = .week }
@@ -369,6 +370,7 @@ private struct WeekDayRow: View {
                         ForEach(Array(day.sessions.enumerated()), id: \.offset) { _, session in
                             PlannedSessionLine(session: session)
                         }
+                        WeekExtrasLine(extras: day.extras)
                         if !day.focus.isEmpty {
                             Text(day.focus)
                                 .font(.caption)

@@ -66,8 +66,8 @@ struct WatchTodayView: View {
                     Text("Plan")
                 }
             } else {
-                ForEach(Array(plan.sessions.enumerated()), id: \.offset) { _, session in
-                    sessionSection(session)
+                ForEach(Array(plan.sessions.enumerated()), id: \.offset) { index, session in
+                    sessionSection(session, previous: index > 0 ? plan.sessions[index - 1].sport : nil)
                 }
                 Section {
                     ForEach(plan.coachNotes, id: \.self) { note in
@@ -90,7 +90,7 @@ struct WatchTodayView: View {
         }
     }
 
-    private func sessionSection(_ session: DaySession) -> some View {
+    private func sessionSection(_ session: DaySession, previous: SportID?) -> some View {
         Section {
             NavigationLink {
                 WatchStartView(sport: session.sport, session: session)
@@ -99,6 +99,12 @@ struct WatchTodayView: View {
                     .font(.headline)
             }
             .tint(.green)
+            // Koppeltraining: gleich nach dem Ende der Einheit davor hier starten; drinnen ist der Ort vorgewählt.
+            ForEach(PlanV2Formatting.sessionHints(brick: session.brick, indoor: session.indoor, sport: session.sport, previous: previous, registry: registry), id: \.self) { hint in
+                Text(hint)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.green)
+            }
             if !session.focus.isEmpty {
                 Text(session.focus)
                     .font(.footnote)
@@ -183,7 +189,11 @@ struct WatchStartView: View {
     init(sport: SportID, session: DaySession?) {
         self.session = session
         _sport = State(initialValue: sport)
-        _locationID = State(initialValue: Self.savedLocation(for: sport))
+        // Plant der Plan drinnen (Rolle, Laufband), ist "Drinnen" vorgewählt; sonst der zuletzt gewählte Ort.
+        let indoor = session?.indoor == true
+            ? SportRegistry.standard.module(for: sport)?.recording.locations.first { $0.isIndoor == true }?.id
+            : nil
+        _locationID = State(initialValue: indoor ?? Self.savedLocation(for: sport))
     }
 
     private var module: (any SportModule)? { registry.module(for: sport) }

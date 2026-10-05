@@ -107,18 +107,26 @@ final class MultiSportWeekLoaderTests: XCTestCase {
         func setLastDay(_ marker: String) { self.marker = marker }
     }
 
+    final class MemoryAdaptationMarker: AdaptationMarking {
+        var keys: Set<String> = []
+        func handled() -> Set<String> { keys }
+        func markHandled(_ key: String) { keys.insert(key) }
+    }
+
     private func makeLoader(
         store: MemoryStore = MemoryStore(),
         provider: FakeProvider?,
         workouts: [Workout] = [],
         snapshot: AthleteStateSnapshot = TestFixtures.snapshot,
         withContext: Bool = true,
-        marker: MemoryMarker = MemoryMarker()
+        marker: MemoryMarker = MemoryMarker(),
+        adaptation: MemoryAdaptationMarker = MemoryAdaptationMarker()
     ) -> MultiSportWeekLoader {
         let loader = MultiSportWeekLoader(
             store: store,
             planProvider: { provider },
             dailyMarker: marker,
+            adaptationMarker: adaptation,
             now: { TestFixtures.now },
             calendar: TestFixtures.utc
         )
@@ -348,7 +356,7 @@ final class MultiSportWeekLoaderTests: XCTestCase {
             WeekLoaderV2Data.workout(SportID(rawValue: "kayak"), daysAgo: 2, hour: 12, minutes: 40), // unbekannte Sportart
             WeekLoaderV2Data.workout(.run, daysAgo: 1, hour: 7, minutes: 32, meters: 5_200),        // harte Intervalle geplant
             WeekLoaderV2Data.workout(.swim, daysAgo: 1, hour: 18, minutes: 41, meters: 2_050),      // locker geplant
-            WeekLoaderV2Data.workout(.swim, daysAgo: 0, hour: 8, minutes: 30, meters: 1_500)        // heute, gehört nicht dazu
+            WeekLoaderV2Data.workout(.swim, daysAgo: 0, hour: 8, minutes: 30, meters: 1_500)        // heute: geht mit (Beschwerden von heute)
         ]
         let provider = FakeProvider()
         let loader = makeLoader(store: MemoryStore([WeekLoaderV2Data.currentWeek()]), provider: provider, workouts: workouts)
@@ -361,7 +369,8 @@ final class MultiSportWeekLoaderTests: XCTestCase {
             RecentTrainingEntry(date: "2026-09-27", sport: .run, minutes: 50, meters: 8_000, hard: false),
             RecentTrainingEntry(date: "2026-09-28", sport: .bike, minutes: 60, meters: 25_000, hard: true),
             RecentTrainingEntry(date: "2026-09-29", sport: .run, minutes: 32, meters: 5_200, hard: true),
-            RecentTrainingEntry(date: "2026-09-29", sport: .swim, minutes: 41, meters: 2_050, hard: false)
+            RecentTrainingEntry(date: "2026-09-29", sport: .swim, minutes: 41, meters: 2_050, hard: false),
+            RecentTrainingEntry(date: "2026-09-30", sport: .swim, minutes: 30, meters: 1_500, hard: false)
         ])
     }
 
@@ -514,6 +523,47 @@ final class MultiSportWeekLoaderTests: XCTestCase {
 
         XCTAssertEqual(provider.requests.count, 1)
         XCTAssertEqual(marker.marker, "2026-09-30|ziel")
+    }
+
+    func testPainFeedbackReplansAtOnceEvenAfterTheDailyRefresh() async throws {
+        let provider = FakeProvider()
+        let adaptation = MemoryAdaptationMarker()
+        let run = WeekLoaderV2Data.workout(.run, daysAgo: 0, hour: 7, minutes: 30, meters: 5_000)
+        let loader = makeLoader(provider: provider, workouts: [run], adaptation: adaptation)
+        var feedback: [SessionFeedback] = []
+        loader.feedbackProvider = { feedback }
+        loader.extrasProvider = { dates in PlanningExtras(supplements: Supplements(strengthPerWeek: 1, mobilityPerWeek: 0), availability: [DayAvailability(date: dates[0], minutes: 50)]) }
+
+        await loader.refreshDaily()
+        feedback = [SessionFeedback(workoutID: run.id, date: "2026-09-30", sport: .run, effort: 6, pain: .strong, painArea: .knee, recordedAt: TestFixtures.now)]
+        await loader.refreshDaily()
+        await loader.refreshDaily()
+
+        XCTAssertEqual(provider.requests.map(\.reason), [.daily, .pain])
+        XCTAssertEqual(loader.lastAdaptation?.reason, .pain)
+        XCTAssertEqual(adaptation.keys.count, 1)
+        let request = try XCTUnwrap(provider.requests.last)
+        // Die Einheit von heute geht mit, samt Beschwerden.
+        XCTAssertEqual(request.recentTraining.last?.date, "2026-09-30")
+        XCTAssertEqual(request.recentTraining.last?.pain, 3)
+        XCTAssertEqual(request.recentTraining.last?.painArea, .knee)
+        XCTAssertEqual(request.extras.supplements?.strengthPerWeek, 1)
+        XCTAssertEqual(request.extras.availability, [DayAvailability(date: "2026-09-30", minutes: 50)])
+    }
+
+    func testAMissedSessionYesterdayIsSentAndReplansOnce() async throws {
+        let provider = FakeProvider()
+        let marker = MemoryMarker()
+        marker.marker = "2026-09-30|"
+        let loader = makeLoader(store: MemoryStore([WeekLoaderV2Data.currentWeek()]), provider: provider, marker: marker)
+
+        await loader.refreshDaily()
+        await loader.refreshDaily()
+
+        XCTAssertEqual(provider.requests.map(\.reason), [.missed])
+        let missed = try XCTUnwrap(provider.requests.first?.missedSessions)
+        XCTAssertTrue(missed.contains { $0.date == "2026-09-29" })
+        XCTAssertTrue(missed.allSatisfy { $0.date < "2026-09-30" })
     }
 
     func testTheDailyRefreshGivesTheWishToThePlan() async throws {

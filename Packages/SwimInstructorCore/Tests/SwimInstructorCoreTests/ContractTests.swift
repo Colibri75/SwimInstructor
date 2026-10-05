@@ -16,8 +16,16 @@ final class ContractTests: XCTestCase {
             let loadFactor: Double
             let planUnit: String
             let typicalSpeedMetersPerSecond: Double
+            let brickAfter: [String]
+            let weatherSensitive: Bool
+            let indoor: Indoor?
             let performanceMetrics: [Metric]
             let performanceTests: [Test]
+        }
+
+        struct Indoor: Decodable, Equatable {
+            let equipment: String
+            let displayName: String
         }
 
         struct GoalSpeed: Decodable {
@@ -103,6 +111,9 @@ final class ContractTests: XCTestCase {
             XCTAssertEqual(module.loadFactor, sport.loadFactor, sport.id)
             XCTAssertEqual(module.planUnit.rawValue, sport.planUnit, sport.id)
             XCTAssertEqual(module.typicalSpeedMetersPerSecond, sport.typicalSpeedMetersPerSecond, sport.id)
+            XCTAssertEqual(module.brickAfter.map(\.rawValue), sport.brickAfter, sport.id)
+            XCTAssertEqual(module.weatherSensitive, sport.weatherSensitive, sport.id)
+            XCTAssertEqual(module.indoorEquipment.map { SportsContract.Indoor(equipment: $0.id, displayName: $0.displayName) }, sport.indoor, sport.id)
             XCTAssertEqual(module.performanceMetrics.map { SportsContract.Metric($0) }, sport.performanceMetrics, sport.id)
             XCTAssertEqual(module.performanceTests.map { SportsContract.Test($0) }, sport.performanceTests, sport.id)
         }

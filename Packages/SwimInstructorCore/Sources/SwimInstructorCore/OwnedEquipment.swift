@@ -45,3 +45,40 @@ public struct UserDefaultsOwnedEquipmentStore: OwnedEquipmentStoring {
         defaults.set(EquipmentItem.allCases.filter(items.contains).map(\.rawValue), forKey: Self.storageKey)
     }
 }
+
+/// Hilfsmittel, mit denen eine Sportart drinnen geht (Rolle, Laufband), aus den Sportmodulen. Anders als beim Schwimm-
+/// Equipment ist ohne Auswahl keins da: Erst mit Rolle oder Laufband plant der Server drinnen.
+public protocol IndoorEquipmentStoring {
+    /// Kennungen (`indoor_trainer`, …) in der Reihenfolge der Sportarten.
+    func ownedIndoorEquipment() -> [String]
+    func setOwnedIndoorEquipment(_ ids: Set<String>)
+}
+
+public struct UserDefaultsIndoorEquipmentStore: IndoorEquipmentStoring {
+    static let storageKey = "settings.indoorEquipment"
+
+    private let defaults: UserDefaults
+    private let registry: SportRegistry
+
+    public init(defaults: UserDefaults = .standard, registry: SportRegistry = .standard) {
+        self.defaults = defaults
+        self.registry = registry
+    }
+
+    public func ownedIndoorEquipment() -> [String] {
+        let stored = Set(defaults.stringArray(forKey: Self.storageKey) ?? [])
+        return registry.indoorEquipment.map(\.id).filter(stored.contains)
+    }
+
+    public func setOwnedIndoorEquipment(_ ids: Set<String>) {
+        defaults.set(registry.indoorEquipment.map(\.id).filter(ids.contains), forKey: Self.storageKey)
+    }
+}
+
+public extension SportRegistry {
+    /// Die Hilfsmittel für drinnen über alle Sportarten, ohne Doppelte, in der Reihenfolge der Sportarten.
+    var indoorEquipment: [IndoorEquipment] {
+        var seen = Set<String>()
+        return modules.compactMap(\.indoorEquipment).filter { seen.insert($0.id).inserted }
+    }
+}

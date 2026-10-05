@@ -112,6 +112,8 @@ public enum MultiSportWeekEditor {
         update(plan, date) { day in
             guard !day.isUnavailable, day.sessions.indices.contains(index) else { return }
             day.sessions.remove(at: index)
+            // Ohne die Einheit davor ist die übrige kein Koppeltraining mehr.
+            if !day.sessions.isEmpty { day.sessions[0].brick = false }
             if day.sessions.isEmpty { day.focus = "Ruhetag" }
             day.isEdited = true
         }

@@ -1,6 +1,17 @@
 import Foundation
 import HealthKit
 
+/// Ein Hilfsmittel, mit dem eine Sportart drinnen geht (Rolle, Laufband). Die Kennung ist die des Servers.
+public struct IndoorEquipment: Equatable, Sendable {
+    public let id: String
+    public let displayName: String
+
+    public init(id: String, displayName: String) {
+        self.id = id
+        self.displayName = displayName
+    }
+}
+
 /// Alles, was eine Sportart der App beibringt. Der Kern fragt nie "welche Sportart ist das?", sondern
 /// immer das Modul: Eine neue Sportart ist ein neues Modul plus Tests, ohne Änderungen quer durch den Code.
 ///
@@ -33,6 +44,13 @@ public protocol SportModule: Sendable {
     /// Einheit von Hand ändert oder die Sportart tauscht. Steht auch in `contracts/sports.json`, der Server rechnet ohne
     /// eigenes Tempo des Athleten mit demselben Wert.
     var typicalSpeedMetersPerSecond: Double { get }
+    /// Koppeltraining: Diese Sportart darf direkt nach diesen Sportarten folgen (Laufen nach dem Rad). Steht auch in
+    /// `contracts/sports.json`.
+    var brickAfter: [SportID] { get }
+    /// Draußen und damit vom Wetter abhängig. Steht auch in `contracts/sports.json`.
+    var weatherSensitive: Bool { get }
+    /// Drinnen möglich mit diesem Hilfsmittel (Rolle, Laufband), `nil` sonst. Steht auch in `contracts/sports.json`.
+    var indoorEquipment: IndoorEquipment? { get }
 
     // MARK: Leistungsprofil (T2b)
 
@@ -73,6 +91,11 @@ public extension SportModule {
 
     // Ohne eigene Angaben zeichnet die Watch draußen mit GPS oder drinnen auf und zeigt Tempo und Strecke.
     var recording: SportRecording { .standard }
+
+    // Ohne eigene Angaben: kein Koppeltraining, unabhängig vom Wetter, kein Drinnen.
+    var brickAfter: [SportID] { [] }
+    var weatherSensitive: Bool { false }
+    var indoorEquipment: IndoorEquipment? { nil }
 
     var statistics: [StatisticDefinition] { SportStatistics.derived(for: self) }
 }
