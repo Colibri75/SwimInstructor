@@ -793,12 +793,22 @@ Schritt bleibt sie fürs Schwimmen voll nutzbar.
 
 Umgesetzt: M1 bis M8, Gesamtplan und sieben Tage, der Umbau zur Triathlon-App (T0 bis T7), die Planung nach dem Konzept
 "Planerstellung" (P1 Startniveau, P2 Zielarten und Wochenraster, P3 Zieländerung mit Entwurf, P4 Fortschreibung), die
-Umbenennung zu Peaksmith und das Aufräumen von Plan v1. Die manuellen Prüfungen stehen jeweils in der Definition of Done
+Umbenennung zu Peaksmith, das Aufräumen von Plan v1 und am 05.10.2026:
+
+- **Plan reagiert auf echtes Training:** "Wie war's?" nach jeder Einheit (Anstrengung, Beschwerden mit Stelle); bei
+  Beschwerden, einer sehr harten oder einer ausgefallenen Einheit plant die App die sieben Tage außer der Reihe neu, der
+  Server bremst die betroffene Sportart ([multisport-planning.md](multisport-planning.md#plan-reagiert-auf-echtes-training)).
+- **Triathlon:** Koppeltraining, drinnen auf Rolle oder Laufband, Wetter, Kalender, Kraft und Mobilität, Plan für den
+  Wettkampftag ([multisport-planning.md](multisport-planning.md#triathlon-koppeltraining-drinnen-wetter-kalender-kraft-und-mobilität)).
+- **Betrieb:** Token je Nutzer mit getrennten Daten, Nutzung und Kosten je Anfrage, Alarme (Kosten, Fehler, Ausfall),
+  Deploy mit Rückfall und automatisch nach grüner CI ([backend-deploy.md](backend-deploy.md)).
+
+Die manuellen Prüfungen stehen jeweils in der Definition of Done
 des Abschnitts. Offen:
 
-- **M10 – Realer Betatest:** Mehrere Wochen im echten Training, Planqualität und Zahlen gegenprüfen. Alle Punkte "Für dich"
-  oben und die Stellschrauben in der [README](../README.md#betatest) sind noch nicht auf dem Gerät geprüft: Wassersperre
-  und Crown im Becken, Rad mit und ohne Sensor, Intervalllauf mit GPS, Testauswertung auf der Uhr.
+- **M10 – Realer Betatest:** Mehrere Wochen im echten Training, Planqualität und Zahlen gegenprüfen. Die offenen
+  Prüfungen oben und die neuen Funktionen stehen der Reihe nach in der [Betatest-Checkliste](betatest.md); die
+  Stellschrauben danach in der [README](../README.md#betatest).
 - **M11 – Feinschliff:** Fehlermeldungen, Barrierefreiheit, UI-Tests, Übungslexikon statt wiederholter Erklärungen im Plan.
 - **M9 – Automatisierung: bewusst gestrichen.** Eine Erinnerung zur Uhrzeit und ein Plan im Hintergrund brächten wenig: Bei
   gesperrtem iPhone kann die App Health nicht lesen (Apple schützt die Daten), und wann iOS Hintergrundläufe erlaubt, lässt
@@ -806,6 +816,6 @@ des Abschnitts. Offen:
   Öffnen des Tages. **Ziehen zum Aktualisieren** holt immer einen neuen Plan von Claude, auch bei unverändertem Zustand
   (der Server begrenzt auf 5 Pläne pro Stunde und 20 pro Tag). Der verworfene Entwurf steht in PR #25.
 
-Ideen, noch nicht geplant: der Plan reagiert von selbst auf verpasste oder zu harte Einheiten; Einheiten als Workouts in
-der Workout-App der Uhr (WorkoutKit); Erinnerungen, Widgets und Complications; Koppeltraining (Rad direkt vor Laufen),
-Kraft und Mobilität; Monitoring von Fehlerquote und Tageskosten auf dem Server.
+Ideen, noch nicht geplant: Einheiten als Workouts in der Workout-App der Uhr (WorkoutKit); Erinnerungen, Widgets und
+Complications; Daten der App in iCloud, damit sie ein Löschen der App überstehen; Koppeltraining als eine Aufzeichnung
+mit Wechselzeit auf der Uhr.

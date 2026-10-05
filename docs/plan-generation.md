@@ -1,7 +1,7 @@
 # Plan-Erzeugung auf dem Server
 
 Die App schickt den Zustands-Snapshot (siehe [AthleteStateSnapshot.md](AthleteStateSnapshot.md)), der Server lässt
-Claude daraus Gesamtplan, die nächsten sieben Tage oder den Tag schreiben, prüft das Ergebnis mit einer Sicherheitsschicht
+Claude daraus Gesamtplan, die nächsten sieben Tage, den Tag oder den Plan für den Wettkampftag schreiben, prüft das Ergebnis mit einer Sicherheitsschicht
 und liefert es zurück. Fällt Claude aus, bekommt die App beim Tagesplan den letzten gültigen Plan. Welche Pfade es gibt,
 was sie annehmen, die Grenzen je Sportart und die Regeln der Sicherheitsschicht stehen in
 [multisport-planning.md](multisport-planning.md). Dieses Dokument beschreibt den Ablauf, Ausfallgründe, Kosten und
@@ -21,7 +21,8 @@ App ──POST {plan_version: 2, snapshot, …}──▶ Server
                           7. Tagesplan speichern, liefern (source: claude)
 
 Fallback (nur Tagesplan) = letzter gespeicherter Plan, vorher erneut durch die Sicherheitsschicht gegen den heutigen
-Zustand geprüft (source: fallback). Gibt es keinen, und bei Woche, Gesamtplan und Überarbeitung immer: 503 mit Grund.
+Zustand geprüft (source: fallback). Gibt es keinen, und bei Woche, Gesamtplan, Überarbeitung und Wettkampftag immer:
+503 mit Grund.
 Die App behält dann ihren bisherigen Plan und kann es später erneut versuchen.
 ```
 
@@ -32,7 +33,7 @@ das Zeitlimit des Reverse-Proxys laufen.
 
 | Wert | Bedeutung |
 |---|---|
-| `unreachable` / `timeout` | Claude war nicht erreichbar oder zu langsam (Zeitlimit 75 s, beim Gesamtplan 180 s) |
+| `unreachable` / `timeout` | Claude war nicht erreichbar oder zu langsam (Zeitlimit 75 s, bei Gesamtplan, Überarbeitung und Wettkampftag 180 s) |
 | `rate_limited` / `upstream_error` | Claude meldete Limit (429) oder Serverfehler (5xx, 529) |
 | `refusal` | Claudes Sicherheitsklassifikatoren haben abgelehnt (und auch der Server-Fallback) |
 | `truncated` / `empty_response` / `invalid_json` / `schema_invalid` | Antwort unbrauchbar |
@@ -84,7 +85,10 @@ Fehlerquote und Dauer zeigt `GET /v1/admin/usage`, Alarme kommen per Webhook (si
 
 An Anthropic geht nur der Snapshot: aggregierte Zahlen (Umfänge, Tempo, Erholungsabweichungen, Warnhinweise, Leistungswerte
 und Zonen), keine Namen, keine einzelnen Workouts, keine Rohdaten aus Health. Dazu kommen die Angaben, die der Athlet
-selbst macht (Ziel, Wünsche, Feedback). Der Server speichert je Nutzer nur den letzten Tagesplan, den Snapshot selbst
+selbst macht (Ziel, Wünsche, Feedback, Rückmeldung zu Anstrengung und Beschwerden, Notizen zum Wettkampf). Mit "Wetter
+berücksichtigen" schickt die App einen auf 0,1° (etwa 10 km) gerundeten Ort; der Server fragt damit Open-Meteo nach der
+Vorhersage, an Anthropic geht nur das Wetter in Worten. Aus dem Kalender gehen nur freie Minuten je Tag an den Server,
+keine Termine. Der Server speichert je Nutzer nur den letzten Tagesplan, den Snapshot selbst
 nicht, dazu die Nutzung je Anfrage (Nutzerkennung, Plan-Art, Ergebnis, Token, Dauer, keine Trainingsdaten).
 
 ## Konfiguration
@@ -95,7 +99,7 @@ nicht, dazu die Nutzung je Anfrage (Nutzerkennung, Plan-Art, Ergebnis, Token, Da
 | `PLAN_MODEL` | `claude-opus-5-5` | Modell für die Pläne |
 | `PLAN_EFFORT` | `high` | Denktiefe: `low`, `medium`, `high`, `xhigh`, `max` |
 | `PLAN_TIMEOUT_MS` | `75000` | Zeitlimit für Tages- und Wochenpläne (1.000 bis 85.000, bleibt unter den 95 s der App) |
-| `PLAN_MACRO_TIMEOUT_MS` | `180000` | Zeitlimit für Gesamtplan und Überarbeitung (1.000 bis 230.000, bleibt unter den 240 s von Caddy und den 245 s der App) |
+| `PLAN_MACRO_TIMEOUT_MS` | `180000` | Zeitlimit für Gesamtplan, Überarbeitung und Wettkampftag (1.000 bis 230.000, bleibt unter den 240 s von Caddy und den 245 s der App) |
 | `PLAN_SERVER_FALLBACK` | `true` | Bei Ablehnung durch Claudes Sicherheitsklassifikatoren automatisch ein anderes Modell versuchen |
 | `DATA_DIR` | `./data` (im Container `/data`) | Letzter Tagesplan (`latest-plan-v2.json`, weitere Nutzer unter `users/<kennung>/`), Nutzer (`users.json`), Nutzung (`metrics/`) |
 | `PLAN_TIMEZONE` | `Europe/Berlin` | Zeitzone für "heute" |

@@ -46,10 +46,18 @@ Eine weitere Sportart: [Neue Sportart hinzufügen](docs/neue-sportart.md) (acht 
 - **Planung** auf dem Server: Gesamtplan bis zum Ziel, sieben Tage, Tagesplan, Überarbeitung nach Feedback; die
   Sicherheitsschicht hält die Grenzen der Module und die übergreifenden Regeln ein
   ([`docs/multisport-planning.md`](docs/multisport-planning.md)).
-- **iPhone:** Heute (Einheiten des Tages, Wunsch, Testergebnis bestätigen), Plan (sieben Tage anpassen, Sportart
-  tauschen, Gesamtplan mit Feedback), Dashboard (Kacheln, Woche gegen Plan, Erholung, Ziel), Verlauf, Leistungsprofil.
-- **Watch:** Einheiten vom iPhone oder freies Training, Stand im Plan mit Ansagen, Leistungstests mit Auswertung auf der
-  Uhr, Aufzeichnung in Health.
+- **Plan reagiert auf echtes Training:** Nach jeder Einheit fragt Heute "Wie war's?" (Anstrengung, Beschwerden mit
+  Stelle). Bei deutlichen oder starken Beschwerden, einer sehr harten Einheit (ab 8 von 10) oder einer ausgefallenen
+  Einheit plant die App die sieben Tage außer der Reihe neu; der Server bremst die betroffene Sportart.
+- **Triathlon:** Koppeltraining (Laufen nach Rad), drinnen auf Rolle oder Laufband, Wetter (bei Gewitter, Sturm,
+  Starkregen oder Glätte nach drinnen), Kalender (volle Tage werden kürzer oder "keine Zeit"), Kraft- und
+  Mobilitätsblöcke mit Übungen und ein Plan für den Wettkampftag (Ablauf, Pacing, Wechsel, Verpflegung, Packliste).
+- **iPhone:** Heute (Einheiten des Tages, Wunsch, Rückmeldung, Testergebnis bestätigen), Plan (sieben Tage anpassen,
+  Sportart tauschen, Gesamtplan mit Feedback, Wettkampftag), Dashboard (Kacheln, Woche gegen Plan, Erholung, Ziel),
+  Verlauf, Leistungsprofil. Einstellungen "Planung": Kraft und Mobilität pro Woche, Wetter (ungefährer Ort), Kalender
+  (Trainingsfenster), unter Equipment Rolle und Laufband.
+- **Watch:** Einheiten vom iPhone oder freies Training, Stand im Plan mit Ansagen, Hinweise zu Koppeltraining und drinnen
+  (Ort vorgewählt), Leistungstests mit Auswertung auf der Uhr, Aufzeichnung in Health.
 - **Verträge** zwischen App und Server ([`contracts/`](contracts/README.md)): Swift- und Jest-Tests lesen dieselben
   Dateien.
 - **Lint:** Außerhalb der Module verzweigt niemand nach einer Sportart (`SportLintTests`, `test/sports/lint.test.ts`).
@@ -61,10 +69,13 @@ Eine weitere Sportart: [Neue Sportart hinzufügen](docs/neue-sportart.md) (acht 
   Reichweite auf (beim Schwimmen bleibt es an Land); den Plan bekommt sie vom iPhone.
 - **SwimInstructorCore** (`Packages/SwimInstructorCore/`): die gemeinsame Logik von iPhone und Watch, plattformunabhängig
   mit eigener Test-Suite. Darin `Sports/` mit den Modulen und der Registry.
-- **Backend** (`backend/`): Node/TypeScript-Server zwischen App und Claude, mit Token, Budget und Sicherheitsschicht.
-  Einrichtung: [`docs/backend-deploy.md`](docs/backend-deploy.md).
+- **Backend** (`backend/`): Node/TypeScript-Server zwischen App und Claude, mit Token je Nutzer (Daten getrennt), Budget,
+  Sicherheitsschicht, Kosten- und Fehlerprotokoll und Alarmen. Einrichtung, Nutzer, Monitoring und automatisches Deploy:
+  [`docs/backend-deploy.md`](docs/backend-deploy.md).
 
 ## Betatest
+
+Was auf dem Gerät zu prüfen ist, steht der Reihe nach in der [Betatest-Checkliste](docs/betatest.md).
 
 Mehrere Wochen echtes Training mit der App. Danach justieren wir vor allem diese Stellen, alle Startwerte aus dem
 Trainingswissen:

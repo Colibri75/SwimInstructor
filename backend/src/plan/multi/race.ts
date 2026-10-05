@@ -163,7 +163,7 @@ export interface RaceSanityResult {
 
 /** Ein Wettkampftag-Plan geht nur fuer ein Ziel mit Wettkampf oder Versuch (nicht fuer "fit bleiben"). */
 export function raceBlockedReason(snapshot: SnapshotV2): string | null {
-  if (goalKind(snapshot) === "fitness") return "Das Ziel hat keinen Wettkampf: Der Plan für den Wettkampftag gibt es nur für Wettkampf, Zeit oder Strecke.";
+  if (goalKind(snapshot) === "fitness") return "Das Ziel hat keinen Wettkampf: Den Plan für den Wettkampftag gibt es nur für Wettkampf, Zeit oder Strecke.";
   if (snapshot.training_goal.disciplines.length === 0) return "Das Ziel hat keine Disziplin.";
   return null;
 }

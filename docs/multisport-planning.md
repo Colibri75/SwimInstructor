@@ -18,13 +18,15 @@ Ein Snapshot v1 (nur Schwimmen) ist ein Fehler 400. Die Antworten stehen als Bei
 
 | Pfad | Body (zusätzlich zu `plan_version: 2` und `snapshot`) | Antwort |
 |---|---|---|
-| `POST /v1/plan/today` | `wishes` (bis 500 Zeichen), `day_plan` (Vorgabe aus dem Wochenplan: Einheiten mit Sportart, Typ, Intensität, Umfang, `test_id`), `equipment`, `recent_training`, `test_settings`, `regenerate` | `plan.sessions[]` mit Schritten, `source` (`claude`, `cache`, `fallback`), `stale`, `adjustments`, bei Ausfall `fallback_reason` |
-| `POST /v1/plan/week` | `from_date`, `today`, `unavailable_dates`, `recent_training`, `macro_weeks` (bis 3 Wochen des Gesamtplans), `wishes`, `equipment`, `test_settings` | `plan.days[]` mit 0 bis 2 Einheiten je Tag, `adjustments` |
+| `POST /v1/plan/today` | `wishes` (bis 500 Zeichen), `day_plan` (Vorgabe aus dem Wochenplan: Einheiten mit Sportart, Typ, Intensität, Umfang, `test_id`, `brick`, `indoor`, dazu `extras`), `equipment`, `recent_training`, `test_settings`, `regenerate`, `supplements`, `location`, `available_minutes` | `plan.sessions[]` mit Schritten, `source` (`claude`, `cache`, `fallback`), `stale`, `adjustments`, bei Ausfall `fallback_reason` |
+| `POST /v1/plan/week` | `from_date`, `today`, `unavailable_dates`, `recent_training`, `macro_weeks` (bis 3 Wochen des Gesamtplans), `wishes`, `equipment`, `test_settings`, `missed_sessions`, `reason`, `supplements`, `location`, `availability` | `plan.days[]` mit 0 bis 2 Einheiten je Tag (mit `brick` und `indoor`) und `extras`, `adjustments` |
 | `POST /v1/plan/macro` | `today`, `test_settings` | `goal_day`, `plan.weeks[]` mit Phase, Entlastung, Umfang je Sportart und Testterminen |
 | `POST /v1/plan/macro/revise` | `today`, `plan` (der Gesamtplan, wie die App ihn hält), `feedback` (1 bis 1000 Zeichen), `history` (bis 5 frühere Runden), `test_settings`; `plan_version` ist hier optional | wie `/plan/macro`, dazu `changes` (was sich ändert) und `feedback` |
+| `POST /v1/plan/race` | `today`, `start_time` ("HH:MM"), `location`, `body_weight_kg`, `notes` (bis 500 Zeichen); nur bei einem Ziel mit Wettkampf, Zeit oder Strecke | `plan` mit `overview`, `total_minutes`, `timeline`, `disciplines` (Zielzeit, Pacing), `transitions`, `nutrition`, `checklist`; dazu `weather` und `adjustments` |
 
-`recent_training` sind die Einheiten der letzten Tage (`date`, `sport`, `minutes`, `meters`, `hard`). Sie zählen für
-"nie zwei harte Tage hintereinander" und für die Grenzen von heute. `test_settings`: `offer` (Tests anbieten,
+`recent_training` sind die Einheiten der letzten Tage (`date`, `sport`, `minutes`, `meters`, `hard`, dazu aus der
+Rückmeldung `effort` 0 bis 10, `pain` 0 bis 3 und `pain_area`). Sie zählen für "nie zwei harte Tage hintereinander"
+und für die Grenzen von heute. `test_settings`: `offer` (Tests anbieten,
 Standard ja), `interval_weeks` (4 bis 12, Standard 6), `preferred` (bevorzugter Test je Sportart).
 
 Fehlerfälle: Zeitüberschreitung, ungültiges JSON, Budget aufgebraucht, kein API-Key oder ein Plan, den die
@@ -212,6 +214,48 @@ Tests gehen beim Verteilen der harten Tage vor normalen harten Einheiten. Passt 
 Einheit ("Locker statt Leistungstest") und der Grund steht in `adjustments`.
 
 Neue Werte aus einem Test gelten erst, wenn der Athlet sie in der App bestätigt (ab T4).
+
+## Plan reagiert auf echtes Training
+
+Nach jeder Einheit fragt die App nach Anstrengung (1 bis 10) und Beschwerden (keine, leicht, deutlich, stark, mit
+Stelle). Beides geht mit `recent_training` an den Server; ohne eigene Angabe zählt die Anstrengung aus Health.
+
+- **Anstrengung ab 8** macht eine Einheit hart, auch wenn sie locker geplant war: Danach gilt "nie zwei harte Tage
+  hintereinander".
+- **Beschwerden** bremsen die Sportart der Einheit: leicht 1 Tag nichts Hartes, deutlich 2 Tage nur locker mit höchstens
+  50 % der Einheitengrenze, stark 3 Tage gar nicht. Die anderen Sportarten bleiben frei. Grenzen und Prompt nennen die
+  Stelle; die Sicherheitsschicht setzt es durch (`painRestriction` in `limits.ts`, `applyPain` in `weekSanity.ts`).
+- **Außer der Reihe neu planen:** Die App plant die sieben Tage sofort neu, wenn deutliche oder starke Beschwerden, eine
+  Einheit ab 8 oder eine gestern ausgefallene Einheit vorliegen, jeder Anlass einmal. `reason` (`pain`, `effort`,
+  `missed`, sonst `daily` oder `manual`) und `missed_sessions` gehen mit; Ausgefallenes wird nicht nachgeholt oder
+  gestapelt, wichtige Inhalte rücken in die nächsten Tage.
+
+## Triathlon: Koppeltraining, drinnen, Wetter, Kalender, Kraft und Mobilität
+
+- **Koppeltraining** (`brick`): eine Einheit direkt nach der davor, ohne Pause. Erlaubt nur, wenn das Modul es kennt
+  (`brickAfter`: Laufen nach Rad, Rad nach Schwimmen) und die Einheit davor am selben Tag diese Sportart ist; sonst
+  streicht die Sicherheitsschicht die Markierung.
+- **Drinnen** (`indoor`): nur mit dem Hilfsmittel aus `equipment` (`indoor_trainer` Rolle, `treadmill` Laufband).
+- **Wetter:** Mit `location` (die App rundet auf 0,1°) holt der Server die Vorhersage bei Open-Meteo (ohne Schlüssel,
+  1 h Cache). Bei Gewitter, Sturm ab 60 km/h, Starkregen ab 20 mm oder Glätte kommen wetterabhängige Einheiten
+  (`weatherSensitive`) nach drinnen, wenn das Hilfsmittel da ist; sonst steht ein Hinweis in der Begründung. Hitze ab
+  30 °C nennt der Prompt.
+- **Kalender:** `availability` (Woche) bzw. `available_minutes` (Tag) ist der längste freie Block im Trainingsfenster.
+  Unter 20 Minuten wird der Tag "keine Zeit", sonst ist die freie Zeit die Obergrenze des Tages. Termine verlassen das
+  iPhone nicht.
+- **Kraft und Mobilität** (`supplements`, Kraft 0 bis 3, Mobilität 0 bis 7 pro Woche): Blöcke in `extras` der Woche
+  (Kraft 15 bis 45 min, Mobilität 5 bis 30 min), im Tagesplan mit bis zu 10 Übungen. Kraft nie am Tag vor einem harten
+  Tag und nicht in den 7 Tagen vor dem Ziel; die Blöcke zählen in die freie Zeit des Tages.
+
+## Wettkampftag
+
+`POST /v1/plan/race` schreibt aus Ziel, Leistungswerten, Startzeit, Wetter (wenn der Tag in der Vorhersage liegt) und
+Notizen den Plan für den Tag. Die Sicherheitsschicht (`sanitizeRace` in `race.ts`) nimmt genau die Disziplinen des
+Ziels in seiner Reihenfolge, ersetzt Zielzeiten außerhalb von ±50 % der Schätzung (Zielzeit des Ziels, sonst Zieltempo
+des Moduls), hält Pacing-Ziele im erlaubten Bereich der Sportart und begrenzt die Verpflegung: Kohlenhydrate bis 30, 60
+oder 90 g/h (Gesamtdauer bis 75 min, bis 150 min, länger), Flüssigkeit bis 800 ml/h (ab 30 °C 1000 ml), Natrium bis
+1000 mg/h, nichts in Disziplinen ohne Verpflegung (`canFuelDuringRace`, Schwimmen). Ein Ziel ohne Wettkampf
+(Fitness) ist ein Fehler 400 mit dem Grund.
 
 ## Prompts
 
