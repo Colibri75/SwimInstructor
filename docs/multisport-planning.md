@@ -169,7 +169,9 @@ Wochengrenze.
 **Sieben Tage:** genau die angefragten Tage; ein Tag ohne Zeit wird Ruhetag. Höchstens zwei harte Tage über alle
 Sportarten, nie hintereinander, auch nicht direkt nach einem harten Tag vor dem Plan. Nicht mehr Trainingstage als im
 Ziel, mindestens ein Ruhetag, insgesamt höchstens die Wochenstunden. Je Sportart Einheiten- und Wochengrenze und die
-Zahl der Einheiten. Was nicht passt, wird gekürzt, leichter oder gestrichen; jede Korrektur steht in `adjustments`
+Zahl der Einheiten. Etwa 80 % der Zeit locker (Drei-Zonen-Modell): Von jeder mittleren oder harten Einheit zählt die
+Hälfte als intensiv (Ein- und Auslaufen, Pausen); sind ab drei Einheiten mehr als 20 % der Wochenminuten intensiv,
+werden mittlere Einheiten locker, die längsten zuerst (Tests und harte Einheiten bleiben). Was nicht passt, wird gekürzt, leichter oder gestrichen; jede Korrektur steht in `adjustments`
 und als Hinweis in der Begründung.
 
 **Gesamtplan:** Claude liefert ihn in Abschnitten von einer bis sechs Wochen: je Sportart den Umfang der ersten und

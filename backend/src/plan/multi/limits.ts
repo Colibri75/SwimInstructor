@@ -19,6 +19,14 @@ export const MULTI_RULES = {
   maxHardSessionsPerDay: 1,
   /** Harte Tage ueber alle Sportarten in 7 Tagen, nie zwei hintereinander. */
   maxHardDaysPerWeek: 2,
+  /**
+   * Intensitaetsverteilung (Seiler, Drei-Zonen-Modell: etwa 80 % der Zeit locker): hoechstens dieser Anteil der
+   * Wochenminuten ist intensiv. Von einer mittleren oder harten Einheit zaehlt `intenseShareOfSession` als intensiv,
+   * Ein- und Auslaufen und Pausen sind locker.
+   */
+  maxIntenseShareOfWeek: 0.2,
+  intenseShareOfSession: 0.5,
+  minSessionsForIntensityShare: 3,
   /** Schlechte Erholung: Umfang heute hoechstens so viel der Grenze. */
   recoveryPoorFactor: 0.5,
   /** Ein Tag hat hoechstens diesen Anteil der Wochenstunden des Ziels, mindestens aber `minDayMinutesCap`. */
