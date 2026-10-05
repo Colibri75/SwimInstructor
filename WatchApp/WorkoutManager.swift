@@ -66,8 +66,15 @@ final class WorkoutManager: NSObject, ObservableObject {
     /// Bekommt ein gültiges Testergebnis, um es ans iPhone zu schicken.
     var onTestResult: ((WatchTestResult) -> Void)?
 
+    init(authorizer: HealthDataAuthorizing) {
+        self.authorizer = authorizer
+        super.init()
+    }
+
     private let registry = SportRegistry.standard
     private let healthStore = HKHealthStore()
+    /// Derselbe Health-Zugriff wie beim Start der Uhr, damit beide Stellen sich eine Anfrage teilen.
+    private let authorizer: HealthDataAuthorizing
     private let announcer = Announcer()
     private var session: HKWorkoutSession?
     private var builder: HKLiveWorkoutBuilder?
@@ -198,9 +205,7 @@ final class WorkoutManager: NSObject, ObservableObject {
 
         let configuration = module.workoutConfiguration(at: location, lapLengthMeters: start.lapLengthMeters)
         do {
-            let shareTypes = HealthKitManager.workoutShareTypes
-            let readTypes = HealthKitManager.readTypes.union(shareTypes.map { $0 as HKObjectType })
-            try await healthStore.requestAuthorization(toShare: shareTypes, read: readTypes)
+            try await authorizer.requestAuthorization()
 
             let session = try HKWorkoutSession(healthStore: healthStore, configuration: configuration)
             let builder = session.associatedWorkoutBuilder()

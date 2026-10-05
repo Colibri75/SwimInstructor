@@ -305,5 +305,5 @@ struct PoolLengthView: View {
     WatchTodayView()
         .environmentObject(HealthKitManager())
         .environmentObject(WatchPlanStore())
-        .environmentObject(WorkoutManager())
+        .environmentObject(WorkoutManager(authorizer: HealthKitManager()))
 }

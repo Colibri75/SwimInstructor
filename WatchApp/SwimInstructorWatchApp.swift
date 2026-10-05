@@ -4,7 +4,7 @@ import SwimInstructorCore
 @main
 @MainActor
 struct SwimInstructorWatchApp: App {
-    @StateObject private var healthKitManager = HealthKitManager(shareTypes: HealthKitManager.workoutShareTypes)
+    @StateObject private var healthKitManager: HealthKitManager
     @StateObject private var planStore: WatchPlanStore
     @StateObject private var workoutManager: WorkoutManager
 
@@ -12,9 +12,13 @@ struct SwimInstructorWatchApp: App {
         // Früh starten, damit ein Plan, den das iPhone inzwischen geschickt hat, gleich ankommt.
         let planStore = WatchPlanStore()
         planStore.start()
-        let workoutManager = WorkoutManager()
+        // Eine Instanz für die ganze Uhr: Start-Bildschirm und Aufzeichnung fragen über sie, so erscheint der
+        // Health-Dialog nur einmal.
+        let healthKitManager = HealthKitManager(shareTypes: HealthKitManager.workoutShareTypes)
+        let workoutManager = WorkoutManager(authorizer: healthKitManager)
         // Testergebnisse gehen ans iPhone; dort bestätigt der Athlet sie, erst dann ändern sie das Profil.
         workoutManager.onTestResult = { [weak planStore] result in planStore?.send(result) }
+        _healthKitManager = StateObject(wrappedValue: healthKitManager)
         _planStore = StateObject(wrappedValue: planStore)
         _workoutManager = StateObject(wrappedValue: workoutManager)
     }

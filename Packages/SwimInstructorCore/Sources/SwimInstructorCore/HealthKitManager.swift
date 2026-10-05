@@ -52,13 +52,30 @@ public final class HealthKitManager: ObservableObject, HealthDataAuthorizing {
         self.shareTypes = shareTypes
     }
 
+    /// Läuft gerade eine Anfrage, warten weitere Aufrufer auf genau diese, statt einen zweiten Health-Dialog zu öffnen.
+    private var pendingRequest: Task<Void, Error>?
+
+    /// Fragt nur, wenn Health noch etwas zu fragen hat; sonst kommt kein Dialog. Gleichzeitige Aufrufe (Start der Uhr
+    /// und Start einer Einheit) teilen sich eine Anfrage, damit der Dialog nicht zweimal hintereinander erscheint.
     public func requestAuthorization() async throws {
         guard HKHealthStore.isHealthDataAvailable() else {
             throw HealthKitAuthorizationError.notAvailableOnDevice
         }
-        do {
-            let readTypes = Self.readTypes.union(shareTypes.map { $0 as HKObjectType })
+        if let pendingRequest {
+            return try await pendingRequest.value
+        }
+        let healthStore = healthStore
+        let shareTypes = shareTypes
+        let readTypes = Self.readTypes.union(shareTypes.map { $0 as HKObjectType })
+        let request = Task {
+            let status = try await healthStore.statusForAuthorizationRequest(toShare: shareTypes, read: readTypes)
+            guard status != .unnecessary else { return }
             try await healthStore.requestAuthorization(toShare: shareTypes, read: readTypes)
+        }
+        pendingRequest = request
+        defer { pendingRequest = nil }
+        do {
+            try await request.value
             // HealthKit never reveals per-type grant/deny status for read access (privacy by
             // design), so "authorized" here only means the request completed without error.
             isAuthorized = true
