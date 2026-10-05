@@ -373,6 +373,29 @@ final class PlanV2ClientTests: XCTestCase {
         XCTAssertEqual(body["reason"] as? String, "low_compliance")
     }
 
+    func testReviewSendsNewPerformanceValuesWithTheirPreviousOnes() async throws {
+        let transport = StubTransport(status: 200, body: try Self.contract("plan-v2-review-response.json"))
+        let change = PerformanceChange(
+            sport: .swim, metric: "css_pace_per_100m", previous: 110, value: 104, source: .tested, measuredAt: TestFixtures.date(daysAgo: 2, hour: 8)
+        )
+        let request = MacroReviewRequest(
+            snapshot: TestFixtures.snapshot, today: "2026-09-30", plan: Self.macroPlan(), planFrom: "2026-09-28", actual: [], reason: .scheduled,
+            performanceChanges: [change]
+        )
+
+        _ = try await makeClient(transport).reviewMacroPlan(request)
+
+        let body = try Self.body(transport.requests.first)
+        let changes = try XCTUnwrap(body["performance_changes"] as? [[String: Any]])
+        XCTAssertEqual(changes.count, 1)
+        XCTAssertEqual(changes[0]["sport"] as? String, "swim")
+        XCTAssertEqual(changes[0]["metric"] as? String, "css_pace_per_100m")
+        XCTAssertEqual(changes[0]["previous"] as? Double, 110)
+        XCTAssertEqual(changes[0]["value"] as? Double, 104)
+        XCTAssertEqual(changes[0]["source"] as? String, "tested")
+        XCTAssertEqual(changes[0]["measured_at"] as? String, "2026-09-28T08:00:00Z")
+    }
+
     func testReviseCutsOverlongTexts() async throws {
         let transport = StubTransport(status: 200, body: try Self.contract("plan-v2-revise-response.json"))
         let round = MacroFeedbackRound(

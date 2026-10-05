@@ -258,6 +258,8 @@ public struct MacroReviewRequest: Equatable, Sendable {
     public var reason: MacroReviewReason
     public var pause: PauseReport?
     public var feedback: String?
+    /// Bestätigte Leistungswerte seit dem letzten Stand des Plans.
+    public var performanceChanges: [PerformanceChange]
     public var testSettings: TestSettings?
 
     public init(
@@ -269,6 +271,7 @@ public struct MacroReviewRequest: Equatable, Sendable {
         reason: MacroReviewReason,
         pause: PauseReport? = nil,
         feedback: String? = nil,
+        performanceChanges: [PerformanceChange] = [],
         testSettings: TestSettings? = nil
     ) {
         self.snapshot = snapshot
@@ -279,6 +282,7 @@ public struct MacroReviewRequest: Equatable, Sendable {
         self.reason = reason
         self.pause = pause
         self.feedback = feedback
+        self.performanceChanges = performanceChanges
         self.testSettings = testSettings
     }
 }
@@ -372,6 +376,11 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
             reason: request.reason.rawValue,
             pause: request.pause.map { ReviewBody.Pause(from: $0.from, to: $0.to, kind: $0.kind.rawValue) },
             feedback: (feedback?.isEmpty ?? true) ? nil : feedback.map { String($0.prefix(MacroRevisionRequest.maxFeedbackLength)) },
+            performanceChanges: request.performanceChanges.isEmpty ? nil : request.performanceChanges.prefix(20).map {
+                ReviewBody.Change(
+                    sport: $0.sport, metric: $0.metric.rawValue, previous: $0.previous, value: $0.value, source: $0.source.rawValue, measuredAt: $0.measuredAt
+                )
+            },
             testSettings: request.testSettings
         ))
     }
@@ -459,6 +468,15 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
             let kind: String
         }
 
+        struct Change: Encodable {
+            let sport: SportID?
+            let metric: String
+            let previous: Double?
+            let value: Double
+            let source: String
+            let measuredAt: Date
+        }
+
         let planVersion: Int
         let snapshot: AthleteStateSnapshot
         let today: String
@@ -467,6 +485,7 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
         let reason: String
         let pause: Pause?
         let feedback: String?
+        let performanceChanges: [Change]?
         let testSettings: TestSettings?
     }
 

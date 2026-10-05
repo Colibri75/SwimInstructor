@@ -33,6 +33,7 @@ import {
   MultiMacroPlanSchema,
   MultiWeekPlanSchema,
   PauseReport,
+  PerformanceChange,
   RecentTraining,
   ReviewReason,
   ActualWeek,
@@ -128,6 +129,7 @@ export interface ReviewInput {
   reason: ReviewReason;
   pause?: PauseReport;
   feedback?: string;
+  performanceChanges?: PerformanceChange[];
   testSettings?: TestSettings;
 }
 
@@ -253,7 +255,7 @@ export class MultiPlanService {
     const generated = await this.generate(
       "review",
       MULTI_REVIEW_SYSTEM_PROMPT,
-      buildReviewUserMessage({ snapshot: input.snapshot, context, plan: input.plan, actual: input.actual, reason: input.reason, pause: input.pause, feedback }),
+      buildReviewUserMessage({ snapshot: input.snapshot, context, plan: input.plan, actual: input.actual, reason: input.reason, pause: input.pause, feedback, performanceChanges: input.performanceChanges }),
       MacroReviewSchema,
       { macro: true }
     );

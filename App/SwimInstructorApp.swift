@@ -103,6 +103,8 @@ struct SwimInstructorApp: App {
             loader?.reading.map { MultiSportWeekLoader.PlanningContext(snapshot: $0.snapshot, workouts: $0.allWorkouts) }
         }
         macroLoader.testSettingsProvider = { testSettingsStore.settings() }
+        // Neue Testwerte seit dem letzten Stand nennt die Fortschreibung ausdrücklich.
+        macroLoader.performanceChangesProvider = { date in profileStore.profile().changes(since: date) }
 
         // Das Profil zeigt neben den bestätigten Werten die Schätzungen aus dem zuletzt gelesenen Zustand.
         let profileLoader = PerformanceProfileLoader(store: profileStore)
