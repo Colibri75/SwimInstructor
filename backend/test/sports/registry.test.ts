@@ -30,6 +30,7 @@ const planning: SportPlanning = {
   brickAfter: [],
   weatherSensitive: false,
   indoor: null,
+  canFuelDuringRace: true,
   promptRules: "- Ruhig atmen."
 };
 

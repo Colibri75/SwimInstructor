@@ -80,6 +80,7 @@ export const rowingTestSport: SportDefinition = {
     brickAfter: [],
     weatherSensitive: false,
     indoor: null,
+    canFuelDuringRace: true,
     promptRules: "- Gesteuert über die Schlagzahl (stroke_rate, Schläge pro Minute), Grundlage 18 bis 22."
   }
 };

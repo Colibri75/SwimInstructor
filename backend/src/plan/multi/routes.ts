@@ -5,7 +5,8 @@ import { z } from "zod";
 import { PlanUnavailableError } from "../errors";
 import { isRealDate, weekdayIndex } from "../calendar";
 import { DayRequestV2Schema, MacroRequestV2Schema, MacroWeekTargetV2, ReviewRequestSchema, ReviseRequestSchema, WeekRequestV2Schema } from "./schemas";
-import { DayResultV2, MacroResultV2, MultiPlanService, ReviewResult, ReviseResult, WeekResultV2 } from "./service";
+import { DayResultV2, MacroResultV2, MultiPlanService, RaceResult, ReviewResult, ReviseResult, WeekResultV2 } from "./service";
+import { raceBlockedReason, RaceRequestSchema } from "./race";
 
 /**
  * Die Routen der Planung (Plan v2, siehe docs/multisport-planning.md): `POST /v1/plan/today`, `/plan/week`, `/plan/macro`
@@ -132,6 +133,30 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
       await answer(res, () => service.planMacro({ user: userOf(res), snapshot: data.snapshot, today: data.today, testSettings: data.test_settings }), macroResponse);
     });
 
+    router.post("/plan/race", async (req: Request, res: Response) => {
+      const parsed = RaceRequestSchema.safeParse(req.body);
+      if (!parsed.success) return invalid(res, issues(parsed.error));
+      const data = parsed.data;
+      const problems = dateProblems([["today", data.today]]);
+      if (problems.length > 0) return invalid(res, problems);
+      const blocked = raceBlockedReason(data.snapshot);
+      if (blocked !== null) return invalid(res, [{ path: "snapshot.training_goal", message: blocked }]);
+      await answer(
+        res,
+        () =>
+          service.planRace({
+            user: userOf(res),
+            snapshot: data.snapshot,
+            today: data.today,
+            startTime: data.start_time,
+            location: data.location,
+            bodyWeightKg: data.body_weight_kg,
+            notes: data.notes
+          }),
+        raceResponse
+      );
+    });
+
     router.post("/plan/macro/revise", async (req: Request, res: Response) => {
       const parsed = ReviseRequestSchema.safeParse(req.body);
       if (!parsed.success) return invalid(res, issues(parsed.error));
@@ -213,6 +238,17 @@ function weekResponse(result: WeekResultV2) {
 
 function macroResponse(result: MacroResultV2) {
   return { plan_version: 2, goal_day: result.goalDay, generated_at: result.generatedAt, plan: result.plan, adjustments: result.adjustments };
+}
+
+function raceResponse(result: RaceResult) {
+  return {
+    plan_version: 2,
+    race_day: result.raceDay,
+    generated_at: result.generatedAt,
+    plan: result.plan,
+    adjustments: result.adjustments,
+    ...(result.weather !== undefined ? { weather: result.weather } : {})
+  };
 }
 
 function reviseResponse(result: ReviseResult) {

@@ -181,7 +181,7 @@ export type MacroReviewRaw = z.infer<typeof MacroReviewSchema>;
 
 // --- Was die App schickt ---
 
-const DateString = z.string().regex(DATE_PATTERN);
+export const DateString = z.string().regex(DATE_PATTERN);
 const KnownSport = z.string().refine((id) => SPORTS.get(id) !== undefined, { message: "unbekannte Sportart" });
 const Identifier = z.string().regex(/^[a-z][a-z0-9_]{1,39}$/);
 const Amount = z.number().min(0).max(1_000_000);
@@ -277,7 +277,7 @@ export const MacroWeekTargetV2Schema = z.object({
 export const MAX_WISH_LENGTH = 500;
 
 /** Jede Anfrage nennt `plan_version: 2`; fehlt es, ist die App veraltet (der Plan von Version 1 wird nicht mehr beantwortet). */
-const PlanVersion = z.literal(2, { error: "plan_version 2 erforderlich: Diese App-Version ist veraltet, bitte aktualisieren" });
+export const PlanVersion = z.literal(2, { error: "plan_version 2 erforderlich: Diese App-Version ist veraltet, bitte aktualisieren" });
 
 export const DayRequestV2Schema = z
   .object({

@@ -6,7 +6,8 @@ import { UsageOutcome, UsageRecorder } from "../../usage";
 import { GenerationBudget, UserBudgets } from "../budget";
 import { FallbackReason, PlanGenerationError, PlanUnavailableError } from "../errors";
 import { CallOptions, GeneratedPlan, StructuredGenerator } from "../generator";
-import { localDate, macroWeekStarts, windowDates } from "../calendar";
+import { daysBetween, localDate, macroWeekStarts, windowDates } from "../calendar";
+import { buildRaceUserMessage, RACE_SYSTEM_PROMPT, RacePlan, RacePlanSchema, sanitizeRace } from "./race";
 import { SnapshotV2 } from "../snapshot";
 import { DayOptionsV2, DayPlanV2, sanitizeDayV2 } from "./daySanity";
 import { DayWeather, roundLocation, WeatherProvider } from "../weather";
@@ -22,7 +23,8 @@ import {
   MULTI_MACRO_SYSTEM_PROMPT,
   MULTI_REVISE_SYSTEM_PROMPT,
   MULTI_REVIEW_SYSTEM_PROMPT,
-  MULTI_WEEK_SYSTEM_PROMPT
+  MULTI_WEEK_SYSTEM_PROMPT,
+  performanceSection
 } from "./prompts";
 import {
   DayTargetV2,
@@ -186,6 +188,28 @@ interface Attempt {
   meta?: GeneratedPlan;
   latencyMs?: number;
 }
+
+export interface RaceInput {
+  user?: string;
+  snapshot: SnapshotV2;
+  today: string;
+  startTime?: string;
+  location?: GeoLocation;
+  bodyWeightKg?: number;
+  notes?: string;
+}
+
+export interface RaceResult {
+  raceDay: string;
+  generatedAt: string;
+  plan: RacePlan;
+  adjustments: string[];
+  /** Die Vorhersage fuer den Wettkampftag, wenn es schon eine gab. */
+  weather?: DayWeather;
+}
+
+/** So weit reicht die Vorhersage (Open-Meteo: 14 Tage). */
+const FORECAST_DAYS = 14;
 
 export class MultiPlanService {
   private readonly now: () => Date;
@@ -387,6 +411,41 @@ export class MultiPlanService {
       reason: input.reason,
       ...(feedback !== undefined ? { feedback } : {})
     };
+  }
+
+  /** Der Plan fuer den Wettkampftag (Ablauf, Pacing, Wechsel, Verpflegung). */
+  async planRace(input: RaceInput): Promise<RaceResult> {
+    const user = input.user ?? OWNER_ID;
+    return this.tracked("race", user, (attempt) => this.racePlan(input, user, attempt), () => ({ outcome: "claude" }));
+  }
+
+  private async racePlan(input: RaceInput, user: string, attempt: Attempt): Promise<RaceResult> {
+    const raceDay = goalDayOf(input.snapshot);
+    const days = daysBetween(input.today, raceDay);
+    const weather =
+      input.location !== undefined && days >= 0 && days < FORECAST_DAYS ? (await this.weatherFor(input.location, [raceDay]))[0] : undefined;
+    const notes = input.notes?.trim() || undefined;
+    const generated = await this.generate(
+      "race",
+      RACE_SYSTEM_PROMPT,
+      buildRaceUserMessage({
+        snapshot: input.snapshot,
+        today: input.today,
+        startTime: input.startTime,
+        bodyWeightKg: input.bodyWeightKg,
+        notes,
+        weather,
+        performance: performanceSection(input.snapshot)
+      }),
+      RacePlanSchema,
+      user,
+      attempt,
+      { macro: true }
+    );
+    const sanitized = sanitizeRace(generated.data, input.snapshot, weather !== undefined ? { weather } : {});
+    if (sanitized.blocked !== null) throw this.blocked("race", sanitized.blocked);
+    this.logGenerated("race", generated.meta, sanitized.adjustments.length, { disciplines: sanitized.plan.disciplines.length, notesChars: notes?.length ?? 0 });
+    return { raceDay, generatedAt: this.now().toISOString(), plan: sanitized.plan, adjustments: sanitized.adjustments, ...(weather !== undefined ? { weather } : {}) };
   }
 
   /** Ein Claude-Aufruf mit Budget und Schema-Pruefung; jeder Ausfall wird `PlanUnavailableError` mit Grund. */

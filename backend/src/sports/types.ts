@@ -185,6 +185,8 @@ export interface SportPlanning {
    * gibt oder sie ohnehin drinnen stattfindet. Gegenstueck: `SportModule.indoorEquipment`.
    */
   readonly indoor: { readonly equipment: string; readonly displayName: string } | null;
+  /** Ob man waehrend dieser Disziplin im Wettkampf essen und trinken kann (beim Schwimmen nicht). */
+  readonly canFuelDuringRace: boolean;
   /**
    * Regeln fuer Claude, wie diese Sportart geplant wird (Deutsch, ohne Datum und ohne Zahlen des Athleten). Sie
    * stehen im festen System-Prompt der Planung fuer mehrere Sportarten.

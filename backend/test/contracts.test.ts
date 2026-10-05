@@ -12,6 +12,7 @@ import { ATHLETE_METRICS } from "../src/sports/performance";
 import { SPORTS } from "../src/sports/registry";
 import { STEP_MEASURES, STEP_TARGETS } from "../src/sports/vocabulary";
 import { buildApp, TEST_TOKEN, testConfig } from "./helpers";
+import { olympicRaceRaw } from "./plan/multi/raceFixtures";
 
 /**
  * Prueft den Server gegen contracts/. Die App prueft dieselben Dateien (ContractTests.swift): So faellt ein
@@ -207,6 +208,27 @@ describe("contracts/wire, Plan", () => {
     expect(response.body.plan.days[4].sessions.map((item: any) => [item.sport, item.brick, item.indoor])).toEqual([["bike", false, true]]);
     expect(response.body.plan.days.map((day: any) => day.extras.map((extra: any) => extra.kind))).toEqual([[], ["mobility"], [], ["strength"], [], [], []]);
     expect(response.body.adjustments).toEqual([]);
+  });
+
+  it("antwortet auf /v1/plan/race mit genau den Feldern des Vertrags, Wetter eingeschlossen", async () => {
+    const fixture = contract("wire/plan-v2-race-response.json");
+    const service = new MultiPlanService({
+      generator: { complete: generated(olympicRaceRaw()) },
+      store: new MemoryDayPlanStoreV2(),
+      budget: new GenerationBudget(100, 100),
+      weather: { forecast: async () => [fixture.weather] },
+      logger,
+      timezone: "Europe/Berlin",
+      now: () => new Date("2027-06-25T10:00:00Z")
+    });
+    const response = await request(buildApp({ registerV1Routes: multiRoutes(service) }))
+      .post("/v1/plan/race")
+      .set(auth)
+      .send({ plan_version: 2, snapshot: profile, today: "2027-06-25", start_time: "09:30", location: { latitude: 52.5, longitude: 13.4 } });
+
+    expect(response.status).toBe(200);
+    expect(sorted(keyPaths(response.body))).toEqual(sorted(keyPaths(fixture)));
+    expect(response.body.plan).toEqual(fixture.plan);
   });
 
   it("antwortet auf /v1/plan/macro mit Plan v2 mit genau den Feldern des Vertrags", async () => {
