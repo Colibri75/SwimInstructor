@@ -7,10 +7,28 @@ import { weekDates, weekdayName } from "../calendar";
 import { dayLimits, DayLimitsV2, dayMinutesCap, declaredLevelText, goalDayOf, MULTI_RULES, painAreaText, painRestriction, phaseOf, realismGaps, SportDayLimits, sportLimits, taperFactors, taperWeeks, testBlackoutReason, weeksToGoal } from "./limits";
 import { goalKind, isFitnessGoal, scheduleDayText, trainingDaysPerWeek, weeklyMinutes } from "./schedule";
 import { MacroContextV2, macroSportLimits } from "./macroSanity";
-import { ActualWeek, DayTargetV2, FeedbackRound, MacroWeekTargetV2, MissedSession, PauseReport, PerformanceChange, RecentTraining, ReplanReason, ReviewReason, TestSettings } from "./schemas";
+import {
+  ActualWeek,
+  Availability,
+  DayTargetV2,
+  EXTRA_KINDS,
+  ExtraKind,
+  FeedbackRound,
+  MacroWeekTargetV2,
+  MissedSession,
+  PauseReport,
+  PerformanceChange,
+  RecentTraining,
+  ReplanReason,
+  ReviewReason,
+  Supplements,
+  TestSettings
+} from "./schemas";
 import { emphasisOf, formatAmount, planningContext, plannedSports, raceAmount, raceSeconds, sportName } from "./sports";
 import { chooseTest, lastConfirmedTest, preferredTest, scheduleMacroTests } from "./tests";
-import { WeekContextV2, weekLimitsV2 } from "./weekSanity";
+import { indoorAllowed, MIN_FREE_MINUTES, WeekContextV2, weekLimitsV2 } from "./weekSanity";
+import { DayWeather, severeWeather, weatherText } from "../weather";
+import { EXTRA_RULES, perWeek, strengthBlackout } from "./extras";
 
 /**
  * Prompts der Planung fuer mehrere Sportarten. Die System-Prompts sind fest (kein Datum, keine Zahlen des Athleten)
@@ -67,6 +85,13 @@ function startingLevelLines(snapshot: SnapshotV2): string[] {
   return lines.length === 0 ? [] : ["", "Startniveau (vom Athleten angegeben, in den Grenzen schon berücksichtigt):", ...lines];
 }
 
+/** Regeln fuer Tag und Woche: Koppeltraining, drinnen, Wetter, Kalender, Kraft und Mobilitaet. */
+const DAY_AND_WEEK_RULES = `## Koppeltraining, drinnen, Wetter, Kalender, Kraft und Mobilität
+- brick true heißt Koppeltraining: Die Einheit schließt am selben Tag direkt an die erste an, ohne Pause außer dem Wechsel. Nur bei der zweiten Einheit des Tages und nur in der Reihenfolge, die die Nutzernachricht unter "Koppeltraining" nennt. Die angehängte Einheit ist kurz (beim Koppellauf 10 bis 30 Minuten) und locker bis mittel. In der zielspezifischen Phase etwa einmal pro Woche, im Aufbau selten, nie direkt nach einem harten Tag. Beide Einheiten zählen voll für ihre Grenzen.
+- indoor true heißt drinnen (Rolle, Laufband), nur wo die Nutzernachricht es für den Athleten erlaubt; sonst indoor false. Bei Gewitter, Sturm, Starkregen oder Glätte (Abschnitt "Wetter") kommen wetterabhängige Einheiten nach drinnen oder auf einen anderen Tag. Bei Hitze ab 30 °C harte Einheiten früh am Morgen oder lockerer, und erinnere ans Trinken.
+- Steht bei einem Tag die freie Zeit laut Kalender, ist sie die Obergrenze für den Tag, Kraft und Mobilität eingeschlossen.
+- extras (Kraft und Mobilität) nur, wenn die Nutzernachricht sie vorsieht, sonst leer. Kraft (strength, 15 bis 45 Minuten): Rumpf, Hüfte und Beine, mit eigenem Körpergewicht, Band oder Matte; nicht am Tag vor einer harten Einheit, gern an einem lockeren Tag oder nach der harten Einheit am selben Tag; keine in den letzten 7 Tagen vor dem Ziel. Mobilität (mobility, 5 bis 30 Minuten): locker dehnen und mobilisieren, gern an Ruhetagen oder nach einer Einheit.`;
+
 const ROLE = "Du bist ein erfahrener Triathlon- und Ausdauertrainer und planst für einen einzelnen Hobby-Athleten das Training in mehreren Sportarten (welche, steht unter Schwerpunkte in der Nutzernachricht).";
 
 export const MULTI_DAY_SYSTEM_PROMPT = `${ROLE} Du erstellst jeden Tag die Einheiten für heute: null (Ruhetag) bis zwei, jede mit Sportart, Typ, Intensität und Schritten.
@@ -77,12 +102,17 @@ ${SNAPSHOT_AND_RULES}
 Eine Einheit besteht aus Einlaufen, Hauptteil und Auslaufen (beim Schwimmen Ein- und Ausschwimmen). Jeder Schritt hat repetitions, ein Maß (measure distance mit distance_meters oder measure duration mit duration_seconds, das andere Feld ist null), eine Pause nach jeder Wiederholung (rest_seconds) und höchstens ein Ziel (target_type und target_value, sonst beide null). Erlaubt sind nur die Maße und Ziele, die die Nutzernachricht für die Sportart nennt, mit Werten im genannten Bereich. Einheiten der Ziele: pace_per_100m in Sekunden pro 100 m, pace_per_km in Sekunden pro km, heart_rate_zone als Zone 1 bis 5, power in Watt, cadence in Umdrehungen oder Schritten pro Minute, perceived_effort von 1 bis 10. Das Feld cue ist der Kurztext für die Uhr: zwei bis vier Wörter, höchstens 30 Zeichen. instructions erklärt den Schritt in ein bis zwei Sätzen, ohne Fachbegriff ohne Erklärung. Hilfsmittel (equipment) nur aus der Liste der Sportart und nur, wenn der Athlet sie hat.
 Bei einem Leistungstest setzt der Server die Schritte selbst ein: steps ist dann eine leere Liste, test_id die Kennung aus der Nutzernachricht.
 
+${DAY_AND_WEEK_RULES}
+Ein Kraft- oder Mobilitätsblock (extras) hat drei bis acht Übungen (exercises) mit Sätzen und entweder Wiederholungen (reps) oder Sekunden (seconds), einer Pause und einem Kurztext (cue); die Summe passt zu minutes.
+
 ## Ausgabe
 Antworte ausschließlich im vorgegebenen JSON-Format und auf Deutsch. Die rationale hat höchstens vier Sätze und nennt zwei bis drei konkrete Zahlen aus dem Snapshot und den Bezug zum Ziel. coach_notes enthält null bis drei kurze Hinweise.`;
 
 export const MULTI_WEEK_SYSTEM_PROMPT = `${ROLE} Du planst die nächsten sieben Tage, jeden Tag neu: Du justierst den Plan auf den Zustand, das Training der Vortage und die Vorgabe des Gesamtplans. Du planst nur das Gerüst jedes Tages: null (Ruhetag) bis zwei Einheiten mit Sportart, Typ, Intensität, Umfang (amount in der Einheit der Sportart) und einem kurzen Schwerpunkt. Die Schritte entstehen am Tag selbst.
 
 ${SNAPSHOT_AND_RULES}
+
+${DAY_AND_WEEK_RULES}
 
 ## Ausgabe
 Antworte ausschließlich im vorgegebenen JSON-Format und auf Deutsch. days enthält genau die genannten Tage, jeden einmal. Ein Ruhetag hat keine Einheiten. Tage, an denen der Athlet keine Zeit hat, sind Ruhetage mit dem Schwerpunkt "Keine Zeit"; verteile den Umfang auf die übrigen Tage. Schwerpunkte haben höchstens 60 Zeichen. Die rationale hat höchstens vier Sätze und nennt zwei bis drei konkrete Zahlen.`;
@@ -424,6 +454,49 @@ function scheduleTodayLines(snapshot: SnapshotV2, date: string, today: DayLimits
   return [`- Wochenraster für heute: ${text}. Bei zwei Einheiten gilt die Tageszeit für beide.`];
 }
 
+/** Koppeltraining je geplanter Sportart (aus `brickAfter` der Module). */
+function brickLines(snapshot: SnapshotV2): string[] {
+  const planned = plannedSports(snapshot);
+  const pairs = planned.flatMap((sport) => sport.planning.brickAfter.filter((before) => planned.some((other) => other.id === before)).map((before) => `${sport.displayName} direkt nach ${sportName(before)}`));
+  return ["Koppeltraining:", pairs.length > 0 ? `- Möglich: ${pairs.join("; ")} (brick true bei der zweiten Einheit des Tages).` : "- Keins (brick ist immer false)."];
+}
+
+/** Drinnen je wetterabhaengiger Sportart, nach dem Equipment des Athleten. */
+function indoorLines(snapshot: SnapshotV2, equipment: readonly string[] | undefined): string[] {
+  const lines = plannedSports(snapshot)
+    .filter((sport) => sport.planning.weatherSensitive)
+    .map((sport) => {
+      const indoor = sport.planning.indoor;
+      if (indoor === null) return `- ${sport.displayName}: nur draußen.`;
+      return indoorAllowed(sport, equipment) ? `- ${sport.displayName}: drinnen möglich (${indoor.displayName}, indoor true).` : `- ${sport.displayName}: nur draußen (kein ${indoor.displayName} angegeben, indoor false).`;
+    });
+  return lines.length === 0 ? [] : ["Drinnen (alle anderen Sportarten: indoor false):", ...lines];
+}
+
+function extrasLines(snapshot: SnapshotV2, supplements: Supplements | undefined, dates: readonly string[], planned?: readonly ExtraKind[]): string[] {
+  const kinds = EXTRA_KINDS.filter((kind) => perWeek(supplements, kind) > 0 && (planned === undefined || planned.includes(kind)));
+  if (kinds.length === 0) return ["Kraft und Mobilität: keine (extras leer)."];
+  const lines = kinds.map((kind) => {
+    const rules = EXTRA_RULES[kind];
+    const blackout = kind === "strength" && dates.every((date) => strengthBlackout(snapshot, date)) ? " Jetzt nicht: letzte 7 Tage vor dem Ziel." : "";
+    return `- ${rules.displayName} (${kind}): ${planned === undefined ? `${perWeek(supplements, kind)}-mal pro Woche, ` : "heute laut Wochenplan, "}je ${rules.minMinutes} bis ${rules.maxMinutes} min.${blackout}`;
+  });
+  return ["Kraft und Mobilität (vom Athleten gewünscht):", ...lines];
+}
+
+/** Zusatz zu einem Tag: freie Zeit laut Kalender und Wetter. */
+function dayExtrasText(date: string, availability: readonly Availability[] | undefined, weather: readonly DayWeather[] | undefined): string {
+  const parts: string[] = [];
+  const free = availability?.find((entry) => entry.date === date);
+  if (free !== undefined) parts.push(free.minutes < MIN_FREE_MINUTES ? "laut Kalender keine Zeit" : `laut Kalender etwa ${free.minutes} min frei`);
+  const day = weather?.find((entry) => entry.date === date);
+  if (day !== undefined) {
+    const severe = severeWeather(day);
+    parts.push(`Wetter ${weatherText(day)}${severe !== null ? `, ${severe}` : ""}`);
+  }
+  return parts.join("; ");
+}
+
 // --- Tagesplan ---
 
 export interface DayPromptInput {
@@ -434,6 +507,9 @@ export interface DayPromptInput {
   equipment?: readonly string[];
   recent?: readonly RecentTraining[];
   testSettings?: TestSettings;
+  supplements?: Supplements;
+  availableMinutes?: number;
+  weather?: DayWeather;
 }
 
 export function buildDayUserMessageV2(input: DayPromptInput): string {
@@ -445,6 +521,8 @@ export function buildDayUserMessageV2(input: DayPromptInput): string {
     "Grenzen für heute (vom System berechnet, verbindlich):",
     ...dayLimitLines(snapshot, today, true),
     ...scheduleTodayLines(snapshot, date, today),
+    ...(input.availableMinutes !== undefined ? [`- Freie Zeit heute laut Kalender: etwa ${input.availableMinutes} min (Obergrenze für den Tag, Kraft und Mobilität eingeschlossen).`] : []),
+    ...(input.weather !== undefined ? [`- Wetter heute: ${weatherText(input.weather)}${severeWeather(input.weather) !== null ? `, ${severeWeather(input.weather)}` : ""}.`] : []),
     ...startingLevelLines(snapshot)
   ];
 
@@ -486,9 +564,15 @@ export function buildDayUserMessageV2(input: DayPromptInput): string {
             : session.amount > limits.maxAmount
               ? ` Das ist mehr als die Grenze für heute: plane höchstens ${formatAmount(sport, limits.maxAmount)} und sag in der rationale in einfachen Worten, warum es weniger wird.`
               : "";
-      lines.push(`- ${sport.displayName}: Typ ${session.session_type}, Intensität ${session.intensity}, etwa ${formatAmount(sport, session.amount)}, Schwerpunkt ${JSON.stringify(session.focus)}.${beyond}`);
+      const how = [session.brick === true ? "direkt nach der ersten Einheit (Koppeltraining, brick true)" : "", session.indoor === true ? "drinnen (indoor true)" : ""].filter((text) => text !== "").join(", ");
+      lines.push(`- ${sport.displayName}: Typ ${session.session_type}, Intensität ${session.intensity}, etwa ${formatAmount(sport, session.amount)}${how !== "" ? `, ${how}` : ""}, Schwerpunkt ${JSON.stringify(session.focus)}.${beyond}`);
     }
+    for (const extra of target.extras ?? []) lines.push(`- ${EXTRA_RULES[extra.kind].displayName} (${extra.kind}): etwa ${extra.minutes} min, Schwerpunkt ${JSON.stringify(extra.focus)}.`);
   }
+  lines.push("", ...brickLines(snapshot));
+  const indoor = indoorLines(snapshot, input.equipment);
+  if (indoor.length > 0) lines.push("", ...indoor);
+  lines.push("", ...extrasLines(snapshot, input.supplements, [date], target !== undefined ? (target.extras ?? []).map((extra) => extra.kind) : undefined));
 
   lines.push(...painLines(snapshot, input.recent ?? [], [date]));
   lines.push("", goalSectionV2(snapshot, date), "", performanceSection(snapshot), "", recentSection(input.recent ?? []));
@@ -558,7 +642,8 @@ export function buildWeekUserMessageV2(input: WeekPromptInput): string {
   lines.push("", "Zu planende Tage:");
   for (const date of context.dates) {
     const scheduled = scheduleDayText(snapshot, date);
-    lines.push(`- ${weekdayName(date)} ${date}${context.unavailable.includes(date) ? " (keine Zeit: Ruhetag)" : scheduled !== null ? ` (${scheduled})` : ""}`);
+    const extra = dayExtrasText(date, context.availability, context.weather);
+    lines.push(`- ${weekdayName(date)} ${date}${context.unavailable.includes(date) ? " (keine Zeit: Ruhetag)" : scheduled !== null ? ` (${scheduled})` : ""}${extra !== "" ? `; ${extra}` : ""}`);
   }
 
   lines.push(
@@ -580,6 +665,10 @@ export function buildWeekUserMessageV2(input: WeekPromptInput): string {
   lines.push(...painLines(snapshot, context.reports ?? context.recent, context.dates));
   lines.push(...missedLines(context.missed));
   lines.push("", "Leistungstests:", ...weekTestLines(snapshot, context));
+  lines.push("", ...brickLines(snapshot));
+  const indoor = indoorLines(snapshot, context.equipment);
+  if (indoor.length > 0) lines.push("", ...indoor);
+  lines.push("", ...extrasLines(snapshot, context.supplements, context.dates));
 
   if (context.macroWeeks !== undefined && context.macroWeeks.length > 0) {
     lines.push("", "Vorgabe aus dem Gesamtplan für die Wochen dieser Tage (die Richtung; feinjustieren, nicht stur abschreiben):");

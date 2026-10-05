@@ -3,7 +3,7 @@ import path from "node:path";
 import { z } from "zod";
 import { INTENSITIES, SESSION_TYPES } from "../vocabulary";
 import { DayPlanV2 } from "./daySanity";
-import { MultiDayPlanRaw, StepSchema } from "./schemas";
+import { EXTRA_KINDS, ExerciseSchema, MultiDayPlanRaw, StepSchema } from "./schemas";
 
 /**
  * Der letzte gueltige Tagesplan v2, als Antwort-Cache und als Fallback bei Claude-Ausfall. Die Datei heisst `latest-plan-v2.json`;
@@ -19,6 +19,8 @@ const StoredSessionSchema = z.object({
   unit: z.enum(["meters", "minutes"]),
   distance_meters: z.number(),
   duration_minutes: z.number(),
+  brick: z.boolean().default(false),
+  indoor: z.boolean().default(false),
   steps: z.array(StepSchema)
 });
 
@@ -27,7 +29,12 @@ export const StoredDayV2Schema = z.object({
   hash: z.string(),
   generatedAt: z.iso.datetime(),
   model: z.string(),
-  plan: z.object({ rationale: z.string(), sessions: z.array(StoredSessionSchema), coach_notes: z.array(z.string()) }),
+  plan: z.object({
+    rationale: z.string(),
+    sessions: z.array(StoredSessionSchema),
+    extras: z.array(z.object({ kind: z.enum(EXTRA_KINDS), minutes: z.number(), focus: z.string(), exercises: z.array(ExerciseSchema) })).default([]),
+    coach_notes: z.array(z.string())
+  }),
   adjustments: z.array(z.string())
 });
 
@@ -56,8 +63,11 @@ export function asRawDayPlan(plan: DayPlanV2): MultiDayPlanRaw {
       intensity: session.intensity,
       focus: session.focus,
       test_id: session.test?.id ?? null,
+      brick: session.brick,
+      indoor: session.indoor,
       steps: session.steps.map((step) => ({ ...step, equipment: [...step.equipment] }))
-    }))
+    })),
+    extras: plan.extras.map((extra) => ({ ...extra, exercises: extra.exercises.map((exercise) => ({ ...exercise })) }))
   };
 }
 

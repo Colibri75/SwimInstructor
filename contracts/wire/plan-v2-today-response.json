@@ -17,6 +17,8 @@
         "unit": "meters",
         "distance_meters": 500,
         "duration_minutes": 12,
+        "brick": false,
+        "indoor": false,
         "steps": [
           {
             "name": "Einschwimmen",
@@ -79,6 +81,8 @@
         "unit": "minutes",
         "distance_meters": 25250,
         "duration_minutes": 58,
+        "brick": false,
+        "indoor": false,
         "steps": [
           {
             "name": "Einfahren",
@@ -131,6 +135,33 @@
             "instructions": "Ganz locker ausrollen.",
             "cue": "Locker ausfahren",
             "equipment": []
+          }
+        ]
+      }
+    ],
+    "extras": [
+      {
+        "kind": "mobility",
+        "minutes": 10,
+        "focus": "Hüfte und Waden",
+        "exercises": [
+          {
+            "name": "Hüftbeuger-Dehnung",
+            "sets": 2,
+            "reps": null,
+            "seconds": 30,
+            "rest_seconds": 0,
+            "cue": "Hüfte dehnen",
+            "instructions": "Tiefer Ausfallschritt, Becken langsam nach vorn schieben, je Seite halten."
+          },
+          {
+            "name": "Wadenheben",
+            "sets": 2,
+            "reps": 15,
+            "seconds": null,
+            "rest_seconds": 30,
+            "cue": "Waden langsam",
+            "instructions": "Auf einer Stufe langsam hoch und tief, die Ferse unter die Kante sinken lassen."
           }
         ]
       }

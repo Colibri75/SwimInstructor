@@ -116,6 +116,10 @@ export const swim: SportDefinition = {
     targetRange,
     testSessions: TEST_SESSIONS,
     equipment: EQUIPMENT_LABELS,
+    // Im Triathlon kommt das Rad nach dem Schwimmen, nicht umgekehrt; das Becken ist drinnen oder wetterunabhaengig genug.
+    brickAfter: [],
+    weatherSensitive: false,
+    indoor: null,
     promptRules: `- Gesteuert über das Tempo pro 100 m (target_type pace_per_100m, target_value in Sekunden pro 100 m) oder die gefühlte Anstrengung (perceived_effort, 1 bis 10). Kein Pulsziel: Puls ist im Wasser kaum brauchbar. Die Pace im Snapshot enthält Pausen, das reine Schwimmtempo ist schneller.
 - Ist die CSS-Pace bekannt (Abschnitt Leistungswerte), richte das Tempo danach: Grundlage etwa 8 bis 12 % langsamer als die CSS-Pace, Schwelle (CSS-Serien) etwa auf CSS-Pace, kurze schnelle Wiederholungen etwa 5 % schneller.
 - Eine Einheit besteht aus Einschwimmen, Hauptteil und Ausschwimmen. Jeder Schritt wird über die Strecke gemessen (measure distance). Jede Wiederholung ist ein Vielfaches von 50 m und mindestens 50 m lang (50, 100, 150, 200 …), damit der Plan in einem 25-m- und in einem 50-m-Becken aufgeht: keine 25er und keine 75er.

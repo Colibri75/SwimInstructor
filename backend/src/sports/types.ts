@@ -174,6 +174,18 @@ export interface SportPlanning {
   /** Hilfsmittel, die ein Schritt verlangen kann, mit deutschem Namen. Leer, wenn die Sportart keine kennt. */
   readonly equipment: Readonly<Record<string, string>>;
   /**
+   * Koppeltraining: Diese Sportart darf am selben Tag direkt im Anschluss an eine dieser Sportarten folgen (Laufen nach
+   * dem Rad). Leer: nie. Gegenstueck in Swift: `SportModule.brickAfter`, beide pruefen contracts/sports.json.
+   */
+  readonly brickAfter: readonly string[];
+  /** Draussen und damit vom Wetter abhaengig (Gewitter, Glaette, Sturm, Hitze). Gegenstueck: `SportModule.weatherSensitive`. */
+  readonly weatherSensitive: boolean;
+  /**
+   * Drinnen moeglich mit diesem Hilfsmittel des Athleten (Rolle, Laufband); `null`, wenn es fuer die Sportart kein Drinnen
+   * gibt oder sie ohnehin drinnen stattfindet. Gegenstueck: `SportModule.indoorEquipment`.
+   */
+  readonly indoor: { readonly equipment: string; readonly displayName: string } | null;
+  /**
    * Regeln fuer Claude, wie diese Sportart geplant wird (Deutsch, ohne Datum und ohne Zahlen des Athleten). Sie
    * stehen im festen System-Prompt der Planung fuer mehrere Sportarten.
    */

@@ -3,7 +3,9 @@ import { Intensity, SessionType } from "../vocabulary";
 import { SnapshotV2 } from "../snapshot";
 import { addDays, weekdayName } from "../calendar";
 import { dayLimits, DayLimitsV2, dayMinutesCap, hardOn, lower, MULTI_RULES, painRestriction, RANK, sportLimits, SportLimitsNow, testBlackoutReason } from "./limits";
-import { MacroWeekTargetV2, MissedSession, MultiWeekPlanRaw, RecentTraining, ReplanReason, TestSettings, WeekSessionRaw } from "./schemas";
+import { Availability, MacroWeekTargetV2, MissedSession, MultiWeekPlanRaw, RecentTraining, ReplanReason, Supplements, TestSettings, WeekSessionRaw } from "./schemas";
+import { DayWeather, severeWeather } from "../weather";
+import { EXERCISE_RULES, EXTRA_RULES, normalizeWeekExtras, perWeek, strengthBlackout, WeekExtra } from "./extras";
 import { amountToMeters, amountToMinutes, floorAmount, formatAmount, plannedSports, roundAmount, sportName } from "./sports";
 import { fixedSport, scheduleDay, trainingDaysPerWeek, weeklyMinutes } from "./schedule";
 import { chooseTest, TestPlan, TestRef, testRef } from "./tests";
@@ -34,6 +36,14 @@ export interface WeekContextV2 {
   missed?: MissedSession[];
   /** Anlass der Neuplanung. */
   reason?: ReplanReason;
+  /** Das Equipment des Athleten (fuer drinnen: Rolle, Laufband); fehlt die Angabe, ist alles erlaubt. */
+  equipment?: readonly string[];
+  /** Freie Minuten je Tag laut Kalender. */
+  availability?: Availability[];
+  /** Wettervorhersage je Tag. */
+  weather?: DayWeather[];
+  /** Wie oft pro Woche Kraft und Mobilitaet dazukommen. */
+  supplements?: Supplements;
   macroWeeks?: MacroWeekTargetV2[];
   testSettings?: TestSettings;
 }
@@ -49,12 +59,18 @@ export interface WeekSessionV2 {
   distance_meters: number;
   focus: string;
   test: TestRef | null;
+  /** Schliesst direkt an die erste Einheit des Tages an (Koppeltraining). */
+  brick: boolean;
+  /** Drinnen (Rolle, Laufband). */
+  indoor: boolean;
 }
 
 export interface WeekDayV2 {
   date: string;
   focus: string;
   sessions: WeekSessionV2[];
+  /** Kraft- und Mobilitaetsbloecke. */
+  extras: WeekExtra[];
 }
 
 export interface WeekPlanV2 {
@@ -108,12 +124,24 @@ interface Draft {
   focus: string;
   testId: string | null;
   test: TestPlan | null;
+  brick: boolean;
+  indoor: boolean;
 }
 
 interface DraftDay {
   date: string;
   focus: string;
   sessions: Draft[];
+  extras: WeekExtra[];
+}
+
+/** Weniger freie Zeit laut Kalender: der Tag gilt als "keine Zeit". */
+export const MIN_FREE_MINUTES = 20;
+
+/** Drinnen moeglich: Die Sportart kennt drinnen und der Athlet hat das Hilfsmittel (ohne Angabe: alles erlaubt). */
+export function indoorAllowed(sport: SportDefinition, equipment: readonly string[] | undefined): boolean {
+  const indoor = sport.planning.indoor;
+  return indoor !== null && (equipment === undefined || equipment.includes(indoor.equipment));
 }
 
 function label(date: string): string {
@@ -155,18 +183,25 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
   const missing = context.dates.filter((date) => !byDate.has(date));
   if (missing.length > 0) notes.push(`${missing.length} fehlende Tage als Ruhetag ergänzt (${missing.map(label).join(", ")})`);
 
+  const free = new Map((context.availability ?? []).map((entry) => [entry.date, entry.minutes]));
   let days: DraftDay[] = context.dates.map((date) => {
     const raw = byDate.get(date);
     const focus = raw?.focus.trim().slice(0, MULTI_RULES.maxFocusLength) ?? "";
     let sessions = (raw?.sessions ?? []).flatMap((session) => toDraft(session, week, unplanned));
-    // 2. Keine Zeit oder Ruhetag laut Wochenraster: Ruhetag. An einem Tag mit fester Sportart nur diese.
+    const extras = normalizeWeekExtras(raw?.extras, context.supplements);
+    // 2. Keine Zeit (auch laut Kalender) oder Ruhetag laut Wochenraster: Ruhetag. An einem Tag mit fester Sportart nur diese.
     if (context.unavailable.includes(date)) {
       if (sessions.length > 0) notes.push(`${label(date)}: keine Zeit, als Ruhetag gesetzt`);
-      return { date, focus: "Keine Zeit", sessions: [] };
+      return { date, focus: "Keine Zeit", sessions: [], extras: [] };
+    }
+    const freeMinutes = free.get(date);
+    if (freeMinutes !== undefined && freeMinutes < MIN_FREE_MINUTES) {
+      if (sessions.length > 0 || extras.length > 0) notes.push(`${label(date)}: laut Kalender keine Zeit, als Ruhetag gesetzt`);
+      return { date, focus: "Keine Zeit", sessions: [], extras: [] };
     }
     if (scheduleDay(snapshot, date)?.trains === false) {
       if (sessions.length > 0) notes.push(`${label(date)}: Ruhetag laut Wochenraster`);
-      return { date, focus: "Ruhetag", sessions: [] };
+      return { date, focus: "Ruhetag", sessions: [], extras: extras.filter((extra) => extra.kind === "mobility") };
     }
     const fixed = fixedSport(snapshot, date);
     if (fixed !== undefined && sessions.some((draft) => draft.sport.id !== fixed)) {
@@ -179,7 +214,7 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
       const keep = [...sessions].sort((a, b) => minutesOf(b) - minutesOf(a)).slice(0, MULTI_RULES.maxSessionsPerDay);
       sessions = sessions.filter((session) => keep.includes(session));
     }
-    return { date, focus, sessions };
+    return { date, focus, sessions: fixBricks(sessions, date, notes), extras };
   });
   if (unplanned.size > 0) notes.push(`Einheiten von Sportarten ohne Schwerpunkt entfernt (${[...unplanned].map(sportName).join(", ")})`);
 
@@ -187,7 +222,14 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
   const reports = context.reports ?? context.recent;
   days = days.map((day) => ({
     ...day,
-    sessions: day.sessions.flatMap((draft) => applyPain(draft, day.date, reports, notes)).flatMap((draft) => limitSession(draft, day.date, notes))
+    sessions: fixBricks(
+      day.sessions
+        .flatMap((draft) => applyPain(draft, day.date, reports, notes))
+        .flatMap((draft) => limitSession(draft, day.date, notes))
+        .map((draft) => placeIndoor(draft, day.date, context, notes)),
+      day.date,
+      []
+    )
   }));
 
   // 5. Leistungstests (fuer heute mit den Grenzen von heute), danach die Grenzen fuer heute fuer alle anderen Einheiten.
@@ -197,9 +239,10 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
 
   // 6. Jeder Tag hoechstens die Tagesgrenze (eine Testeinheit bleibt ganz).
   days = days.map((day) => {
-    const cap = day.date === context.today && today !== null ? today.maxMinutes : (week.dayMinutes.get(day.date) ?? week.maxDayMinutes);
+    const ruleCap = day.date === context.today && today !== null ? today.maxMinutes : (week.dayMinutes.get(day.date) ?? week.maxDayMinutes);
+    const cap = Math.min(ruleCap, free.get(day.date) ?? Infinity);
     if (dayMinutes(day) <= cap) return day;
-    notes.push(`${label(day.date)}: Tagesumfang von ${Math.round(dayMinutes(day))} min auf höchstens ${cap} min gekürzt`);
+    notes.push(`${label(day.date)}: Tagesumfang von ${Math.round(dayMinutes(day))} min auf höchstens ${cap} min gekürzt${cap < ruleCap ? " (freie Zeit laut Kalender)" : ""}`);
     return scaleSessions([day], () => true, cap, minutesOf)[0];
   });
 
@@ -252,6 +295,9 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
   // 11. Etwa 80 % locker: zu viel Intensitaet senkt mittlere Einheiten auf locker, die laengsten zuerst.
   days = limitIntensity(days, notes);
 
+  // 12. Kraft und Mobilitaet: so oft wie gewuenscht, Kraft nicht vor einem harten Tag und nicht kurz vor dem Ziel, in der Tageszeit.
+  days = placeExtras(days, snapshot, context, week, free, notes);
+
   const result = days.map(finalizeDay);
   const adjustments = notes.slice(0, MULTI_RULES.maxAdjustmentLines);
   if (notes.length > MULTI_RULES.maxAdjustmentLines) adjustments.push(`… und ${notes.length - MULTI_RULES.maxAdjustmentLines} weitere Korrekturen`);
@@ -299,7 +345,9 @@ function toDraft(session: WeekSessionRaw, week: WeekLimitsV2, unplanned: Set<str
       amount: roundAmount(sport, Math.max(session.amount, 0)),
       focus: session.focus.trim().slice(0, MULTI_RULES.maxFocusLength) || sport.displayName,
       testId: isTest ? (session.test_id ?? null) : null,
-      test: null
+      test: null,
+      brick: session.brick === true,
+      indoor: session.indoor === true
     }
   ];
 }
@@ -326,6 +374,91 @@ function applyPain(draft: Draft, date: string, reports: readonly RecentTraining[
     }
   }
   return [result];
+}
+
+/**
+ * Koppeltraining nur fuer die zweite Einheit des Tages und nur direkt nach einer Sportart, nach der die Sportart das
+ * erlaubt (`brickAfter`). Sonst wird es eine eigene Einheit; `notes` bekommt den Hinweis (leer: still korrigieren, etwa
+ * wenn die erste Einheit gestrichen wurde).
+ */
+function fixBricks(sessions: Draft[], date: string, notes: string[]): Draft[] {
+  return sessions.map((draft, index) => {
+    if (!draft.brick) return draft;
+    const previous = index === 1 ? sessions[0] : undefined;
+    if (previous !== undefined && draft.sport.planning.brickAfter.includes(previous.sport.id)) return draft;
+    const allowed = draft.sport.planning.brickAfter.map(sportName).join(" oder ");
+    notes.push(`${label(date)}: ${draft.sport.displayName} als eigene Einheit (Koppeltraining nur direkt nach ${allowed || "keiner Sportart"})`);
+    return { ...draft, brick: false };
+  });
+}
+
+/**
+ * Drinnen nur, wo die Sportart es kennt und der Athlet das Hilfsmittel hat. Bei Gewitter, Sturm, Starkregen oder
+ * Glaette kommt eine wetterabhaengige Einheit nach drinnen, wenn das geht.
+ */
+function placeIndoor(draft: Draft, date: string, context: WeekContextV2, notes: string[]): Draft {
+  const sport = draft.sport;
+  const allowed = indoorAllowed(sport, context.equipment);
+  if (draft.indoor && !allowed) {
+    notes.push(`${label(date)}: ${sport.displayName} draußen (${sport.planning.indoor === null ? "drinnen gibt es nicht" : `kein ${sport.planning.indoor.displayName} angegeben`})`);
+    return { ...draft, indoor: false };
+  }
+  const weather = context.weather?.find((day) => day.date === date);
+  const severe = weather !== undefined && sport.planning.weatherSensitive ? severeWeather(weather) : null;
+  if (severe !== null && !draft.indoor && allowed && sport.planning.indoor !== null) {
+    notes.push(`${label(date)}: ${severe}, ${sport.displayName} drinnen (${sport.planning.indoor.displayName})`);
+    return { ...draft, indoor: true };
+  }
+  return draft;
+}
+
+/** Kraft und Mobilitaet nach den Regeln in `extras.ts`. */
+function placeExtras(days: DraftDay[], snapshot: SnapshotV2, context: WeekContextV2, week: WeekLimitsV2, free: ReadonlyMap<string, number>, notes: string[]): DraftDay[] {
+  const counts = new Map<string, number>();
+  return days.map((day, index) => {
+    const nextHard = days[index + 1]?.sessions.some(isHard) ?? false;
+    const extras = day.extras.flatMap((extra) => {
+      const name = EXTRA_RULES[extra.kind].displayName;
+      if (extra.kind === "strength") {
+        if (strengthBlackout(snapshot, day.date)) {
+          notes.push(`${label(day.date)}: kein Krafttraining in den letzten ${EXERCISE_RULES.noStrengthDaysBeforeGoal} Tagen vor dem Ziel`);
+          return [];
+        }
+        if (day.date === context.today && week.today?.restReason != null) {
+          notes.push(`${label(day.date)}: kein Krafttraining (${week.today.restReason})`);
+          return [];
+        }
+        if (nextHard) {
+          notes.push(`${label(day.date)}: kein Krafttraining am Tag vor einer harten Einheit`);
+          return [];
+        }
+      }
+      const used = counts.get(extra.kind) ?? 0;
+      if (used >= perWeek(context.supplements, extra.kind)) {
+        notes.push(`${label(day.date)}: ${name} gestrichen (höchstens ${perWeek(context.supplements, extra.kind)}-mal pro Woche)`);
+        return [];
+      }
+      counts.set(extra.kind, used + 1);
+      return [extra];
+    });
+    // In der Tageszeit: was nicht mehr passt, faellt weg (Mobilitaet zuletzt).
+    const cap = Math.min(
+      day.date === context.today && week.today !== null ? week.today.maxMinutes : (week.dayMinutes.get(day.date) ?? week.maxDayMinutes),
+      free.get(day.date) ?? Infinity
+    );
+    let room = cap - dayMinutes(day);
+    const kept = [...extras]
+      .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "mobility" ? -1 : 1))
+      .filter((extra) => {
+        if (extra.minutes <= room) {
+          room -= extra.minutes;
+          return true;
+        }
+        notes.push(`${label(day.date)}: ${EXTRA_RULES[extra.kind].displayName} gestrichen (Tageszeit ausgeschöpft)`);
+        return false;
+      });
+    return { ...day, extras: extras.filter((extra) => kept.includes(extra)) };
+  });
 }
 
 function limitSession(draft: Draft, date: string, notes: string[]): Draft[] {
@@ -518,11 +651,13 @@ function finalizeDay(day: DraftDay): WeekDayV2 {
       minutes: Math.round(minutesOf(draft)),
       distance_meters: Math.round((draft.test?.meters ?? amountToMeters(draft.sport, draft.amount, draft.limits.speed)) / 50) * 50,
       focus: draft.focus,
-      test: draft.test === null ? null : testRef(draft.test.test)
+      test: draft.test === null ? null : testRef(draft.test.test),
+      brick: draft.brick,
+      indoor: draft.indoor
     })
   );
   const focus = day.focus !== "" && (sessions.length > 0 || day.focus === "Keine Zeit") ? day.focus : sessions.length > 0 ? sessions.map((session) => session.focus).join(" + ").slice(0, MULTI_RULES.maxFocusLength) : "Ruhetag";
-  return { date: day.date, focus, sessions };
+  return { date: day.date, focus, sessions, extras: day.extras };
 }
 
 export function withNote(rationale: string, notes: string[]): string {

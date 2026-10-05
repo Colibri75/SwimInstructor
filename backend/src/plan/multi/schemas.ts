@@ -34,18 +34,57 @@ export const StepSchema = z.object({
 
 const TestId = z.string().nullable().describe("Nur bei session_type test: die Kennung des Leistungstests aus der Nutzernachricht, sonst null");
 
+/**
+ * Neue Felder haben einen Standardwert: Claude muss sie liefern (im JSON-Schema stehen sie als Pflicht), gespeicherte
+ * Plaene und aufgezeichnete Bewertungslaeufe ohne sie bleiben gueltig.
+ */
+const Brick = z
+  .boolean()
+  .describe("true, wenn die Einheit am selben Tag direkt an die vorige Einheit anschließt (Koppeltraining, nur die zweite Einheit des Tages), sonst false")
+  .default(false);
+const Indoor = z.boolean().describe("true: drinnen (Rolle oder Laufband, nur wenn die Nutzernachricht es erlaubt), sonst false").default(false);
+
+/** Ergaenzungstraining neben den Sportarten: Kraft und Mobilitaet (Dehnen, Beweglichkeit). */
+export const EXTRA_KINDS = ["strength", "mobility"] as const;
+export type ExtraKind = (typeof EXTRA_KINDS)[number];
+
+const ExtraKind = z.enum(EXTRA_KINDS);
+
+export const ExerciseSchema = z.object({
+  name: z.string().describe("Name der Übung auf Deutsch, z. B. Kniebeuge, Ausfallschritt, Hüftbeuger-Dehnung"),
+  sets: z.number().int().describe("Anzahl der Sätze, 1 bis 5"),
+  reps: z.number().int().nullable().describe("Wiederholungen je Satz, null bei einer Übung nach Zeit"),
+  seconds: z.number().int().nullable().describe("Dauer je Satz in Sekunden bei einer Übung nach Zeit (Halten, Dehnen), sonst null"),
+  rest_seconds: z.number().int().describe("Pause nach jedem Satz in Sekunden"),
+  cue: z.string().describe("Kurztext: zwei bis vier Wörter, höchstens 30 Zeichen"),
+  instructions: z.string().describe("Ausführung in ein bis zwei Sätzen, ohne Geräte außer dem eigenen Körpergewicht, einem Band oder einer Matte")
+});
+
+const WeekExtraSchema = z.object({
+  kind: ExtraKind,
+  minutes: z.number().int().describe("Dauer in Minuten"),
+  focus: z.string().describe("Schwerpunkt in höchstens 60 Zeichen, z. B. Rumpf und Hüfte")
+});
+
+const DayExtraSchema = WeekExtraSchema.extend({
+  exercises: z.array(ExerciseSchema).describe("Die Übungen in der Reihenfolge, höchstens 10")
+});
+
 export const DaySessionSchema = z.object({
   sport: Sport,
   session_type: z.enum(SESSION_TYPES),
   intensity: z.enum(INTENSITIES),
   focus: z.string().describe("Schwerpunkt der Einheit in höchstens 60 Zeichen auf Deutsch"),
   test_id: TestId,
+  brick: Brick,
+  indoor: Indoor,
   steps: z.array(StepSchema).describe("Die Schritte in der Reihenfolge des Trainings; bei einem Leistungstest setzt der Server sie selbst ein")
 });
 
 export const MultiDayPlanSchema = z.object({
   rationale: z.string().describe("Begründung auf Deutsch, höchstens vier Sätze, mit konkreten Zahlen aus dem Snapshot"),
   sessions: z.array(DaySessionSchema).describe("Null bis zwei Einheiten; ein Ruhetag hat keine"),
+  extras: z.array(DayExtraSchema).describe("Kraft- oder Mobilitätsblock heute, nur wenn die Nutzernachricht ihn vorsieht, sonst leer").default([]),
   coach_notes: z.array(z.string()).describe("Null bis drei kurze Hinweise auf Deutsch")
 });
 
@@ -55,7 +94,9 @@ export const WeekSessionSchema = z.object({
   intensity: z.enum(INTENSITIES),
   amount: z.number().int().describe("Umfang in der Einheit der Sportart (Meter oder Minuten, siehe Nutzernachricht)"),
   focus: z.string().describe("Schwerpunkt in höchstens 60 Zeichen auf Deutsch"),
-  test_id: TestId
+  test_id: TestId,
+  brick: Brick,
+  indoor: Indoor
 });
 
 export const MultiWeekPlanSchema = z.object({
@@ -64,7 +105,8 @@ export const MultiWeekPlanSchema = z.object({
     z.object({
       date: z.string().describe("Kalendertag im Format YYYY-MM-DD, genau einer der angegebenen Tage"),
       focus: z.string().describe("Schwerpunkt des Tages in höchstens 60 Zeichen, z. B. Ruhetag oder Koppeltraining"),
-      sessions: z.array(WeekSessionSchema).describe("Null bis zwei Einheiten; ein Ruhetag hat keine")
+      sessions: z.array(WeekSessionSchema).describe("Null bis zwei Einheiten; ein Ruhetag hat keine"),
+      extras: z.array(WeekExtraSchema).describe("Kraft- oder Mobilitätsblock an diesem Tag, nur wenn die Nutzernachricht sie vorsieht, sonst leer").default([])
     })
   )
 });
@@ -124,10 +166,14 @@ export interface MacroWeeksRaw {
 }
 
 export type StepRaw = z.infer<typeof StepSchema>;
-export type DaySessionRaw = z.infer<typeof DaySessionSchema>;
-export type MultiDayPlanRaw = z.infer<typeof MultiDayPlanSchema>;
-export type WeekSessionRaw = z.infer<typeof WeekSessionSchema>;
-export type MultiWeekPlanRaw = z.infer<typeof MultiWeekPlanSchema>;
+export type ExerciseRaw = z.infer<typeof ExerciseSchema>;
+export type WeekExtraRaw = z.infer<typeof WeekExtraSchema>;
+export type DayExtraRaw = z.infer<typeof DayExtraSchema>;
+// Eingangstypen der Sicherheitsschicht: Felder mit Standardwert duerfen fehlen (gespeicherte Plaene, Tests).
+export type DaySessionRaw = z.input<typeof DaySessionSchema>;
+export type MultiDayPlanRaw = z.input<typeof MultiDayPlanSchema>;
+export type WeekSessionRaw = z.input<typeof WeekSessionSchema>;
+export type MultiWeekPlanRaw = z.input<typeof MultiWeekPlanSchema>;
 export type MacroBlockRaw = z.infer<typeof MacroBlockRawSchema>;
 export type MultiMacroPlanRaw = z.infer<typeof MultiMacroPlanSchema>;
 export type MacroRevisionRaw = z.infer<typeof MacroRevisionSchema>;
@@ -192,11 +238,31 @@ const TargetSession = z.object({
   intensity: z.enum(INTENSITIES),
   amount: Amount,
   focus: z.string().max(120),
-  test_id: Identifier.nullable().optional()
+  test_id: Identifier.nullable().optional(),
+  brick: z.boolean().optional(),
+  indoor: z.boolean().optional()
 });
 
+const TargetExtra = z.object({ kind: ExtraKind, minutes: z.number().int().min(1).max(120), focus: z.string().max(120) });
+
 /** Was der Wochenplan fuer einen Tag vorgibt (Feld `day_plan` des Tagesplans v2). Keine Einheit: Ruhetag. */
-export const DayTargetV2Schema = z.object({ focus: z.string().max(120).optional(), sessions: z.array(TargetSession).max(2) });
+export const DayTargetV2Schema = z.object({
+  focus: z.string().max(120).optional(),
+  sessions: z.array(TargetSession).max(2),
+  extras: z.array(TargetExtra).max(2).optional()
+});
+
+/** Wie oft pro Woche Kraft und Mobilitaet dazukommen sollen (Einstellung in der App). */
+export const SupplementsSchema = z.object({
+  strength_per_week: z.number().int().min(0).max(3),
+  mobility_per_week: z.number().int().min(0).max(7)
+});
+
+/** Ungefaehrer Ort fuer die Wettervorhersage (die App rundet auf eine Nachkommastelle, etwa 10 km). */
+export const LocationSchema = z.object({ latitude: z.number().min(-90).max(90), longitude: z.number().min(-180).max(180) });
+
+/** Freie Zeit je Tag laut Kalender des Athleten, in Minuten (laengster freier Block im Trainingsfenster). */
+export const AvailabilitySchema = z.array(z.object({ date: DateString, minutes: z.number().int().min(0).max(1440) })).max(14);
 
 /** Was der Gesamtplan fuer eine Woche vorgibt (Feld `macro_weeks` des Wochenplans v2); die App schickt die Woche, wie sie sie bekam. */
 export const MacroWeekTargetV2Schema = z.object({
@@ -222,7 +288,10 @@ export const DayRequestV2Schema = z
     day_plan: DayTargetV2Schema.optional(),
     equipment: EquipmentV2Schema.optional(),
     recent_training: RecentTrainingSchema.optional(),
-    test_settings: TestSettingsSchema.optional()
+    test_settings: TestSettingsSchema.optional(),
+    supplements: SupplementsSchema.optional(),
+    location: LocationSchema.optional(),
+    available_minutes: z.number().int().min(0).max(1440).optional()
   });
 
 export const WeekRequestV2Schema = z
@@ -239,7 +308,10 @@ export const WeekRequestV2Schema = z
     macro_weeks: z.array(MacroWeekTargetV2Schema).max(3).optional(),
     wishes: z.string().max(MAX_WISH_LENGTH).optional(),
     equipment: EquipmentV2Schema.optional(),
-    test_settings: TestSettingsSchema.optional()
+    test_settings: TestSettingsSchema.optional(),
+    supplements: SupplementsSchema.optional(),
+    location: LocationSchema.optional(),
+    availability: AvailabilitySchema.optional()
   });
 
 export const MacroRequestV2Schema = z
@@ -306,6 +378,9 @@ export type PerformanceChange = z.infer<typeof PerformanceChangeSchema>;
 
 export type RecentTraining = z.infer<typeof RecentTrainingSchema>[number];
 export type MissedSession = z.infer<typeof MissedSessionSchema>;
+export type Supplements = z.infer<typeof SupplementsSchema>;
+export type GeoLocation = z.infer<typeof LocationSchema>;
+export type Availability = z.infer<typeof AvailabilitySchema>[number];
 export type TestSettings = z.infer<typeof TestSettingsSchema>;
 export type DayTargetV2 = z.infer<typeof DayTargetV2Schema>;
 export type MacroWeekTargetV2 = z.infer<typeof MacroWeekTargetV2Schema>;

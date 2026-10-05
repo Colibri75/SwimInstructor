@@ -20,7 +20,8 @@ export class SportRegistryError extends Error {
       | "invalid_load_factor"
       | "invalid_performance_metric"
       | "invalid_performance_test"
-      | "invalid_planning",
+      | "invalid_planning"
+      | "invalid_brick",
     readonly sportId: string
   ) {
     super(`Sportart ${sportId}: ${problem}`);
@@ -53,6 +54,10 @@ export class SportRegistry {
       validatePerformance(sport);
       if (!validPlanning(sport)) throw new SportRegistryError("invalid_planning", sport.id);
       byId.set(sport.id, sport);
+    }
+    // Koppeltraining nur nach einer anderen, angemeldeten Sportart.
+    for (const sport of sports) {
+      if (sport.planning.brickAfter.some((other) => other === sport.id || !byId.has(other))) throw new SportRegistryError("invalid_brick", sport.id);
     }
     this.byId = byId;
   }
@@ -146,6 +151,8 @@ function validPlanning(sport: SportDefinition): boolean {
   if (![planning.distanceStepMeters, planning.minStepMeters, planning.minStepSeconds].every(positive)) return false;
   if (planning.minStepMeters > planning.maxStepMeters || planning.minStepSeconds > planning.maxStepSeconds) return false;
   if (planning.promptRules.trim() === "") return false;
+  if (planning.indoor !== null && (!/^[a-z][a-z0-9_]{1,39}$/.test(planning.indoor.equipment) || planning.indoor.displayName.trim() === "")) return false;
+  if (planning.indoor !== null && !planning.weatherSensitive) return false;
   const tests = sport.performanceTests.map((test) => test.id);
   const templates = Object.keys(planning.testSessions);
   return tests.every((id) => (planning.testSessions[id]?.length ?? 0) > 0) && templates.every((id) => tests.includes(id));

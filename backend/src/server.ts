@@ -11,6 +11,7 @@ import { multiRoutes } from "./plan/multi/routes";
 import { MultiPlanService } from "./plan/multi/service";
 import { DayPlanStoreV2, FileDayPlanStoreV2 } from "./plan/multi/store";
 import { FileUsageLog, UsageEvent } from "./usage";
+import { OpenMeteoProvider } from "./plan/weather";
 import { FileUserDirectory, userDataDir, USERS_FILE } from "./users";
 
 let config: Config;
@@ -81,6 +82,8 @@ const planService = new MultiPlanService({
   budget,
   userBudgets,
   usage,
+  // Wetter nur, wenn die App einen Ort schickt (Einstellung "Wetter berücksichtigen").
+  weather: new OpenMeteoProvider(config.planTimezone),
   logger,
   timezone: config.planTimezone
 });

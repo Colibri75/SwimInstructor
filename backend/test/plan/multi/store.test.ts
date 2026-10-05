@@ -8,6 +8,14 @@ import { step, swimStep } from "./fixtures";
 const plan: DayPlanV2 = {
   rationale: "Lockerer Tag mit Bezug zum Ziel, 3500 m in 7 Tagen.",
   coach_notes: ["Viel trinken."],
+  extras: [
+    {
+      kind: "mobility",
+      minutes: 10,
+      focus: "Hüfte",
+      exercises: [{ name: "Hüftbeuger-Dehnung", sets: 2, reps: null, seconds: 30, rest_seconds: 0, cue: "Hüfte dehnen", instructions: "Ausfallschritt, Becken nach vorn." }]
+    }
+  ],
   sessions: [
     {
       sport: "swim",
@@ -19,6 +27,8 @@ const plan: DayPlanV2 = {
       unit: "meters",
       distance_meters: 850,
       duration_minutes: 17,
+      brick: false,
+      indoor: false,
       steps: [swimStep(300, { name: "Einschwimmen", equipment: ["pull_buoy"] }), swimStep(400), swimStep(150, { name: "Ausschwimmen" })]
     },
     {
@@ -31,6 +41,8 @@ const plan: DayPlanV2 = {
       unit: "minutes",
       distance_meters: 5900,
       duration_minutes: 35,
+      brick: false,
+      indoor: false,
       steps: [step({ name: "Einlaufen", duration_seconds: 600 }), step({ duration_seconds: 1500 })]
     }
   ]
@@ -139,8 +151,11 @@ describe("asRawDayPlan", () => {
       intensity: "easy",
       focus: "Grundlage",
       test_id: null,
+      brick: false,
+      indoor: false,
       steps: plan.sessions[0].steps
     });
+    expect(raw.extras).toEqual(plan.extras);
     expect(raw.sessions[1].test_id).toBe("entry_easy_25min");
     // Berechnete Felder gehoeren nicht zu Claudes Ausgabe.
     expect(raw.sessions[1]).not.toHaveProperty("test");

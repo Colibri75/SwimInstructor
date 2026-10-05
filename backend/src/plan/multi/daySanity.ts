@@ -3,11 +3,13 @@ import { LimitUnit, SessionStep, SportDefinition } from "../../sports/types";
 import { Intensity, SessionType } from "../vocabulary";
 import { SnapshotV2 } from "../snapshot";
 import { dayLimits, DayLimitsV2, lower, MULTI_RULES, RANK, sportLimits, SportLimitsNow } from "./limits";
-import { DaySessionRaw, MultiDayPlanRaw, RecentTraining, TestSettings } from "./schemas";
+import { DaySessionRaw, ExtraKind, EXTRA_KINDS, MultiDayPlanRaw, RecentTraining, Supplements, TestSettings } from "./schemas";
+import { DayWeather, severeWeather } from "../weather";
+import { DayExtra, EXERCISE_RULES, EXTRA_RULES, normalizeDayExtras, perWeek, strengthBlackout } from "./extras";
 import { formatAmount, planningContext, sportName } from "./sports";
 import { checkTarget, normalizeStep, stepsAmount, trimSteps } from "./steps";
 import { chooseTest, stepsTotals, TestRef, testRef } from "./tests";
-import { withNote } from "./weekSanity";
+import { indoorAllowed, withNote } from "./weekSanity";
 
 /**
  * Sicherheitsschicht fuer den Tagesplan ueber mehrere Sportarten. Reiner Code: korrigiert Claudes Plan
@@ -26,6 +28,14 @@ export interface DayOptionsV2 {
   equipment?: readonly string[];
   recent?: readonly RecentTraining[];
   testSettings?: TestSettings;
+  /** Wie oft pro Woche Kraft und Mobilitaet dazukommen; ohne Angabe keine. */
+  supplements?: Supplements;
+  /** Die Arten, die der Wochenplan fuer heute vorsieht; ohne Vorgabe jede gewuenschte. */
+  plannedExtras?: readonly ExtraKind[];
+  /** Freie Minuten heute laut Kalender. */
+  availableMinutes?: number;
+  /** Wetter heute. */
+  weather?: DayWeather;
 }
 
 export interface DaySessionV2 {
@@ -39,12 +49,18 @@ export interface DaySessionV2 {
   unit: LimitUnit;
   distance_meters: number;
   duration_minutes: number;
+  /** Schliesst direkt an die erste Einheit des Tages an (Koppeltraining). */
+  brick: boolean;
+  /** Drinnen (Rolle, Laufband). */
+  indoor: boolean;
   steps: SessionStep[];
 }
 
 export interface DayPlanV2 {
   rationale: string;
   sessions: DaySessionV2[];
+  /** Kraft- und Mobilitaetsbloecke mit Uebungen. */
+  extras: DayExtra[];
   coach_notes: string[];
 }
 
@@ -62,13 +78,15 @@ interface Draft {
   focus: string;
   test: TestRef | null;
   steps: SessionStep[];
+  brick: boolean;
+  indoor: boolean;
 }
 
 const FORMAL_PREFIX = "Formal:";
 
 export function sanitizeDayV2(input: MultiDayPlanRaw, snapshot: SnapshotV2, options: DayOptionsV2): DaySanityResultV2 {
   const problem = findProblem(input);
-  if (problem !== null) return { plan: { rationale: input.rationale, sessions: [], coach_notes: [] }, adjustments: [], blocked: problem };
+  if (problem !== null) return { plan: { rationale: input.rationale, sessions: [], extras: [], coach_notes: [] }, adjustments: [], blocked: problem };
 
   const notes: string[] = [];
   const today = dayLimits(snapshot, options.date, options.recent ?? []);
@@ -78,9 +96,16 @@ export function sanitizeDayV2(input: MultiDayPlanRaw, snapshot: SnapshotV2, opti
     .filter((note) => note !== "")
     .slice(0, MULTI_RULES.maxNotes);
 
+  // Kraft und Mobilitaet: gewuenscht, vom Wochenplan vorgesehen, Kraft nicht kurz vor dem Ziel und nicht an einem Ruhetag.
+  const wanted = new Set(EXTRA_KINDS.filter((kind) => perWeek(options.supplements, kind) > 0 && (options.plannedExtras === undefined || options.plannedExtras.includes(kind))));
+  if (wanted.has("strength") && (strengthBlackout(snapshot, options.date) || today.restReason !== null)) wanted.delete("strength");
+  let extras = normalizeDayExtras(input.extras, wanted);
+  const dropped = (input.extras ?? []).filter((extra) => !extras.some((kept) => kept.kind === extra.kind)).map((extra) => EXTRA_RULES[extra.kind].displayName);
+  if (dropped.length > 0) notes.push(`${[...new Set(dropped)].join(" und ")} heute gestrichen (nicht vorgesehen)`);
+
   if (today.restReason !== null) {
     if (input.sessions.length > 0) notes.push(`Ruhetag erzwungen: ${today.restReason}`);
-    return done(`Heute ist Ruhe angesagt: ${today.restReason}.`, [], coachNotes, notes, true);
+    return done(`Heute ist Ruhe angesagt: ${today.restReason}.`, [], extras, coachNotes, notes, true);
   }
 
   // 1. Sportarten des Plans, Formalien der Schritte.
@@ -94,6 +119,7 @@ export function sanitizeDayV2(input: MultiDayPlanRaw, snapshot: SnapshotV2, opti
     const keep = [...drafts].sort((a, b) => minutesOf(b) - minutesOf(a)).slice(0, MULTI_RULES.maxSessionsPerDay);
     drafts = drafts.filter((draft) => keep.includes(draft));
   }
+  drafts = drafts.map((draft) => placeIndoor(draft, options, notes));
 
   // 2. Leistungstests: Schritte aus dem Modul oder eine lockere Einheit.
   let testDone = false;
@@ -146,13 +172,15 @@ export function sanitizeDayV2(input: MultiDayPlanRaw, snapshot: SnapshotV2, opti
     drafts = drafts.map((draft) => (draft.intensity === "hard" && draft !== keep ? soften(draft, "moderate") : draft));
   }
 
-  // 5. Der Tag hat hoechstens die Haelfte der Wochenstunden: die groessten Einheiten (ohne Test) werden gekuerzt.
+  // 5. Der Tag hat hoechstens die Haelfte der Wochenstunden (oder die freie Zeit laut Kalender): die groessten Einheiten
+  // (ohne Test) werden gekuerzt.
+  const maxMinutes = Math.min(today.maxMinutes, options.availableMinutes ?? Infinity);
   const total = drafts.reduce((sum, draft) => sum + minutesOf(draft), 0);
-  if (total > today.maxMinutes) {
+  if (total > maxMinutes) {
     const fixed = drafts.filter((draft) => draft.test !== null).reduce((sum, draft) => sum + minutesOf(draft), 0);
     const flexible = total - fixed;
-    const factor = flexible > 0 ? Math.max(today.maxMinutes - fixed, 0) / flexible : 0;
-    notes.push(`Tagesumfang von ${Math.round(total)} min auf höchstens ${today.maxMinutes} min gekürzt`);
+    const factor = flexible > 0 ? Math.max(maxMinutes - fixed, 0) / flexible : 0;
+    notes.push(`Tagesumfang von ${Math.round(total)} min auf höchstens ${maxMinutes} min gekürzt${maxMinutes < today.maxMinutes ? " (freie Zeit laut Kalender)" : ""}`);
     drafts = drafts.flatMap((draft) => {
       if (draft.test !== null) return [draft];
       const steps = trimSteps(draft.steps, draft.sport, draft.limits.speed, minutesOf(draft) * factor, "minutes");
@@ -174,9 +202,47 @@ export function sanitizeDayV2(input: MultiDayPlanRaw, snapshot: SnapshotV2, opti
   });
   if (targetsChanged) notes.push(`${FORMAL_PREFIX} Zielwerte an die Grenzen für dich und die Intensität angepasst`);
 
+  // 7. Koppeltraining nur direkt nach der passenden ersten Einheit (nach allen Streichungen).
+  drafts = drafts.map((draft, index) => {
+    if (!draft.brick) return draft;
+    const previous = index === 1 ? drafts[0] : undefined;
+    if (previous !== undefined && draft.sport.planning.brickAfter.includes(previous.sport.id)) return draft;
+    notes.push(`${draft.sport.displayName} als eigene Einheit (Koppeltraining nur direkt nach ${draft.sport.planning.brickAfter.map(sportName).join(" oder ") || "keiner Sportart"})`);
+    return { ...draft, brick: false };
+  });
+
+  // 8. Kraft und Mobilitaet in der restlichen Tageszeit (Mobilitaet zuerst).
+  let room = maxMinutes - drafts.reduce((sum, draft) => sum + minutesOf(draft), 0);
+  extras = [...extras]
+    .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "mobility" ? -1 : 1))
+    .filter((extra) => {
+      if (extra.minutes <= room) {
+        room -= extra.minutes;
+        return true;
+      }
+      notes.push(`${EXTRA_RULES[extra.kind].displayName} gestrichen (Tageszeit ausgeschöpft)`);
+      return false;
+    });
+
   const rest = drafts.length === 0;
   const rationale = rest && input.sessions.length > 0 ? "Heute ist Ruhe angesagt: Die geplanten Einheiten passen heute nicht in die Grenzen." : input.rationale;
-  return done(rationale, drafts, coachNotes, notes, false);
+  return done(rationale, drafts, extras, coachNotes, notes, false);
+}
+
+/** Drinnen nur mit Hilfsmittel; bei Unwetter nach drinnen, wenn das geht (wie im Wochenplan). */
+function placeIndoor(draft: Draft, options: DayOptionsV2, notes: string[]): Draft {
+  const sport = draft.sport;
+  const allowed = indoorAllowed(sport, options.equipment);
+  if (draft.indoor && !allowed) {
+    notes.push(`${sport.displayName} draußen (${sport.planning.indoor === null ? "drinnen gibt es nicht" : `kein ${sport.planning.indoor.displayName} angegeben`})`);
+    return { ...draft, indoor: false };
+  }
+  const severe = options.weather !== undefined && sport.planning.weatherSensitive ? severeWeather(options.weather) : null;
+  if (severe !== null && !draft.indoor && allowed && sport.planning.indoor !== null) {
+    notes.push(`${severe}: ${sport.displayName} drinnen (${sport.planning.indoor.displayName})`);
+    return { ...draft, indoor: true };
+  }
+  return draft;
 }
 
 function findProblem(input: MultiDayPlanRaw): string | null {
@@ -233,7 +299,9 @@ function toDraft(
       focus: raw.focus.trim().slice(0, MULTI_RULES.maxFocusLength) || sport.displayName,
       // Bis zur Pruefung haelt `test` nur den angefragten Test fest.
       test: test !== undefined ? testRef(test) : null,
-      steps
+      steps,
+      brick: raw.brick === true,
+      indoor: raw.indoor === true
     }
   ];
 }
@@ -276,7 +344,7 @@ function applySportLimits(draft: Draft, today: DayLimitsV2, notes: string[]): Dr
   return [result];
 }
 
-function done(rationale: string, drafts: Draft[], coachNotes: string[], notes: string[], forcedRest: boolean): DaySanityResultV2 {
+function done(rationale: string, drafts: Draft[], extras: DayExtra[], coachNotes: string[], notes: string[], forcedRest: boolean): DaySanityResultV2 {
   const sessions = drafts.map((draft): DaySessionV2 => {
     const totals = stepsTotals(draft.sport, draft.steps, draft.limits.speed);
     return {
@@ -289,13 +357,15 @@ function done(rationale: string, drafts: Draft[], coachNotes: string[], notes: s
       unit: draft.sport.planning.limitUnit,
       distance_meters: Math.round(totals.meters / 50) * 50,
       duration_minutes: Math.max(Math.round(totals.minutes), 1),
+      brick: draft.brick,
+      indoor: draft.indoor,
       steps: draft.steps
     };
   });
   const substantive = notes.filter((note) => !note.startsWith(FORMAL_PREFIX));
   const adjustments = notes.map((note) => (note.startsWith(FORMAL_PREFIX) ? note.slice(FORMAL_PREFIX.length).trim() : note));
   return {
-    plan: { rationale: forcedRest ? rationale : withNote(rationale, substantive), sessions, coach_notes: coachNotes },
+    plan: { rationale: forcedRest ? rationale : withNote(rationale, substantive), sessions, extras, coach_notes: coachNotes },
     adjustments,
     blocked: null
   };

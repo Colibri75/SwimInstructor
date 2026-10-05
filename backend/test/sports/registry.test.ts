@@ -27,6 +27,9 @@ const planning: SportPlanning = {
   targetRange: () => ({ min: 1, max: 10 }),
   testSessions: {},
   equipment: {},
+  brickAfter: [],
+  weatherSensitive: false,
+  indoor: null,
   promptRules: "- Ruhig atmen."
 };
 
@@ -141,9 +144,20 @@ describe("SportRegistry", () => {
     ["Streckenbereich verkehrt", { minStepMeters: 2000 }],
     ["Dauerbereich verkehrt", { minStepSeconds: 7200 }],
     ["ohne Regeln", { promptRules: " " }],
-    ["Testeinheit fuer unbekannten Test", { testSessions: rampSession }]
+    ["Testeinheit fuer unbekannten Test", { testSessions: rampSession }],
+    ["drinnen mit ungueltigem Hilfsmittel", { weatherSensitive: true, indoor: { equipment: "Matte!", displayName: "Matte" } }],
+    ["drinnen ohne Namen", { weatherSensitive: true, indoor: { equipment: "mat", displayName: " " } }],
+    ["drinnen, aber nicht wetterabhaengig", { indoor: { equipment: "mat", displayName: "Matte" } }]
   ])("lehnt ungueltige Planungsangaben ab: %s", (_why, patch) => {
     expect(problemOf([stub({ planning: { ...planning, ...patch } })])).toBe("invalid_planning");
+  });
+
+  it("erlaubt Koppeltraining nur nach einer anderen, angemeldeten Sportart", () => {
+    const after = (brickAfter: string[]) => stub({ planning: { ...planning, brickAfter } });
+    expect(problemOf([after(["yoga"])])).toBe("invalid_brick");
+    expect(problemOf([after(["kayak"])])).toBe("invalid_brick");
+    expect(problemOf([...SPORTS.sports, after(["run"])])).toBeUndefined();
+    expect(SPORTS.get("run")?.planning.brickAfter).toEqual(["bike"]);
   });
 
   it("verlangt eine Testeinheit je Leistungstest", () => {

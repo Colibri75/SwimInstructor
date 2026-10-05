@@ -17,6 +17,8 @@
         "unit": "meters",
         "distance_meters": 500,
         "duration_minutes": 12,
+        "brick": false,
+        "indoor": false,
         "steps": [
           {
             "name": "Einschwimmen",
@@ -79,6 +81,8 @@
         "unit": "minutes",
         "distance_meters": 25250,
         "duration_minutes": 58,
+        "brick": false,
+        "indoor": false,
         "steps": [
           {
             "name": "Einfahren",
@@ -135,6 +139,7 @@
         ]
       }
     ],
+    "extras": [],
     "coach_notes": [
       "Vor dem Test gut essen und trinken."
     ]

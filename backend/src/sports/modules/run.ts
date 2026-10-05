@@ -121,6 +121,10 @@ export const run: SportDefinition = {
     targetRange,
     testSessions: TEST_SESSIONS,
     equipment: {},
+    // Der klassische Koppellauf direkt nach dem Rad (Wechsel 2); auf dem Laufband ohne Wetter.
+    brickAfter: ["bike"],
+    weatherSensitive: true,
+    indoor: { equipment: "treadmill", displayName: "Laufband" },
     promptRules: `- Laufen ist im Triathlon die verletzungsträchtigste Disziplin und hat die strengsten Grenzen. Keine Laufeinheit ist mehr als 10 % länger als die längste der letzten 4 Wochen (longest_session_minutes im Snapshot). Der Laufumfang steigt pro Woche um etwa 10 %, auch wenn die Grenzen mehr erlauben, und nicht mehrere Wochen hintereinander am oberen Rand.
 - Rund 80 % der Laufzeit sind locker (Zone 1 bis 2, Gespräch möglich). Schwelle und Intervalle erst auf einer stabilen Grundlage, höchstens eine harte Laufeinheit pro Woche.
 - Gesteuert über die Pace (target_type pace_per_km, target_value in Sekunden pro km), Pulszonen (heart_rate_zone 1 bis 5 nach Prozent der Lauf-Schwellenherzfrequenz: 1 unter 85 %, 2 85 bis 89 %, 3 90 bis 94 %, 4 95 bis 99 %, 5 ab 100 %) oder die gefühlte Anstrengung (perceived_effort). Einsteiger und Wiedereinsteiger laufen nach gefühlter Anstrengung, gern mit Gehpausen (eigener Schritt "Gehen"), nicht nach Pace.

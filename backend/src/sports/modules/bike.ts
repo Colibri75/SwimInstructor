@@ -93,6 +93,10 @@ export const bike: SportDefinition = {
     targetRange,
     testSessions: TEST_SESSIONS,
     equipment: {},
+    // Koppeltraining Schwimmen und direkt danach Rad (Wechsel 1); auf der Rolle ohne Wetter.
+    brickAfter: ["swim"],
+    weatherSensitive: true,
+    indoor: { equipment: "indoor_trainer", displayName: "Rolle" },
     promptRules: `- Gesteuert über Pulszonen (target_type heart_rate_zone, target_value 1 bis 5 nach Prozent der Rad-Schwellenherzfrequenz: 1 unter 81 %, 2 81 bis 89 %, 3 90 bis 93 %, 4 94 bis 99 %, 5 ab 100 %) und die gefühlte Anstrengung (perceived_effort, 1 bis 10). Kurze harte Abschnitte unter etwa 3 Minuten bekommen ein perceived_effort-Ziel statt eines Pulsziels, weil der Puls zu träge reagiert. Kein Tempo als Ziel. Trittfrequenz (cadence, Umdrehungen pro Minute) nur für Technikabschnitte.
 - Wattziele (power, target_value in Watt) nur, wenn eine Schwellenleistung (FTP) bekannt ist: Grundlage 55 bis 75 %, Tempo 76 bis 87 %, Schwelle 95 bis 105 %, VO2max 106 bis 120 % der FTP.
 - Schritte meist nach Dauer (measure duration, duration_seconds); eine Strecke nur, wenn sie sinnvoll ist (Vielfache von 500 m).

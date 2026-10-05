@@ -77,6 +77,9 @@ export const rowingTestSport: SportDefinition = {
       ]
     },
     equipment: {},
+    brickAfter: [],
+    weatherSensitive: false,
+    indoor: null,
     promptRules: "- Gesteuert über die Schlagzahl (stroke_rate, Schläge pro Minute), Grundlage 18 bis 22."
   }
 };

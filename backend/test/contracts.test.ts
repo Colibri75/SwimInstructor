@@ -68,6 +68,9 @@ describe("contracts/sports.json", () => {
       expect(definition?.loadFactor).toBe(sport.load_factor);
       expect(definition?.planning.limitUnit).toBe(sport.plan_unit);
       expect(definition?.planning.typicalSpeedMetersPerSecond).toBe(sport.typical_speed_meters_per_second);
+      expect(definition?.planning.brickAfter).toEqual(sport.brick_after);
+      expect(definition?.planning.weatherSensitive).toBe(sport.weather_sensitive);
+      expect(definition?.planning.indoor).toEqual(sport.indoor === null ? null : { equipment: sport.indoor.equipment, displayName: sport.indoor.display_name });
       expect(definition?.performanceMetrics).toEqual(sport.performance_metrics.map(metricOf));
       expect(definition?.performanceTests).toEqual(
         sport.performance_tests.map((test: any) => ({
@@ -124,9 +127,20 @@ describe("contracts/wire, Plan", () => {
     days: plan.days.map((day: any) => ({
       date: day.date,
       focus: day.focus,
-      sessions: day.sessions.map((item: any) => ({ sport: item.sport, session_type: item.session_type, intensity: item.intensity, amount: item.amount, focus: item.focus, test_id: item.test?.id ?? null }))
+      sessions: day.sessions.map((item: any) => ({
+        sport: item.sport,
+        session_type: item.session_type,
+        intensity: item.intensity,
+        amount: item.amount,
+        focus: item.focus,
+        test_id: item.test?.id ?? null,
+        brick: item.brick,
+        indoor: item.indoor
+      })),
+      extras: day.extras
     }))
   });
+  const supplements = { strength_per_week: 1, mobility_per_week: 2 };
   const rawWeeks = (weeks: any[]) =>
     weeks.map((week) => ({ week_start: week.week_start, deload: week.deload, focus: week.focus, sports: week.sports.map((entry: any) => ({ sport: entry.sport, amount: entry.amount, sessions: entry.sessions })) }));
   // So liefert Claude den Gesamtplan: in Abschnitten, hier jede Woche ein eigener.
@@ -155,7 +169,8 @@ describe("contracts/wire, Plan", () => {
     const { response } = await expectContract("wire/plan-v2-today-response.json", appWith(generated(asRawDayPlan(fixture.plan))), "/v1/plan/today", {
       plan_version: 2,
       snapshot,
-      wishes: fixture.wishes
+      wishes: fixture.wishes,
+      supplements
     });
 
     expect(response.body.plan.sessions.map((item: { test: { id: string } | null }) => item.test?.id ?? null)).toEqual([null, "threshold_30min"]);
@@ -184,10 +199,14 @@ describe("contracts/wire, Plan", () => {
       from_date: fixture.from_date,
       today: fixture.from_date,
       wishes: fixture.wishes,
-      macro_weeks: [macroWeek]
+      macro_weeks: [macroWeek],
+      supplements
     });
 
     expect(response.body.plan.days.flatMap((day: any) => day.sessions.filter((item: any) => item.test !== null).map((item: any) => `${day.date} ${item.test.id}`))).toEqual(["2026-10-02 threshold_30min"]);
+    expect(response.body.plan.days[4].sessions.map((item: any) => [item.sport, item.brick, item.indoor])).toEqual([["bike", false, true]]);
+    expect(response.body.plan.days.map((day: any) => day.extras.map((extra: any) => extra.kind))).toEqual([[], ["mobility"], [], ["strength"], [], [], []]);
+    expect(response.body.adjustments).toEqual([]);
   });
 
   it("antwortet auf /v1/plan/macro mit Plan v2 mit genau den Feldern des Vertrags", async () => {

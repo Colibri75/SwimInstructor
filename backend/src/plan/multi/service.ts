@@ -8,7 +8,8 @@ import { FallbackReason, PlanGenerationError, PlanUnavailableError } from "../er
 import { CallOptions, GeneratedPlan, StructuredGenerator } from "../generator";
 import { localDate, macroWeekStarts, windowDates } from "../calendar";
 import { SnapshotV2 } from "../snapshot";
-import { DayPlanV2, sanitizeDayV2 } from "./daySanity";
+import { DayOptionsV2, DayPlanV2, sanitizeDayV2 } from "./daySanity";
+import { DayWeather, roundLocation, WeatherProvider } from "../weather";
 import { goalDayOf, MULTI_RULES } from "./limits";
 import { expandMacroBlocks, MacroContextV2, MacroPlanV2, sanitizeMacroV2 } from "./macroSanity";
 import {
@@ -35,6 +36,9 @@ import {
   MissedSession,
   PauseReport,
   ReplanReason,
+  Availability,
+  GeoLocation,
+  Supplements,
   PerformanceChange,
   RecentTraining,
   ReviewReason,
@@ -61,6 +65,8 @@ export interface MultiServiceDeps {
   userBudgets?: UserBudgets;
   /** Nimmt jede Anfrage mit Ergebnis, Token und Dauer auf (Monitoring). */
   usage?: UsageRecorder;
+  /** Wettervorhersage; ohne sie (oder ohne Ort in der Anfrage) wird ohne Wetter geplant. */
+  weather?: WeatherProvider;
   logger: Logger;
   timezone: string;
   now?: () => Date;
@@ -76,6 +82,10 @@ export interface DayInputV2 {
   equipment?: readonly string[];
   recent?: readonly RecentTraining[];
   testSettings?: TestSettings;
+  supplements?: Supplements;
+  location?: GeoLocation;
+  /** Freie Minuten heute laut Kalender. */
+  availableMinutes?: number;
 }
 
 export interface DayResultV2 {
@@ -104,6 +114,9 @@ export interface WeekInputV2 {
   wishes?: string;
   equipment?: readonly string[];
   testSettings?: TestSettings;
+  supplements?: Supplements;
+  location?: GeoLocation;
+  availability?: Availability[];
 }
 
 export interface WeekResultV2 {
@@ -192,7 +205,17 @@ export class MultiPlanService {
     const today = localDate(this.now(), this.deps.timezone);
     const wishes = input.wishes?.trim() || undefined;
     const hash = dayHash(input, wishes);
-    const options = { date: today, equipment: input.equipment, recent: input.recent ?? [], testSettings: input.testSettings };
+    const weather = input.location !== undefined ? (await this.weatherFor(input.location, [today]))[0] : undefined;
+    const options: DayOptionsV2 = {
+      date: today,
+      equipment: input.equipment,
+      recent: input.recent ?? [],
+      testSettings: input.testSettings,
+      supplements: input.supplements,
+      ...(input.dayTarget !== undefined ? { plannedExtras: (input.dayTarget.extras ?? []).map((extra) => extra.kind) } : {}),
+      ...(input.availableMinutes !== undefined ? { availableMinutes: input.availableMinutes } : {}),
+      ...(weather !== undefined ? { weather } : {})
+    };
 
     const stored = await this.latestOrNull(store);
     if (input.regenerate !== true && stored !== null && stored.date === today && stored.hash === hash) {
@@ -205,7 +228,18 @@ export class MultiPlanService {
       generated = await this.generate(
         "day",
         MULTI_DAY_SYSTEM_PROMPT,
-        buildDayUserMessageV2({ snapshot: input.snapshot, date: today, wishes, dayTarget: input.dayTarget, equipment: input.equipment, recent: input.recent, testSettings: input.testSettings }),
+        buildDayUserMessageV2({
+          snapshot: input.snapshot,
+          date: today,
+          wishes,
+          dayTarget: input.dayTarget,
+          equipment: input.equipment,
+          recent: input.recent,
+          testSettings: input.testSettings,
+          supplements: input.supplements,
+          availableMinutes: input.availableMinutes,
+          weather
+        }),
         MultiDayPlanSchema,
         user,
         attempt
@@ -239,9 +273,15 @@ export class MultiPlanService {
 
   private async weekPlan(input: WeekInputV2, user: string, attempt: Attempt): Promise<WeekResultV2> {
     const wishes = input.wishes?.trim() || undefined;
+    const dates = windowDates(input.fromDate, 7);
+    const weather = input.location !== undefined ? await this.weatherFor(input.location, dates) : [];
     const context: WeekContextV2 = {
       today: input.today,
-      dates: windowDates(input.fromDate, 7),
+      dates,
+      ...(input.equipment !== undefined ? { equipment: input.equipment } : {}),
+      ...(input.availability !== undefined && input.availability.length > 0 ? { availability: input.availability } : {}),
+      ...(weather.length > 0 ? { weather } : {}),
+      ...(input.supplements !== undefined ? { supplements: input.supplements } : {}),
       unavailable: input.unavailable,
       recent: input.recent.filter((entry) => entry.date < input.fromDate),
       reports: input.recent.filter((entry) => (entry.pain ?? 0) > 0),
@@ -418,6 +458,17 @@ export class MultiPlanService {
     });
   }
 
+  /** Die Vorhersage fuer die Tage; ohne Anbieter oder bei einem Fehler keine (dann ohne Wetter planen). */
+  private async weatherFor(location: GeoLocation, dates: readonly string[]): Promise<DayWeather[]> {
+    if (this.deps.weather === undefined) return [];
+    try {
+      return await this.deps.weather.forecast(location, dates);
+    } catch (error) {
+      this.deps.logger.warn({ err: error }, "weather forecast unavailable");
+      return [];
+    }
+  }
+
   private storeFor(user: string): DayPlanStoreV2 {
     const store = this.deps.store;
     return typeof store === "function" ? store(user) : store;
@@ -497,7 +548,10 @@ export function dayHash(input: DayInputV2, wishes?: string): string {
     ...(input.dayTarget ? { day_target: input.dayTarget } : {}),
     ...(input.equipment ? { equipment: [...new Set(input.equipment)].sort() } : {}),
     ...(input.recent && input.recent.length > 0 ? { recent: input.recent } : {}),
-    ...(input.testSettings ? { test_settings: input.testSettings } : {})
+    ...(input.testSettings ? { test_settings: input.testSettings } : {}),
+    ...(input.supplements ? { supplements: input.supplements } : {}),
+    ...(input.availableMinutes !== undefined ? { available_minutes: input.availableMinutes } : {}),
+    ...(input.location ? { location: roundLocation(input.location) } : {})
   };
   return createHash("sha256").update(JSON.stringify(material)).digest("hex");
 }
