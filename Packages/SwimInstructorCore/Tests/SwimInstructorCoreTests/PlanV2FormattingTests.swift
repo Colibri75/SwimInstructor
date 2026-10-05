@@ -194,7 +194,7 @@ final class PlanV2FormattingTests: XCTestCase {
             DayPlanV2Response.self, from: RepoPaths.contractData("wire/plan-v2-today-fallback-response.json")
         )
 
-        XCTAssertEqual(PlanV2Formatting.sourceNotice(response), "Letzter gültiger Plan vom 29.09.2026. Claude war gerade nicht erreichbar.")
+        XCTAssertEqual(PlanV2Formatting.sourceNotice(response), "Letzter gültiger Plan vom 29.09.2026. Dein Coach war gerade nicht erreichbar.")
     }
 
     func testNoticeForAnEarlierPlanOfToday() {
@@ -204,7 +204,7 @@ final class PlanV2FormattingTests: XCTestCase {
         )
         XCTAssertEqual(
             PlanV2Formatting.sourceNotice(Self.dayResponse(source: .fallback, stale: false, reason: nil)),
-            "Früherer Plan von heute. Claude hat keinen neuen Plan geliefert."
+            "Früherer Plan von heute. Dein Coach hat keinen neuen Plan geliefert."
         )
         XCTAssertEqual(
             PlanV2Formatting.sourceNotice(Self.dayResponse(source: .fallback, stale: true, reason: "sanity_blocked", date: "2026-09-28")),

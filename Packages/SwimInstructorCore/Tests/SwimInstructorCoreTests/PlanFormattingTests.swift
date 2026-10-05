@@ -47,11 +47,11 @@ final class PlanFormattingTests: XCTestCase {
         XCTAssertNil(PlanFormatting.sourceNotice(TestFixtures.response(source: .cache)))
         XCTAssertEqual(
             PlanFormatting.sourceNotice(TestFixtures.response(date: "2026-09-29", source: .fallback, stale: true)),
-            "Letzter gültiger Plan vom 29.09.2026. Claude war gerade nicht erreichbar."
+            "Letzter gültiger Plan vom 29.09.2026. Dein Coach war gerade nicht erreichbar."
         )
         XCTAssertEqual(
             PlanFormatting.sourceNotice(TestFixtures.response(source: .fallback, stale: false)),
-            "Früherer Plan von heute. Claude war gerade nicht erreichbar."
+            "Früherer Plan von heute. Dein Coach war gerade nicht erreichbar."
         )
     }
 
