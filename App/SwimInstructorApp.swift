@@ -101,10 +101,6 @@ struct SwimInstructorApp: App {
             },
             testSettings: { testSettingsStore.settings() },
             extras: { planningExtras([PlanFormatting.isoDay(Date())]) },
-            // Vorschau kommender Tage im Plan-Tab: Vorgabe der sieben Tage und freie Zeit des Tags.
-            previewStore: FileDayPlanPreviewStore.standard(),
-            targetOn: { [weak weekLoader] date in weekLoader?.day(on: date)?.target },
-            extrasOn: { date in planningExtras([date]) },
             // Beim ersten Öffnen am Tag, nach dem Lesen von Health und vor dem Tagesplan: Gesamtplan sicherstellen und
             // die nächsten sieben Tage neu abstimmen. Nach einer Überarbeitung des Gesamtplans gilt der Tag wieder als
             // offen, damit die Tage zum neuen Gesamtplan passen.
@@ -120,7 +116,11 @@ struct SwimInstructorApp: App {
                     wishes: wishStore.wish(for: today),
                     stamp: "\(macroLoader.currentGoalKey)|\(macroLoader.revisionStamp)"
                 )
-            }
+            },
+            // Vorschau kommender Tage im Plan-Tab: Vorgabe der sieben Tage und freie Zeit des Tags.
+            previewStore: FileDayPlanPreviewStore.standard(),
+            targetOn: { [weak weekLoader] date in weekLoader?.day(on: date)?.target },
+            extrasOn: { date in planningExtras([date]) }
         )
         reviewRunner.onReviewed = { [weak loader] in await loader?.refreshIfNeeded() }
         weekLoader.equipmentProvider = equipment
