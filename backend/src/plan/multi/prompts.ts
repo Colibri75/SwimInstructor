@@ -536,13 +536,17 @@ export interface DayPromptInput {
   supplements?: Supplements;
   availableMinutes?: number;
   weather?: DayWeather;
+  /** Vorschau fuer einen kommenden Tag: "heute" meint unten diesen Tag. */
+  preview?: boolean;
 }
 
 export function buildDayUserMessageV2(input: DayPromptInput): string {
   const { snapshot, date } = input;
   const today = dayLimits(snapshot, date, input.recent ?? []);
   const lines = [
-    `Erstelle die Einheiten für heute, ${weekdayName(date)}, ${date}.`,
+    input.preview === true
+      ? `Erstelle die Einheiten für ${weekdayName(date)}, ${date}. Das ist eine Vorschau für einen kommenden Tag: "heute" meint unten diesen Tag; das Training bis dahin kennst du nur aus dem Wochenplan, am Tag selbst wird der Plan noch einmal abgestimmt.`
+      : `Erstelle die Einheiten für heute, ${weekdayName(date)}, ${date}.`,
     "",
     "Grenzen für heute (vom System berechnet, verbindlich):",
     ...dayLimitLines(snapshot, today, true),

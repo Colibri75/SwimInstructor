@@ -4,7 +4,7 @@ import { z } from "zod";
 import { OWNER_ID } from "../../users";
 import { UsageOutcome, UsageRecorder } from "../../usage";
 import { GenerationBudget, UserBudgets } from "../budget";
-import { FallbackReason, PlanGenerationError, PlanUnavailableError } from "../errors";
+import { FallbackReason, PlanGenerationError, PlanRequestError, PlanUnavailableError } from "../errors";
 import { CallOptions, GeneratedPlan, StructuredGenerator } from "../generator";
 import { daysBetween, localDate, macroWeekStarts, windowDates } from "../calendar";
 import { buildRaceUserMessage, RACE_SYSTEM_PROMPT, RacePlan, RacePlanSchema, sanitizeRace } from "./race";
@@ -78,6 +78,8 @@ export interface DayInputV2 {
   /** Kennung des Nutzers (Token), Standard der Besitzer. */
   user?: string;
   snapshot: SnapshotV2;
+  /** Vorschau fuer einen kommenden Tag (1 bis `PREVIEW_DAYS` nach heute); ohne Angabe heute. */
+  date?: string;
   regenerate?: boolean;
   wishes?: string;
   dayTarget?: DayTargetV2;
@@ -210,6 +212,8 @@ export interface RaceResult {
 
 /** So weit reicht die Vorhersage (Open-Meteo: 14 Tage). */
 const FORECAST_DAYS = 14;
+/** So weit im Voraus zeigt der Tagesplan eine Vorschau (der Plan-Tab reicht bis in die naechste Woche). */
+export const PREVIEW_DAYS = 13;
 
 export class MultiPlanService {
   private readonly now: () => Date;
@@ -227,6 +231,7 @@ export class MultiPlanService {
     const { logger } = this.deps;
     const store = this.storeFor(user);
     const today = localDate(this.now(), this.deps.timezone);
+    if (input.date !== undefined && input.date !== today) return this.previewDay(input, user, attempt, today, input.date);
     const wishes = input.wishes?.trim() || undefined;
     const hash = dayHash(input, wishes);
     const weather = input.location !== undefined ? (await this.weatherFor(input.location, [today]))[0] : undefined;
@@ -288,6 +293,51 @@ export class MultiPlanService {
     await this.saveQuietly(store, record);
     this.logGenerated("day", generated.meta, sanitized.adjustments.length, { sessions: sanitized.plan.sessions.length, wishChars: wishes?.length ?? 0 });
     return { source: "claude", date: today, generatedAt: record.generatedAt, stale: false, plan: record.plan, adjustments: record.adjustments, ...(wishes ? { wishes } : {}) };
+  }
+
+  /**
+   * Der konkrete Plan fuer einen kommenden Tag, damit der Athlet ihn im Plan-Tab ansehen kann. Ohne Cache und ohne
+   * Fallback, und er ersetzt nicht den gespeicherten Plan von heute; am Tag selbst entsteht der Plan neu.
+   */
+  private async previewDay(input: DayInputV2, user: string, attempt: Attempt, today: string, date: string): Promise<DayResultV2> {
+    const ahead = daysBetween(today, date);
+    if (ahead < 1 || ahead > PREVIEW_DAYS) throw new PlanRequestError("date", `Vorschau nur für die nächsten ${PREVIEW_DAYS} Tage`);
+    const wishes = input.wishes?.trim() || undefined;
+    const weather = input.location !== undefined ? (await this.weatherFor(input.location, [date]))[0] : undefined;
+    const options: DayOptionsV2 = {
+      date,
+      equipment: input.equipment,
+      recent: input.recent ?? [],
+      testSettings: input.testSettings,
+      supplements: input.supplements,
+      ...(input.dayTarget !== undefined ? { plannedExtras: (input.dayTarget.extras ?? []).map((extra) => extra.kind) } : {}),
+      ...(input.availableMinutes !== undefined ? { availableMinutes: input.availableMinutes } : {}),
+      ...(weather !== undefined ? { weather } : {})
+    };
+    const generated = await this.generate(
+      "day",
+      MULTI_DAY_SYSTEM_PROMPT,
+      buildDayUserMessageV2({
+        snapshot: input.snapshot,
+        date,
+        wishes,
+        dayTarget: input.dayTarget,
+        equipment: input.equipment,
+        recent: input.recent,
+        testSettings: input.testSettings,
+        supplements: input.supplements,
+        availableMinutes: input.availableMinutes,
+        weather,
+        preview: true
+      }),
+      MultiDayPlanSchema,
+      user,
+      attempt
+    );
+    const sanitized = sanitizeDayV2(generated.data, input.snapshot, options);
+    if (sanitized.blocked !== null) throw this.blocked("day", sanitized.blocked);
+    this.logGenerated("day", generated.meta, sanitized.adjustments.length, { sessions: sanitized.plan.sessions.length, preview: "yes" });
+    return { source: "claude", date, generatedAt: this.now().toISOString(), stale: false, plan: sanitized.plan, adjustments: sanitized.adjustments, ...(wishes ? { wishes } : {}) };
   }
 
   async planWeek(input: WeekInputV2): Promise<WeekResultV2> {

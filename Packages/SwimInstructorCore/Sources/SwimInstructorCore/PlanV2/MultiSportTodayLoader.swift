@@ -20,6 +20,12 @@ public final class MultiSportTodayLoader: ObservableObject {
     @Published public private(set) var wish: String = ""
     /// Gespeicherte Tagespläne der letzten Wochen für "Plan gegen Ist", ältester zuerst.
     @Published public private(set) var planHistory: [DayPlanV2Response] = []
+    /// Vorschauen kommender Tage (Plan-Tab), je Tag die letzte.
+    @Published public private(set) var previews: [String: DayPlanV2Response] = [:]
+    /// Der Tag, dessen Vorschau gerade entsteht.
+    @Published public private(set) var loadingPreviewDate: String?
+    /// Fehler bei der letzten Vorschau, mit ihrem Tag.
+    @Published public private(set) var previewError: (date: String, message: String)?
 
     private let authorizer: HealthDataAuthorizing?
     private let snapshotBuilder: SnapshotBuilding
@@ -33,6 +39,9 @@ public final class MultiSportTodayLoader: ObservableObject {
     private let testSettings: @MainActor () -> TestSettings?
     private let extras: @MainActor () -> PlanningExtras
     private let prepare: @MainActor (AthleteStateReading) async -> Void
+    private let previewStore: DayPlanPreviewStoring?
+    private let targetOn: @MainActor (String) -> DayTargetV2?
+    private let extrasOn: @MainActor (String) -> PlanningExtras
     private let now: () -> Date
     private let calendar: Calendar
 
@@ -41,6 +50,8 @@ public final class MultiSportTodayLoader: ObservableObject {
     ///   - dayTarget: die Vorgabe der sieben Tage für heute, `nil` ohne Plan.
     ///   - recentTraining: die Einheiten der letzten Tage samt heute, aus dem frisch gelesenen Zustand.
     ///   - prepare: läuft nach dem Lesen von Health und vor dem Tagesplan (Gesamtplan, sieben Tage).
+    ///   - previewStore, targetOn, extrasOn: für die Vorschau kommender Tage im Plan-Tab: wo sie liegen, die Vorgabe
+    ///     der sieben Tage und Kraft, Ort und freie Zeit für einen Tag.
     public init(
         authorizer: HealthDataAuthorizing?,
         snapshotBuilder: SnapshotBuilding,
@@ -54,6 +65,9 @@ public final class MultiSportTodayLoader: ObservableObject {
         testSettings: @escaping @MainActor () -> TestSettings? = { nil },
         extras: @escaping @MainActor () -> PlanningExtras = { .none },
         prepare: @escaping @MainActor (AthleteStateReading) async -> Void = { _ in },
+        previewStore: DayPlanPreviewStoring? = nil,
+        targetOn: @escaping @MainActor (String) -> DayTargetV2? = { _ in nil },
+        extrasOn: @escaping @MainActor (String) -> PlanningExtras = { _ in .none },
         now: @escaping () -> Date = { Date() },
         calendar: Calendar = .current
     ) {
@@ -69,6 +83,9 @@ public final class MultiSportTodayLoader: ObservableObject {
         self.testSettings = testSettings
         self.extras = extras
         self.prepare = prepare
+        self.previewStore = previewStore
+        self.targetOn = targetOn
+        self.extrasOn = extrasOn
         self.now = now
         self.calendar = calendar
         self.response = cache.load()
@@ -78,6 +95,8 @@ public final class MultiSportTodayLoader: ObservableObject {
         }
         self.planHistory = history?.load() ?? []
         self.wish = wishStore?.wish(for: PlanFormatting.isoDay(now(), calendar: calendar)) ?? ""
+        let today = PlanFormatting.isoDay(now(), calendar: calendar)
+        self.previews = Dictionary((previewStore?.load() ?? []).filter { $0.date > today }.map { ($0.date, $0) }, uniquingKeysWith: { _, last in last })
     }
 
     public var todayKey: String { PlanFormatting.isoDay(now(), calendar: calendar) }
@@ -126,6 +145,68 @@ public final class MultiSportTodayLoader: ObservableObject {
     public func setWish(_ text: String) {
         wishStore?.setWish(text, for: todayKey)
         wish = wishStore?.wish(for: todayKey) ?? ""
+    }
+
+    // MARK: - Ein Tag im Plan-Tab
+
+    /// Der konkrete Plan eines Tags: heute der Tagesplan, vorher der erste aus dem Verlauf, später die Vorschau, solange
+    /// sie zur Vorgabe der sieben Tage passt (nach einer Änderung im Plan-Tab nicht mehr).
+    public func dayPlan(on date: String) -> DayPlanV2Response? {
+        let today = todayKey
+        if date == today {
+            return response?.date == today ? response : planHistory.last { $0.date == date }
+        }
+        if date < today { return planHistory.last { $0.date == date } }
+        guard let preview = previews[date], preview.requestedTarget == targetOn(date) else { return nil }
+        return preview
+    }
+
+    /// Ob sich für den Tag eine Vorschau holen lässt: ein kommender Tag mit Einheiten, so weit der Server vorausplant.
+    public func canPreview(_ date: String) -> Bool {
+        guard date > todayKey, let target = targetOn(date), !target.sessions.isEmpty else { return false }
+        guard let today = calendar.date(from: Self.components(todayKey)), let day = calendar.date(from: Self.components(date)) else { return false }
+        let ahead = calendar.dateComponents([.day], from: today, to: day).day ?? 0
+        return ahead >= 1 && ahead <= Self.previewDays
+    }
+
+    /// So weit voraus plant der Server eine Vorschau (`PREVIEW_DAYS`).
+    public static let previewDays = 13
+
+    /// Holt den konkreten Plan für einen kommenden Tag (ein Claude-Aufruf). Am Tag selbst entsteht der Plan neu.
+    public func loadPreview(for date: String) async {
+        guard loadingPreviewDate == nil, canPreview(date), let reading else { return }
+        guard let provider = planProvider() else {
+            needsConfiguration = true
+            return
+        }
+        let target = targetOn(date)
+        loadingPreviewDate = date
+        defer { loadingPreviewDate = nil }
+        do {
+            var fresh = try await provider.fetchDayPlanV2(DayPlanV2Request(
+                snapshot: reading.snapshot,
+                date: date,
+                dayPlan: target,
+                equipment: equipment(),
+                recentTraining: recentTraining(reading),
+                testSettings: testSettings(),
+                extras: extrasOn(date)
+            ))
+            fresh.requestedTarget = target
+            let today = todayKey
+            previews = previews.filter { $0.key > today }
+            previews[date] = fresh
+            previewError = nil
+            try? previewStore?.save(previews.values.sorted { $0.date < $1.date })
+        } catch {
+            previewError = (date, error.localizedDescription)
+        }
+    }
+
+    private static func components(_ isoDay: String) -> DateComponents {
+        let parts = isoDay.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3 else { return DateComponents() }
+        return DateComponents(year: parts[0], month: parts[1], day: parts[2])
     }
 
     /// Wunsch speichern und sofort einen neuen Plan dazu holen.

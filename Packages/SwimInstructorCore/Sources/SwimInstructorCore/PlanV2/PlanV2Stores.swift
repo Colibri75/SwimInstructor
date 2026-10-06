@@ -153,3 +153,32 @@ public struct FileMacroPlanV2Store: MacroPlanV2Storing {
         try PlanV2Files.write(plan, to: fileURL)
     }
 }
+
+// MARK: - Vorschau kommender Tage
+
+/// Vorschauen kommender Tage aus dem Plan-Tab, höchstens eine je Tag. Der Loader räumt vergangene Tage weg.
+public protocol DayPlanPreviewStoring {
+    func load() -> [DayPlanV2Response]
+    func save(_ previews: [DayPlanV2Response]) throws
+}
+
+public struct FileDayPlanPreviewStore: DayPlanPreviewStoring {
+    private let fileURL: URL
+
+    public init(fileURL: URL) {
+        self.fileURL = fileURL
+    }
+
+    /// `day-previews-v2.json`.
+    public static func standard() -> FileDayPlanPreviewStore {
+        FileDayPlanPreviewStore(fileURL: PlanV2Files.url("day-previews-v2.json"))
+    }
+
+    public func load() -> [DayPlanV2Response] {
+        PlanV2Files.read([DayPlanV2Response].self, from: fileURL) ?? []
+    }
+
+    public func save(_ previews: [DayPlanV2Response]) throws {
+        try PlanV2Files.write(previews, to: fileURL)
+    }
+}

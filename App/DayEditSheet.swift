@@ -1,9 +1,10 @@
 import SwiftUI
 import SwimInstructorCore
 
-/// Einen Tag der nächsten sieben Tage anpassen: je Einheit Umfang und Sportart ändern oder sie entfernen, eine Einheit
-/// dazunehmen, Ruhetag, "keine Zeit", mit einem anderen Tag tauschen. Vergangene Tage lassen sich auf einen freien
-/// Ruhetag nachholen.
+/// Ein Tag im Plan-Tab: der konkrete Trainingsplan mit allen Schritten (heute der Tagesplan, vorher der aus dem Verlauf,
+/// später eine Vorschau auf Knopfdruck), dazu anpassen: je Einheit Umfang und Sportart ändern oder sie entfernen, eine
+/// Einheit dazunehmen, Ruhetag, "keine Zeit", mit einem anderen Tag tauschen. Vergangene Tage lassen sich auf einen
+/// freien Ruhetag nachholen.
 struct DayEditSheet: View {
     let date: String
 
@@ -36,6 +37,7 @@ struct DayEditSheet: View {
             List {
                 if let status {
                     plannedSection(status)
+                    trainingPlanSections(status)
                     if status.workoutCount > 0 {
                         doneSection(status)
                     }
@@ -59,7 +61,7 @@ struct DayEditSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
     }
 
     // MARK: Geplant
@@ -93,6 +95,92 @@ struct DayEditSheet: View {
                 .font(.footnote)
                 .foregroundStyle(WeekStateStyle.color(status.state))
         }
+    }
+
+    // MARK: Konkreter Trainingsplan
+
+    @ViewBuilder
+    private func trainingPlanSections(_ status: MultiSportDayStatus) -> some View {
+        if let response = todayLoader.dayPlan(on: date) {
+            let plan = response.plan
+            if plan.isRestDay {
+                Section("Trainingsplan") {
+                    Text(plan.rationale.isEmpty ? "Ruhetag" : plan.rationale)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            } else {
+                Section {
+                    if !plan.rationale.isEmpty {
+                        Text(plan.rationale)
+                            .font(.subheadline)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                } header: {
+                    Text("Trainingsplan")
+                } footer: {
+                    Text(trainingPlanFooter(response))
+                }
+                ForEach(Array(plan.sessions.enumerated()), id: \.offset) { index, session in
+                    Section {
+                        SessionCardView(session: session, previousSport: index > 0 ? plan.sessions[index - 1].sport : nil)
+                    }
+                }
+                if !plan.extras.isEmpty {
+                    Section {
+                        ForEach(Array(plan.extras.enumerated()), id: \.offset) { _, extra in
+                            ExtraCardView(extra: extra)
+                        }
+                    }
+                }
+                if !plan.coachNotes.isEmpty {
+                    Section("Hinweise") {
+                        ForEach(plan.coachNotes, id: \.self) { note in
+                            Text(note)
+                                .font(.footnote)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
+        } else if todayLoader.canPreview(date) {
+            Section {
+                Button {
+                    Task { await todayLoader.loadPreview(for: date) }
+                } label: {
+                    if todayLoader.loadingPreviewDate == date {
+                        HStack(spacing: 12) {
+                            ForgeAnimation()
+                            Text("Dein Coach schreibt den Plan für diesen Tag …")
+                        }
+                    } else {
+                        Label("Trainingsplan anzeigen", systemImage: "list.bullet.rectangle")
+                    }
+                }
+                .disabled(todayLoader.loadingPreviewDate != nil || todayLoader.reading == nil)
+                if let error = todayLoader.previewError, error.date == date {
+                    Label(error.message, systemImage: "exclamationmark.triangle")
+                        .font(.footnote)
+                        .foregroundStyle(.orange)
+                }
+            } header: {
+                Text("Trainingsplan")
+            } footer: {
+                Text("Die Einheiten mit allen Schritten, Zielen und Equipment. Am Tag selbst stimmt dein Coach den Plan noch einmal auf deinen Zustand ab.")
+            }
+        } else if date == weekLoader.todayKey, status.day?.isRestDay == false {
+            Section("Trainingsplan") {
+                Text("Der Plan für heute entsteht im Tab Heute.")
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func trainingPlanFooter(_ response: DayPlanV2Response) -> String {
+        if date > weekLoader.todayKey {
+            return "Vorschau. Am Tag selbst stimmt dein Coach den Plan noch einmal auf deinen Zustand ab; nach einer Änderung an diesem Tag lässt sich die Vorschau neu holen."
+        }
+        if date < weekLoader.todayKey { return "So war der Tag geplant." }
+        return "Der Plan von heute, wie im Tab Heute."
     }
 
     private func doneSection(_ status: MultiSportDayStatus) -> some View {

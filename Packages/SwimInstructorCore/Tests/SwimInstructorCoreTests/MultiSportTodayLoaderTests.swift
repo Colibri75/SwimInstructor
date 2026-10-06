@@ -96,6 +96,9 @@ final class MultiSportTodayLoaderTests: XCTestCase {
         recentTraining: @escaping @MainActor (AthleteStateReading) -> [RecentTrainingEntry] = { _ in [] },
         testSettings: @escaping @MainActor () -> TestSettings? = { nil },
         prepare: @escaping @MainActor (AthleteStateReading) async -> Void = { _ in },
+        previewStore: DayPlanPreviewStoring? = nil,
+        targetOn: @escaping @MainActor (String) -> DayTargetV2? = { _ in nil },
+        extrasOn: @escaping @MainActor (String) -> PlanningExtras = { _ in .none },
         provider: CountingProvider?,
         repository: FakeAllSportsRepository = FakeAllSportsRepository(workouts: TodayLoaderV2Data.workouts),
         authorizer: Authorizer = Authorizer()
@@ -117,9 +120,84 @@ final class MultiSportTodayLoaderTests: XCTestCase {
             recentTraining: recentTraining,
             testSettings: testSettings,
             prepare: prepare,
+            previewStore: previewStore,
+            targetOn: targetOn,
+            extrasOn: extrasOn,
             now: { TestFixtures.now },
             calendar: TestFixtures.utc
         )
+    }
+
+    // MARK: - Ein Tag im Plan-Tab
+
+    private final class MemoryPreviews: DayPlanPreviewStoring {
+        var stored: [DayPlanV2Response]
+        init(_ stored: [DayPlanV2Response] = []) { self.stored = stored }
+        func load() -> [DayPlanV2Response] { stored }
+        func save(_ previews: [DayPlanV2Response]) throws { stored = previews }
+    }
+
+    private static let friday = DayTargetV2(focus: "Locker", sessions: [
+        DayTargetV2.Session(sport: .run, sessionType: .endurance, intensity: .easy, amount: 40, focus: "Locker")
+    ])
+
+    func testAComingDayGetsAPreviewWithItsDateAndKeepsIt() async throws {
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response(date: "2026-10-02")))
+        let store = MemoryPreviews([TodayLoaderV2Data.response(date: "2026-09-28")])
+        var target: DayTargetV2? = Self.friday
+        let loader = makeLoader(
+            previewStore: store,
+            targetOn: { date in date == "2026-10-02" ? target : nil },
+            extrasOn: { date in PlanningExtras(availability: [DayAvailability(date: date, minutes: 50)]) },
+            provider: provider
+        )
+        // Vergangene Vorschauen fallen beim Start weg.
+        XCTAssertTrue(loader.previews.isEmpty)
+        await loader.readHealth()
+
+        XCTAssertTrue(loader.canPreview("2026-10-02"))
+        XCTAssertFalse(loader.canPreview("2026-10-03"), "ohne Einheiten keine Vorschau")
+        XCTAssertFalse(loader.canPreview("2026-09-30"), "heute plant der Tab Heute")
+        XCTAssertNil(loader.dayPlan(on: "2026-10-02"))
+
+        await loader.loadPreview(for: "2026-10-02")
+
+        let request = try XCTUnwrap(provider.requests.first)
+        XCTAssertEqual(request.date, "2026-10-02")
+        XCTAssertEqual(request.dayPlan, Self.friday)
+        XCTAssertEqual(request.extras.availableMinutes(on: "2026-10-02"), 50)
+        XCTAssertEqual(loader.dayPlan(on: "2026-10-02")?.date, "2026-10-02")
+        XCTAssertEqual(store.stored.map(\.date), ["2026-10-02"])
+        XCTAssertNil(loader.response, "Die Vorschau ersetzt nicht den Plan von heute")
+
+        // Nach einer Änderung an dem Tag passt die Vorschau nicht mehr.
+        target = DayTargetV2(focus: "Rad", sessions: [DayTargetV2.Session(sport: .bike, sessionType: .endurance, intensity: .easy, amount: 60, focus: "Rad")])
+        XCTAssertNil(loader.dayPlan(on: "2026-10-02"))
+    }
+
+    func testTodayAndPastDaysShowTheirPlans() async throws {
+        let yesterday = TodayLoaderV2Data.response(date: "2026-09-29")
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        let loader = makeLoader(history: MemoryHistory([yesterday]), provider: provider)
+
+        XCTAssertEqual(loader.dayPlan(on: "2026-09-29"), yesterday)
+        XCTAssertNil(loader.dayPlan(on: "2026-09-28"))
+
+        await loader.refreshIfNeeded()
+        XCTAssertEqual(loader.dayPlan(on: "2026-09-30")?.date, "2026-09-30")
+    }
+
+    func testAFailedPreviewKeepsTheErrorForItsDay() async throws {
+        let provider = CountingProvider(.failure(PlanAPIError.server(status: 503)))
+        let loader = makeLoader(targetOn: { _ in Self.friday }, provider: provider)
+        await loader.readHealth()
+
+        await loader.loadPreview(for: "2026-10-01")
+
+        XCTAssertEqual(loader.previewError?.date, "2026-10-01")
+        XCTAssertNil(loader.dayPlan(on: "2026-10-01"))
+        XCTAssertNil(loader.loadingPreviewDate)
+        XCTAssertFalse(loader.canPreview("2026-10-20"), "weiter als der Server vorausplant")
     }
 
     func testReadHealthOnlyReadsTheState() async throws {

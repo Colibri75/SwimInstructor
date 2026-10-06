@@ -288,6 +288,8 @@ export const DayRequestV2Schema = z
     plan_version: PlanVersion,
     snapshot: SnapshotSchema,
     regenerate: z.boolean().optional(),
+    /** Vorschau fuer einen kommenden Tag (1 bis 13 Tage nach heute); ohne Angabe heute. */
+    date: DateString.optional(),
     wishes: z.string().max(MAX_WISH_LENGTH).optional(),
     day_plan: DayTargetV2Schema.optional(),
     equipment: EquipmentV2Schema.optional(),

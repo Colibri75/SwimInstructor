@@ -26,6 +26,17 @@ export class PlanGenerationError extends Error {
   }
 }
 
+/** Die Anfrage passt nicht (etwa ein Tag ausserhalb der Vorschau); die Route antwortet mit 400. */
+export class PlanRequestError extends Error {
+  constructor(
+    readonly path: string,
+    message: string
+  ) {
+    super(message);
+    this.name = "PlanRequestError";
+  }
+}
+
 /** Claude scheiterte und es gibt keinen frueheren Plan, den man ausliefern koennte. */
 export class PlanUnavailableError extends Error {
   /** `detail`: was genau scheiterte (etwa warum die Sicherheitsschicht blockierte), nur fuer Log und Bewertung, nie fuer die App. */

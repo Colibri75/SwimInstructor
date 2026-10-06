@@ -2,7 +2,7 @@ import { Request, Response, Router } from "express";
 import { currentUser } from "../../auth";
 import { OWNER_ID } from "../../users";
 import { z } from "zod";
-import { PlanUnavailableError } from "../errors";
+import { PlanRequestError, PlanUnavailableError } from "../errors";
 import { isRealDate, weekdayIndex } from "../calendar";
 import { DayRequestV2Schema, MacroRequestV2Schema, MacroWeekTargetV2, ReviewRequestSchema, ReviseRequestSchema, WeekRequestV2Schema } from "./schemas";
 import { DayResultV2, MacroResultV2, MultiPlanService, RaceResult, ReviewResult, ReviseResult, WeekResultV2 } from "./service";
@@ -52,6 +52,10 @@ async function answer<T>(res: Response, work: () => Promise<T>, toJson: (result:
       res.status(503).json({ error: "plan_unavailable", reason: error.reason });
       return;
     }
+    if (error instanceof PlanRequestError) {
+      invalid(res, [{ path: error.path, message: error.message }]);
+      return;
+    }
     throw error;
   }
 }
@@ -62,7 +66,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
       const parsed = DayRequestV2Schema.safeParse(req.body);
       if (!parsed.success) return invalid(res, issues(parsed.error));
       const data = parsed.data;
-      const problems = dateProblems(recentDates(data.recent_training));
+      const problems = dateProblems([...(data.date !== undefined ? [["date", data.date] as [string, string]] : []), ...recentDates(data.recent_training)]);
       if (problems.length > 0) return invalid(res, problems);
       await answer(
         res,
@@ -70,6 +74,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
           service.planDay({
             user: userOf(res),
             snapshot: data.snapshot,
+            date: data.date,
             regenerate: data.regenerate === true,
             wishes: data.wishes,
             dayTarget: data.day_plan,

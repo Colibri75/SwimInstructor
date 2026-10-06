@@ -168,9 +168,12 @@ public struct DayPlanV2Request: Equatable, Sendable {
     public var testSettings: TestSettings?
     /// Kraft und Mobilität, Ort für das Wetter, freie Zeit heute.
     public var extras: PlanningExtras
+    /// Ein kommender Tag (`yyyy-MM-dd`) für die Vorschau im Plan-Tab; `nil` heißt heute.
+    public var date: String?
 
     public init(
         snapshot: AthleteStateSnapshot,
+        date: String? = nil,
         regenerate: Bool = false,
         wishes: String? = nil,
         dayPlan: DayTargetV2? = nil,
@@ -180,6 +183,7 @@ public struct DayPlanV2Request: Equatable, Sendable {
         extras: PlanningExtras = .none
     ) {
         self.snapshot = snapshot
+        self.date = date
         self.regenerate = regenerate
         self.wishes = wishes
         self.dayPlan = dayPlan
@@ -342,6 +346,7 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
         try await postV2(path: "v1/plan/today", body: DayBody(
             planVersion: Self.planVersion,
             snapshot: request.snapshot,
+            date: request.date,
             regenerate: request.regenerate ? true : nil,
             wishes: Self.cleaned(request.wishes),
             dayPlan: request.dayPlan,
@@ -350,8 +355,8 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
             testSettings: request.testSettings,
             supplements: request.extras.supplements.flatMap { $0.isEmpty ? nil : $0 },
             location: request.extras.location,
-            // Beim Tagesplan steht in `availability` nur heute.
-            availableMinutes: request.extras.availability.first?.minutes
+            // Beim Tagesplan steht in `availability` nur der geplante Tag.
+            availableMinutes: request.date.map { request.extras.availableMinutes(on: $0) } ?? request.extras.availability.first?.minutes
         ))
     }
 
@@ -456,6 +461,8 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
     private struct DayBody: Encodable {
         let planVersion: Int
         let snapshot: AthleteStateSnapshot
+        /// Fehlt im JSON, wenn `nil` (heute).
+        let date: String?
         /// Fehlt im JSON, wenn `nil`: Der Server nimmt dann seinen Cache.
         let regenerate: Bool?
         let wishes: String?
