@@ -101,7 +101,15 @@ struct DayEditSheet: View {
 
     @ViewBuilder
     private func trainingPlanSections(_ status: MultiSportDayStatus) -> some View {
-        if let response = todayLoader.dayPlan(on: date) {
+        if date == weekLoader.todayKey && todayLoader.isLoadingPlan {
+            Section("Trainingsplan") {
+                HStack(spacing: 12) {
+                    ForgeAnimation()
+                    Text("Dein Coach passt den Plan für heute an …")
+                        .foregroundStyle(.secondary)
+                }
+            }
+        } else if let response = todayLoader.dayPlan(on: date) {
             let plan = response.plan
             if plan.isRestDay {
                 Section("Trainingsplan") {
@@ -278,7 +286,7 @@ struct DayEditSheet: View {
             Text("Tag anpassen")
         } footer: {
             Text(date == weekLoader.todayKey
-                 ? "Die Einheiten selbst stehen im Tab Heute. Nach einer Änderung dort \"Plan neu erstellen\" tippen, damit sie zur neuen Vorgabe passen."
+                 ? "Eine Änderung gilt sofort auch im Tab Heute und auf der Watch: Dein Coach passt die Einheiten an."
                  : "Höchstens \(MultiSportWeekEditor.maxSessionsPerDay) Einheiten am Tag. Beim Tausch der Sportart rechnet die App den Umfang über die Dauer um.")
         }
     }

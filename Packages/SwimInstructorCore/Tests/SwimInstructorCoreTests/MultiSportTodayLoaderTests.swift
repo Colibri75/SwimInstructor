@@ -99,6 +99,7 @@ final class MultiSportTodayLoaderTests: XCTestCase {
         previewStore: DayPlanPreviewStoring? = nil,
         targetOn: @escaping @MainActor (String) -> DayTargetV2? = { _ in nil },
         extrasOn: @escaping @MainActor (String) -> PlanningExtras = { _ in .none },
+        adoptPlan: @escaping @MainActor (DayPlanV2Response) -> DayTargetV2? = { _ in nil },
         provider: CountingProvider?,
         repository: FakeAllSportsRepository = FakeAllSportsRepository(workouts: TodayLoaderV2Data.workouts),
         authorizer: Authorizer = Authorizer()
@@ -123,6 +124,7 @@ final class MultiSportTodayLoaderTests: XCTestCase {
             previewStore: previewStore,
             targetOn: targetOn,
             extrasOn: extrasOn,
+            adoptPlan: adoptPlan,
             now: { TestFixtures.now },
             calendar: TestFixtures.utc
         )
@@ -185,6 +187,73 @@ final class MultiSportTodayLoaderTests: XCTestCase {
 
         await loader.refreshIfNeeded()
         XCTAssertEqual(loader.dayPlan(on: "2026-09-30")?.date, "2026-09-30")
+    }
+
+    // MARK: - Abgleich mit dem Plan-Tab
+
+    func testAChangeInThePlanTabGetsANewPlanAtOnce() async throws {
+        let swim = DayTargetV2(focus: "Technik", sessions: [DayTargetV2.Session(sport: .swim, sessionType: .technique, intensity: .easy, amount: 1_500, focus: "Technik")])
+        let run = DayTargetV2(focus: "Locker", sessions: [DayTargetV2.Session(sport: .run, sessionType: .endurance, intensity: .easy, amount: 30, focus: "Locker")])
+        var target: DayTargetV2? = swim
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        let loader = makeLoader(dayTarget: { target }, provider: provider)
+        await loader.refreshIfNeeded()
+        XCTAssertEqual(provider.calls, 1)
+
+        // Unverändert: nichts zu tun.
+        await loader.syncWithTodayTarget()
+        XCTAssertEqual(provider.calls, 1)
+
+        target = run
+        XCTAssertFalse(loader.matchesTodayTarget)
+        XCTAssertNil(loader.dayPlan(on: "2026-09-30"), "Der alte Plan gilt nicht mehr")
+        await loader.syncWithTodayTarget()
+
+        XCTAssertEqual(provider.calls, 2)
+        XCTAssertEqual(provider.requests.last?.dayPlan, run)
+        XCTAssertTrue(loader.matchesTodayTarget)
+        XCTAssertNotNil(loader.dayPlan(on: "2026-09-30"))
+    }
+
+    func testARestDayInThePlanTabNeedsNoCall() async throws {
+        let swim = DayTargetV2(focus: "Technik", sessions: [DayTargetV2.Session(sport: .swim, sessionType: .technique, intensity: .easy, amount: 1_500, focus: "Technik")])
+        var target: DayTargetV2? = swim
+        let cache = MemoryCache()
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        let loader = makeLoader(cache: cache, dayTarget: { target }, provider: provider)
+        await loader.refreshIfNeeded()
+
+        target = DayTargetV2(focus: "Keine Zeit", sessions: [])
+        await loader.syncWithTodayTarget()
+
+        XCTAssertEqual(provider.calls, 1)
+        XCTAssertEqual(loader.response?.plan.isRestDay, true)
+        XCTAssertTrue(loader.matchesTodayTarget)
+        XCTAssertEqual(cache.stored?.plan.isRestDay, true)
+    }
+
+    func testANewDayPlanIsHandedToTheWeekAndKeepsMatching() async throws {
+        let swim = DayTargetV2(focus: "Technik", sessions: [DayTargetV2.Session(sport: .swim, sessionType: .technique, intensity: .easy, amount: 1_500, focus: "Technik")])
+        let adopted = DayTargetV2(focus: "Technik + Locker", sessions: [
+            DayTargetV2.Session(sport: .swim, sessionType: .technique, intensity: .easy, amount: 1_500, focus: "Technik"),
+            DayTargetV2.Session(sport: .run, sessionType: .endurance, intensity: .easy, amount: 30, focus: "Locker")
+        ])
+        var target: DayTargetV2? = swim
+        var handed: [DayPlanV2Response] = []
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        let loader = makeLoader(dayTarget: { target }, adoptPlan: { response in
+            handed.append(response)
+            target = adopted
+            return adopted
+        }, provider: provider)
+
+        await loader.refreshIfNeeded()
+
+        XCTAssertEqual(handed.count, 1)
+        XCTAssertEqual(loader.response?.requestedTarget, adopted)
+        XCTAssertTrue(loader.matchesTodayTarget, "Nach dem Übernehmen passt der Plan zur Woche")
+        await loader.refreshIfNeeded()
+        XCTAssertEqual(provider.calls, 1)
     }
 
     func testAFailedPreviewKeepsTheErrorForItsDay() async throws {

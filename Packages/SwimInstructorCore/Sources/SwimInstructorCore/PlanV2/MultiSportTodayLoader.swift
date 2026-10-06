@@ -42,6 +42,7 @@ public final class MultiSportTodayLoader: ObservableObject {
     private let previewStore: DayPlanPreviewStoring?
     private let targetOn: @MainActor (String) -> DayTargetV2?
     private let extrasOn: @MainActor (String) -> PlanningExtras
+    private let adoptPlan: @MainActor (DayPlanV2Response) -> DayTargetV2?
     private let now: () -> Date
     private let calendar: Calendar
 
@@ -52,6 +53,7 @@ public final class MultiSportTodayLoader: ObservableObject {
     ///   - prepare: läuft nach dem Lesen von Health und vor dem Tagesplan (Gesamtplan, sieben Tage).
     ///   - previewStore, targetOn, extrasOn: für die Vorschau kommender Tage im Plan-Tab: wo sie liegen, die Vorgabe
     ///     der sieben Tage und Kraft, Ort und freie Zeit für einen Tag.
+    ///   - adoptPlan: übernimmt einen neuen Tagesplan in die sieben Tage und liefert die Vorgabe danach (`nil`: keine).
     public init(
         authorizer: HealthDataAuthorizing?,
         snapshotBuilder: SnapshotBuilding,
@@ -68,6 +70,7 @@ public final class MultiSportTodayLoader: ObservableObject {
         previewStore: DayPlanPreviewStoring? = nil,
         targetOn: @escaping @MainActor (String) -> DayTargetV2? = { _ in nil },
         extrasOn: @escaping @MainActor (String) -> PlanningExtras = { _ in .none },
+        adoptPlan: @escaping @MainActor (DayPlanV2Response) -> DayTargetV2? = { _ in nil },
         now: @escaping () -> Date = { Date() },
         calendar: Calendar = .current
     ) {
@@ -86,6 +89,7 @@ public final class MultiSportTodayLoader: ObservableObject {
         self.previewStore = previewStore
         self.targetOn = targetOn
         self.extrasOn = extrasOn
+        self.adoptPlan = adoptPlan
         self.now = now
         self.calendar = calendar
         self.response = cache.load()
@@ -147,6 +151,29 @@ public final class MultiSportTodayLoader: ObservableObject {
         wish = wishStore?.wish(for: todayKey) ?? ""
     }
 
+    /// Nach einer Änderung an heute im Plan-Tab: den Tagesplan sofort an die neue Vorgabe anpassen, damit Heute und die
+    /// Watch dasselbe zeigen. Ein Tag ohne Einheiten (Ruhetag, keine Zeit) braucht keinen Claude-Aufruf.
+    public func syncWithTodayTarget() async {
+        guard !matchesTodayTarget, !isLoading, let reading else { return }
+        let target = dayTarget()
+        if let target, target.sessions.isEmpty, (target.extras ?? []).isEmpty {
+            var rest = DayPlanV2Response(
+                source: .cache, date: todayKey, generatedAt: now(), stale: false,
+                plan: DayPlanV2(rationale: "Heute ist laut Plan kein Training vorgesehen. Erhol dich gut.", sessions: [])
+            )
+            rest.requestedTarget = target
+            response = rest
+            planError = nil
+            try? cache.save(rest)
+            return
+        }
+        guard let provider = planProvider() else {
+            needsConfiguration = true
+            return
+        }
+        await fetchPlan(provider: provider, reading: reading, regenerate: false)
+    }
+
     // MARK: - Ein Tag im Plan-Tab
 
     /// Der konkrete Plan eines Tags: heute der Tagesplan, vorher der erste aus dem Verlauf, später die Vorschau, solange
@@ -154,7 +181,9 @@ public final class MultiSportTodayLoader: ObservableObject {
     public func dayPlan(on date: String) -> DayPlanV2Response? {
         let today = todayKey
         if date == today {
-            return response?.date == today ? response : planHistory.last { $0.date == date }
+            // Nach einer Änderung im Plan-Tab gilt der alte Plan nicht mehr, bis der neue da ist.
+            guard let response, response.date == today, matchesTodayTarget else { return nil }
+            return response
         }
         if date < today { return planHistory.last { $0.date == date } }
         guard let preview = previews[date], preview.requestedTarget == targetOn(date) else { return nil }
@@ -247,6 +276,12 @@ public final class MultiSportTodayLoader: ObservableObject {
         let todaysWish = wishStore?.wish(for: todayKey)
         wish = todaysWish ?? ""
 
+        await fetchPlan(provider: provider, reading: reading, regenerate: regenerate)
+    }
+
+    /// Holt den Tagesplan zur aktuellen Vorgabe und übernimmt ihn in die sieben Tage (`adoptPlan`).
+    private func fetchPlan(provider: DayPlanV2Providing, reading: AthleteStateReading, regenerate: Bool) async {
+        let todaysWish = wishStore?.wish(for: todayKey)
         let target = dayTarget()
         isLoadingPlan = true
         defer { isLoadingPlan = false }
@@ -261,7 +296,8 @@ public final class MultiSportTodayLoader: ObservableObject {
                 testSettings: testSettings(),
                 extras: extras()
             ))
-            fresh.requestedTarget = target
+            // Was der Tagesplan festlegt, gilt auch im Plan-Tab: Die Vorgabe danach gehört zu diesem Plan.
+            fresh.requestedTarget = adoptPlan(fresh) ?? target
             response = fresh
             planError = nil
             // Speichern ist Komfort; scheitert es, ist der Plan trotzdem da.

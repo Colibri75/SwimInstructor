@@ -44,6 +44,8 @@ public final class MultiSportWeekLoader: ObservableObject {
     public var feedbackProvider: @MainActor () -> [SessionFeedback] = { [] }
     /// Kraft und Mobilität, Ort und freie Zeit für die angefragten Tage.
     public var extrasProvider: @MainActor ([String]) -> PlanningExtras = { _ in .none }
+    /// Nach jeder Änderung von Hand im Plan-Tab: Heute und die Watch ziehen nach, wenn heute betroffen ist.
+    public var onEdit: @MainActor () -> Void = {}
 
     private let store: WeekPlanV2Storing
     private let dailyMarker: DailyRefreshMarking
@@ -303,6 +305,43 @@ public final class MultiSportWeekLoader: ObservableObject {
         let changed = change(current)
         guard changed != current else { return }
         save(weeks.filter { $0.weekStart != start } + [changed])
+        onEdit()
+    }
+
+    // MARK: - Tagesplan übernehmen
+
+    /// Übernimmt den Tagesplan von heute in die Woche (Sportart, Art, Umfang, Test, Koppeltraining, drinnen, Freiwasser,
+    /// Kraft und Mobilität). So zeigen Plan-Tab, Heute und Watch dasselbe, auch wenn der Tagesplan nach einem Wunsch
+    /// anders ausfällt als die Vorgabe. Ein Plan von einem anderen Tag oder ein Ersatzplan ändert nichts; ein Tag ohne Zeit
+    /// bleibt ohne Zeit. Liefert die Vorgabe für heute danach.
+    @discardableResult
+    public func adoptTodayPlan(_ response: DayPlanV2Response) -> DayTargetV2? {
+        let today = todayKey
+        guard response.date == today, response.source != .fallback,
+              let start = weekStart(of: today), let current = week(starting: start),
+              let index = current.days.firstIndex(where: { $0.date == today }), !current.days[index].isUnavailable else {
+            return todayTarget
+        }
+        let sessions = response.plan.sessions.map { session in
+            WeekSession(
+                sport: session.sport, sessionType: session.sessionType, intensity: session.intensity,
+                amount: session.amount, unit: session.unit, minutes: session.durationMinutes,
+                distanceMeters: session.distanceMeters, focus: session.focus, test: session.test,
+                brick: session.brick, indoor: session.indoor, openWater: session.openWater
+            )
+        }
+        let extras = response.plan.extras.map { WeekExtra(kind: $0.kind, minutes: $0.minutes, focus: $0.focus) }
+        var changed = current
+        var day = changed.days[index]
+        guard day.sessions != sessions || day.extras != extras else { return todayTarget }
+        if sessions.isEmpty != day.sessions.isEmpty {
+            day.focus = sessions.isEmpty ? "Ruhetag" : sessions.map(\.focus).joined(separator: " + ")
+        }
+        day.sessions = sessions
+        day.extras = extras
+        changed.days[index] = day
+        save(weeks.filter { $0.weekStart != start } + [changed])
+        return todayTarget
     }
 
     private func save(_ plans: [WeekPlanV2]) {

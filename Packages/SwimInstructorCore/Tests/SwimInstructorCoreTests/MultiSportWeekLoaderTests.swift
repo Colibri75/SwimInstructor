@@ -637,6 +637,65 @@ final class MultiSportWeekLoaderTests: XCTestCase {
         XCTAssertEqual(store.stored, loader.weeks)
     }
 
+    // MARK: - Abgleich mit dem Tagesplan
+
+    func testAnEditTellsTodayToFollow() {
+        let loader = makeLoader(store: MemoryStore([WeekLoaderV2Data.currentWeek()]), provider: nil)
+        var edits = 0
+        loader.onEdit = { edits += 1 }
+
+        loader.changeSport("2026-09-30", session: 0, to: .run)
+        loader.changeSport("2026-09-30", session: 0, to: .run)
+
+        XCTAssertEqual(edits, 1, "Nur eine echte Änderung zählt")
+    }
+
+    func testTodaysDayPlanIsTakenIntoTheWeek() {
+        let store = MemoryStore([WeekLoaderV2Data.currentWeek()])
+        let loader = makeLoader(store: store, provider: nil)
+        var edits = 0
+        loader.onEdit = { edits += 1 }
+        let run = DaySession(
+            sport: .run, sessionType: .endurance, intensity: .easy, focus: "Locker statt Schwimmen",
+            amount: 35, unit: .minutes, distanceMeters: 5_900, durationMinutes: 35, openWater: false,
+            steps: [PlanStep(name: "Locker", repetitions: 1, measure: .duration, durationSeconds: 2_100, cue: "Locker")]
+        )
+        let mobility = DayExtra(kind: .mobility, minutes: 10, focus: "Hüfte", exercises: [])
+        let response = DayPlanV2Response(source: .claude, date: "2026-09-30", generatedAt: TestFixtures.now, stale: false,
+                                          plan: DayPlanV2(rationale: "Wunsch: lieber laufen", sessions: [run], extras: [mobility]))
+
+        let target = loader.adoptTodayPlan(response)
+
+        let today = loader.todayEntry
+        XCTAssertEqual(today?.sessions.map(\.sport), [.run])
+        XCTAssertEqual(today?.sessions.first?.amount, 35)
+        XCTAssertEqual(today?.sessions.first?.minutes, 35)
+        XCTAssertEqual(today?.extras, [WeekExtra(kind: .mobility, minutes: 10, focus: "Hüfte")])
+        XCTAssertEqual(target, loader.todayTarget)
+        XCTAssertEqual(target?.sessions.map(\.sport), [.run])
+        XCTAssertEqual(store.saves, 1)
+        XCTAssertEqual(edits, 0, "Übernehmen ist keine Änderung von Hand")
+
+        // Derselbe Plan noch einmal ändert nichts.
+        loader.adoptTodayPlan(response)
+        XCTAssertEqual(store.saves, 1)
+    }
+
+    func testOtherDaysFallbackPlansAndDaysWithoutTimeStayAsTheyAre() {
+        let store = MemoryStore([WeekLoaderV2Data.currentWeek()])
+        let loader = makeLoader(store: store, provider: nil)
+        let rest = DayPlanV2(rationale: "Ruhe", sessions: [])
+
+        loader.adoptTodayPlan(DayPlanV2Response(source: .claude, date: "2026-09-29", generatedAt: TestFixtures.now, stale: false, plan: rest))
+        loader.adoptTodayPlan(DayPlanV2Response(source: .fallback, date: "2026-09-30", generatedAt: TestFixtures.now, stale: true, plan: rest))
+        XCTAssertEqual(store.saves, 0)
+
+        loader.markUnavailable("2026-09-30")
+        loader.adoptTodayPlan(DayPlanV2Response(source: .claude, date: "2026-09-30", generatedAt: TestFixtures.now, stale: false, plan: rest))
+        XCTAssertEqual(loader.todayEntry?.isUnavailable, true)
+        XCTAssertEqual(store.saves, 1, "Nur das Markieren")
+    }
+
     func testAMissedDayCanBeMovedToARestDay() {
         let store = MemoryStore([WeekLoaderV2Data.currentWeek()])
         let loader = makeLoader(store: store, provider: nil)

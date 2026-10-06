@@ -120,8 +120,14 @@ struct SwimInstructorApp: App {
             // Vorschau kommender Tage im Plan-Tab: Vorgabe der sieben Tage und freie Zeit des Tags.
             previewStore: FileDayPlanPreviewStore.standard(),
             targetOn: { [weak weekLoader] date in weekLoader?.day(on: date)?.target },
-            extrasOn: { date in planningExtras([date]) }
+            extrasOn: { date in planningExtras([date]) },
+            // Was der Tagesplan festlegt (auch nach einem Wunsch), steht danach auch im Plan-Tab.
+            adoptPlan: { [weak weekLoader] response in weekLoader?.adoptTodayPlan(response) }
         )
+        // Eine Änderung an heute im Plan-Tab gilt sofort auch in Heute und auf der Watch.
+        weekLoader.onEdit = { [weak loader] in
+            Task { await loader?.syncWithTodayTarget() }
+        }
         reviewRunner.onReviewed = { [weak loader] in await loader?.refreshIfNeeded() }
         weekLoader.equipmentProvider = equipment
         weekLoader.extrasProvider = planningExtras

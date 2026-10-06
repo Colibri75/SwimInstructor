@@ -125,6 +125,13 @@ struct TodayView: View {
         .padding(.vertical, 8)
     }
 
+    /// Der gespeicherte Tagesplan, solange er zum Wochenplan passt oder kein neuer unterwegs ist. Während der Coach den
+    /// Plan nach einer Änderung im Plan-Tab anpasst, verschwindet der alte, damit nichts Widersprüchliches zu sehen ist.
+    private var shownResponse: DayPlanV2Response? {
+        guard let response = loader.response else { return nil }
+        return loader.matchesTodayTarget || !loader.isLoadingPlan ? response : nil
+    }
+
     @ViewBuilder
     private var planSection: some View {
         Section {
@@ -132,10 +139,21 @@ struct TodayView: View {
                 forgeRow("Dein Coach passt deinen Plan für die nächsten Tage an …")
             }
             if loader.isLoadingPlan {
-                forgeRow("Dein Coach schreibt deinen Plan …")
+                forgeRow(loader.response != nil && !loader.matchesTodayTarget ? "Dein Coach passt den Plan an deine Änderung an …" : "Dein Coach schreibt deinen Plan …")
             }
-            if let response = loader.response {
+            if let response = shownResponse {
                 DayPlanHeaderView(response: response)
+                if !loader.matchesTodayTarget && response.date == loader.todayKey {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Der Plan für heute wurde im Plan-Tab geändert.", systemImage: "arrow.triangle.2.circlepath")
+                            .font(.footnote)
+                            .foregroundStyle(.orange)
+                        Button("Jetzt anpassen") {
+                            Task { await loader.syncWithTodayTarget() }
+                        }
+                        .disabled(loader.isLoading)
+                    }
+                }
             } else if !loader.isLoadingPlan {
                 emptyPlanRow
             }
@@ -148,7 +166,7 @@ struct TodayView: View {
             Text("Dein Plan, \(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))")
         }
         // Eine Karte je Einheit, damit Schwimmen und Laufen am selben Tag getrennt lesbar bleiben.
-        if let response = loader.response {
+        if let response = shownResponse {
             ForEach(Array(response.plan.sessions.enumerated()), id: \.offset) { index, session in
                 Section {
                     SessionCardView(
@@ -168,7 +186,7 @@ struct TodayView: View {
     /// Kraft- und Mobilitätsblöcke des Tages, je ein eigener Abschnitt nach den Einheiten.
     @ViewBuilder
     private var extrasSections: some View {
-        if let response = loader.response {
+        if let response = shownResponse {
             ForEach(Array(response.plan.extras.enumerated()), id: \.offset) { _, extra in
                 Section {
                     ExtraCardView(extra: extra)
