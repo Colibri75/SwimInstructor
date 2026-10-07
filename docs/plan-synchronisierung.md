@@ -1,7 +1,21 @@
 # Plan-Synchronisierung: Ist-Zustand und Vorschlag
 
-Stand 07.10.2026. Zum Durchsehen vor der Umsetzung: Welche Pläne es gibt, wo sie liegen, wer sie ändert, welche
-Ansicht was zeigt, wo es heute bricht und wie es sauber werden soll. Die offenen Fragen stehen am Ende.
+Stand 07.10.2026. Welche Pläne es gibt, wo sie liegen, wer sie ändert, welche Ansicht was zeigt, wo es brach und wie
+es jetzt geregelt ist.
+
+## Entschieden und umgesetzt (07.10.2026)
+
+| Entscheidung | Umsetzung |
+|---|---|
+| Änderungen von Hand bleiben dauerhaft | Von Hand geänderte Tage (`isEdited`) bleiben beim Neu-Abstimmen und gehen als `fixed_days` an den Server; der plant die anderen Tage darum herum (ihr Umfang zählt in die Wochengrenzen, feste harte Tage bei "nie zwei harte Tage hintereinander"). Im Tagesblatt: "Wieder deinem Coach überlassen". "Doch wieder Zeit" gibt den Tag dem Coach zurück. |
+| Heute bleibt stabil, nur auf deinen Wunsch geändert | Heute steht fest, sobald es einen Tagesplan oder eine Vorschau gibt oder schon trainiert wurde (`isTodayLocked`). Das Neu-Abstimmen (täglich, Beschwerden, Gesamtplan) ändert heute dann nicht mehr. Ändern: Plan-Tab, Wunsch oder Ziehen auf Heute. |
+| Vorschau am Tag selbst übernehmen | Gibt es für heute eine Vorschau mit gleicher Vorgabe, wird sie beim ersten Öffnen der Tagesplan, ohne Claude-Aufruf. |
+| Verlauf: letzter Stand des Tages | Der Verlauf hält je Tag den letzten Tagesplan; "Plan gegen Ist" vergleicht damit. |
+| Sofort-Fixes F1, F2, F4 | Eine Antwort, deren Vorgabe sich unterwegs geändert hat, wird verworfen und neu gefragt. Mehrere Tipps hintereinander ergeben eine Anfrage (1,5 s Pause). Ein Ersatzplan gilt nicht als passend und zeigt einen Hinweis. |
+
+Das Planbuch aus Abschnitt 6 (eine Datei für alles) ist damit nicht mehr nötig, um die Ansichten gleich zu halten:
+Die Regeln gelten auf den bestehenden Speichern. Es bleibt eine Option für später. Offen ist noch R9 (Watch zeigt
+"wird angepasst").
 
 ## 1. Welche Pläne es gibt
 

@@ -45,13 +45,14 @@ final class MultiSportTodayLoaderTests: XCTestCase {
         }
     }
 
-    /// Wie `FileDayPlanV2History`: pro Tag der erste Plan, ohne Fallback-Pläne.
+    /// Wie `FileDayPlanV2History`: pro Tag der letzte Plan, ohne Fallback-Pläne.
     private final class MemoryHistory: DayPlanV2HistoryStoring {
         var stored: [DayPlanV2Response]
         init(_ stored: [DayPlanV2Response] = []) { self.stored = stored }
         func load() -> [DayPlanV2Response] { stored }
         func record(_ response: DayPlanV2Response) throws {
-            guard response.source != .fallback, !stored.contains(where: { $0.date == response.date }) else { return }
+            guard response.source != .fallback else { return }
+            stored.removeAll { $0.date == response.date }
             stored.append(response)
             stored.sort { $0.date < $1.date }
         }
@@ -60,12 +61,16 @@ final class MultiSportTodayLoaderTests: XCTestCase {
     private final class CountingProvider: DayPlanV2Providing, @unchecked Sendable {
         var result: Result<DayPlanV2Response, Error>
         private(set) var requests: [DayPlanV2Request] = []
+        /// Läuft während einer Anfrage, etwa um eine Änderung im Plan-Tab nachzustellen.
+        var whileFetching: @MainActor (Int) -> Void = { _ in }
         init(_ result: Result<DayPlanV2Response, Error>) { self.result = result }
         var calls: Int { requests.count }
         var newPlanCalls: Int { requests.filter(\.regenerate).count }
 
         func fetchDayPlanV2(_ request: DayPlanV2Request) async throws -> DayPlanV2Response {
             requests.append(request)
+            let call = requests.count
+            await whileFetching(call)
             return try result.get()
         }
     }
@@ -254,6 +259,95 @@ final class MultiSportTodayLoaderTests: XCTestCase {
         XCTAssertTrue(loader.matchesTodayTarget, "Nach dem Übernehmen passt der Plan zur Woche")
         await loader.refreshIfNeeded()
         XCTAssertEqual(provider.calls, 1)
+    }
+
+    // MARK: - Synchronisierung nach Entscheidung
+
+    func testAChangeDuringARunningRequestWinsOverTheOldAnswer() async throws {
+        let swim = DayTargetV2(focus: "Technik", sessions: [DayTargetV2.Session(sport: .swim, sessionType: .technique, intensity: .easy, amount: 1_500, focus: "Technik")])
+        let run = DayTargetV2(focus: "Locker", sessions: [DayTargetV2.Session(sport: .run, sessionType: .endurance, intensity: .easy, amount: 30, focus: "Locker")])
+        var target: DayTargetV2? = swim
+        var adopted: [DayTargetV2?] = []
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        // Während die erste Anfrage (Schwimmen) läuft, ändert der Athlet heute auf Laufen.
+        provider.whileFetching = { call in if call == 1 { target = run } }
+        let loader = makeLoader(dayTarget: { target }, adoptPlan: { response in
+            adopted.append(target)
+            return target
+        }, provider: provider)
+
+        await loader.refreshIfNeeded()
+
+        // Die Antwort für Schwimmen wird verworfen, nicht übernommen; danach wird für Laufen gefragt.
+        XCTAssertEqual(provider.requests.map(\.dayPlan), [swim, run])
+        XCTAssertEqual(adopted, [run])
+        XCTAssertEqual(loader.response?.requestedTarget, run)
+        XCTAssertTrue(loader.matchesTodayTarget)
+    }
+
+    func testSeveralChangesInARowGiveOneRequest() async throws {
+        var target: DayTargetV2? = DayTargetV2(focus: "A", sessions: [DayTargetV2.Session(sport: .run, sessionType: .endurance, intensity: .easy, amount: 30, focus: "A")])
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        let loader = makeLoader(dayTarget: { target }, provider: provider)
+        await loader.refreshIfNeeded()
+
+        for amount in [35.0, 40, 45] {
+            target = DayTargetV2(focus: "A", sessions: [DayTargetV2.Session(sport: .run, sessionType: .endurance, intensity: .easy, amount: amount, focus: "A")])
+            loader.scheduleSync(after: 0.05)
+        }
+        try await Task.sleep(nanoseconds: 400_000_000)
+
+        XCTAssertEqual(provider.calls, 2)
+        XCTAssertEqual(provider.requests.last?.dayPlan?.sessions.first?.amount, 45)
+    }
+
+    func testAFallbackPlanIsShownButDoesNotCountAsMatching() async throws {
+        let target = DayTargetV2(focus: "Locker", sessions: [DayTargetV2.Session(sport: .run, sessionType: .endurance, intensity: .easy, amount: 30, focus: "Locker")])
+        var adopted = 0
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response(source: .fallback)))
+        let loader = makeLoader(dayTarget: { target }, adoptPlan: { _ in adopted += 1; return target }, provider: provider)
+
+        await loader.refreshIfNeeded()
+
+        XCTAssertEqual(loader.response?.source, .fallback)
+        XCTAssertNil(loader.response?.requestedTarget)
+        XCTAssertFalse(loader.matchesTodayTarget)
+        XCTAssertEqual(adopted, 0, "Ein Ersatzplan kommt nicht in die Woche")
+        XCTAssertNil(loader.dayPlan(on: "2026-09-30"))
+    }
+
+    func testThePreviewBecomesTodaysPlanWithoutACall() async throws {
+        let target = DayTargetV2(focus: "Locker", sessions: [DayTargetV2.Session(sport: .run, sessionType: .endurance, intensity: .easy, amount: 30, focus: "Locker")])
+        var preview = TodayLoaderV2Data.response(date: "2026-09-30")
+        preview.requestedTarget = target
+        let history = MemoryHistory()
+        let previews = MemoryPreviews([preview])
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        // Gestern als Vorschau geholt: Der Lader startet heute (Vorschauen von heute bleiben beim Start).
+        let loader = makeLoader(history: history, dayTarget: { target }, previewStore: previews, provider: provider)
+
+        XCTAssertTrue(loader.isTodayLocked, "Eine Vorschau für heute hält heute fest")
+        await loader.refreshIfNeeded()
+
+        XCTAssertEqual(provider.calls, 0)
+        XCTAssertEqual(loader.response, preview)
+        XCTAssertEqual(history.stored.map(\.date), ["2026-09-30"])
+        XCTAssertTrue(previews.stored.isEmpty)
+        XCTAssertTrue(loader.isTodayLocked)
+    }
+
+    func testTheHistoryKeepsTheLastPlanOfTheDay() async throws {
+        let history = MemoryHistory()
+        var target: DayTargetV2? = DayTargetV2(focus: "A", sessions: [DayTargetV2.Session(sport: .swim, sessionType: .endurance, intensity: .easy, amount: 1_500, focus: "A")])
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        let loader = makeLoader(history: history, dayTarget: { target }, provider: provider)
+        await loader.refreshIfNeeded()
+
+        target = DayTargetV2(focus: "Ruhetag", sessions: [])
+        await loader.syncWithTodayTarget()
+
+        XCTAssertEqual(history.stored.count, 1)
+        XCTAssertEqual(history.stored.first?.plan.isRestDay, true)
     }
 
     func testAFailedPreviewKeepsTheErrorForItsDay() async throws {

@@ -278,7 +278,7 @@ struct WeekView: View {
         } header: {
             Text("Planen")
         } footer: {
-            Text("Die App plant die nächsten sieben Tage jeden Tag beim ersten Öffnen neu und stimmt sie auf deinen Zustand, dein Training der letzten Tage und den Gesamtplan ab. \"Keine Zeit\" bleibt dabei erhalten, andere Änderungen von Hand gelten bis zur nächsten Anpassung. Die genauen Schritte mit Equipment entstehen am Tag selbst im Tab Heute.")
+            Text("Die App plant die nächsten sieben Tage jeden Tag beim ersten Öffnen neu und stimmt sie auf deinen Zustand, dein Training der letzten Tage und den Gesamtplan ab. \"Keine Zeit\" und deine Änderungen von Hand bleiben dabei, bis du einen Tag wieder deinem Coach überlässt. Heute bleibt, sobald es einen Plan dafür gibt, und ändert sich nur auf deinen Wunsch. Die genauen Schritte mit Equipment stehen im Tab Heute.")
         }
     }
 }

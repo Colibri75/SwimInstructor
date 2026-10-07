@@ -28,6 +28,11 @@ und die Zeile aus `GET /v1/admin/usage` (Ergebnis, Grund, Dauer).
       am selben Tag wartet nicht und plant nicht neu
 - [ ] Gesamtplan (Plan-Tab, Gesamtplan) plausibel: Umfang steigt langsam, etwa jede vierte Woche Entlastung,
       Zuspitzen vor dem Ziel
+- [ ] Synchronisierung: Während Heute noch lädt, im Plan-Tab heute von Schwimmen auf Laufen ändern: Am Ende zeigen
+      Heute, Plan-Tab und Watch Laufen. Den Umfang mehrmals schnell ändern: eine Anpassung mit dem letzten Wert
+- [ ] Einen kommenden Tag von Hand ändern, "Nächste 7 Tage neu planen": Der Tag bleibt (Stecknadel "von dir festgelegt"),
+      "Wieder deinem Coach überlassen" plant ihn neu. Heute bleibt beim Neu-Planen, sobald es einen Plan gibt
+- [ ] Vorschau für morgen holen, am nächsten Tag öffnen: Heute zeigt genau die Vorschau (keine Schmiede-Animation)
 - [ ] Plan-Tab, auf einen Tag tippen: heute und vergangene Tage zeigen den Trainingsplan mit allen Schritten; bei einem
       kommenden Tag "Trainingsplan anzeigen" tippen, nach der Schmiede-Animation stehen Einheiten, Schritte und Equipment da
       und bleiben beim nächsten Öffnen; nach einer Änderung an dem Tag lässt sich die Vorschau neu holen

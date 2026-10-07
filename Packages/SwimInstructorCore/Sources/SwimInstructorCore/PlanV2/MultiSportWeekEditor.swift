@@ -43,7 +43,8 @@ public enum MultiSportWeekEditor {
             day.content = day.contentBeforeUnavailable ?? .rest()
             day.contentBeforeUnavailable = nil
             day.isUnavailable = false
-            day.isEdited = true
+            // Das Training von vorher kommt zurück; der Coach darf den Tag wieder abstimmen.
+            day.isEdited = false
         }
     }
 
@@ -169,15 +170,16 @@ public enum MultiSportWeekEditor {
 
     // MARK: - Neu planen
 
-    /// Übernimmt neu geplante Tage: Tage vor `fromDate` bleiben (sie sind vorbei), ab `fromDate` gilt der neue Plan,
-    /// Tage ohne Zeit behalten ihre Markierung. Mit `through` bleiben auch die Tage danach, die der neue Plan nicht kennt.
-    public static func merge(existing: WeekPlanV2?, generated: WeekPlanV2, fromDate: String, through: String? = nil) -> WeekPlanV2 {
+    /// Übernimmt neu geplante Tage: Tage vor `fromDate` bleiben (sie sind vorbei), ab `fromDate` gilt der neue Plan. Tage
+    /// ohne Zeit, von Hand geänderte Tage und die Tage in `keep` (etwa heute, wenn es schon einen Tagesplan gibt) bleiben,
+    /// wie sie sind. Mit `through` bleiben auch die Tage danach, die der neue Plan nicht kennt.
+    public static func merge(existing: WeekPlanV2?, generated: WeekPlanV2, fromDate: String, through: String? = nil, keep: Set<String> = []) -> WeekPlanV2 {
         guard let existing, existing.weekStart == generated.weekStart else { return generated }
         let kept = existing.days.filter { day in
             day.date < fromDate || (through.map { day.date > $0 && generated.day(on: day.date) == nil } ?? false)
         }
         let incoming = generated.days.filter { $0.date >= fromDate }.map { day -> PlannedDay in
-            if let old = existing.day(on: day.date), old.isUnavailable { return old }
+            if let old = existing.day(on: day.date), old.isUnavailable || old.isEdited || keep.contains(day.date) { return old }
             return day
         }
         return WeekPlanV2(
@@ -188,6 +190,14 @@ public enum MultiSportWeekEditor {
             wishes: generated.wishes,
             days: kept + incoming
         )
+    }
+
+    /// Gibt einen von Hand geänderten Tag an den Coach zurück: Beim nächsten Abstimmen plant er ihn wieder.
+    public static func release(_ plan: WeekPlanV2, date: String) -> WeekPlanV2 {
+        guard plan.day(on: date)?.isEdited == true else { return plan }
+        return update(plan, date) { day in
+            day.isEdited = false
+        }
     }
 
     // MARK: - Intern

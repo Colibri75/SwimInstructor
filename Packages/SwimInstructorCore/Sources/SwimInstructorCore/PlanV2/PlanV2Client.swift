@@ -195,6 +195,21 @@ public struct DayPlanV2Request: Equatable, Sendable {
 }
 
 /// Anfrage für die nächsten sieben Tage v2 (`POST /v1/plan/week` mit `plan_version: 2`).
+/// Ein fester Tag für die Anfrage der sieben Tage (`fixed_days`): Datum und Vorgabe wie beim Tagesplan.
+public struct FixedDayV2: Encodable, Equatable, Sendable {
+    public let date: String
+    public let focus: String?
+    public let sessions: [DayTargetV2.Session]
+    public let extras: [DayTargetV2.Extra]?
+
+    public init(date: String, target: DayTargetV2) {
+        self.date = date
+        self.focus = target.focus
+        self.sessions = target.sessions
+        self.extras = target.extras
+    }
+}
+
 public struct WeekPlanV2Request: Equatable, Sendable {
     public var snapshot: AthleteStateSnapshot
     /// Erster der sieben Tage, meist heute.
@@ -202,6 +217,8 @@ public struct WeekPlanV2Request: Equatable, Sendable {
     public var today: String
     /// Tage ohne Zeit, sie werden Ruhetage.
     public var unavailableDates: [String]
+    /// Feste Tage (von Hand geändert, heute schon geplant): Sie bleiben, die anderen Tage richten sich danach.
+    public var fixedDays: [FixedDayV2]
     public var recentTraining: [RecentTrainingEntry]
     /// Die Wochen des Gesamtplans, in die die sieben Tage fallen (höchstens drei gehen mit).
     public var macroWeeks: [MacroWeekV2]
@@ -220,6 +237,7 @@ public struct WeekPlanV2Request: Equatable, Sendable {
         fromDate: String,
         today: String,
         unavailableDates: [String] = [],
+        fixedDays: [FixedDayV2] = [],
         recentTraining: [RecentTrainingEntry] = [],
         macroWeeks: [MacroWeekV2] = [],
         wishes: String? = nil,
@@ -233,6 +251,7 @@ public struct WeekPlanV2Request: Equatable, Sendable {
         self.fromDate = fromDate
         self.today = today
         self.unavailableDates = unavailableDates
+        self.fixedDays = fixedDays
         self.recentTraining = recentTraining
         self.macroWeeks = macroWeeks
         self.wishes = wishes
@@ -367,6 +386,7 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
             fromDate: request.fromDate,
             today: request.today,
             unavailableDates: request.unavailableDates,
+            fixedDays: request.fixedDays.isEmpty ? nil : Array(request.fixedDays.prefix(7)),
             recentTraining: request.recentTraining,
             macroWeeks: request.macroWeeks.isEmpty ? nil : Array(request.macroWeeks.prefix(3)),
             wishes: Self.cleaned(request.wishes),
@@ -481,6 +501,7 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
         let fromDate: String
         let today: String
         let unavailableDates: [String]
+        let fixedDays: [FixedDayV2]?
         let recentTraining: [RecentTrainingEntry]
         let macroWeeks: [MacroWeekV2]?
         let wishes: String?

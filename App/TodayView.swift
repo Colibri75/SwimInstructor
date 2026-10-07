@@ -145,7 +145,12 @@ struct TodayView: View {
                 DayPlanHeaderView(response: response)
                 if !loader.matchesTodayTarget && response.date == loader.todayKey {
                     VStack(alignment: .leading, spacing: 8) {
-                        Label("Der Plan für heute wurde im Plan-Tab geändert.", systemImage: "arrow.triangle.2.circlepath")
+                        Label(
+                            response.source == .fallback
+                                ? "Ersatzplan: Dein Coach war nicht erreichbar, der Plan passt vielleicht nicht zum Wochenplan."
+                                : "Der Plan für heute wurde im Plan-Tab geändert.",
+                            systemImage: "arrow.triangle.2.circlepath"
+                        )
                             .font(.footnote)
                             .foregroundStyle(.orange)
                         Button("Jetzt anpassen") {

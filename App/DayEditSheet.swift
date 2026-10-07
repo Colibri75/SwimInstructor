@@ -82,10 +82,18 @@ struct DayEditSheet: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
-                if day.isEdited {
-                    Label("von dir angepasst", systemImage: "pencil")
+                if day.isEdited && !day.isUnavailable {
+                    Label("von dir festgelegt: bleibt beim Abstimmen", systemImage: "pin.fill")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
+                    if date > weekLoader.todayKey {
+                        Button("Wieder deinem Coach überlassen") {
+                            weekLoader.release(date)
+                            Task { await weekLoader.planNextDays() }
+                        }
+                        .font(.footnote)
+                        .disabled(weekLoader.isLoading)
+                    }
                 }
             } else {
                 Text("Für diesen Tag gibt es keinen Plan.")
@@ -286,7 +294,7 @@ struct DayEditSheet: View {
             Text("Tag anpassen")
         } footer: {
             Text(date == weekLoader.todayKey
-                 ? "Eine Änderung gilt sofort auch im Tab Heute und auf der Watch: Dein Coach passt die Einheiten an."
+                 ? "Eine Änderung gilt sofort auch im Tab Heute und auf der Watch: Dein Coach passt die Einheiten an. Was du festlegst, bleibt; heute ändert sich sonst nur auf deinen Wunsch."
                  : "Höchstens \(MultiSportWeekEditor.maxSessionsPerDay) Einheiten am Tag. Beim Tausch der Sportart rechnet die App den Umfang über die Dauer um.")
         }
     }

@@ -318,19 +318,39 @@ final class MultiSportWeekLoaderTests: XCTestCase {
         XCTAssertEqual(loader.day(on: "2026-10-02")?.content, friday.content)
     }
 
-    func testAnEditedDayInsideTheWindowTakesTheNewPlan() async throws {
-        // Neu planen bringt die Woche wieder ins Gleichgewicht: Im Fenster gilt der Plan des Servers (nur Tage ohne
-        // Zeit behalten ihre Markierung).
-        let loader = makeLoader(store: MemoryStore([WeekLoaderV2Data.currentWeek()]), provider: FakeProvider())
+    func testAnEditedDayStaysAndIsSentAsFixed() async throws {
+        // Von Hand geändert bleibt dauerhaft: Der Server bekommt den Tag als fest und plant die anderen darum herum.
+        let provider = FakeProvider()
+        let loader = makeLoader(store: MemoryStore([WeekLoaderV2Data.currentWeek()]), provider: provider)
         loader.changeSport("2026-10-02", session: 0, to: .bike)
-        XCTAssertEqual(loader.day(on: "2026-10-02")?.isEdited, true)
+        let edited = try XCTUnwrap(loader.day(on: "2026-10-02"))
 
         await loader.planNextDays()
 
+        XCTAssertEqual(provider.requests.first?.fixedDays.map(\.date), ["2026-10-02"])
+        XCTAssertEqual(provider.requests.first?.fixedDays.first?.sessions.map(\.sport), [.bike])
+        XCTAssertEqual(loader.day(on: "2026-10-02"), edited)
+
+        // Zurück an den Coach: Beim nächsten Abstimmen plant er den Tag wieder.
+        loader.release("2026-10-02")
+        await loader.planNextDays()
         let friday = try XCTUnwrap(loader.day(on: "2026-10-02"))
         XCTAssertFalse(friday.isEdited)
-        XCTAssertEqual(friday.focus, "Leistungstest Rad")
         XCTAssertEqual(friday.sessions.first?.test?.id, "threshold_30min")
+    }
+
+    func testTodayStaysWhenItIsLocked() async throws {
+        let provider = FakeProvider()
+        let loader = makeLoader(store: MemoryStore([WeekLoaderV2Data.currentWeek()]), provider: provider)
+        let today = try XCTUnwrap(loader.todayEntry)
+        loader.todayLockedProvider = { true }
+
+        await loader.planNextDays()
+
+        XCTAssertEqual(provider.requests.first?.fixedDays.map(\.date), ["2026-09-30"])
+        XCTAssertEqual(loader.todayEntry, today)
+        // Die anderen Tage kommen vom Server.
+        XCTAssertEqual(loader.day(on: "2026-10-01")?.sessions.map(\.sport), [SportID.swim])
     }
 
     func testOnlyDaysWithoutTimeInsideTheWindowAreSent() async throws {

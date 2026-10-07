@@ -148,7 +148,7 @@ final class PlanV2StoreTests: XCTestCase {
         XCTAssertEqual(reloaded.first, Self.response(date: "2026-09-28"))
     }
 
-    func testFirstPlanOfADayWins() throws {
+    func testLastPlanOfADayWins() throws {
         let history = FileDayPlanV2History(fileURL: file("plan-history-v2.json"))
         let morning = Self.response(date: "2026-09-30", rationale: "Morgens")
         let evening = Self.response(date: "2026-09-30", source: .cache, rationale: "Abends")
@@ -156,7 +156,7 @@ final class PlanV2StoreTests: XCTestCase {
         try history.record(morning)
         try history.record(evening)
 
-        XCTAssertEqual(history.load(), [morning])
+        XCTAssertEqual(history.load(), [evening])
     }
 
     func testFallbackPlansAreNotRecorded() throws {

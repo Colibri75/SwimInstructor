@@ -150,7 +150,8 @@ final class MultiSportWeekEditorTests: XCTestCase {
         XCTAssertNil(day.contentBeforeUnavailable)
         XCTAssertEqual(day.content, original.content)
         XCTAssertEqual(day.focus, "Koppeltraining")
-        XCTAssertTrue(day.isEdited)
+        // Das Training von vorher ist wieder da; der Coach darf den Tag wieder abstimmen.
+        XCTAssertFalse(day.isEdited)
         XCTAssertEqual(cleared.plannedMinutes, base.plannedMinutes)
     }
 
@@ -162,7 +163,7 @@ final class MultiSportWeekEditorTests: XCTestCase {
         XCTAssertFalse(day.isUnavailable)
         XCTAssertTrue(day.isRestDay)
         XCTAssertEqual(day.focus, "Ruhetag")
-        XCTAssertTrue(day.isEdited)
+        XCTAssertFalse(day.isEdited)
     }
 
     func testClearingADayThatIsAvailableChangesNothing() {
@@ -665,17 +666,30 @@ final class MultiSportWeekEditorTests: XCTestCase {
         XCTAssertEqual(merged.day(on: "2026-09-30")?.sessions.map(\.sport), [SportID.bike])
     }
 
-    func testMergeReplacesEditedDaysFromTheStartDateOn() {
-        // Ab dem Starttag gilt der neue Plan, auch für von Hand geänderte Tage.
+    func testMergeKeepsEditedDaysAndKeptDays() {
+        // Von Hand geänderte Tage bleiben dauerhaft; `keep` hält auch einen Tag des Coachs fest (heute mit Tagesplan).
         let edited = MultiSportWeekEditor.addSession(base, date: "2026-10-01", sport: .swim)
-        let new = Self.plan([Self.day("2026-10-01", "Neu Do", [Self.runSession(30, meters: 5000)])])
+        let new = Self.plan([
+            Self.day("2026-09-30", "Neu Mi", [Self.runSession(30, meters: 5000)]),
+            Self.day("2026-10-01", "Neu Do", [Self.runSession(30, meters: 5000)]),
+            Self.day("2026-10-03", "Neu Sa", [Self.runSession(30, meters: 5000)])
+        ])
 
-        let merged = MultiSportWeekEditor.merge(existing: edited, generated: new, fromDate: "2026-09-30")
+        let merged = MultiSportWeekEditor.merge(existing: edited, generated: new, fromDate: "2026-09-30", keep: ["2026-09-30"])
 
-        XCTAssertEqual(merged.day(on: "2026-10-01")?.focus, "Neu Do")
-        XCTAssertEqual(merged.day(on: "2026-10-01")?.isEdited, false)
-        // Ohne Fenster gilt ab dem Starttag nur der neue Plan.
-        XCTAssertEqual(merged.days.map(\.date), ["2026-10-01"])
+        XCTAssertEqual(merged.day(on: "2026-10-01"), edited.day(on: "2026-10-01"))
+        XCTAssertEqual(merged.day(on: "2026-09-30"), edited.day(on: "2026-09-30"))
+        XCTAssertEqual(merged.day(on: "2026-10-03")?.focus, "Neu Sa")
+    }
+
+    func testReleasingAnEditedDayHandsItBackToTheCoach() throws {
+        let edited = MultiSportWeekEditor.addSession(base, date: "2026-10-01", sport: .swim)
+
+        let released = MultiSportWeekEditor.release(edited, date: "2026-10-01")
+
+        XCTAssertEqual(released.day(on: "2026-10-01")?.isEdited, false)
+        XCTAssertEqual(released.day(on: "2026-10-01")?.sessions, edited.day(on: "2026-10-01")?.sessions)
+        XCTAssertEqual(MultiSportWeekEditor.release(base, date: "2026-10-01"), base, "Ein Tag des Coachs bleibt, wie er ist")
     }
 
     func testMergeKeepsDaysWithoutTimeEvenIfTheServerPlannedThem() throws {

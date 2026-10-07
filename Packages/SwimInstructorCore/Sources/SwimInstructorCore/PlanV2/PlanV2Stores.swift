@@ -54,7 +54,7 @@ public struct FileDayPlanV2Cache: DayPlanV2Caching {
 
 /// Die Tagespläne der letzten Wochen für "Plan gegen Ist".
 public protocol DayPlanV2HistoryStoring {
-    /// Alle gespeicherten Pläne, ältester zuerst, höchstens einer pro Tag.
+    /// Alle gespeicherten Pläne, ältester zuerst, höchstens einer pro Tag (der letzte Stand des Tages).
     func load() -> [DayPlanV2Response]
     func record(_ response: DayPlanV2Response) throws
 }
@@ -79,12 +79,11 @@ public struct FileDayPlanV2History: DayPlanV2HistoryStoring {
         stored()
     }
 
-    /// Pro Tag zählt der erste Plan (nach ihm konnte der Athlet sich richten); Fallback-Pläne sind nur Kopien älterer
-    /// und kommen nicht hinein.
+    /// Pro Tag zählt der letzte Plan: Nach einer Änderung (Plan-Tab, Wunsch) vergleicht "Plan gegen Ist" mit dem, was
+    /// zuletzt galt. Fallback-Pläne sind nur Kopien älterer und kommen nicht hinein.
     public func record(_ response: DayPlanV2Response) throws {
         guard response.source != .fallback else { return }
-        var entries = stored()
-        guard !entries.contains(where: { $0.date == response.date }) else { return }
+        var entries = stored().filter { $0.date != response.date }
         entries.append(response)
         entries.sort { $0.date < $1.date }
         if entries.count > maxEntries {

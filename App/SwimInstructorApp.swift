@@ -124,10 +124,10 @@ struct SwimInstructorApp: App {
             // Was der Tagesplan festlegt (auch nach einem Wunsch), steht danach auch im Plan-Tab.
             adoptPlan: { [weak weekLoader] response in weekLoader?.adoptTodayPlan(response) }
         )
-        // Eine Änderung an heute im Plan-Tab gilt sofort auch in Heute und auf der Watch.
-        weekLoader.onEdit = { [weak loader] in
-            Task { await loader?.syncWithTodayTarget() }
-        }
+        // Eine Änderung an heute im Plan-Tab gilt auch in Heute und auf der Watch (mehrere Tipps hintereinander: eine Anfrage).
+        weekLoader.onEdit = { [weak loader] in loader?.scheduleSync() }
+        // Steht heute fest (Tagesplan, Vorschau, schon trainiert), bleibt es beim Neu-Abstimmen der sieben Tage.
+        weekLoader.todayLockedProvider = { [weak loader] in loader?.isTodayLocked ?? false }
         reviewRunner.onReviewed = { [weak loader] in await loader?.refreshIfNeeded() }
         weekLoader.equipmentProvider = equipment
         weekLoader.extrasProvider = planningExtras

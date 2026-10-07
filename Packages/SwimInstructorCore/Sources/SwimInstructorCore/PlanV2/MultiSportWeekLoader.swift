@@ -46,6 +46,9 @@ public final class MultiSportWeekLoader: ObservableObject {
     public var extrasProvider: @MainActor ([String]) -> PlanningExtras = { _ in .none }
     /// Nach jeder Änderung von Hand im Plan-Tab: Heute und die Watch ziehen nach, wenn heute betroffen ist.
     public var onEdit: @MainActor () -> Void = {}
+    /// Ob heute feststeht (es gibt schon einen Tagesplan oder eine Vorschau, oder es wurde schon trainiert): Dann bleibt
+    /// heute beim Neu-Abstimmen, wie es ist.
+    public var todayLockedProvider: @MainActor () -> Bool = { false }
 
     private let store: WeekPlanV2Storing
     private let dailyMarker: DailyRefreshMarking
@@ -177,11 +180,13 @@ public final class MultiSportWeekLoader: ObservableObject {
         let dates = weekCalendar.dates(from: fromDate, count: Self.windowDays)
         let through = dates.last ?? fromDate
         let unavailable = Set(dates.filter { day(on: $0)?.isUnavailable == true })
+        let fixed = fixedDates(in: dates)
         let request = WeekPlanV2Request(
             snapshot: context.snapshot,
             fromDate: fromDate,
             today: fromDate,
             unavailableDates: unavailable.sorted(),
+            fixedDays: fixed.compactMap { date in day(on: date).map { FixedDayV2(date: date, target: $0.target) } },
             // Mit heute: Beschwerden nach einer Einheit von heute bremsen schon die nächsten Tage (der Server zählt
             // heutige Einheiten nur dafür, nicht für die Grenzen davor).
             recentTraining: recentTraining(
@@ -203,7 +208,7 @@ public final class MultiSportWeekLoader: ObservableObject {
         defer { isLoading = false }
         do {
             let response = try await provider.fetchWeekPlanV2(request)
-            apply(response, fromDate: fromDate, through: through)
+            apply(response, fromDate: fromDate, through: through, keep: Set(fixed))
             error = nil
             return true
         } catch {
@@ -231,7 +236,18 @@ public final class MultiSportWeekLoader: ObservableObject {
     }
 
     /// Verteilt die Tage der Antwort auf ihre Kalenderwochen und führt sie mit den gespeicherten zusammen.
-    private func apply(_ response: WeekPlanV2Response, fromDate: String, through: String) {
+    /// Tage, die beim Neu-Abstimmen bleiben: von Hand geänderte und heute, wenn es feststeht. Tage ohne Zeit gehen
+    /// getrennt mit.
+    public func fixedDates(in dates: [String]) -> [String] {
+        let today = todayKey
+        let todayLocked = todayLockedProvider()
+        return dates.filter { date in
+            guard let day = day(on: date), !day.isUnavailable else { return false }
+            return day.isEdited || (date == today && todayLocked)
+        }
+    }
+
+    private func apply(_ response: WeekPlanV2Response, fromDate: String, through: String, keep: Set<String> = []) {
         var byWeek: [String: [PlannedDay]] = [:]
         for day in response.plan.days {
             guard let start = weekStart(of: day.date) else { continue }
@@ -248,7 +264,7 @@ public final class MultiSportWeekLoader: ObservableObject {
                 days: days
             )
             let merged = MultiSportWeekEditor.merge(
-                existing: updated.first { $0.weekStart == weekStart }, generated: generated, fromDate: fromDate, through: through
+                existing: updated.first { $0.weekStart == weekStart }, generated: generated, fromDate: fromDate, through: through, keep: keep
             )
             updated = updated.filter { $0.weekStart != weekStart } + [merged]
         }
@@ -286,6 +302,11 @@ public final class MultiSportWeekLoader: ObservableObject {
     public func changeSport(_ date: String, session index: Int, to sport: SportID) {
         let registry = self.registry
         edit(date) { MultiSportWeekEditor.changeSport($0, date: date, session: index, to: sport, registry: registry) }
+    }
+
+    /// Gibt einen von Hand geänderten Tag an den Coach zurück (beim nächsten Abstimmen plant er ihn wieder).
+    public func release(_ date: String) {
+        edit(date) { MultiSportWeekEditor.release($0, date: date) }
     }
 
     /// Zwei Tage derselben Woche tauschen.
