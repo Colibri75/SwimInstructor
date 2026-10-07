@@ -16,6 +16,7 @@ struct MacroPlanSections: View {
     @State private var feedback = ""
     /// Der letzte Fehler kam aus dem Feedback (nicht aus dem Neuberechnen): Er steht dann beim Feedback-Feld.
     @State private var errorFromFeedback = false
+    @State private var confirmsRegenerate = false
 
     init(onSelectWeek: @escaping (String) -> Void) {
         self.onSelectWeek = onSelectWeek
@@ -152,23 +153,30 @@ private struct ActualWeekRow: View {
                 Text("Noch kein Gesamtplan. Er legt die Wochen bis zu deinem Ziel für alle Sportarten fest, die nächsten sieben Tage richten sich danach.")
                     .foregroundStyle(.secondary)
             }
-            // Neu berechnet wird nur ohne gültigen Plan; sonst schreibt die App ihn alle zwei Wochen fort.
-            if macroLoader.plan == nil || !macroLoader.isCurrent || macroLoader.isLoading {
-                Button {
-                    guard let snapshot = todayLoader.reading?.snapshot else { return }
-                    errorFromFeedback = false
-                    Task { await macroLoader.regenerate(snapshot: snapshot) }
-                } label: {
-                    if macroLoader.isLoading {
-                        HStack(spacing: 12) {
-                            ForgeAnimation()
-                            Text("Dein Coach plant bis zum Ziel …")
-                        }
-                    } else {
-                        Text("Gesamtplan erstellen")
-                    }
+            // Ohne gültigen Plan direkt; einen gültigen Plan neu zu erstellen, fragt erst nach (Feedback beginnt von vorn).
+            Button {
+                if macroLoader.plan != nil && macroLoader.isCurrent {
+                    confirmsRegenerate = true
+                } else {
+                    regenerate()
                 }
-                .disabled(isBusy || todayLoader.reading == nil || !settings.hasToken)
+            } label: {
+                if macroLoader.isLoading {
+                    HStack(spacing: 12) {
+                        ForgeAnimation()
+                        Text("Dein Coach plant bis zum Ziel …")
+                    }
+                } else if macroLoader.plan != nil && macroLoader.isCurrent {
+                    Label("Gesamtplan neu erstellen", systemImage: "arrow.clockwise")
+                } else {
+                    Text("Gesamtplan erstellen")
+                }
+            }
+            .disabled(isBusy || todayLoader.reading == nil || !settings.hasToken)
+            .confirmationDialog("Gesamtplan neu erstellen?", isPresented: $confirmsRegenerate, titleVisibility: .visible) {
+                Button("Neu erstellen") { regenerate() }
+            } message: {
+                Text("Dein Coach plant alle Wochen bis zum Ziel neu, mit deinem aktuellen Stand. Die laufende Woche bleibt, die Feedback-Runden beginnen von vorn. Danach werden die nächsten sieben Tage angepasst; deine festgelegten Tage und heute bleiben.")
             }
             if let error = macroLoader.error, !errorFromFeedback {
                 Label(error, systemImage: "exclamationmark.triangle")
@@ -178,7 +186,18 @@ private struct ActualWeekRow: View {
         } header: {
             Text("Gesamtplan bis zum Ziel")
         } footer: {
-            Text("Der Gesamtplan entsteht beim Start und bei einem neuen Ziel. Danach schreibt die App ihn alle zwei Wochen mit deinem Ist fort; vergangene Wochen bleiben stehen.")
+            Text("Der Gesamtplan entsteht beim Start und bei einem neuen Ziel. Danach schreibt die App ihn alle zwei Wochen mit deinem Ist fort; vergangene Wochen bleiben stehen. Mit \"Gesamtplan neu erstellen\" plant dein Coach ihn jederzeit von vorn.")
+        }
+    }
+
+    /// Neu berechnen und danach die nächsten sieben Tage an den neuen Gesamtplan anpassen.
+    private func regenerate() {
+        guard let snapshot = todayLoader.reading?.snapshot else { return }
+        errorFromFeedback = false
+        Task {
+            if await macroLoader.regenerate(snapshot: snapshot) {
+                await todayLoader.refreshIfNeeded()
+            }
         }
     }
 
