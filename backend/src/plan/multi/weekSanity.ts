@@ -3,7 +3,7 @@ import { Intensity, SessionType } from "../vocabulary";
 import { SnapshotV2 } from "../snapshot";
 import { addDays, weekdayName } from "../calendar";
 import { dayLimits, DayLimitsV2, dayMinutesCap, hardOn, lower, MULTI_RULES, painRestriction, RANK, sportLimits, SportLimitsNow, testBlackoutReason } from "./limits";
-import { Availability, MacroWeekTargetV2, MissedSession, MultiWeekPlanRaw, RecentTraining, ReplanReason, Supplements, TestSettings, WeekSessionRaw } from "./schemas";
+import { Availability, FixedDay, MacroWeekTargetV2, MissedSession, MultiWeekPlanRaw, RecentTraining, ReplanReason, Supplements, TestSettings, WeekSessionRaw } from "./schemas";
 import { DayWeather, severeWeather } from "../weather";
 import { EXERCISE_RULES, EXTRA_RULES, normalizeWeekExtras, perWeek, strengthBlackout, WeekExtra } from "./extras";
 import { amountToMeters, amountToMinutes, floorAmount, formatAmount, plannedSports, roundAmount, sportName } from "./sports";
@@ -26,6 +26,11 @@ export interface WeekContextV2 {
   /** Die sieben Tage ab `from_date`, aufsteigend. */
   dates: string[];
   unavailable: string[];
+  /**
+   * Feste Tage (vom Athleten geaendert oder heute schon geplant): Sie bleiben genau so, zaehlen aber fuer die Grenzen der
+   * Woche (Umfang, Einheiten, Trainingstage, harte Tage). Claude plant die anderen Tage um sie herum.
+   */
+  fixed?: FixedDay[];
   /** Training vor dem ersten geplanten Tag (Information fuer Claude, harte Einheiten zaehlen fuer "nie hintereinander"). */
   recent: RecentTraining[];
   /**
@@ -178,8 +183,10 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
   if (problem !== null) return { plan: { rationale: input.rationale, total_minutes: 0, days: [] }, adjustments: [], blocked: problem };
 
   const notes: string[] = [];
-  const week = weekLimitsV2(snapshot, context);
   const unplanned = new Set<string>();
+  // Feste Tage: stehen schon, ihr Umfang geht von den Grenzen der Woche ab.
+  const pinned = fixedDays(context, weekLimitsV2(snapshot, context));
+  const week = reserveFixed(weekLimitsV2(snapshot, context), pinned);
 
   // 1. Genau die angefragten Tage, jeder einmal.
   const byDate = new Map<string, MultiWeekPlanRaw["days"][number]>();
@@ -193,6 +200,8 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
     const focus = raw?.focus.trim().slice(0, MULTI_RULES.maxFocusLength) ?? "";
     let sessions = (raw?.sessions ?? []).flatMap((session) => toDraft(session, week, unplanned));
     const extras = normalizeWeekExtras(raw?.extras, context.supplements);
+    // Ein fester Tag ist fuer die Pruefung leer; seine Einheiten kommen am Ende zurueck.
+    if (pinned.has(date)) return { date, focus: "", sessions: [], extras: [] };
     // 2. Keine Zeit (auch laut Kalender) oder Ruhetag laut Wochenraster: Ruhetag. An einem Tag mit fester Sportart nur diese.
     if (context.unavailable.includes(date)) {
       if (sessions.length > 0) notes.push(`${label(date)}: keine Zeit, als Ruhetag gesetzt`);
@@ -259,11 +268,11 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
     notes.push(`${label(day.date)}: nur eine harte Einheit am Tag, die anderen auf "moderate" gesenkt`);
     return { ...day, sessions: day.sessions.map((draft) => (isHard(draft) && draft !== keep ? soften(draft, "moderate") : draft)) };
   });
-  days = limitHardDays(days, week, notes);
+  days = limitHardDays(days, week, notes, new Set([...pinned.values()].filter((day) => day.sessions.some(isHard)).map((day) => day.date)));
 
   // 8. Je Sportart: Zahl der Einheiten und Wochengrenze.
   for (const [sportId, limits] of week.sports) {
-    const max = limits.sport.planning.limits.maxSessionsPerWeek;
+    const max = Math.max(limits.sport.planning.limits.maxSessionsPerWeek - fixedCount(pinned, sportId), 0);
     for (;;) {
       const own = days.flatMap((day) => day.sessions.filter((draft) => draft.sport.id === sportId).map((draft) => ({ day, draft })));
       if (own.length <= max) break;
@@ -279,7 +288,8 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
   }
 
   // 9. Nicht mehr Trainingstage als im Ziel, und in einer vollen Woche mindestens ein Ruhetag.
-  const maxDays = Math.min(week.maxTrainingDays, context.dates.length >= 6 ? context.dates.length - 1 : context.dates.length);
+  const fixedTraining = [...pinned.values()].filter((day) => day.sessions.length > 0).length;
+  const maxDays = Math.max(Math.min(week.maxTrainingDays, context.dates.length >= 6 ? context.dates.length - 1 : context.dates.length) - fixedTraining, 0);
   for (;;) {
     const training = days.filter((day) => day.sessions.length > 0);
     if (training.length <= maxDays) break;
@@ -305,6 +315,9 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
 
   // 13. Kraft und Mobilitaet: so oft wie gewuenscht, Kraft nicht vor einem harten Tag und nicht kurz vor dem Ziel, in der Tageszeit.
   days = placeExtras(days, snapshot, context, week, free, notes);
+
+  // 14. Die festen Tage zurueck, wie der Athlet sie festgelegt hat.
+  days = days.map((day) => pinned.get(day.date) ?? day);
 
   const result = days.map(finalizeDay);
   const adjustments = notes.slice(0, MULTI_RULES.maxAdjustmentLines);
@@ -539,9 +552,10 @@ function limitSession(draft: Draft, date: string, notes: string[]): Draft[] {
  * Tage mit einem Test kommen zuerst zum Zug, dann die uebrigen in der Reihenfolge der Tage. Was nicht passt, wird
  * leichter: ein Test zur lockeren Einheit, eine harte Einheit "moderate".
  */
-function limitHardDays(days: DraftDay[], week: WeekLimitsV2, notes: string[]): DraftDay[] {
+function limitHardDays(days: DraftDay[], week: WeekLimitsV2, notes: string[], fixedHard: ReadonlySet<string> = new Set()): DraftDay[] {
   const result = [...days];
-  const hard = new Set<number>();
+  // Harte feste Tage stehen schon: Sie zaehlen mit und duerfen keine harten Nachbarn bekommen.
+  const hard = new Set<number>(days.flatMap((day, index) => (fixedHard.has(day.date) ? [index] : [])));
   const neighbourHard = (index: number) => (index === 0 ? week.hardBefore : hard.has(index - 1)) || hard.has(index + 1);
   for (const testsFirst of [true, false]) {
     result.forEach((day, index) => {
@@ -666,6 +680,52 @@ function limitIntensity(days: DraftDay[], notes: string[]): DraftDay[] {
     days = days.map((other) => (other.date === day.date ? { ...other, sessions: other.sessions.map((item) => (item === draft ? soften(item, "easy") : item)) } : other));
   }
   return days;
+}
+
+/** Die festen Tage der Anfrage als Entwurf (nur Tage im Plan und mit Zeit), je Datum. */
+function fixedDays(context: WeekContextV2, week: WeekLimitsV2): Map<string, DraftDay> {
+  const result = new Map<string, DraftDay>();
+  for (const day of context.fixed ?? []) {
+    if (!context.dates.includes(day.date) || context.unavailable.includes(day.date) || result.has(day.date)) continue;
+    const sessions = day.sessions.flatMap((session) =>
+      toDraft(
+        {
+          sport: session.sport,
+          session_type: session.session_type,
+          intensity: session.intensity,
+          amount: session.amount,
+          focus: session.focus,
+          test_id: session.test_id ?? null,
+          brick: session.brick ?? false,
+          indoor: session.indoor ?? false,
+          open_water: session.open_water ?? false
+        },
+        week,
+        new Set()
+      )
+    );
+    const extras = (day.extras ?? []).map((extra) => ({ kind: extra.kind, minutes: extra.minutes, focus: extra.focus.trim().slice(0, MULTI_RULES.maxFocusLength) }));
+    result.set(day.date, { date: day.date, focus: day.focus?.trim().slice(0, MULTI_RULES.maxFocusLength) ?? "", sessions, extras });
+  }
+  return result;
+}
+
+/** Was die festen Tage verbrauchen, steht den anderen Tagen nicht mehr zur Verfuegung. */
+function reserveFixed(week: WeekLimitsV2, fixed: ReadonlyMap<string, DraftDay>): WeekLimitsV2 {
+  if (fixed.size === 0) return week;
+  const drafts = [...fixed.values()].flatMap((day) => day.sessions);
+  const sports = new Map(
+    [...week.sports].map(([id, limits]): [string, SportLimitsNow] => {
+      const used = drafts.filter((draft) => draft.sport.id === id).reduce((sum, draft) => sum + draft.amount, 0);
+      return [id, used > 0 ? { ...limits, weeklyCap: Math.max(limits.weeklyCap - used, 0) } : limits];
+    })
+  );
+  const minutes = drafts.reduce((sum, draft) => sum + minutesOf(draft), 0);
+  return { ...week, sports, maxMinutes: Math.max(week.maxMinutes - minutes, 0) };
+}
+
+function fixedCount(fixed: ReadonlyMap<string, DraftDay>, sportId: string): number {
+  return [...fixed.values()].reduce((sum, day) => sum + day.sessions.filter((draft) => draft.sport.id === sportId).length, 0);
 }
 
 function dayMinutes(day: DraftDay): number {

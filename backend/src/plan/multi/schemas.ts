@@ -256,6 +256,10 @@ export const DayTargetV2Schema = z.object({
   extras: z.array(TargetExtra).max(2).optional()
 });
 
+/** Ein Tag, den der Athlet festgelegt hat (von Hand geaendert oder heute schon geplant): Er bleibt, wie er ist. */
+export const FixedDaySchema = DayTargetV2Schema.extend({ date: DateString });
+export type FixedDay = z.infer<typeof FixedDaySchema>;
+
 /** Wie oft pro Woche Kraft und Mobilitaet dazukommen sollen (Einstellung in der App). */
 export const SupplementsSchema = z.object({
   strength_per_week: z.number().int().min(0).max(3),
@@ -308,6 +312,8 @@ export const WeekRequestV2Schema = z
     from_date: DateString,
     today: DateString,
     unavailable_dates: z.array(DateString).max(7).optional(),
+    /** Feste Tage: bleiben unveraendert, die anderen Tage werden um sie herum geplant. */
+    fixed_days: z.array(FixedDaySchema).max(7).optional(),
     recent_training: RecentTrainingSchema.optional(),
     missed_sessions: z.array(MissedSessionSchema).max(14).optional(),
     reason: z.enum(REPLAN_REASONS).optional(),

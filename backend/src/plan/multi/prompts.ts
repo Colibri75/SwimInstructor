@@ -666,6 +666,19 @@ function weekTestLines(snapshot: SnapshotV2, context: WeekContextV2): string[] {
   });
 }
 
+/** Was an einem festen Tag steht, kurz: "Laufen, endurance, easy, 40 min". `null`, wenn der Tag nicht fest ist. */
+function fixedDayText(context: WeekContextV2, date: string): string | null {
+  const day = (context.fixed ?? []).find((entry) => entry.date === date);
+  if (day === undefined) return null;
+  if (day.sessions.length === 0) return "Ruhetag";
+  return day.sessions
+    .map((session) => {
+      const sport = SPORTS.get(session.sport);
+      return sport === undefined ? session.sport : `${sport.displayName}, ${session.session_type}, ${session.intensity}, ${formatAmount(sport, session.amount)}`;
+    })
+    .join(" + ");
+}
+
 export function buildWeekUserMessageV2(input: WeekPromptInput): string {
   const { snapshot, context } = input;
   const week = weekLimitsV2(snapshot, context);
@@ -675,7 +688,11 @@ export function buildWeekUserMessageV2(input: WeekPromptInput): string {
   for (const date of context.dates) {
     const scheduled = scheduleDayText(snapshot, date);
     const extra = dayExtrasText(date, context.availability, context.weather);
-    lines.push(`- ${weekdayName(date)} ${date}${context.unavailable.includes(date) ? " (keine Zeit: Ruhetag)" : scheduled !== null ? ` (${scheduled})` : ""}${extra !== "" ? `; ${extra}` : ""}`);
+    const pinned = fixedDayText(context, date);
+    lines.push(`- ${weekdayName(date)} ${date}${context.unavailable.includes(date) ? " (keine Zeit: Ruhetag)" : pinned !== null ? ` (fest: ${pinned})` : scheduled !== null ? ` (${scheduled})` : ""}${extra !== "" ? `; ${extra}` : ""}`);
+  }
+  if ((context.fixed ?? []).some((day) => context.dates.includes(day.date))) {
+    lines.push("Tage mit \"fest\" hat der Athlet selbst festgelegt: Übernimm sie genau so (gleiche Einheiten), sie zählen voll für alle Grenzen. Plane die anderen Tage passend dazu, zum Beispiel nichts Hartes direkt vor oder nach einem festen harten Tag.");
   }
 
   lines.push(

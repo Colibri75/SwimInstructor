@@ -29,6 +29,7 @@ import {
 import {
   DayTargetV2,
   FeedbackRound,
+  FixedDay,
   MacroReviewSchema,
   MacroRevisionSchema,
   MacroWeekTargetV2,
@@ -110,6 +111,8 @@ export interface WeekInputV2 {
   fromDate: string;
   today: string;
   unavailable: string[];
+  /** Feste Tage (von Hand geaendert, heute schon geplant): bleiben, wie sie sind. */
+  fixed?: FixedDay[];
   /** Training der Tage davor; Eintraege ab `fromDate` (heute schon trainiert) zaehlen nur mit ihren Beschwerden. */
   recent: RecentTraining[];
   missed?: MissedSession[];
@@ -357,6 +360,7 @@ export class MultiPlanService {
       ...(weather.length > 0 ? { weather } : {}),
       ...(input.supplements !== undefined ? { supplements: input.supplements } : {}),
       unavailable: input.unavailable,
+      ...(input.fixed !== undefined && input.fixed.length > 0 ? { fixed: input.fixed } : {}),
       recent: input.recent.filter((entry) => entry.date < input.fromDate),
       reports: input.recent.filter((entry) => (entry.pain ?? 0) > 0),
       ...(input.missed !== undefined && input.missed.length > 0 ? { missed: input.missed } : {}),
