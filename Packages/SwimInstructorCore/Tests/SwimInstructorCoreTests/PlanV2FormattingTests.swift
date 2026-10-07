@@ -200,7 +200,7 @@ final class PlanV2FormattingTests: XCTestCase {
     func testNoticeForAnEarlierPlanOfToday() {
         XCTAssertEqual(
             PlanV2Formatting.sourceNotice(Self.dayResponse(source: .fallback, stale: false, reason: "budget_exceeded")),
-            "Früherer Plan von heute. Das Tageslimit für neue Pläne ist erreicht."
+            "Früherer Plan von heute. Das Stunden- oder Tageslimit für neue Pläne ist erreicht (10 pro Stunde, 20 pro Tag). Versuch es später noch einmal."
         )
         XCTAssertEqual(
             PlanV2Formatting.sourceNotice(Self.dayResponse(source: .fallback, stale: false, reason: nil)),

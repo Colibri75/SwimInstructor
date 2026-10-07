@@ -75,7 +75,7 @@ public enum PlanFormatting {
     /// Satz zum Ausfallgrund des Servers (`fallback_reason`), für Fehlermeldungen und Hinweise zum Plan.
     static func fallbackReason(_ reason: String?) -> String {
         switch reason {
-        case "budget_exceeded": return "Das Tageslimit für neue Pläne ist erreicht."
+        case "budget_exceeded": return "Das Stunden- oder Tageslimit für neue Pläne ist erreicht (10 pro Stunde, 20 pro Tag). Versuch es später noch einmal."
         case "not_configured": return "Auf dem Server ist der Coach nicht eingerichtet."
         case "unreachable", "timeout", "rate_limited", "upstream_error":
             return "Dein Coach war gerade nicht erreichbar."

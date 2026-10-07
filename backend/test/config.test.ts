@@ -65,7 +65,7 @@ describe("loadConfig: Claude und Plan", () => {
       claudeServerFallback: true,
       dataDir: "./data",
       planTimezone: "Europe/Berlin",
-      maxGenerationsPerHour: 5,
+      maxGenerationsPerHour: 10,
       maxGenerationsPerDay: 20
     });
   });

@@ -71,7 +71,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     claudeServerFallback: parseBoolean("PLAN_SERVER_FALLBACK", env.PLAN_SERVER_FALLBACK, true),
     dataDir: env.DATA_DIR?.trim() || "./data",
     planTimezone: parseTimezone(env.PLAN_TIMEZONE),
-    maxGenerationsPerHour: parseInteger("PLAN_MAX_GENERATIONS_PER_HOUR", env.PLAN_MAX_GENERATIONS_PER_HOUR, 5, 1, 1_000),
+    maxGenerationsPerHour: parseInteger("PLAN_MAX_GENERATIONS_PER_HOUR", env.PLAN_MAX_GENERATIONS_PER_HOUR, 10, 1, 1_000),
     maxGenerationsPerDay: parseInteger("PLAN_MAX_GENERATIONS_PER_DAY", env.PLAN_MAX_GENERATIONS_PER_DAY, 20, 1, 10_000),
     maxGenerationsTotalPerHour: parseInteger("PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR", env.PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR, 15, 1, 10_000),
     maxGenerationsTotalPerDay: parseInteger("PLAN_MAX_GENERATIONS_TOTAL_PER_DAY", env.PLAN_MAX_GENERATIONS_TOTAL_PER_DAY, 60, 1, 100_000),

@@ -53,7 +53,7 @@ Text zusammenpassen. Was nicht mehr zu retten ist, blockt sie (`sanity_blocked`)
 
 ## Kostenbremse
 
-Der Server ruft Claude je Nutzer höchstens 5-mal pro Stunde und 20-mal pro Tag auf (`PLAN_MAX_GENERATIONS_PER_HOUR`,
+Der Server ruft Claude je Nutzer höchstens 10-mal pro Stunde und 20-mal pro Tag auf (`PLAN_MAX_GENERATIONS_PER_HOUR`,
 `PLAN_MAX_GENERATIONS_PER_DAY`), über alle Nutzer höchstens 15-mal pro Stunde und 60-mal pro Tag
 (`PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR`, `_TOTAL_PER_DAY`); alle Pläne zählen zusammen. Darüber liefert er den letzten gültigen Tagesplan
 (`fallback_reason: budget_exceeded`) bzw. 503. Ein durchgesickerter Token kann so nur begrenzt Kosten erzeugen. Der
@@ -103,7 +103,7 @@ nicht, dazu die Nutzung je Anfrage (Nutzerkennung, Plan-Art, Ergebnis, Token, Da
 | `PLAN_SERVER_FALLBACK` | `true` | Bei Ablehnung durch Claudes Sicherheitsklassifikatoren automatisch ein anderes Modell versuchen |
 | `DATA_DIR` | `./data` (im Container `/data`) | Letzter Tagesplan (`latest-plan-v2.json`, weitere Nutzer unter `users/<kennung>/`), Nutzer (`users.json`), Nutzung (`metrics/`) |
 | `PLAN_TIMEZONE` | `Europe/Berlin` | Zeitzone für "heute" |
-| `PLAN_MAX_GENERATIONS_PER_HOUR` | `5` | Kostenbremse je Nutzer |
+| `PLAN_MAX_GENERATIONS_PER_HOUR` | `10` | Kostenbremse je Nutzer |
 | `PLAN_MAX_GENERATIONS_PER_DAY` | `20` | Kostenbremse je Nutzer |
 | `PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR` | `15` | Kostenbremse des ganzen Servers |
 | `PLAN_MAX_GENERATIONS_TOTAL_PER_DAY` | `60` | Kostenbremse des ganzen Servers |
