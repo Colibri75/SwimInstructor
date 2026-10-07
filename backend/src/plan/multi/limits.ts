@@ -308,7 +308,25 @@ export function painRestriction(recent: readonly RecentTraining[], sportId: stri
   return { blocked: false, maxIntensity: "moderate", amountFactor: 1, reason, until };
 }
 
-export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly RecentTraining[] = []): DayLimitsV2 {
+/** Umfang einer Einheit aus dem Verlauf in der Einheit der Sportart (Meter oder Minuten). */
+export function recentAmount(sport: SportDefinition, entry: RecentTraining): number {
+  return sport.planning.limitUnit === "meters" ? entry.meters : entry.minutes;
+}
+
+/**
+ * Was der Verlauf in den sechs Tagen vor `date` fuer eine Sportart hatte: mit `date` sind das die 7 Tage, fuer die
+ * `weeklyCap` gilt. So rechnen Wochenplan und Vorschau mit demselben gleitenden Fenster wie der Tagesplan am Tag selbst.
+ */
+export function recentBefore(sport: SportDefinition, recent: readonly RecentTraining[], date: string): number {
+  const from = addDays(date, -6);
+  return recent.filter((entry) => entry.sport === sport.id && entry.date >= from && entry.date < date).reduce((sum, entry) => sum + recentAmount(sport, entry), 0);
+}
+
+/**
+ * Die Grenzen fuer einen Tag. Am Tag selbst zaehlen die letzten 7 Tage aus Health (mit dem Training von heute); bei einer
+ * Vorschau (`preview`) die Einheiten aus `recent` in den sechs Tagen davor.
+ */
+export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly RecentTraining[] = [], preview = false): DayLimitsV2 {
   const restReason = snapshot.flags.includes("overreaching_risk")
     ? "Erholungswerte schlecht bei hoher Belastung (Übertrainingsrisiko)"
     : scheduleDay(snapshot, today)?.trains === false
@@ -336,7 +354,8 @@ export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly 
   const sports = new Map<string, SportDayLimits>();
   for (const sport of plannedSports(snapshot)) {
     const limits = sportLimits(snapshot, sport);
-    let maxAmount = Math.min(limits.sessionCap, limits.weeklyCap - limits.lastSeven);
+    const lastSeven = preview ? recentBefore(sport, recent, today) : limits.lastSeven;
+    let maxAmount = Math.min(limits.sessionCap, limits.weeklyCap - lastSeven);
     if (poor) maxAmount *= MULTI_RULES.recoveryPoorFactor;
     const pain = painRestriction(recent, sport.id, today);
     if (pain !== null) maxAmount *= pain.amountFactor;
@@ -357,7 +376,7 @@ export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly 
         : pain?.blocked === true
         ? `${pain.reason}: Pause bis ${pain.until.slice(8, 10)}.${pain.until.slice(5, 7)}.`
         : maxAmount < sport.planning.limits.minSession
-        ? limits.weeklyCap - limits.lastSeven < sport.planning.limits.minSession
+        ? limits.weeklyCap - lastSeven < sport.planning.limits.minSession
           ? "Wochenumfang ausgeschöpft"
           : "zu wenig sicherer Umfang"
         : null;
@@ -368,7 +387,7 @@ export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly 
       intensityReasons: reasons,
       sessionCap: limits.sessionCap,
       weeklyCap: limits.weeklyCap,
-      lastSeven: limits.lastSeven,
+      lastSeven,
       reducedForRecovery: poor
     });
   }

@@ -309,6 +309,7 @@ export class MultiPlanService {
     const weather = input.location !== undefined ? (await this.weatherFor(input.location, [date]))[0] : undefined;
     const options: DayOptionsV2 = {
       date,
+      preview: true,
       equipment: input.equipment,
       recent: input.recent ?? [],
       testSettings: input.testSettings,

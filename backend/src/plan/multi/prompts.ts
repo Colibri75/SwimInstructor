@@ -4,7 +4,7 @@ import { StepTarget } from "../../sports/vocabulary";
 import { daysBetween, mondayOf } from "../calendar";
 import { SnapshotV2 } from "../snapshot";
 import { weekDates, weekdayName } from "../calendar";
-import { dayLimits, DayLimitsV2, dayMinutesCap, declaredLevelText, goalDayOf, MULTI_RULES, painAreaText, painRestriction, phaseOf, realismGaps, SportDayLimits, sportLimits, taperFactors, taperWeeks, testBlackoutReason, weeksToGoal } from "./limits";
+import { dayLimits, DayLimitsV2, dayMinutesCap, declaredLevelText, goalDayOf, MULTI_RULES, painAreaText, painRestriction, phaseOf, realismGaps, recentBefore, SportDayLimits, sportLimits, taperFactors, taperWeeks, testBlackoutReason, weeksToGoal } from "./limits";
 import { goalKind, isFitnessGoal, scheduleDayText, trainingDaysPerWeek, weeklyMinutes } from "./schedule";
 import { MacroContextV2, macroSportLimits } from "./macroSanity";
 import {
@@ -542,7 +542,7 @@ export interface DayPromptInput {
 
 export function buildDayUserMessageV2(input: DayPromptInput): string {
   const { snapshot, date } = input;
-  const today = dayLimits(snapshot, date, input.recent ?? []);
+  const today = dayLimits(snapshot, date, input.recent ?? [], input.preview === true);
   const lines = [
     input.preview === true
       ? `Erstelle die Einheiten für ${weekdayName(date)}, ${date}. Das ist eine Vorschau für einen kommenden Tag: "heute" meint unten diesen Tag; das Training bis dahin kennst du nur aus dem Wochenplan, am Tag selbst wird der Plan noch einmal abgestimmt.`
@@ -679,6 +679,20 @@ function fixedDayText(context: WeekContextV2, date: string): string | null {
     .join(" + ");
 }
 
+/**
+ * Die Wochengrenze gilt fuer jede Spanne von 7 Tagen (wie im Tagesplan am Tag selbst): Was vor dem Plan trainiert wurde,
+ * zaehlt an den ersten Tagen mit. `null`, wenn davon nichts in die geplanten Tage reicht.
+ */
+function carriedText(sport: SportDefinition, context: WeekContextV2): string | null {
+  const parts = context.dates
+    .filter((date) => date !== context.today)
+    .map((date) => ({ date, amount: recentBefore(sport, context.recent, date) }))
+    .filter((entry) => entry.amount > 0)
+    .map((entry) => `bis ${weekdayName(entry.date)} ${entry.date.slice(8, 10)}.${entry.date.slice(5, 7)}. schon ${formatAmount(sport, entry.amount)}`);
+  if (parts.length === 0) return null;
+  return `Die Grenze gilt für jede Spanne von 7 Tagen, auch über den Planbeginn: Vom Training davor zählen in den 7 Tagen ${parts.join(", ")}, dazu was du an den Tagen davor planst. Lege Tests und lange Einheiten auf Tage mit genug Platz.`;
+}
+
 export function buildWeekUserMessageV2(input: WeekPromptInput): string {
   const { snapshot, context } = input;
   const week = weekLimitsV2(snapshot, context);
@@ -706,6 +720,8 @@ export function buildWeekUserMessageV2(input: WeekPromptInput): string {
     lines.push(
       `- ${sport.displayName} (sport "${sport.id}", amount in ${UNIT_NAME[sport.planning.limitUnit]}): je Einheit ${formatAmount(sport, planning.minSession)} bis ${formatAmount(sport, limits.sessionCap)}, zusammen höchstens ${formatAmount(sport, limits.weeklyCap)}, höchstens ${planning.maxSessionsPerWeek} Einheiten${limits.pause ? "; Wiedereinstieg nach Pause: nur locker" : ""}.`
     );
+    const carried = carriedText(sport, context);
+    if (carried !== null) lines.push(`  ${carried}`);
   }
   if (week.today !== null) {
     lines.push(`- Heute (${context.today}):`, ...dayLimitLines(snapshot, week.today, false).map((line) => `  ${line}`));

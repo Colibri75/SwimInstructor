@@ -133,7 +133,10 @@ describe("Szenarien fuer mehrere Sportarten", () => {
     expect(days.filter((day) => day.sessions.length > 0).map((day) => day.date)).toEqual(["2026-09-30", "2026-10-01", "2026-10-03", "2026-10-04"]);
     expect(days[1].sessions.map((entry) => entry.sport)).toEqual(["bike"]);
     expect(days[4].sessions.map((entry) => entry.sport)).toEqual(["run"]);
-    expect(days.map((day) => day.sessions.reduce((sum, entry) => sum + entry.minutes, 0))).toEqual([40, 58, 0, 75, 47, 0, 0]);
+    // Sonntag: 25 min Laufen vor dem Plan und 40 min am Mittwoch liegen in denselben 7 Tagen, der Lauftest (47 min) passt
+    // nicht mehr unter 110 min; am Tag selbst saehe der Tagesplan das genauso.
+    expect(days.map((day) => day.sessions.reduce((sum, entry) => sum + entry.minutes, 0))).toEqual([40, 58, 0, 75, 45, 0, 0]);
+    expect(item.week.result!.adjustments[0]).toBe("Sonntag, 04.10.: kein Leistungstest Laufen (in 7 Tagen höchstens 110 min, davon schon 65 min), lockere Einheit statt dessen");
   });
 
   it("haelt das Laufen nach der Verletzungspause kurz und locker", () => {

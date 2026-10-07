@@ -172,7 +172,12 @@ Wochengrenze.
 **Sieben Tage:** genau die angefragten Tage; ein Tag ohne Zeit wird Ruhetag. Höchstens zwei harte Tage über alle
 Sportarten, nie hintereinander, auch nicht direkt nach einem harten Tag vor dem Plan. Nicht mehr Trainingstage als im
 Ziel, mindestens ein Ruhetag, insgesamt höchstens die Wochenstunden. Je Sportart Einheiten- und Wochengrenze und die
-Zahl der Einheiten. Etwa 80 % der Zeit locker (Drei-Zonen-Modell): Von jeder mittleren oder harten Einheit zählt die
+Zahl der Einheiten. Die Wochengrenze gilt wie im Tagesplan für jede Spanne von 7 Tagen, auch über den Planbeginn: Für
+jeden kommenden Tag zählen das Training davor (`recent`) und die geplanten Tage davor mit. Passt ein Test an seinem Tag
+nicht, tauscht er mit einer lockeren Einheit derselben Sportart an einem späteren Tag, an dem er passt (Testregeln und
+harte Tage bleiben gewahrt); sonst wird er locker. Die Vorschau eines kommenden Tags rechnet das Fenster ab diesem Tag
+aus dem Verlauf; am Tag selbst gelten die Werte aus Health. So kündigt der Wochenplan nichts an, was der Tagesplan
+danach streicht. Etwa 80 % der Zeit locker (Drei-Zonen-Modell): Von jeder mittleren oder harten Einheit zählt die
 Hälfte als intensiv (Ein- und Auslaufen, Pausen); sind ab drei Einheiten mehr als 20 % der Wochenminuten intensiv,
 werden mittlere Einheiten locker, die längsten zuerst (Tests und harte Einheiten bleiben). Was nicht passt, wird gekürzt, leichter oder gestrichen; jede Korrektur steht in `adjustments`
 und als Hinweis in der Begründung.

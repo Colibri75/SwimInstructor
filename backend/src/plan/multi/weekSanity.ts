@@ -2,7 +2,7 @@ import { LimitUnit, SportDefinition } from "../../sports/types";
 import { Intensity, SessionType } from "../vocabulary";
 import { SnapshotV2 } from "../snapshot";
 import { addDays, weekdayName } from "../calendar";
-import { dayLimits, DayLimitsV2, dayMinutesCap, hardOn, lower, MULTI_RULES, painRestriction, RANK, sportLimits, SportLimitsNow, testBlackoutReason } from "./limits";
+import { dayLimits, DayLimitsV2, dayMinutesCap, hardOn, lower, MULTI_RULES, painRestriction, RANK, recentBefore, sportLimits, SportLimitsNow, testBlackoutReason } from "./limits";
 import { Availability, FixedDay, MacroWeekTargetV2, MissedSession, MultiWeekPlanRaw, RecentTraining, ReplanReason, Supplements, TestSettings, WeekSessionRaw } from "./schemas";
 import { DayWeather, severeWeather } from "../weather";
 import { EXERCISE_RULES, EXTRA_RULES, normalizeWeekExtras, perWeek, strengthBlackout, WeekExtra } from "./extras";
@@ -185,8 +185,9 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
   const notes: string[] = [];
   const unplanned = new Set<string>();
   // Feste Tage: stehen schon, ihr Umfang geht von den Grenzen der Woche ab.
-  const pinned = fixedDays(context, weekLimitsV2(snapshot, context));
-  const week = reserveFixed(weekLimitsV2(snapshot, context), pinned);
+  const base = weekLimitsV2(snapshot, context);
+  const pinned = fixedDays(context, base);
+  const week = reserveFixed(base, pinned);
 
   // 1. Genau die angefragten Tage, jeder einmal.
   const byDate = new Map<string, MultiWeekPlanRaw["days"][number]>();
@@ -286,6 +287,9 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
       days = scaleSessions(days, (draft) => draft.sport.id === sportId, limits.weeklyCap, (draft) => draft.amount);
     }
   }
+
+  // 8b. Jede Spanne von 7 Tagen, auch ueber den Planbeginn: das Training davor zaehlt mit (wie im Tagesplan am Tag selbst).
+  days = limitRollingWindow(days, base, pinned, snapshot, context, free, notes);
 
   // 9. Nicht mehr Trainingstage als im Ziel, und in einer vollen Woche mindestens ein Ruhetag.
   const fixedTraining = [...pinned.values()].filter((day) => day.sessions.length > 0).length;
@@ -577,6 +581,111 @@ function limitHardDays(days: DraftDay[], week: WeekLimitsV2, notes: string[], fi
     });
   }
   return result;
+}
+
+/**
+ * Die Wochengrenze einer Sportart gilt fuer jede Spanne von 7 Tagen: Was vor dem Plan trainiert wurde (`recent`) und was
+ * die Tage davor im Plan haben (feste Tage eingeschlossen), zaehlt fuer einen Tag mit. Heute prueft `applyToday` mit den
+ * Werten aus Health. Passt ein Test an seinem Tag nicht, kommt er auf einen spaeteren Tag mit einer lockeren Einheit
+ * derselben Sportart (Tausch), an dem er passt; sonst wird er eine lockere Einheit. Andere Einheiten werden gekuerzt.
+ */
+function limitRollingWindow(
+  days: DraftDay[],
+  base: WeekLimitsV2,
+  pinned: ReadonlyMap<string, DraftDay>,
+  snapshot: SnapshotV2,
+  context: WeekContextV2,
+  free: ReadonlyMap<string, number>,
+  notes: string[]
+): DraftDay[] {
+  const result = [...days];
+  for (const [sportId, limits] of base.sports) {
+    const sport = limits.sport;
+    const own = (day: DraftDay) => day.sessions.filter((draft) => draft.sport.id === sportId);
+    const amountOn = (date: string) => {
+      const day = pinned.get(date) ?? result.find((entry) => entry.date === date);
+      return day === undefined ? 0 : own(day).reduce((sum, draft) => sum + draft.amount, 0);
+    };
+    const usedBefore = (date: string) => {
+      let used = recentBefore(sport, context.recent, date);
+      for (let back = 1; back <= 6; back += 1) used += amountOn(addDays(date, -back));
+      return used;
+    };
+    for (let index = 0; index < result.length; index += 1) {
+      const day = result[index];
+      if (day.date === context.today || pinned.has(day.date) || own(day).length === 0) continue;
+      const used = usedBefore(day.date);
+      const allowed = Math.max(limits.weeklyCap - used, 0);
+      const why = `in 7 Tagen höchstens ${formatAmount(sport, limits.weeklyCap)}, davon schon ${formatAmount(sport, used)}`;
+      const test = own(day).find((draft) => draft.test !== null);
+      if (test !== undefined && test.amount > allowed) {
+        const moved = moveTest(result, index, test, limits.weeklyCap, usedBefore, base, pinned, snapshot, context, free);
+        if (moved !== null) {
+          notes.push(`${label(day.date)}: Leistungstest ${sport.displayName} auf ${label(result[moved].date)} verlegt (${why})`);
+        } else {
+          notes.push(`${label(day.date)}: kein Leistungstest ${sport.displayName} (${why}), lockere Einheit statt dessen`);
+          const sessions = day.sessions.map((draft) => (draft === test ? soften(draft, "easy") : draft));
+          result[index] = { ...day, focus: focusWithoutTest(day.focus, sessions), sessions };
+        }
+      }
+      const current = result[index];
+      const total = own(current).reduce((sum, draft) => sum + draft.amount, 0);
+      if (total <= allowed) continue;
+      const [scaled] = scaleSessions([current], (draft) => draft.sport.id === sportId, allowed, (draft) => draft.amount);
+      const left = own(scaled).reduce((sum, draft) => sum + draft.amount, 0);
+      notes.push(`${label(current.date)}: ${sport.displayName} ${left > 0 ? `von ${formatAmount(sport, total)} auf ${formatAmount(sport, left)} gekürzt` : "gestrichen"} (${why})`);
+      result[index] = { ...scaled, focus: scaled.sessions.length > 0 ? scaled.focus : "Ruhetag" };
+    }
+  }
+  return result;
+}
+
+/**
+ * Tauscht den Test von Tag `index` mit einer lockeren Einheit derselben Sportart an einem spaeteren Tag, an dem er in
+ * die 7 Tage passt und die Regeln fuer Tests und harte Tage halten. Liefert den neuen Tag des Tests oder `null`.
+ */
+function moveTest(
+  days: DraftDay[],
+  index: number,
+  test: Draft,
+  weeklyCap: number,
+  usedBefore: (date: string) => number,
+  week: WeekLimitsV2,
+  pinned: ReadonlyMap<string, DraftDay>,
+  snapshot: SnapshotV2,
+  context: WeekContextV2,
+  free: ReadonlyMap<string, number>
+): number | null {
+  const from = days[index];
+  const sessionsOn = (at: number) => {
+    const day = days[at];
+    if (day === undefined) return [];
+    return pinned.get(day.date)?.sessions ?? day.sessions;
+  };
+  const hardAt = (at: number) => (at < 0 ? week.hardBefore : at !== index && sessionsOn(at).some(isHard));
+  const testAt = (at: number) => at >= 0 && at !== index && sessionsOn(at).some((draft) => draft.test !== null);
+  for (let at = index + 1; at < days.length; at += 1) {
+    const target = days[at];
+    if (pinned.has(target.date)) continue;
+    const swap = target.sessions.find((draft) => draft.sport.id === test.sport.id && draft.test === null && !isHard(draft) && !draft.brick);
+    if (swap === undefined || test.brick) continue;
+    if (testBlackoutReason(snapshot, target.date) !== null) continue;
+    if (target.sessions.some((draft) => draft !== swap && (isHard(draft) || draft.test !== null))) continue;
+    if (testAt(at - 1) || testAt(at + 1)) continue;
+    if (isHard(test) && (hardAt(at - 1) || hardAt(at + 1))) continue;
+    const minutes = dayMinutes(target) - minutesOf(swap) + minutesOf(test);
+    const cap = Math.min(week.dayMinutes.get(target.date) ?? week.maxDayMinutes, free.get(target.date) ?? Infinity);
+    if (minutes > cap) continue;
+    // Probeweise tauschen und das Fenster am neuen Tag pruefen. Der Schwerpunkt beider Tage kommt danach aus den Einheiten.
+    const swapped = placeOpenWater(placeIndoor(swap, from.date, context, []), from.date, context, []);
+    const before = [days[index], days[at]];
+    days[index] = { ...from, focus: "", sessions: from.sessions.map((draft) => (draft === test ? swapped : draft)) };
+    days[at] = { ...target, focus: "", sessions: target.sessions.map((draft) => (draft === swap ? test : draft)) };
+    const ownThere = days[at].sessions.filter((draft) => draft.sport.id === test.sport.id).reduce((sum, draft) => sum + draft.amount, 0);
+    if (usedBefore(target.date) + ownThere <= weeklyCap) return at;
+    [days[index], days[at]] = before;
+  }
+  return null;
 }
 
 function applyToday(day: DraftDay, today: DayLimitsV2, notes: string[]): DraftDay {

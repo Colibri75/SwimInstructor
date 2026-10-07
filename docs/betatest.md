@@ -91,6 +91,9 @@ Je eine Einheit, danach in der Fitness-App Strecke, Karte und Herzfrequenz prüf
 
 - [ ] CSS-Test im Becken, 30-Minuten-Test Laufen und Rad: Die Watch wertet aus, das iPhone zeigt das Ergebnis zur
       Bestätigung; erst nach Bestätigung ändern sich Zonen und Tempo im Plan
+- [ ] Ein Test im Wochenplan (z. B. CSS-Test) nach ein paar Schwimmtagen: Die Vorschau des Tages zeigt den Test und
+      nicht "passt heute nicht". Passt er nicht in die 7 Tage, steht im Wochenplan schon "verlegt" oder "locker statt
+      Leistungstest"
 - [ ] Leistungsprofil: einen Wert von Hand ändern und sehen, dass der nächste Plan ihn nutzt
 
 ## 7. Gesamtplan, Ziel, Statistik (Woche 2 bis 4)

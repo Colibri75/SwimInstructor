@@ -37,6 +37,8 @@ export interface DayOptionsV2 {
   availableMinutes?: number;
   /** Wetter heute. */
   weather?: DayWeather;
+  /** Vorschau fuer einen kommenden Tag: Das 7-Tage-Fenster rechnet ab diesem Tag (aus `recent`). */
+  preview?: boolean;
 }
 
 export interface DaySessionV2 {
@@ -93,7 +95,7 @@ export function sanitizeDayV2(input: MultiDayPlanRaw, snapshot: SnapshotV2, opti
   if (problem !== null) return { plan: { rationale: input.rationale, sessions: [], extras: [], coach_notes: [] }, adjustments: [], blocked: problem };
 
   const notes: string[] = [];
-  const today = dayLimits(snapshot, options.date, options.recent ?? []);
+  const today = dayLimits(snapshot, options.date, options.recent ?? [], options.preview === true);
   const available = options.equipment === undefined ? undefined : new Set(options.equipment);
   const coachNotes = input.coach_notes
     .map((note) => note.trim().slice(0, MULTI_RULES.maxNoteLength))
