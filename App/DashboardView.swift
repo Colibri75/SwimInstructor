@@ -68,7 +68,7 @@ struct DashboardView: View {
                 } else if let error = loader.healthError {
                     Text("Health: \(error)").foregroundStyle(.red)
                 } else {
-                    Text("Noch keine Daten. Öffne zuerst den Tab \"Heute\".")
+                    Text("Noch keine Daten. Öffne zuerst den Tab \"Aktuell\".")
                         .foregroundStyle(.secondary)
                 }
             }

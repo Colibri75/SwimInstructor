@@ -167,7 +167,7 @@ public final class MultiSportWeekLoader: ObservableObject {
     public func planNextDays(wishes: String? = nil, reason: ReplanReason = .manual) async -> Bool {
         guard !isLoading else { return false }
         guard let context = contextProvider() else {
-            error = "Die Health-Daten sind noch nicht geladen. Öffne zuerst den Tab Heute."
+            error = "Die Health-Daten sind noch nicht geladen. Öffne zuerst den Tab Aktuell."
             return false
         }
         guard let provider = planProvider() else {

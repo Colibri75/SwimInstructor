@@ -185,7 +185,7 @@ struct DayEditSheet: View {
             }
         } else if date == weekLoader.todayKey, status.day?.isRestDay == false {
             Section("Trainingsplan") {
-                Text("Der Plan für heute entsteht im Tab Heute.")
+                Text("Der Plan für heute entsteht im Tab Aktuell.")
                     .foregroundStyle(.secondary)
             }
         }
@@ -196,7 +196,7 @@ struct DayEditSheet: View {
             return "Vorschau. Am Tag selbst stimmt dein Coach den Plan noch einmal auf deinen Zustand ab; nach einer Änderung an diesem Tag lässt sich die Vorschau neu holen."
         }
         if date < weekLoader.todayKey { return "So war der Tag geplant." }
-        return "Der Plan von heute, wie im Tab Heute."
+        return "Der Plan von heute, wie im Tab Aktuell."
     }
 
     private func doneSection(_ status: MultiSportDayStatus) -> some View {
@@ -294,7 +294,7 @@ struct DayEditSheet: View {
             Text("Tag anpassen")
         } footer: {
             Text(date == weekLoader.todayKey
-                 ? "Eine Änderung gilt sofort auch im Tab Heute und auf der Watch: Dein Coach passt die Einheiten an. Was du festlegst, bleibt; heute ändert sich sonst nur auf deinen Wunsch."
+                 ? "Eine Änderung gilt sofort auch im Tab Aktuell und auf der Watch: Dein Coach passt die Einheiten an. Was du festlegst, bleibt; heute ändert sich sonst nur auf deinen Wunsch."
                  : "Höchstens \(MultiSportWeekEditor.maxSessionsPerDay) Einheiten am Tag. Beim Tausch der Sportart rechnet die App den Umfang über die Dauer um.")
         }
     }

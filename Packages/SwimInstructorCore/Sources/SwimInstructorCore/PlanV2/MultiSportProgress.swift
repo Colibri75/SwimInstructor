@@ -207,6 +207,13 @@ public struct MultiSportDayStatus: Identifiable, Equatable, Sendable {
     }
 
     public var workoutCount: Int { comparisons.reduce(0) { $0 + $1.workoutCount } }
+
+    /// Ob das geplante Training des Tages gemacht ist: je geplanter Sportart mindestens so viele Einheiten wie geplant.
+    /// Ein Tag ohne Einheiten (Ruhetag, keine Zeit) ist nie erledigt.
+    public var isTrainingDone: Bool {
+        let planned = comparisons.filter(\.isPlanned)
+        return !planned.isEmpty && planned.allSatisfy { $0.workoutCount >= $0.plannedSessions }
+    }
 }
 
 /// Geplant und gemacht in einer Woche für eine Sportart.

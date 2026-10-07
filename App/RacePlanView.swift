@@ -98,7 +98,7 @@ struct RacePlanView: View {
             }
             .disabled(raceLoader.isLoading || todayLoader.reading == nil)
             if todayLoader.reading == nil {
-                Text("Öffne zuerst den Tab Heute, damit die App deinen Zustand aus Health kennt.")
+                Text("Öffne zuerst den Tab Aktuell, damit die App deinen Zustand aus Health kennt.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

@@ -1,8 +1,9 @@
 import SwiftUI
 import SwimInstructorCore
 
-/// Heute-Bildschirm: was der Plan der nächsten sieben Tage für heute vorsieht, darunter je Einheit eine Karte mit allen
-/// Schritten, dazu der Wunsch für heute.
+/// Tab "Aktuell": was der Plan der nächsten sieben Tage für heute vorsieht, darunter je Einheit eine Karte mit allen
+/// Schritten, dazu der Wunsch für heute. Ist das Training von heute erledigt, steht hier der Plan für morgen (die Vorschau,
+/// die morgen der Tagesplan wird); heute bleibt per Umschalter erreichbar.
 struct TodayView: View {
     @EnvironmentObject private var loader: MultiSportTodayLoader
     @EnvironmentObject private var weekLoader: MultiSportWeekLoader
@@ -14,9 +15,12 @@ struct TodayView: View {
     @State private var wishDraft = ""
     @State private var resultTest: TestResultTarget?
     @State private var feedbackWorkout: Workout?
+    /// Nach erledigtem Training trotzdem heute zeigen.
+    @State private var showsToday = false
 
     private let onShowWeek: () -> Void
     private let progress = MultiSportWeekProgressCalculator()
+    private let weekCalendar = WeekCalendar()
 
     /// - Parameter onShowWeek: wechselt in den Tab "Plan" (für den Hinweis ohne Eintrag für heute).
     init(onShowWeek: @escaping () -> Void = {}) {
@@ -33,18 +37,33 @@ struct TodayView: View {
         ).first { $0.date == weekLoader.todayKey }
     }
 
+    /// Alles, was heute geplant war, ist gemacht.
+    private var todayDone: Bool { todayStatus?.isTrainingDone == true }
+
+    private var showsTomorrow: Bool { todayDone && !showsToday }
+
+    private var tomorrowKey: String { weekCalendar.addingDays(1, to: weekLoader.todayKey) ?? weekLoader.todayKey }
+
+    /// Der Tag, den der Tab gerade zeigt.
+    private var shownDate: String { showsTomorrow ? tomorrowKey : weekLoader.todayKey }
+
     var body: some View {
         NavigationStack {
             List {
                 watchResultSection
                 adaptationSection
                 feedbackSection
+                doneSection
                 weekTodaySection
-                planSection
-                extrasSections
-                wishSection
+                if showsTomorrow {
+                    tomorrowSections
+                } else {
+                    planSection
+                    extrasSections
+                    wishSection
+                }
             }
-            .navigationTitle("Heute")
+            .navigationTitle("Aktuell")
             .swipeClosesKeyboard()
             .settingsToolbar(isPresented: $showsSettings)
             .refreshable { await loader.refresh() }
@@ -60,6 +79,11 @@ struct TodayView: View {
             }
         }
         .task { await loader.refreshIfNeeded() }
+        // Training erledigt: den Plan für morgen gleich holen (einmal je Vorgabe, er wird morgen der Tagesplan).
+        .task(id: tomorrowPreviewKey) { await loadTomorrowIfNeeded() }
+        .onChange(of: todayDone) { _, done in
+            if done { showsToday = false }
+        }
         .onChange(of: scenePhase) { _, phase in
             // Über Nacht offen gelassen: beim Zurückkommen den Plan für den neuen Tag holen.
             if phase == .active {
@@ -68,19 +92,37 @@ struct TodayView: View {
         }
     }
 
-    // MARK: - Heute im Plan
+    // MARK: - Heute erledigt
 
-    /// Was der Plan der sieben Tage für heute vorgibt. Die Einheiten mit allen Schritten stehen darunter.
+    /// Nach erledigtem Training: Umschalter zwischen dem Plan für morgen und dem von heute.
+    @ViewBuilder
+    private var doneSection: some View {
+        if todayDone {
+            Section {
+                Picker("Tag", selection: $showsToday) {
+                    Text("Heute").tag(true)
+                    Text("Morgen").tag(false)
+                }
+                .pickerStyle(.segmented)
+            } footer: {
+                Text(showsTomorrow ? "Dein Training für heute ist erledigt. Hier steht schon dein Plan für morgen." : "Dein Training für heute ist erledigt.")
+            }
+        }
+    }
+
+    // MARK: - Im Plan
+
+    /// Was der Plan der sieben Tage für den gezeigten Tag vorgibt. Die Einheiten mit allen Schritten stehen darunter.
     @ViewBuilder
     private var weekTodaySection: some View {
         Section {
-            if let entry = weekLoader.todayEntry {
+            if let entry = weekLoader.day(on: shownDate) {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(alignment: .firstTextBaseline) {
-                        Text(entry.isUnavailable ? "Keine Zeit" : (entry.isRestDay ? "Ruhetag" : "Heute im Plan"))
+                        Text(entry.isUnavailable ? "Keine Zeit" : (entry.isRestDay ? "Ruhetag" : (showsTomorrow ? "Morgen im Plan" : "Heute im Plan")))
                             .font(.headline)
                         Spacer()
-                        if let state = todayStatus?.state {
+                        if !showsTomorrow, let state = todayStatus?.state {
                             Text(PlanV2Formatting.stateText(state))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
@@ -102,7 +144,7 @@ struct TodayView: View {
                 .padding(.vertical, 2)
             } else {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Für heute gibt es keinen Eintrag im Plan.")
+                    Text(showsTomorrow ? "Für morgen gibt es keinen Eintrag im Plan." : "Für heute gibt es keinen Eintrag im Plan.")
                     Button("Zum Plan") { onShowWeek() }
                 }
                 .padding(.vertical, 2)
@@ -183,6 +225,73 @@ struct TodayView: View {
                     if response.plan.sessions.count > 1 {
                         Text("Einheit \(index + 1) von \(response.plan.sessions.count)")
                     }
+                }
+            }
+        }
+    }
+
+    // MARK: - Morgen
+
+    /// Ändert sich, wenn ein Plan für morgen fällig wird: Training erledigt, Vorgabe für morgen geändert, Health gelesen.
+    private var tomorrowPreviewKey: String {
+        guard showsTomorrow else { return "" }
+        let date = tomorrowKey
+        return "\(date)|\(loader.canPreview(date))|\(loader.dayPlan(on: date) != nil)|\(loader.reading != nil)"
+    }
+
+    /// Holt die Vorschau für morgen, wenn es Einheiten gibt und noch keine passende da ist. Nach einem Fehler nur auf Tipp.
+    private func loadTomorrowIfNeeded() async {
+        let date = tomorrowKey
+        guard showsTomorrow, loader.dayPlan(on: date) == nil, loader.canPreview(date), loader.previewError?.date != date else { return }
+        await loader.loadPreview(for: date)
+    }
+
+    /// Der Plan für morgen: die Vorschau mit allen Schritten. Morgen wird sie der Tagesplan, solange die Vorgabe gleich bleibt.
+    @ViewBuilder
+    private var tomorrowSections: some View {
+        let date = tomorrowKey
+        let preview = loader.dayPlan(on: date)
+        Section {
+            if loader.loadingPreviewDate == date {
+                forgeRow("Dein Coach schreibt deinen Plan für morgen …")
+            } else if let preview {
+                DayPlanHeaderView(response: preview)
+            } else if loader.canPreview(date) {
+                Button {
+                    Task { await loader.loadPreview(for: date) }
+                } label: {
+                    Label("Plan für morgen holen", systemImage: "list.bullet.rectangle")
+                }
+                .disabled(loader.loadingPreviewDate != nil || loader.reading == nil)
+            } else if let entry = weekLoader.day(on: date), entry.isRestDay || entry.isUnavailable {
+                Text("Morgen ist kein Training geplant. Erhol dich gut.")
+                    .foregroundStyle(.secondary)
+            }
+            if let error = loader.previewError, error.date == date {
+                Label(error.message, systemImage: "exclamationmark.triangle")
+                    .font(.footnote)
+                    .foregroundStyle(.orange)
+            }
+        } header: {
+            Text("Dein Plan, \(weekCalendar.weekdayName(date)), \(PlanFormatting.shortGermanDate(date))")
+        } footer: {
+            Text("Vorschau. Morgen wird sie dein Tagesplan, solange du den Tag nicht im Plan-Tab änderst.")
+        }
+        if let preview {
+            ForEach(Array(preview.plan.sessions.enumerated()), id: \.offset) { index, session in
+                Section {
+                    SessionCardView(session: session, previousSport: index > 0 ? preview.plan.sessions[index - 1].sport : nil)
+                } header: {
+                    if preview.plan.sessions.count > 1 {
+                        Text("Einheit \(index + 1) von \(preview.plan.sessions.count)")
+                    }
+                }
+            }
+            ForEach(Array(preview.plan.extras.enumerated()), id: \.offset) { _, extra in
+                Section {
+                    ExtraCardView(extra: extra)
+                } header: {
+                    Text("Ergänzung")
                 }
             }
         }

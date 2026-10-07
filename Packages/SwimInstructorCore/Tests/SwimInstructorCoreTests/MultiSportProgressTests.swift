@@ -209,6 +209,22 @@ final class MultiSportProgressTests: XCTestCase {
         XCTAssertEqual(outcome(swim, swum(2_600), isToday: true), .longer)
     }
 
+    func testATrainingDayIsDoneWhenEveryPlannedSportHasItsSessions() {
+        let planned = [ProgressV2Data.planned(.swim, 2_000, minutes: 40), ProgressV2Data.planned(.run, 30, minutes: 30)]
+        func done(_ planned: [MultiSportComparator.Planned], _ workouts: [Workout]) -> Bool {
+            MultiSportDayStatus(date: "2026-09-29", day: nil, comparisons: comparator.compare(planned: planned, workouts: workouts), state: .today).isTrainingDone
+        }
+        let swim = ProgressV2Data.workout(.swim, daysAgo: 1, minutes: 40, meters: 2_000)
+        let run = ProgressV2Data.workout(.run, daysAgo: 1, minutes: 30, meters: 5_000)
+
+        XCTAssertFalse(done(planned, []))
+        // Schwimmen gemacht, der Lauf fehlt noch.
+        XCTAssertFalse(done(planned, [swim]))
+        XCTAssertTrue(done(planned, [swim, run]))
+        // Ein Ruhetag ist nie erledigt, auch nicht mit Training.
+        XCTAssertFalse(done([], [run]))
+    }
+
     func testBikeAndRunCountTheirMinutes() {
         let bike = [ProgressV2Data.planned(.bike, 60, minutes: 60)]
 

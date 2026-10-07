@@ -437,7 +437,7 @@ final class MultiSportWeekLoaderTests: XCTestCase {
 
         XCTAssertFalse(planned)
         XCTAssertTrue(provider.requests.isEmpty)
-        XCTAssertEqual(loader.error, "Die Health-Daten sind noch nicht geladen. Öffne zuerst den Tab Heute.")
+        XCTAssertEqual(loader.error, "Die Health-Daten sind noch nicht geladen. Öffne zuerst den Tab Aktuell.")
         XCTAssertFalse(loader.needsConfiguration)
         XCTAssertTrue(loader.weeks.isEmpty)
     }

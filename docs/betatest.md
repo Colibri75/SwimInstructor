@@ -32,7 +32,10 @@ und die Zeile aus `GET /v1/admin/usage` (Ergebnis, Grund, Dauer).
       Heute, Plan-Tab und Watch Laufen. Den Umfang mehrmals schnell ändern: eine Anpassung mit dem letzten Wert
 - [ ] Einen kommenden Tag von Hand ändern, "Nächste 7 Tage neu planen": Der Tag bleibt (Stecknadel "von dir festgelegt"),
       "Wieder deinem Coach überlassen" plant ihn neu. Heute bleibt beim Neu-Planen, sobald es einen Plan gibt
-- [ ] Vorschau für morgen holen, am nächsten Tag öffnen: Heute zeigt genau die Vorschau (keine Schmiede-Animation)
+- [ ] Vorschau für morgen holen, am nächsten Tag öffnen: Aktuell zeigt genau die Vorschau (keine Schmiede-Animation)
+- [ ] Training von heute erledigt (alle geplanten Sportarten): Der Tab Aktuell zeigt "Heute | Morgen" und den Plan für
+      morgen mit allen Schritten (holt ihn selbst); "Heute" zeigt wieder den Plan von heute. Am nächsten Morgen ist
+      dieser Plan der Tagesplan
 - [ ] Plan-Tab, auf einen Tag tippen: heute und vergangene Tage zeigen den Trainingsplan mit allen Schritten; bei einem
       kommenden Tag "Trainingsplan anzeigen" tippen, nach der Schmiede-Animation stehen Einheiten, Schritte und Equipment da
       und bleiben beim nächsten Öffnen; nach einer Änderung an dem Tag lässt sich die Vorschau neu holen

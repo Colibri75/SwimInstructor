@@ -36,7 +36,7 @@ struct RootView: View {
     private var tabs: some View {
         TabView(selection: $selection) {
             TodayView(onShowWeek: { selection = .week })
-                .tabItem { Label("Heute", systemImage: "figure.mixed.cardio") }
+                .tabItem { Label("Aktuell", systemImage: "figure.mixed.cardio") }
                 .tag(Tab.today)
             WeekView()
                 .tabItem { Label("Plan", systemImage: "calendar") }

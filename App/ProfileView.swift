@@ -95,7 +95,7 @@ struct ProfileView: View {
                 }
             }
         } footer: {
-            Text("Nach einem Test trägst du hier oder im Tab Heute dein Ergebnis ein. Die App zeigt den Vergleich zum bisherigen Wert; übernommen wird erst nach deiner Bestätigung.")
+            Text("Nach einem Test trägst du hier oder im Tab Aktuell dein Ergebnis ein. Die App zeigt den Vergleich zum bisherigen Wert; übernommen wird erst nach deiner Bestätigung.")
         }
     }
 
