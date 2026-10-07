@@ -11,6 +11,11 @@ struct DashboardView: View {
     @State private var confirmsReset = false
     /// Die Kachel, deren Detail offen ist.
     @State private var openedTileID: UUID?
+    /// Eigener Bearbeiten-Zustand statt `EditButton`: Der reagierte in der Toolbar oft erst beim zweiten Tipp und blieb
+    /// beim Tabwechsel an.
+    @State private var editMode: EditMode = .inactive
+
+    private var isEditing: Bool { editMode.isEditing }
 
     private let weekProgress = MultiSportWeekProgressCalculator()
 
@@ -39,7 +44,7 @@ struct DashboardView: View {
                             Text("Keine Kacheln.")
                                 .foregroundStyle(.secondary)
                         }
-                        StatisticTileRows(dashboard: dashboard, input: statisticInput) { tile in
+                        StatisticTileRows(dashboard: dashboard, input: statisticInput, isEditing: isEditing) { tile in
                             openedTileID = tile.id
                         }
                         Button {
@@ -72,6 +77,7 @@ struct DashboardView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            .environment(\.editMode, $editMode)
             .navigationTitle("Dashboard")
             .settingsToolbar()
             .navigationDestination(item: $openedTileID) { id in
@@ -80,7 +86,10 @@ struct DashboardView: View {
             .toolbar {
                 if loader.reading != nil {
                     ToolbarItem(placement: .topBarTrailing) {
-                        EditButton()
+                        Button(isEditing ? "Fertig" : "Bearbeiten") {
+                            withAnimation { editMode = isEditing ? .inactive : .active }
+                        }
+                        .fontWeight(isEditing ? .semibold : .regular)
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -112,6 +121,8 @@ struct DashboardView: View {
             .refreshable { await loader.refreshIfNeeded() }
         }
         .task { await loader.refreshIfNeeded() }
+        // Beim Wechsel in einen anderen Tab endet das Bearbeiten.
+        .onDisappear { editMode = .inactive }
     }
 }
 

@@ -8,6 +8,8 @@ import SwimInstructorCore
 struct StatisticTileRows: View {
     @ObservedObject var dashboard: StatisticDashboard
     let input: StatisticInput
+    /// Beim Bearbeiten (entfernen, umsortieren) öffnen Tippen und langes Drücken nichts.
+    var isEditing = false
     /// Öffnet das Detail einer Kachel. Die Navigation hängt am Dashboard, nicht in dieser Liste.
     let onOpen: (StatisticTile) -> Void
 
@@ -15,14 +17,18 @@ struct StatisticTileRows: View {
 
     var body: some View {
         ForEach(calculator.results(for: dashboard.tiles, input: input)) { result in
-            StatisticTileView(result: result)
+            StatisticTileView(result: result, showsDisclosure: !isEditing)
                 .contentShape(RoundedRectangle(cornerRadius: 14))
                 .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 14))
-                .onTapGesture { onOpen(result.tile) }
+                .onTapGesture {
+                    if !isEditing { onOpen(result.tile) }
+                }
                 .accessibilityAddTraits(.isButton)
                 .accessibilityAction { onOpen(result.tile) }
                 .contextMenu {
-                    StatisticTileMenu(dashboard: dashboard, tile: result.tile)
+                    if !isEditing {
+                        StatisticTileMenu(dashboard: dashboard, tile: result.tile)
+                    }
                 }
                 .accessibilityAction(named: "Nach vorn") { dashboard.move(result.tile.id, by: -1) }
                 .accessibilityAction(named: "Nach hinten") { dashboard.move(result.tile.id, by: 1) }
