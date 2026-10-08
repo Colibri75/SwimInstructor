@@ -66,6 +66,16 @@ public struct SessionFeedback: Codable, Equatable, Sendable, Identifiable {
 
     public static let effortRange: ClosedRange<Int> = 1...10
 
+    /// Kurz für die Uhr: "locker", "mittel", "hart", "sehr hart" (ab 8 plant die App danach erst etwas Lockeres).
+    public static func effortLabel(_ effort: Int) -> String {
+        switch effort {
+        case ...3: return "locker"
+        case 4...6: return "mittel"
+        case 7: return "hart"
+        default: return "sehr hart"
+        }
+    }
+
     // `workoutId`: Die Datei wird in snake_case geschrieben und zurückgelesen ("workout_id").
     enum CodingKeys: String, CodingKey {
         case workoutID = "workoutId"

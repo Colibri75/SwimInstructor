@@ -336,6 +336,40 @@ final class MultiSportTodayLoaderTests: XCTestCase {
         XCTAssertTrue(loader.isTodayLocked)
     }
 
+    func testThePreviewIsShownBeforeTheNextDaysAreTuned() async throws {
+        let target = DayTargetV2(focus: "Locker", sessions: [DayTargetV2.Session(sport: .run, sessionType: .endurance, intensity: .easy, amount: 30, focus: "Locker")])
+        var preview = TodayLoaderV2Data.response(date: "2026-09-30")
+        preview.requestedTarget = target
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        var shownWhilePreparing: DayPlanV2Response?
+        weak var weakLoader: MultiSportTodayLoader?
+        let loader = makeLoader(
+            dayTarget: { target },
+            prepare: { _ in shownWhilePreparing = weakLoader?.response },
+            previewStore: MemoryPreviews([preview]),
+            provider: provider
+        )
+        weakLoader = loader
+
+        await loader.refreshIfNeeded()
+
+        XCTAssertEqual(shownWhilePreparing, preview, "Heute steht schon da, während die 14 Tage abgestimmt werden")
+        XCTAssertEqual(loader.response, preview)
+        XCTAssertEqual(provider.calls, 0)
+    }
+
+    func testANewPlanRequestIgnoresThePreview() async throws {
+        let target = DayTargetV2(focus: "Locker", sessions: [DayTargetV2.Session(sport: .run, sessionType: .endurance, intensity: .easy, amount: 30, focus: "Locker")])
+        var preview = TodayLoaderV2Data.response(date: "2026-09-30")
+        preview.requestedTarget = target
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        let loader = makeLoader(dayTarget: { target }, previewStore: MemoryPreviews([preview]), provider: provider)
+
+        await loader.refresh()
+
+        XCTAssertEqual(provider.newPlanCalls, 1)
+    }
+
     func testTheHistoryKeepsTheLastPlanOfTheDay() async throws {
         let history = MemoryHistory()
         var target: DayTargetV2? = DayTargetV2(focus: "A", sessions: [DayTargetV2.Session(sport: .swim, sessionType: .endurance, intensity: .easy, amount: 1_500, focus: "A")])

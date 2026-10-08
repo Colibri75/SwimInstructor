@@ -19,6 +19,8 @@ struct SwimInstructorApp: App {
     @StateObject private var raceLoader: RacePlanLoader
     @StateObject private var locationProvider: LocationProvider
     @StateObject private var calendarProvider: CalendarAvailabilityProvider
+    @StateObject private var coach: BackgroundCoach
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         let healthKitManager = HealthKitManager()
@@ -176,6 +178,11 @@ struct SwimInstructorApp: App {
             store: FileRacePlanStore.standard(),
             planProvider: { [weak settings] in settings?.configuration.map { PlanAPIClient(configuration: $0) } }
         ))
+        // Arbeitet ohne offene App: neue Einheiten aus Health, Plan für morgen, Mitteilungen. Früh starten, damit die
+        // Hintergrundaufgabe vor dem Ende des Starts angemeldet ist.
+        let coach = BackgroundCoach(loader: loader, weekLoader: weekLoader, feedbackBook: feedbackBook)
+        coach.start()
+        _coach = StateObject(wrappedValue: coach)
         _statisticDashboard = StateObject(wrappedValue: StatisticDashboard(store: UserDefaultsStatisticLayoutStore()))
         // Reihenfolge und Auswahl der Bereiche je Tab, auf dem Gerät gespeichert.
         _screenLayouts = StateObject(wrappedValue: ScreenLayouts(store: UserDefaultsScreenLayoutStore()))
@@ -198,6 +205,10 @@ struct SwimInstructorApp: App {
                 .environmentObject(raceLoader)
                 .environmentObject(locationProvider)
                 .environmentObject(calendarProvider)
+                .environmentObject(coach)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background { coach.didEnterBackground() }
         }
     }
 }

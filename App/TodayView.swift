@@ -11,6 +11,7 @@ struct TodayView: View {
     @EnvironmentObject private var testResultInbox: WatchTestResultInbox
     @EnvironmentObject private var feedbackBook: SessionFeedbackBook
     @EnvironmentObject private var layouts: ScreenLayouts
+    @EnvironmentObject private var coach: BackgroundCoach
     @Environment(\.scenePhase) private var scenePhase
     @State private var showsSettings = false
     @State private var wishDraft = ""
@@ -73,12 +74,19 @@ struct TodayView: View {
                 }
             }
         }
-        .task { await loader.refreshIfNeeded() }
+        .task {
+            coach.requestPermission()
+            await loader.refreshIfNeeded()
+        }
         // Training erledigt: den Plan für morgen gleich holen (einmal je Vorgabe, er wird morgen der Tagesplan).
         .task(id: tomorrowPreviewKey) { await loadTomorrowIfNeeded() }
         .onChange(of: todayDone) { _, done in
             if done { showsToday = false }
+            coach.updateGlance()
         }
+        // Widget und Sperrbildschirm zeigen, was hier steht.
+        .onChange(of: loader.response) { _, _ in coach.updateGlance() }
+        .onChange(of: loader.previews) { _, _ in coach.updateGlance() }
         .onChange(of: scenePhase) { _, phase in
             // Über Nacht offen gelassen: beim Zurückkommen den Plan für den neuen Tag holen.
             if phase == .active {
@@ -249,7 +257,14 @@ struct TodayView: View {
     private var planSection: some View {
         Section {
             if loader.isPreparing {
-                forgeRow("Dein Coach passt deinen Plan für die nächsten Tage an …")
+                if loader.hasFreshPlanForToday {
+                    // Heute steht schon (Vorschau von gestern): nur ein kleiner Hinweis, der Plan bleibt lesbar.
+                    Label("Dein Coach stimmt die nächsten Tage ab …", systemImage: "hammer")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                } else {
+                    forgeRow("Dein Coach passt deinen Plan für die nächsten Tage an …")
+                }
             }
             if loader.isLoadingPlan {
                 forgeRow(loader.response != nil && !loader.matchesTodayTarget ? "Dein Coach passt den Plan an deine Änderung an …" : "Dein Coach schreibt deinen Plan …")

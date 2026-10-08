@@ -318,6 +318,10 @@ struct WatchSummaryView: View {
                     TestResultBlock(result: result, definitions: workoutManager.module?.performanceMetrics ?? [])
                         .padding(.top, 4)
                 }
+                if saved, workoutManager.canRateEffort {
+                    EffortRatingBlock()
+                        .padding(.top, 4)
+                }
                 Text(saved ? "In Health gespeichert. Das iPhone berücksichtigt die Einheit beim nächsten Plan." : (workoutManager.errorMessage ?? "Nicht in Health gespeichert."))
                     .font(.footnote)
                     .foregroundStyle(saved ? Color.secondary : Color.red)
@@ -326,6 +330,62 @@ struct WatchSummaryView: View {
                     workoutManager.reset()
                 }
                 .padding(.top, 4)
+            }
+        }
+    }
+}
+
+/// Nach dem Ende: Wie anstrengend war es? 1 bis 10 mit der Crown oder den Knöpfen, gespeichert als eigene Bewertung in
+/// Health. Das iPhone nimmt sie für die Trainingslast und schlägt sie in "Wie war's?" vor.
+private struct EffortRatingBlock: View {
+    @EnvironmentObject private var workoutManager: WorkoutManager
+    @State private var effort = 5.0
+
+    private var value: Int { Int(effort.rounded()) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let saved = workoutManager.savedEffort {
+                Label("Anstrengung \(saved) von 10 gespeichert", systemImage: "checkmark.circle.fill")
+                    .font(.footnote)
+                    .foregroundStyle(.green)
+            } else {
+                Text("Wie anstrengend?")
+                    .font(.headline)
+                HStack {
+                    Button {
+                        effort = max(effort.rounded() - 1, 1)
+                    } label: {
+                        Image(systemName: "minus")
+                    }
+                    .frame(width: 40)
+                    .accessibilityLabel("Weniger")
+                    VStack(spacing: 0) {
+                        Text("\(value)")
+                            .font(.title.weight(.heavy))
+                            .monospacedDigit()
+                        Text(SessionFeedback.effortLabel(value))
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .focusable()
+                    .digitalCrownRotation($effort, from: 1, through: 10, by: 1, sensitivity: .low, isContinuous: false, isHapticFeedbackEnabled: true)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityValue("\(value) von 10, \(SessionFeedback.effortLabel(value))")
+                    Button {
+                        effort = min(effort.rounded() + 1, 10)
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .frame(width: 40)
+                    .accessibilityLabel("Mehr")
+                }
+                Button(workoutManager.isSavingEffort ? "Speichert …" : "Sichern") {
+                    Task { await workoutManager.saveEffort(value) }
+                }
+                .tint(Theme.ember)
+                .disabled(workoutManager.isSavingEffort)
             }
         }
     }

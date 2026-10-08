@@ -12,9 +12,10 @@ struct SwimInstructorWatchApp: App {
         // Früh starten, damit ein Plan, den das iPhone inzwischen geschickt hat, gleich ankommt.
         let planStore = WatchPlanStore()
         planStore.start()
+        planStore.updateComplication()
         // Eine Instanz für die ganze Uhr: Start-Bildschirm und Aufzeichnung fragen über sie, so erscheint der
         // Health-Dialog nur einmal.
-        let healthKitManager = HealthKitManager(shareTypes: HealthKitManager.workoutShareTypes)
+        let healthKitManager = HealthKitManager(shareTypes: HealthKitManager.workoutShareTypes.union(HealthKitManager.effortShareTypes))
         let workoutManager = WorkoutManager(authorizer: healthKitManager)
         // Testergebnisse gehen ans iPhone; dort bestätigt der Athlet sie, erst dann ändern sie das Profil.
         workoutManager.onTestResult = { [weak planStore] result in planStore?.send(result) }

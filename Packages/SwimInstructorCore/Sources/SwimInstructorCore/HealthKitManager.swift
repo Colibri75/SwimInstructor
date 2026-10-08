@@ -46,6 +46,14 @@ public final class HealthKitManager: ObservableObject, HealthDataAuthorizing {
     /// Messwerte aller Sportarten (Strecke, Züge, Watt ...). Das iPhone schreibt nichts.
     public nonisolated static let workoutShareTypes: Set<HKSampleType> = SportRegistry.standard.workoutShareTypes
 
+    /// Die eigene Bewertung der Anstrengung, die die Watch nach einer Einheit schreibt (ab watchOS 11).
+    public nonisolated static var effortShareTypes: Set<HKSampleType> {
+        if #available(iOS 18.0, watchOS 11.0, macOS 15.0, *) {
+            return [HKQuantityType(.workoutEffortScore)]
+        }
+        return []
+    }
+
     /// - Parameter shareTypes: zusätzlich zu schreibende Typen; die werden auch gelesen, damit die
     ///   Watch ihre Live-Werte (z. B. Energie) anzeigen darf.
     public init(shareTypes: Set<HKSampleType> = []) {

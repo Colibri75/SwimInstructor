@@ -62,6 +62,9 @@ final class WorkoutManager: NSObject, ObservableObject {
     @Published private(set) var lastGestureNote = "noch nichts"
     /// Auswertung des Leistungstests nach dem Ende, `nil` ohne Test.
     @Published private(set) var testResult: RecordedTestResult?
+    /// Die Anstrengung (1 bis 10), die der Athlet nach dem Ende in Health gespeichert hat; `nil`, solange keine.
+    @Published private(set) var savedEffort: Int?
+    @Published private(set) var isSavingEffort = false
 
     /// Bekommt ein gültiges Testergebnis, um es ans iPhone zu schicken.
     var onTestResult: ((WatchTestResult) -> Void)?
@@ -79,6 +82,8 @@ final class WorkoutManager: NSObject, ObservableObject {
     private var session: HKWorkoutSession?
     private var builder: HKLiveWorkoutBuilder?
     private var routeRecorder: RouteRecorder?
+    /// Das zuletzt gespeicherte Workout, an das die Anstrengung gehängt wird.
+    private var finishedWorkout: HKWorkout?
     private var recording = WorkoutRecording()
     private var speedTracker = SportRecording.standard.speedSmoothing.makeTracker()
     private var lapEvents = 0
@@ -280,6 +285,43 @@ final class WorkoutManager: NSObject, ObservableObject {
         sectionGesture.reset()
         testResult = nil
         errorMessage = nil
+        finishedWorkout = nil
+        savedEffort = nil
+    }
+
+    // MARK: - Anstrengung
+
+    /// Ob nach dem Ende nach der Anstrengung gefragt wird: ab watchOS 11 und nur für ein gespeichertes Workout.
+    var canRateEffort: Bool {
+        guard #available(watchOS 11.0, *) else { return false }
+        return finishedWorkout != nil
+    }
+
+    /// Speichert die gefühlte Anstrengung als eigene Bewertung am Workout in Health (wie in der Fitness-App). Das iPhone
+    /// liest sie von dort: für die Trainingslast und als Vorschlag in "Wie war's?".
+    func saveEffort(_ effort: Int) async {
+        guard #available(watchOS 11.0, *), let workout = finishedWorkout, !isSavingEffort else { return }
+        isSavingEffort = true
+        defer { isSavingEffort = false }
+        let value = min(max(effort, SessionFeedback.effortRange.lowerBound), SessionFeedback.effortRange.upperBound)
+        let sample = HKQuantitySample(
+            type: HKQuantityType(.workoutEffortScore),
+            quantity: HKQuantity(unit: .appleEffortScore(), doubleValue: Double(value)),
+            start: workout.startDate,
+            end: workout.endDate
+        )
+        do {
+            _ = try await healthStore.relateWorkoutEffortSample(sample, with: workout, activity: nil)
+            savedEffort = value
+        } catch {
+            // Ohne Verknüpfung zählt die Probe über den Zeitraum des Workouts trotzdem.
+            do {
+                try await healthStore.save(sample)
+                savedEffort = value
+            } catch {
+                errorMessage = "Anstrengung nicht gespeichert: \(error.localizedDescription)"
+            }
+        }
     }
 
     /// Nächster Schritt von Hand.
@@ -478,6 +520,7 @@ final class WorkoutManager: NSObject, ObservableObject {
             }
             if let workout = try await builder.finishWorkout() {
                 saved = true
+                finishedWorkout = workout
                 await routeRecorder?.finish(with: workout)
             }
         } catch {

@@ -88,6 +88,32 @@ Je eine Einheit, danach in der Fitness-App Strecke, Karte und Herzfrequenz prüf
       ohne die Einheit nachzuholen oder zu stapeln
 - [ ] Dieselbe Rückmeldung erneut öffnen und sichern: kein zweites Neuplanen
 
+## 4a. Coach im Hintergrund und Anstrengung auf der Uhr
+
+- [ ] Beim ersten Öffnen nach dem Update fragt das iPhone nach Mitteilungen (erlauben); die Watch fragt einmal neu nach
+      Health (Anstrengung schreiben)
+- [ ] Einheit mit der Watch beenden: Unter "Geschafft" steht "Wie anstrengend?"; mit der Crown oder +/- wählen, "Sichern":
+      "Anstrengung 7 von 10 gespeichert". In der Fitness-App steht die Anstrengung am Workout, in "Wie war's?" auf dem
+      iPhone ist sie vorbelegt
+- [ ] Nach einer Einheit (iPhone entsperrt, App zu): Mitteilung "Wie war's?" mit Sportart und Minuten, einmal je Einheit
+- [ ] Training des Tages erledigt, App zu lassen: Am Abend steht im Plan-Tab für morgen schon "Trainingsplan" (ohne Tippen
+      auf "Trainingsplan anzeigen"); morgens zur eingestellten Uhrzeit (Einstellungen › Mitteilungen) kommt "Dein Plan für
+      heute steht" mit den Einheiten
+- [ ] Am Morgen danach Aktuell öffnen: Der Plan steht sofort da, oben nur der kleine Hinweis "Dein Coach stimmt die
+      nächsten Tage ab …", keine große Schmiede
+- [ ] Einstellungen › Mitteilungen: "Plan am Morgen" aus: keine Morgen-Mitteilung mehr; "Nach dem Training fragen" aus:
+      keine "Wie war's?"-Mitteilung
+
+## 4b. Widget und Komplikation
+
+- [ ] iPhone: Widget "Nächste Einheit" (klein, mittel) auf den Home-Bildschirm und auf den Sperrbildschirm (rechteckig,
+      rund, Zeile): "Heute" mit den Einheiten aus Aktuell; nach erledigtem Training "Morgen"; Ruhetag mit Mond
+- [ ] Im Plan-Tab heute ändern: Das Widget folgt, sobald Aktuell den neuen Plan hat
+- [ ] Watch: Komplikation "Nächste Einheit" aufs Zifferblatt (rechteckig, rund, Ecke, Zeile): zeigt den Plan vom iPhone;
+      Tippen öffnet die Watch-App
+- [ ] Am nächsten Morgen ohne Öffnen der App: Statt eines alten Plans steht "Öffne Peaksmith für deinen Plan" oder der
+      vorab geholte Plan
+
 ## 5. Wetter (wenn es passt)
 
 - [ ] An einem Tag mit Gewitter- oder Sturmwarnung: Rad steht "drinnen (Rolle)" im Plan, Laufen ohne Laufband bleibt
@@ -108,8 +134,9 @@ Je eine Einheit, danach in der Fitness-App Strecke, Karte und Herzfrequenz prüf
 - [ ] Feedback zum Gesamtplan ("weniger Laufen im Winter"): Änderungen werden aufgelistet
 - [ ] Ziel ändern (Feinjustierung sofort, neues Ziel höchstens alle 7 Tage): neuer Gesamtplan
 - [ ] Pause melden (krank, 7 Tage): Fortschreibung, danach behutsamer Wiedereinstieg
-- [ ] Dashboard: "Kachel hinzufügen" unter den Kacheln, eine Kachel nach links wischen und löschen, mit "Bearbeiten"
-      umsortieren, im Detail einer Kachel "Kachel entfernen"; nach einem Neustart ist alles noch so
+- [ ] Dashboard, "Bereiche anpassen": Kachel hinzufügen, eine antippen und ändern, eine mit Minus entfernen, Kacheln
+      umsortieren; nach einem Neustart ist alles noch so
+- [ ] Jeder Tab, "Bereiche anpassen": Bereiche umsortieren, ausblenden, wieder hinzufügen, Standard wiederherstellen
 - [ ] Dashboard-Kachel auf "Laufen, Pace pro km" stellen, App neu starten: Einstellung bleibt, Zahl stimmt mit der
       Fitness-App
 - [ ] Verlauf: Plan gegen Ist ist nach ein paar Tagen sinnvoll

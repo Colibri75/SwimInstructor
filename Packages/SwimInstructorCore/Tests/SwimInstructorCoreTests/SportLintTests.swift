@@ -20,7 +20,10 @@ final class SportLintTests: XCTestCase {
         let checkedDirectories = [
             RepoPaths.packageSources,
             RepoPaths.root.appendingPathComponent("App"),
-            RepoPaths.root.appendingPathComponent("WatchApp")
+            RepoPaths.root.appendingPathComponent("WatchApp"),
+            RepoPaths.root.appendingPathComponent("WidgetsShared"),
+            RepoPaths.root.appendingPathComponent("Widgets"),
+            RepoPaths.root.appendingPathComponent("WatchWidgets")
         ]
         let allowed = RepoPaths.packageSources.appendingPathComponent("Sports").standardizedFileURL.path + "/"
         let expressions = try Self.forbidden.map { (try NSRegularExpression(pattern: $0.pattern), $0.why) }
