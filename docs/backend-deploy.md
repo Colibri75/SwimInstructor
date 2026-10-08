@@ -186,36 +186,52 @@ in der alten Version, bis du den Fehler behoben hast.
 ### Automatisch deployen (optional)
 
 Der Workflow `Backend Deploy` spielt das Backend nach jedem grünen `Backend CI` auf `main` selbst ein. Er
-bleibt aus, solange die Secrets fehlen. GitHub meldet sich als root an, der Schlüssel kann aber nur
-`deploy.sh` starten. Einrichtung, einmalig, als root auf dem Server:
+bleibt aus, solange die Secrets fehlen. GitHub meldet sich als eigener Nutzer `deploy` an. Der darf per
+`sudo` genau ein Programm als root starten, nämlich `deploy.sh`, denn das Skript braucht root für
+`git pull` im Repo, für die nur für root lesbare `backend.env` und für `/var/log/swiminstructor`.
+Einrichtung, einmalig, als root auf dem Server:
 
-1. Einen eigenen Schlüssel nur für dieses Repo anlegen und ihn auf das Skript festnageln:
+1. Nutzer `deploy` anlegen, falls es ihn noch nicht gibt (`id deploy` zeigt es), und ihm genau das
+   Deploy-Skript per sudo erlauben:
+
+```bash
+id deploy || adduser --disabled-password --gecos "" deploy
+echo 'deploy ALL=(root) NOPASSWD: /opt/stack/swiminstructor/backend/deploy/deploy.sh' > /etc/sudoers.d/swiminstructor-deploy
+chmod 440 /etc/sudoers.d/swiminstructor-deploy
+visudo -cf /etc/sudoers.d/swiminstructor-deploy   # muss "parsed OK" melden
+ls -l /opt/stack/swiminstructor/backend/deploy/deploy.sh   # muss root gehören, sonst könnte deploy es ändern
+```
+
+2. Einen eigenen Schlüssel nur für dieses Repo anlegen und ihn auf das Skript festnageln, damit er
+   nichts anderes kann:
 
 ```bash
 ssh-keygen -t ed25519 -N "" -C github-swiminstructor -f /root/gh-swiminstructor
-echo "command=\"/opt/stack/swiminstructor/backend/deploy/deploy.sh\",no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-pty $(cat /root/gh-swiminstructor.pub)" >> /root/.ssh/authorized_keys
-sshd -T | grep -i permitrootlogin   # muss yes, prohibit-password oder forced-commands-only sein, nicht no
+DEPLOY_HOME=$(getent passwd deploy | cut -d: -f6)
+install -d -m 700 -o deploy -g deploy "$DEPLOY_HOME/.ssh"
+echo "command=\"sudo -n /opt/stack/swiminstructor/backend/deploy/deploy.sh\",no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-pty $(cat /root/gh-swiminstructor.pub)" >> "$DEPLOY_HOME/.ssh/authorized_keys"
+chown deploy:deploy "$DEPLOY_HOME/.ssh/authorized_keys" && chmod 600 "$DEPLOY_HOME/.ssh/authorized_keys"
 ```
 
-2. Testen, ob der Schlüssel das Deployment auslöst (deployt einmal den aktuellen Stand):
+3. Testen, ob der Schlüssel das Deployment auslöst (deployt einmal den aktuellen Stand):
 
 ```bash
-ssh -i /root/gh-swiminstructor -o IdentitiesOnly=yes root@localhost   # endet mit "Deploy erfolgreich"
+ssh -i /root/gh-swiminstructor -o IdentitiesOnly=yes deploy@localhost   # endet mit "Deploy erfolgreich"
 ```
 
-3. Die Werte für GitHub auslesen und unter *Settings → Secrets and variables → Actions → New repository
+4. Die Werte für GitHub auslesen und unter *Settings → Secrets and variables → Actions → New repository
    secret* eintragen:
    - `DEPLOY_HOST`: der Name, unter dem GitHub den Server per SSH erreicht (IPv4 nötig, GitHub-Runner
      haben kein IPv6).
-   - `DEPLOY_USER`: `root`
-   - `DEPLOY_PORT`: nur nötig, wenn SSH nicht auf Port 22 läuft (`sshd -T | grep -i '^port'` zeigt den Port).
+   - `DEPLOY_USER`: `deploy`
+   - `DEPLOY_PORT`: nur nötig, wenn SSH nicht auf Port 22 läuft (`ss -tlnp | grep sshd` zeigt den Port).
    - `DEPLOY_SSH_KEY`: Ausgabe von `cat /root/gh-swiminstructor`, alles inklusive der BEGIN- und END-Zeile.
    - `DEPLOY_KNOWN_HOSTS`: Ausgabe von
      `echo "<host> $(cut -d' ' -f1,2 /etc/ssh/ssh_host_ed25519_key.pub)"` (bei anderem Port als 22 statt
      `<host>` die Form `[<host>]:<port>`).
 
    Danach den privaten Schlüssel vom Server löschen: `rm /root/gh-swiminstructor /root/gh-swiminstructor.pub`.
-4. Einmal von Hand starten (*Actions → Backend Deploy → Run workflow*) und im Log auf
+5. Einmal von Hand starten (*Actions → Backend Deploy → Run workflow*) und im Log auf
    "Deploy erfolgreich" achten.
 
 ## Logs
