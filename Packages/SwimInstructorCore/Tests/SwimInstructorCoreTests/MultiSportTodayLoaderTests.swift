@@ -376,6 +376,20 @@ final class MultiSportTodayLoaderTests: XCTestCase {
         XCTAssertFalse(loader.isLoading)
     }
 
+    func testPullToRefreshNeverFetchesOrPreparesAPlan() async throws {
+        let cache = MemoryCache(TodayLoaderV2Data.response(date: "2026-09-29"))
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        var prepared = 0
+        let loader = makeLoader(cache: cache, prepare: { _ in prepared += 1 }, provider: provider)
+
+        await loader.pullToRefresh()
+
+        XCTAssertNotNil(loader.reading)
+        XCTAssertEqual(provider.calls, 0, "auch ohne Plan von heute kein Claude-Aufruf")
+        XCTAssertEqual(prepared, 0, "Gesamtplan und sieben Tage bleiben")
+        XCTAssertEqual(loader.response?.date, "2026-09-29")
+    }
+
     // MARK: - Plan holen
 
     func testFetchesAndCachesAPlanWhenNoneIsThereForToday() async throws {

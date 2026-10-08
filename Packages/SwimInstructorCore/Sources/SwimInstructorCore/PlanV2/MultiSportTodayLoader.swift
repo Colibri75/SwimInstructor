@@ -126,9 +126,15 @@ public final class MultiSportTodayLoader: ObservableObject {
         await load(force: false, regenerate: false)
     }
 
-    /// Ziehen zum Aktualisieren: Health lesen und in jedem Fall einen neuen Plan von Claude holen.
+    /// Health lesen und in jedem Fall einen neuen Plan von Claude holen (Knopf "Plan neu erstellen", neue Einstellungen).
     public func refresh() async {
         await load(force: true, regenerate: true)
+    }
+
+    /// Ziehen zum Aktualisieren, in jedem Tab: nur Health neu lesen. Gesamtplan, sieben Tage und Tagesplan bleiben, wie
+    /// sie sind; einen neuen Plan gibt es nur über den Knopf oder eine Änderung im Plan-Tab.
+    public func pullToRefresh() async {
+        await readHealth()
     }
 
     /// Nur Health lesen (mit Erlaubnis), ohne Gesamtplan, sieben Tage und Tagesplan: für die Einrichtung, die beim
@@ -166,7 +172,7 @@ public final class MultiSportTodayLoader: ObservableObject {
     }
 
     /// Ob heute feststeht: Es gibt schon einen Tagesplan oder eine Vorschau für heute, oder heute wurde schon trainiert.
-    /// Dann ändert das Neu-Abstimmen der sieben Tage heute nicht mehr, nur noch du (Plan-Tab, Wunsch, Ziehen).
+    /// Dann ändert das Neu-Abstimmen der sieben Tage heute nicht mehr, nur noch du (Plan-Tab, Wunsch, Knopf).
     public var isTodayLocked: Bool {
         let today = todayKey
         if hasFreshPlanForToday || previews[today] != nil { return true }

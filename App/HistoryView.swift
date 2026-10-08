@@ -42,7 +42,8 @@ struct HistoryView: View {
             .themedList()
             .navigationTitle("Verlauf")
             .settingsToolbar()
-            .refreshable { await loader.refreshIfNeeded() }
+            // Ziehen liest nur Health neu, der Plan bleibt.
+            .refreshable { await loader.pullToRefresh() }
         }
         .task { await loader.refreshIfNeeded() }
     }
