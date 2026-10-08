@@ -76,6 +76,34 @@ platform :ios do
     UI.user_error!("Sport-Coverage unter #{minimum} %: #{too_low.join(', ')}") unless too_low.empty?
   end
 
+  # Von Hand (Workflow "Profile erneuern"): erzeugt die App-Store-Profile aller Targets neu und legt sie ins
+  # Zertifikate-Repo. Nötig, wenn sich Capabilities der App-IDs ändern (z. B. App Groups) oder ein Target dazukommt.
+  # Braucht Schreibrecht aufs Zertifikate-Repo (MATCH_GIT_WRITE_AUTHORIZATION); die beta-Lane liest danach wie gewohnt.
+  desc "Regenerate the App Store provisioning profiles of all targets"
+  lane :profiles do
+    setup_ci if is_ci
+
+    app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_KEY_CONTENT"],
+      is_key_content_base64: false
+    )
+
+    match(
+      type: "appstore",
+      readonly: false,
+      force: true,
+      app_identifier: [
+        "com.kellner.SwimInstructor",
+        "com.kellner.SwimInstructor.watchkitapp",
+        "com.kellner.SwimInstructor.widgets",
+        "com.kellner.SwimInstructor.watchkitapp.widgets"
+      ],
+      git_basic_authorization: ENV["MATCH_GIT_WRITE_AUTHORIZATION"]
+    )
+  end
+
   desc "Build, sign and upload a new build to TestFlight"
   lane :beta do
     # Without this, codesign can hang forever in headless CI waiting for a keychain-access
