@@ -14,6 +14,7 @@ struct WeekView: View {
     @EnvironmentObject private var macroLoader: MultiSportMacroLoader
     @EnvironmentObject private var todayLoader: MultiSportTodayLoader
     @EnvironmentObject private var settings: BackendSettings
+    @EnvironmentObject private var layouts: ScreenLayouts
 
     @State private var part = Part.week
     @State private var wish = ""
@@ -49,13 +50,13 @@ struct WeekView: View {
                 case .macro:
                     List {
                         Group {
-                            RacePlanLinkSection()
-                            MacroPlanSections { start in
+                            MacroPlanSections(sections: layouts.visible(.macro).map(\.id)) { start in
                                 // Eine Woche aus dem Gesamtplan im Wochenplan öffnen.
                                 if weekLoader.selectWeek(containing: start) { part = .week }
                             }
                         }
                         .cardRows()
+                        CustomizeSectionsRow(screen: .macro)
                     }
                     .themedList()
                     .swipeClosesKeyboard()
@@ -106,19 +107,32 @@ struct WeekView: View {
     private var weekList: some View {
         List {
             Group {
-                weekHeaderSection
-                if let macroWeek {
-                    macroTargetSection(macroWeek)
-                }
-                if let plan, !plan.rationale.isEmpty {
-                    overviewSection(plan)
-                }
-                daysSection
-                if overlapsWindow {
-                    planSection
+                // Reihenfolge und Auswahl der Bereiche: "Bereiche anpassen" unten in der Liste.
+                ForEach(layouts.visible(.week)) { section in
+                    switch section.id {
+                    case "summary":
+                        weekHeaderSection
+                    case "macroTarget":
+                        if let macroWeek {
+                            macroTargetSection(macroWeek)
+                        }
+                    case "overview":
+                        if let plan, !plan.rationale.isEmpty {
+                            overviewSection(plan)
+                        }
+                    case "days":
+                        daysSection
+                    case "planning":
+                        if overlapsWindow {
+                            planSection
+                        }
+                    default:
+                        EmptyView()
+                    }
                 }
             }
             .cardRows()
+            CustomizeSectionsRow(screen: .week)
         }
         .themedList()
         .swipeClosesKeyboard()
