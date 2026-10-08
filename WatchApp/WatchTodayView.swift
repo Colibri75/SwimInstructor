@@ -98,12 +98,12 @@ struct WatchTodayView: View {
                 Label(session.test.map { "Test starten: \($0.displayName)" } ?? "Starten", systemImage: registry.symbolName(for: session.sport))
                     .font(.headline)
             }
-            .tint(.green)
+            .tint(Theme.ember)
             // Koppeltraining: gleich nach dem Ende der Einheit davor hier starten; drinnen ist der Ort vorgewählt.
             ForEach(PlanV2Formatting.sessionHints(brick: session.brick, indoor: session.indoor, openWater: session.openWater, sport: session.sport, previous: previous, registry: registry), id: \.self) { hint in
                 Text(hint)
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Theme.spark)
             }
             if !session.focus.isEmpty {
                 Text(session.focus)
@@ -214,7 +214,7 @@ struct WatchStartView: View {
                     Label("Los", systemImage: "play.fill")
                         .font(.headline)
                 }
-                .tint(.green)
+                .tint(Theme.ember)
                 if let error = workoutManager.errorMessage {
                     Text(error)
                         .font(.footnote)

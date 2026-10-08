@@ -40,92 +40,96 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    TextField("https://…", text: $urlText)
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    SecureField(settings.hasToken ? "Token gespeichert (leer lassen = behalten)" : "API-Token", text: $tokenText)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                } header: {
-                    Text("Server")
-                } footer: {
-                    Text("Dein persönlicher Token vom Server (beim Besitzer der Wert von API_TOKEN, sonst von ihm angelegt). Er wird nur im Schlüsselbund dieses iPhones gespeichert.")
-                }
-
-                Section {
-                    Button(isChecking ? "Prüft …" : "Verbindung testen") {
-                        Task { await checkConnection() }
-                    }
-                    .disabled(isChecking)
-                    if let message {
-                        Text(message)
-                            .font(.footnote)
-                            .foregroundStyle(messageIsError ? .red : .green)
-                    }
-                }
-
-                goalSection
-                    // Auch beim Zurückkommen aus dem Ziel-Assistenten neu lesen.
-                    .onAppear { trainingGoal = trainingGoalStore.goal() }
-
-                scheduleSection
-                    .onAppear { scheduleSummary = scheduleStore.schedule(for: trainingGoalStore.goal()).summary }
-
-                startingLevelSection
-                    .onAppear { startingLevels = startingLevelStore.levels() }
-
-                pauseSection
-                    .onAppear { pauseReport = pauseStore.report() }
-
-                Section {
-                    NavigationLink {
-                        ProfileView()
-                    } label: {
-                        Label("Leistungswerte und Tests", systemImage: "gauge.with.dots.needle.67percent")
-                    }
-                } header: {
-                    Text("Leistungsprofil")
-                } footer: {
-                    Text("Danach richten sich Zonen und Tempo im Plan. Hier trägst du Werte von Hand oder nach einem Test ein und stellst ein, ob und wie oft die App Tests einplant.")
-                }
-
-                planningSection
-
-                Section {
-                    ForEach(EquipmentItem.allCases) { item in
-                        Toggle(item.title, isOn: equipmentBinding(for: item))
-                    }
-                    ForEach(SportRegistry.standard.indoorEquipment, id: \.id) { item in
-                        Toggle(item.displayName, isOn: indoorBinding(for: item.id))
-                    }
-                    ForEach(SportRegistry.standard.openWaterVenues, id: \.id) { venue in
-                        Toggle("Zugang zu \(venue.displayName) (See, Meer)", isOn: indoorBinding(for: venue.id))
-                    }
-                } header: {
-                    Text("Mein Equipment")
-                } footer: {
-                    Text("Der Plan nutzt nur, was hier an ist. Mit Rolle oder Laufband plant er bei Unwetter drinnen. Mit Zugang zu Freiwasser plant er dort, wenn es warm genug ist, vor allem vor einem Ziel im Freiwasser. Die Auswahl gilt ab dem nächsten Plan (zum Aktualisieren auf Heute nach unten ziehen). Ohne Auswahl plant dein Coach ganz ohne Hilfsmittel.")
-                }
-
-                Section("Apple Health") {
-                    Button("Health-Zugriff erneut anfragen") {
-                        Task { try? await healthKitManager.requestAuthorization() }
-                    }
-                    if let error = healthKitManager.lastError {
-                        Text("Fehler: \(error)").font(.footnote).foregroundStyle(.red)
-                    }
-                }
-
-                if settings.hasToken {
+                Group {
                     Section {
-                        Button("Token entfernen", role: .destructive) {
-                            try? settings.removeToken()
+                        TextField("https://…", text: $urlText)
+                            .keyboardType(.URL)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                        SecureField(settings.hasToken ? "Token gespeichert (leer lassen = behalten)" : "API-Token", text: $tokenText)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                    } header: {
+                        Text("Server")
+                    } footer: {
+                        Text("Dein persönlicher Token vom Server (beim Besitzer der Wert von API_TOKEN, sonst von ihm angelegt). Er wird nur im Schlüsselbund dieses iPhones gespeichert.")
+                    }
+
+                    Section {
+                        Button(isChecking ? "Prüft …" : "Verbindung testen") {
+                            Task { await checkConnection() }
+                        }
+                        .disabled(isChecking)
+                        if let message {
+                            Text(message)
+                                .font(.footnote)
+                                .foregroundStyle(messageIsError ? .red : .green)
+                        }
+                    }
+
+                    goalSection
+                        // Auch beim Zurückkommen aus dem Ziel-Assistenten neu lesen.
+                        .onAppear { trainingGoal = trainingGoalStore.goal() }
+
+                    scheduleSection
+                        .onAppear { scheduleSummary = scheduleStore.schedule(for: trainingGoalStore.goal()).summary }
+
+                    startingLevelSection
+                        .onAppear { startingLevels = startingLevelStore.levels() }
+
+                    pauseSection
+                        .onAppear { pauseReport = pauseStore.report() }
+
+                    Section {
+                        NavigationLink {
+                            ProfileView()
+                        } label: {
+                            Label("Leistungswerte und Tests", systemImage: "gauge.with.dots.needle.67percent")
+                        }
+                    } header: {
+                        Text("Leistungsprofil")
+                    } footer: {
+                        Text("Danach richten sich Zonen und Tempo im Plan. Hier trägst du Werte von Hand oder nach einem Test ein und stellst ein, ob und wie oft die App Tests einplant.")
+                    }
+
+                    planningSection
+
+                    Section {
+                        ForEach(EquipmentItem.allCases) { item in
+                            Toggle(item.title, isOn: equipmentBinding(for: item))
+                        }
+                        ForEach(SportRegistry.standard.indoorEquipment, id: \.id) { item in
+                            Toggle(item.displayName, isOn: indoorBinding(for: item.id))
+                        }
+                        ForEach(SportRegistry.standard.openWaterVenues, id: \.id) { venue in
+                            Toggle("Zugang zu \(venue.displayName) (See, Meer)", isOn: indoorBinding(for: venue.id))
+                        }
+                    } header: {
+                        Text("Mein Equipment")
+                    } footer: {
+                        Text("Der Plan nutzt nur, was hier an ist. Mit Rolle oder Laufband plant er bei Unwetter drinnen. Mit Zugang zu Freiwasser plant er dort, wenn es warm genug ist, vor allem vor einem Ziel im Freiwasser. Die Auswahl gilt ab dem nächsten Plan (zum Aktualisieren auf Heute nach unten ziehen). Ohne Auswahl plant dein Coach ganz ohne Hilfsmittel.")
+                    }
+
+                    Section("Apple Health") {
+                        Button("Health-Zugriff erneut anfragen") {
+                            Task { try? await healthKitManager.requestAuthorization() }
+                        }
+                        if let error = healthKitManager.lastError {
+                            Text("Fehler: \(error)").font(.footnote).foregroundStyle(.red)
+                        }
+                    }
+
+                    if settings.hasToken {
+                        Section {
+                            Button("Token entfernen", role: .destructive) {
+                                try? settings.removeToken()
+                            }
                         }
                     }
                 }
+                .cardRows()
             }
+            .themedList()
             .navigationTitle("Einstellungen")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

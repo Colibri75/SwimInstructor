@@ -37,6 +37,9 @@ public protocol SportModule: Sendable {
     var displayName: String { get }
     /// SF-Symbol für Listen und Karten.
     var symbolName: String { get }
+    /// Farbe der Sportart in Symbolen, Balken und Diagrammen (RGB, z. B. 0x4CC9F0), für dunklen Grund gewählt; hell
+    /// dunkelt die App sie ab. Bewusst nie Orange: Das ist die Farbe für Aktionen.
+    var colorRGB: UInt32 { get }
     /// Maße, nach denen ein Schritt dieser Sportart geplant werden kann.
     var measures: Set<StepMeasure> { get }
     /// Ziele, nach denen sich die Intensität eines Schritts richten kann.
@@ -116,6 +119,9 @@ public extension SportModule {
     var openWater: OpenWaterVenue? { nil }
 
     var statistics: [StatisticDefinition] { SportStatistics.derived(for: self) }
+
+    // Ohne eigene Farbe: neutrales Blaugrau.
+    var colorRGB: UInt32 { SportRegistry.neutralColorRGB }
 }
 
 /// Die angemeldeten Sportarten. Prüft beim Anlegen, dass jede Sportart vollständig beschrieben ist und keine
@@ -228,6 +234,14 @@ public struct SportRegistry: Sendable {
     public func symbolName(for id: SportID) -> String {
         module(for: id)?.symbolName ?? "figure.mixed.cardio"
     }
+
+    /// Farbe einer Sportart, neutral für unbekannte Kennungen.
+    public func colorRGB(for id: SportID) -> UInt32 {
+        module(for: id)?.colorRGB ?? Self.neutralColorRGB
+    }
+
+    /// Blaugrau für Sportarten ohne eigene Farbe.
+    public static let neutralColorRGB: UInt32 = 0x8E9AB3
 
     /// Ob eine Strecke in dieser Zielzeit für die Sportart ein plausibles Durchschnittstempo ergibt.
     public func isPlausibleGoal(sport: SportID, distanceMeters: Double, durationSeconds: TimeInterval) -> Bool {

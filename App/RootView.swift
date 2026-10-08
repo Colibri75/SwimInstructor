@@ -20,17 +20,22 @@ struct RootView: View {
     }
 
     var body: some View {
-        if onboardingDone {
-            tabs
-        } else {
-            OnboardingView {
-                onboardingStore.complete()
-                selection = .week
-                onboardingDone = true
-                // Gesamtplan und sieben Tage zum neuen Ziel; der Plan-Tab liest Health nur, wenn noch nichts gelesen ist.
-                Task { await loader.refreshIfNeeded() }
+        Group {
+            if onboardingDone {
+                tabs
+            } else {
+                OnboardingView {
+                    onboardingStore.complete()
+                    selection = .week
+                    onboardingDone = true
+                    // Gesamtplan und sieben Tage zum neuen Ziel; der Plan-Tab liest Health nur, wenn noch nichts gelesen ist.
+                    Task { await loader.refreshIfNeeded() }
+                }
             }
         }
+        // Design aus dem Logo: Glut als Akzent, runde Schrift wie die Linien des Gipfels.
+        .tint(Theme.accent)
+        .fontDesign(.rounded)
     }
 
     private var tabs: some View {

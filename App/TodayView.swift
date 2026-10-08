@@ -50,19 +50,27 @@ struct TodayView: View {
     var body: some View {
         NavigationStack {
             List {
-                watchResultSection
-                adaptationSection
-                feedbackSection
-                doneSection
-                weekTodaySection
-                if showsTomorrow {
-                    tomorrowSections
-                } else {
-                    planSection
-                    extrasSections
-                    wishSection
+                Group {
+                    watchResultSection
+                    adaptationSection
+                    feedbackSection
+                    doneSection
                 }
+                .cardRows()
+                // Die Tageskarte hat ihren eigenen Grund (Nacht).
+                weekTodaySection
+                Group {
+                    if showsTomorrow {
+                        tomorrowSections
+                    } else {
+                        planSection
+                        extrasSections
+                        wishSection
+                    }
+                }
+                .cardRows()
             }
+            .themedList()
             .navigationTitle("Aktuell")
             .swipeClosesKeyboard()
             .settingsToolbar(isPresented: $showsSettings)
@@ -99,6 +107,20 @@ struct TodayView: View {
     private var doneSection: some View {
         if todayDone {
             Section {
+                HStack(spacing: 14) {
+                    SparkPeak(size: 48, peakColor: .primary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Heute erledigt")
+                            .font(.title3.weight(.heavy))
+                        if let summary = todaySummary {
+                            Text(summary)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .padding(.vertical, 4)
+                .accessibilityElement(children: .combine)
                 Picker("Tag", selection: $showsToday) {
                     Text("Heute").tag(true)
                     Text("Morgen").tag(false)
@@ -112,42 +134,65 @@ struct TodayView: View {
 
     // MARK: - Im Plan
 
-    /// Was der Plan der sieben Tage für den gezeigten Tag vorgibt. Die Einheiten mit allen Schritten stehen darunter.
+    /// Was heute schon gemacht ist, kurz: "Schwimmen 850 m · Laufen 30 min".
+    private var todaySummary: String? {
+        let done = todayStatus?.comparisons.filter { $0.workoutCount > 0 } ?? []
+        guard !done.isEmpty else { return nil }
+        return done.map { "\(SportRegistry.standard.displayName(for: $0.sport)) \(PlanV2Formatting.amount($0.actual, unit: $0.unit))" }
+            .joined(separator: " · ")
+    }
+
+    /// Die Tageskarte in Nacht, wie das Logo (auch im hellen Modus): Tag, Stand, Einheiten groß, Schwerpunkt, dahinter
+    /// der Gipfel als Wasserzeichen. Die Einheiten mit allen Schritten stehen darunter.
     @ViewBuilder
     private var weekTodaySection: some View {
         Section {
             if let entry = weekLoader.day(on: shownDate) {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(entry.isUnavailable ? "Keine Zeit" : (entry.isRestDay ? "Ruhetag" : (showsTomorrow ? "Morgen im Plan" : "Heute im Plan")))
-                            .font(.headline)
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .center) {
+                        Text("\(weekCalendar.weekdayName(shownDate)), \(PlanFormatting.shortGermanDate(shownDate))".uppercased())
+                            .font(.footnote.weight(.bold))
+                            .tracking(1)
+                            .foregroundStyle(Theme.nightSecondary)
                         Spacer()
-                        if !showsTomorrow, let state = todayStatus?.state {
-                            Text(PlanV2Formatting.stateText(state))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
+                        statusBadge(entry)
                     }
-                    if !entry.isUnavailable {
+                    if entry.isUnavailable || entry.isRestDay || entry.sessions.isEmpty {
+                        Text(entry.isUnavailable ? "Keine Zeit" : "Ruhetag")
+                            .font(.title.weight(.heavy))
+                    } else {
                         ForEach(Array(entry.sessions.enumerated()), id: \.offset) { _, session in
-                            PlannedSessionLine(session: session)
+                            HeroSessionLine(session: session)
                         }
                         WeekExtrasLine(extras: entry.extras)
                     }
                     if !entry.focus.isEmpty, !entry.isRestDay, !entry.isUnavailable {
                         Text(entry.focus)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .font(.subheadline)
+                            .foregroundStyle(.white.opacity(0.88))
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
-                .padding(.vertical, 2)
+                .padding(.vertical, 8)
+                .foregroundStyle(.white)
+                .environment(\.colorScheme, .dark)
+                .listRowBackground(
+                    ZStack(alignment: .bottomTrailing) {
+                        Theme.night
+                        PeakShape()
+                            .stroke(.white.opacity(0.1), style: StrokeStyle(lineWidth: 16, lineCap: .round, lineJoin: .round))
+                            .frame(width: 150, height: 86)
+                            .offset(x: 14, y: 16)
+                    }
+                    .clipped()
+                )
             } else {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(showsTomorrow ? "Für morgen gibt es keinen Eintrag im Plan." : "Für heute gibt es keinen Eintrag im Plan.")
                     Button("Zum Plan") { onShowWeek() }
                 }
                 .padding(.vertical, 2)
+                .cardRows()
             }
         }
     }
@@ -228,6 +273,27 @@ struct TodayView: View {
                 }
             }
         }
+    }
+
+    /// Stand des Tages als Abzeichen: offen in Glut, erledigt in Funke, morgen "Vorschau".
+    @ViewBuilder
+    private func statusBadge(_ entry: PlannedDay) -> some View {
+        if showsTomorrow {
+            badge("morgen", fill: Theme.nightSecondary.opacity(0.25), foreground: .white)
+        } else if todayDone {
+            badge("erledigt", fill: Theme.spark, foreground: Theme.onBright)
+        } else if !entry.isRestDay, !entry.isUnavailable, let state = todayStatus?.state {
+            badge(PlanV2Formatting.stateText(state), fill: Theme.ember, foreground: Theme.onBright)
+        }
+    }
+
+    private func badge(_ label: String, fill: Color, foreground: Color) -> some View {
+        Text(label)
+            .font(.caption.weight(.heavy))
+            .foregroundStyle(foreground)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(fill, in: Capsule())
     }
 
     // MARK: - Morgen
@@ -389,7 +455,7 @@ struct TodayView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Noch kein Server-Token hinterlegt.")
                 Button("Einstellungen öffnen") { showsSettings = true }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.ember)
             }
             .padding(.vertical, 4)
         } else if loader.healthError != nil {
@@ -431,6 +497,7 @@ struct TodayView: View {
                          : "Plan mit Wunsch neu erstellen")
                 }
             }
+            .buttonStyle(.ember)
             .disabled(loader.isLoading || !settings.hasToken)
         } header: {
             Text("Dein Wunsch für heute")
@@ -453,6 +520,43 @@ struct TestResultTarget: Identifiable {
     var watchResult: WatchTestResult?
 
     var id: String { "\(sport.rawValue)|\(testID)|\(watchResult?.id.uuidString ?? "-")" }
+}
+
+/// Eine geplante Einheit groß auf der Tageskarte: Symbol in der Farbe der Sportart, Sportart und Umfang, darunter Art
+/// und Intensität.
+private struct HeroSessionLine: View {
+    let session: WeekSession
+
+    private let registry = SportRegistry.standard
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: registry.symbolName(for: session.sport))
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(Theme.sport(session.sport))
+                .frame(width: 52, height: 52)
+                .background(Theme.sport(session.sport).opacity(0.18), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(PlanV2Formatting.sessionTitle(sport: session.sport, amount: session.amount, unit: session.unit, registry: registry))
+                    .font(.title2.weight(.heavy))
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+                Text(subtitle)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.nightSecondary)
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var subtitle: String {
+        var parts = [session.test.map { "Test: \($0.displayName)" } ?? "\(PlanFormatting.sessionType(session.sessionType)), \(PlanFormatting.intensity(session.intensity))"]
+        if session.brick { parts.append("Koppeltraining") }
+        if session.indoor { parts.append("drinnen") }
+        if session.openWater { parts.append("Freiwasser") }
+        return parts.joined(separator: " · ")
+    }
 }
 
 /// Eine geplante Einheit in einer Zeile: Symbol, Sportart, Umfang, Art und Intensität.

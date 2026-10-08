@@ -43,6 +43,7 @@ struct DashboardView: View {
                         if dashboard.tiles.isEmpty {
                             Text("Keine Kacheln.")
                                 .foregroundStyle(.secondary)
+                                .cardRows()
                         }
                         StatisticTileRows(dashboard: dashboard, input: statisticInput, isEditing: isEditing) { tile in
                             openedTileID = tile.id
@@ -52,6 +53,7 @@ struct DashboardView: View {
                         } label: {
                             Label("Kachel hinzufügen", systemImage: "plus.circle.fill")
                         }
+                        .cardRows()
                     } header: {
                         Text("Statistik")
                     } footer: {
@@ -64,7 +66,9 @@ struct DashboardView: View {
                         )
                         RecoveryRow(reading: reading)
                     }
+                    .cardRows()
                     GoalSection(snapshot: reading.snapshot)
+                        .cardRows()
                 } else if loader.isLoadingHealth {
                     HStack(spacing: 12) {
                         ForgeAnimation()
@@ -77,6 +81,7 @@ struct DashboardView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            .themedList()
             .environment(\.editMode, $editMode)
             .navigationTitle("Dashboard")
             .settingsToolbar()

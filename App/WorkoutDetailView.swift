@@ -26,7 +26,7 @@ struct WorkoutDetailView: View {
                 HStack(spacing: 14) {
                     Image(systemName: registry.symbolName(for: workout.sport))
                         .font(.largeTitle)
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(Theme.accent)
                         .frame(width: 48)
                         .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 4) {

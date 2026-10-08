@@ -45,6 +45,10 @@ und die Zeile aus `GET /v1/admin/usage` (Ergebnis, Grund, Dauer).
 - [ ] Watch: Nach dem Öffnen der iPhone-App erscheint derselbe Plan; "Vom iPhone holen" liefert ihn, bei ausgeschaltetem
       iPhone kommt eine verständliche Meldung
 
+- [ ] Design im Hellen und Dunkeln (iOS-Einstellungen › Anzeige & Helligkeit): Aktuell mit Navy-Tageskarte, orange Knöpfe gut lesbar,
+      Gesamtplan zeigt den Berg mit "du bist hier" und Fahne, Sportfarben in Karten und Diagramm, Watch mit oranger
+      Schrittzeile und gelber Pause
+
 ## 2. Einstellungen der Planung (Tag 1)
 
 - [ ] Planung: Kraft 2× und Mobilität 3× pro Woche; nach dem nächsten Planen stehen Kraft- und Mobilitätsblöcke in der

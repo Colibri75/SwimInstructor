@@ -63,7 +63,7 @@ struct MacroPlanSections: View {
                     MacroWeekRow(week: week, isCurrent: week.weekStart == macroLoader.currentWeekStart)
                 }
                 .buttonStyle(.plain)
-                .listRowBackground(week.weekStart == macroLoader.currentWeekStart ? Color.accentColor.opacity(0.1) : nil)
+                .listRowBackground(week.weekStart == macroLoader.currentWeekStart ? Theme.highlightedCard : Theme.card)
             }
         } header: {
             Text("Wochen bis zum Ziel (\(plan.weeks.count))")
@@ -395,6 +395,7 @@ private struct MacroOverview: View {
     private let registry = SportRegistry.standard
 
     var body: some View {
+        MacroSummitView(profile: MacroSummitProfile(plan: plan, currentWeekStart: currentWeekStart), weeks: plan.weeks.count)
         VStack(alignment: .leading, spacing: 6) {
             Text("Ziel am \(PlanFormatting.germanDate(plan.goalDay)), noch \(weeksLeft) Wochen")
                 .font(.headline)
@@ -451,6 +452,129 @@ private struct MacroOverview: View {
     }
 }
 
+/// Der Weg zum Ziel als Berg wie im Logo (`MacroSummitProfile`): der gegangene Teil in Glut, der Rest gepunktet, auf
+/// dem Gipfel die Fahne des Ziels, darunter die Phasen als Farbband.
+private struct MacroSummitView: View {
+    let profile: MacroSummitProfile
+    let weeks: Int
+
+    private struct Run: Identifiable {
+        let phase: MacroPhase
+        let from: Double
+        let to: Double
+        var id: Double { from }
+    }
+
+    /// Aufeinanderfolgende Wochen derselben Phase als ein Abschnitt.
+    private var runs: [Run] {
+        var result: [Run] = []
+        for segment in profile.segments {
+            if let last = result.last, last.phase == segment.phase {
+                result[result.count - 1] = Run(phase: last.phase, from: last.from, to: segment.toX)
+            } else {
+                result.append(Run(phase: segment.phase, from: segment.fromX, to: segment.toX))
+            }
+        }
+        return result
+    }
+
+    private var accessibilityText: String {
+        guard let index = profile.currentIndex else { return "Weg zum Ziel über \(weeks) Wochen" }
+        return "Weg zum Ziel: Woche \(index + 1) von \(weeks)"
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            GeometryReader { geometry in
+                let points = profile.points.map { position($0, in: geometry.size) }
+                let walked = Array(points.prefix((profile.currentIndex ?? -1) + 1))
+                ZStack {
+                    path(points)
+                        .stroke(Color.primary.opacity(0.35), style: StrokeStyle(lineWidth: 7, lineCap: .round, lineJoin: .round, dash: [0.1, 14]))
+                    if walked.count > 1 {
+                        path(walked)
+                            .stroke(Theme.ember, style: StrokeStyle(lineWidth: 7, lineCap: .round, lineJoin: .round))
+                    }
+                    if let summit = points.last {
+                        SummitFlag()
+                            .frame(width: 24, height: 30)
+                            .position(x: summit.x + 9, y: summit.y - 17)
+                    }
+                    if let here = walked.last {
+                        Circle()
+                            .fill(Theme.ember)
+                            .frame(width: 18, height: 18)
+                            .overlay { Circle().stroke(Theme.card, lineWidth: 4) }
+                            .position(here)
+                    }
+                }
+            }
+            .frame(height: 170)
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    ForEach(runs) { run in
+                        Capsule()
+                            .fill(Theme.phase(run.phase))
+                            .frame(width: max((run.to - run.from) * geometry.size.width - 3, 4), height: 8)
+                            .offset(x: run.from * geometry.size.width)
+                    }
+                }
+            }
+            .frame(height: 8)
+            HStack(spacing: 12) {
+                ForEach(runs) { run in
+                    HStack(spacing: 5) {
+                        Circle().fill(Theme.phase(run.phase)).frame(width: 9, height: 9)
+                        Text(PlanFormatting.macroPhase(run.phase))
+                    }
+                }
+            }
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 6)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityText)
+    }
+
+    /// Raum oben für die Fahne, an den Seiten für die runden Enden.
+    private func position(_ point: MacroSummitProfile.Point, in size: CGSize) -> CGPoint {
+        let inset: CGFloat = 10
+        let top: CGFloat = 36
+        return CGPoint(
+            x: inset + point.x * (size.width - 2 * inset - 18),
+            y: size.height - inset - point.y * (size.height - inset - top)
+        )
+    }
+
+    private func path(_ points: [CGPoint]) -> Path {
+        Path { path in
+            guard let first = points.first else { return }
+            path.move(to: first)
+            for point in points.dropFirst() { path.addLine(to: point) }
+        }
+    }
+}
+
+/// Die Fahne auf dem Gipfel, in Funke.
+private struct SummitFlag: View {
+    var body: some View {
+        Canvas { context, size in
+            var pole = Path()
+            pole.move(to: CGPoint(x: 2, y: size.height))
+            pole.addLine(to: CGPoint(x: 2, y: 2))
+            context.stroke(pole, with: .color(Theme.spark), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+            var flag = Path()
+            flag.move(to: CGPoint(x: 2, y: 2))
+            flag.addLine(to: CGPoint(x: size.width, y: size.height * 0.25))
+            flag.addLine(to: CGPoint(x: 2, y: size.height * 0.5))
+            flag.closeSubpath()
+            context.fill(flag, with: .color(Theme.spark))
+        }
+        .accessibilityHidden(true)
+    }
+}
+
 /// Wochenstunden je Sportart bis zum Zieltag, gestapelt.
 private struct MacroChart: View {
     let plan: MacroPlanV2
@@ -486,6 +610,7 @@ private struct MacroChart: View {
                 .foregroundStyle(by: .value("Sportart", bar.sport))
                 .opacity(bar.isCurrent ? 1 : 0.75)
             }
+            .chartForegroundStyleScale(domain: plan.sports.map { SportRegistry.standard.displayName(for: $0) }, range: plan.sports.map { Theme.sport($0) })
             .chartYAxisLabel("Stunden")
             .frame(height: 160)
             .accessibilityLabel("Wochenstunden je Sportart bis zum Ziel")
@@ -504,7 +629,7 @@ private struct MacroWeekRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text("\(isCurrent ? "Diese Woche" : "Ab \(PlanFormatting.shortGermanDate(week.weekStart))") · \(PlanFormatting.macroPhase(week.phase))\(week.deload ? " · Entlastung" : "")")
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(isCurrent ? Color.accentColor : Color.primary)
+                    .foregroundStyle(isCurrent ? Theme.accent : Color.primary)
                 Text("Etwa \(PlanV2Formatting.duration(minutes: week.totalMinutes))")
                     .font(.subheadline)
                 Text(week.sports.map { "\(registry.displayName(for: $0.sport)) \(PlanV2Formatting.amount($0.amount, unit: $0.unit))" }.joined(separator: " · "))

@@ -35,24 +35,28 @@ struct DayEditSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                if let status {
-                    plannedSection(status)
-                    trainingPlanSections(status)
-                    if status.workoutCount > 0 {
-                        doneSection(status)
-                    }
-                    if weekLoader.isEditable(date) {
-                        if let day = status.day, !day.isUnavailable {
-                            ForEach(Array(day.sessions.enumerated()), id: \.offset) { index, session in
-                                sessionSection(index: index, session: session, count: day.sessions.count)
-                            }
+                Group {
+                    if let status {
+                        plannedSection(status)
+                        trainingPlanSections(status)
+                        if status.workoutCount > 0 {
+                            doneSection(status)
                         }
-                        editSection(status)
-                    } else {
-                        catchUpSection(status)
+                        if weekLoader.isEditable(date) {
+                            if let day = status.day, !day.isUnavailable {
+                                ForEach(Array(day.sessions.enumerated()), id: \.offset) { index, session in
+                                    sessionSection(index: index, session: session, count: day.sessions.count)
+                                }
+                            }
+                            editSection(status)
+                        } else {
+                            catchUpSection(status)
+                        }
                     }
                 }
+                .cardRows()
             }
+            .themedList()
             .navigationTitle("\(weekCalendar.weekdayName(date)), \(PlanFormatting.shortGermanDate(date))")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

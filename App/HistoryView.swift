@@ -16,26 +16,30 @@ struct HistoryView: View {
                 now: Date()
             )
             List {
-                workoutsSection
-                if entries.isEmpty {
-                    Section {
-                        Text("Noch kein Verlauf. Ab jetzt merkt sich die App jeden Tagesplan und legt ihn neben deine Einheiten. Rückwirkend gibt es nichts zu vergleichen.")
-                            .foregroundStyle(.secondary)
-                    }
-                } else {
-                    SummarySection(summary: calculator.summary(of: entries))
-                    ChartSection(entries: entries)
-                    Section("Tage") {
-                        ForEach(entries) { entry in
-                            NavigationLink {
-                                HistoryDayView(entry: entry, workouts: workouts(on: entry.date), input: statisticInput)
-                            } label: {
-                                HistoryRow(entry: entry)
+                Group {
+                    workoutsSection
+                    if entries.isEmpty {
+                        Section {
+                            Text("Noch kein Verlauf. Ab jetzt merkt sich die App jeden Tagesplan und legt ihn neben deine Einheiten. Rückwirkend gibt es nichts zu vergleichen.")
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        SummarySection(summary: calculator.summary(of: entries))
+                        ChartSection(entries: entries)
+                        Section("Tage") {
+                            ForEach(entries) { entry in
+                                NavigationLink {
+                                    HistoryDayView(entry: entry, workouts: workouts(on: entry.date), input: statisticInput)
+                                } label: {
+                                    HistoryRow(entry: entry)
+                                }
                             }
                         }
                     }
                 }
+                .cardRows()
             }
+            .themedList()
             .navigationTitle("Verlauf")
             .settingsToolbar()
             .refreshable { await loader.refreshIfNeeded() }
@@ -173,46 +177,50 @@ private struct HistoryDayView: View {
 
     var body: some View {
         List {
-            Section {
-                HistoryRow(entry: entry)
-            }
-            if !entry.plan.sessions.isEmpty {
-                Section("Geplant") {
-                    ForEach(Array(entry.plan.sessions.enumerated()), id: \.offset) { _, session in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Label(
-                                PlanV2Formatting.sessionTitle(sport: session.sport, amount: session.amount, unit: session.unit),
-                                systemImage: registry.symbolName(for: session.sport)
-                            )
-                            if !session.focus.isEmpty {
-                                Text(session.focus)
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
+            Group {
+                Section {
+                    HistoryRow(entry: entry)
+                }
+                if !entry.plan.sessions.isEmpty {
+                    Section("Geplant") {
+                        ForEach(Array(entry.plan.sessions.enumerated()), id: \.offset) { _, session in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Label(
+                                    PlanV2Formatting.sessionTitle(sport: session.sport, amount: session.amount, unit: session.unit),
+                                    systemImage: registry.symbolName(for: session.sport)
+                                )
+                                if !session.focus.isEmpty {
+                                    Text(session.focus)
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                         }
                     }
                 }
-            }
-            Section("Trainiert") {
-                if workouts.isEmpty {
-                    Text("Keine Einheit an diesem Tag.")
-                        .foregroundStyle(.secondary)
+                Section("Trainiert") {
+                    if workouts.isEmpty {
+                        Text("Keine Einheit an diesem Tag.")
+                            .foregroundStyle(.secondary)
+                    }
+                    ForEach(workouts) { workout in
+                        NavigationLink {
+                            WorkoutDetailView(workout: workout, input: input)
+                        } label: {
+                            WorkoutRow(workout: workout)
+                        }
+                    }
                 }
-                ForEach(workouts) { workout in
-                    NavigationLink {
-                        WorkoutDetailView(workout: workout, input: input)
-                    } label: {
-                        WorkoutRow(workout: workout)
+                if !entry.plan.rationale.isEmpty {
+                    Section("Warum dieser Plan") {
+                        Text(entry.plan.rationale)
+                            .font(.callout)
                     }
                 }
             }
-            if !entry.plan.rationale.isEmpty {
-                Section("Warum dieser Plan") {
-                    Text(entry.plan.rationale)
-                        .font(.callout)
-                }
-            }
+            .cardRows()
         }
+        .themedList()
         .navigationTitle(PlanFormatting.germanDate(entry.date))
         .navigationBarTitleDisplayMode(.inline)
     }

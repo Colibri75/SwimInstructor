@@ -48,12 +48,16 @@ struct WeekView: View {
                     weekList
                 case .macro:
                     List {
-                        RacePlanLinkSection()
-                        MacroPlanSections { start in
-                            // Eine Woche aus dem Gesamtplan im Wochenplan öffnen.
-                            if weekLoader.selectWeek(containing: start) { part = .week }
+                        Group {
+                            RacePlanLinkSection()
+                            MacroPlanSections { start in
+                                // Eine Woche aus dem Gesamtplan im Wochenplan öffnen.
+                                if weekLoader.selectWeek(containing: start) { part = .week }
+                            }
                         }
+                        .cardRows()
                     }
+                    .themedList()
                     .swipeClosesKeyboard()
                 }
             }
@@ -101,18 +105,22 @@ struct WeekView: View {
 
     private var weekList: some View {
         List {
-            weekHeaderSection
-            if let macroWeek {
-                macroTargetSection(macroWeek)
+            Group {
+                weekHeaderSection
+                if let macroWeek {
+                    macroTargetSection(macroWeek)
+                }
+                if let plan, !plan.rationale.isEmpty {
+                    overviewSection(plan)
+                }
+                daysSection
+                if overlapsWindow {
+                    planSection
+                }
             }
-            if let plan, !plan.rationale.isEmpty {
-                overviewSection(plan)
-            }
-            daysSection
-            if overlapsWindow {
-                planSection
-            }
+            .cardRows()
         }
+        .themedList()
         .swipeClosesKeyboard()
     }
 
@@ -225,7 +233,7 @@ struct WeekView: View {
                         WeekDayRow(status: status, isToday: status.date == weekLoader.todayKey)
                     }
                     .buttonStyle(.plain)
-                    .listRowBackground(status.date == weekLoader.todayKey ? Color.accentColor.opacity(0.1) : nil)
+                    .listRowBackground(status.date == weekLoader.todayKey ? Theme.highlightedCard : Theme.card)
                 }
             }
         } header: {
@@ -355,7 +363,7 @@ private struct WeekDayRow: View {
             VStack(spacing: 0) {
                 Text(weekCalendar.weekdayShort(status.date))
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(isToday ? Color.accentColor : Color.secondary)
+                    .foregroundStyle(isToday ? Theme.accent : Color.secondary)
                 Text(String(status.date.suffix(2)))
                     .font(.title3.monospacedDigit())
             }
@@ -427,7 +435,7 @@ enum WeekStateStyle {
         case .followed, .restKept: return .green
         case .shorter, .longer, .restBroken: return .orange
         case .missed: return .red
-        case .today: return .accentColor
+        case .today: return Theme.accent
         case .upcoming, .skipped, .unplanned: return .secondary
         }
     }

@@ -61,12 +61,12 @@ private struct StepBlock: View {
         case .completed:
             Label(ProgressFormatting.remaining(status), systemImage: "checkmark.circle.fill")
                 .font(.footnote)
-                .foregroundStyle(.green)
+                .foregroundStyle(Theme.spark)
         case let .rest(_, next, _):
             VStack(alignment: .leading, spacing: 1) {
                 Label(ProgressFormatting.remaining(status), systemImage: "timer")
                     .font(.system(size: compact ? 20 : 24, weight: .semibold, design: .rounded).monospacedDigit())
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Theme.spark)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                 if let next {
@@ -101,7 +101,7 @@ private struct StepBlock: View {
             }
             Text(ProgressFormatting.line(status))
                 .font(compact ? .caption.monospacedDigit() : .footnote.monospacedDigit())
-                .foregroundStyle(.blue)
+                .foregroundStyle(Theme.ember)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
             if compact {
@@ -232,7 +232,7 @@ private struct WorkoutPlanView: View {
                 .font(.caption2.weight(.semibold))
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
-                .background(Capsule().fill(Color.blue.opacity(0.4)))
+                .background(Capsule().fill(Theme.ember.opacity(0.35)))
         }
         .buttonStyle(.plain)
     }
@@ -372,7 +372,7 @@ struct WatchCountdownView: View {
                 .foregroundStyle(.secondary)
             Text("\(workoutManager.countdownRemaining ?? 0)")
                 .font(.system(size: 72, weight: .bold, design: .rounded).monospacedDigit())
-                .foregroundStyle(.yellow)
+                .foregroundStyle(Theme.spark)
                 .minimumScaleFactor(0.6)
             HStack(spacing: 12) {
                 Button {
@@ -386,7 +386,7 @@ struct WatchCountdownView: View {
                 } label: {
                     Image(systemName: "play.fill")
                 }
-                .tint(.green)
+                .tint(Theme.ember)
             }
         }
     }

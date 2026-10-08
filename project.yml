@@ -36,6 +36,7 @@ targets:
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
       configs:
         Debug:
           # Automatic for local Simulator/device debugging (⌘R) - convenient, no profile needed.
@@ -68,6 +69,7 @@ targets:
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "4"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         # Embedded in the iOS app via `embed: true` - must NOT also be installed as a standalone
         # product, otherwise the archive contains two top-level apps, Xcode classifies it as a
         # "Generic Xcode Archive" and offers no distribution methods (exportArchive then fails

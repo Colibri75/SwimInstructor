@@ -119,7 +119,7 @@ struct StatisticTileView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(StatisticFormatting.accessibilityLabel(result))
         .accessibilityHint("Öffnet die Details. Lange drücken, um Sportart, Kennzahl und Zeitraum zu ändern.")
@@ -164,13 +164,13 @@ private struct StatisticSparkline: View {
                     if let value = point.value {
                         if isTotal {
                             BarMark(x: .value("Abschnitt", String(index)), y: .value("Wert", value))
-                                .foregroundStyle(Color.accentColor.gradient)
+                                .foregroundStyle(Theme.accent.gradient)
                                 .cornerRadius(2)
                         } else {
                             LineMark(x: .value("Abschnitt", String(index)), y: .value("Wert", value))
-                                .foregroundStyle(Color.accentColor)
+                                .foregroundStyle(Theme.accent)
                             PointMark(x: .value("Abschnitt", String(index)), y: .value("Wert", value))
-                                .foregroundStyle(Color.accentColor)
+                                .foregroundStyle(Theme.accent)
                                 .symbolSize(14)
                         }
                     }

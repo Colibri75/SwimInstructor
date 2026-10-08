@@ -26,6 +26,9 @@ struct SwimInstructorWatchApp: App {
     var body: some Scene {
         WindowGroup {
             WatchRootView()
+                // Design aus dem Logo: Glut für Aktionen, Funke für Pausen und Erfolge, runde Schrift.
+                .tint(Theme.ember)
+                .fontDesign(.rounded)
                 .environmentObject(healthKitManager)
                 .environmentObject(planStore)
                 .environmentObject(workoutManager)

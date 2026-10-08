@@ -54,7 +54,7 @@ struct StatisticDetailView: View {
                                 .monospacedDigit()
                                 .foregroundStyle(.secondary)
                             Image(systemName: "checkmark")
-                                .foregroundStyle(Color.accentColor)
+                                .foregroundStyle(Theme.accent)
                                 .opacity(point.start == selected?.start ? 1 : 0)
                                 .accessibilityHidden(true)
                         }
@@ -167,13 +167,13 @@ private struct StatisticDetailChart: View {
                         let isSelected = point.start == selected?.start
                         if isTotal {
                             BarMark(x: .value("Abschnitt", labels[index]), y: .value("Wert", value))
-                                .foregroundStyle(isSelected ? Color.accentColor : Color.accentColor.opacity(0.35))
+                                .foregroundStyle(isSelected ? Theme.accent : Theme.accent.opacity(0.35))
                                 .cornerRadius(3)
                         } else {
                             LineMark(x: .value("Abschnitt", labels[index]), y: .value("Wert", value))
-                                .foregroundStyle(Color.accentColor.opacity(0.6))
+                                .foregroundStyle(Theme.accent.opacity(0.6))
                             PointMark(x: .value("Abschnitt", labels[index]), y: .value("Wert", value))
-                                .foregroundStyle(Color.accentColor)
+                                .foregroundStyle(Theme.accent)
                                 .symbolSize(isSelected ? 160 : 50)
                         }
                     }

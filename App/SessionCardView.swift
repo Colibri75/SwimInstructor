@@ -134,7 +134,7 @@ struct SessionCardView: View {
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+        .background(Theme.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
     }
 }
 
