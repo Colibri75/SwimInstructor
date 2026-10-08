@@ -74,7 +74,7 @@ struct TodayView: View {
             .navigationTitle("Aktuell")
             .swipeClosesKeyboard()
             .settingsToolbar(isPresented: $showsSettings)
-            .refreshable { await loader.refresh() }
+            .refreshable { await loader.pullToRefresh() }
             .sheet(item: $resultTest) { target in
                 TestResultSheet(sport: target.sport, testID: target.testID, watchResult: target.watchResult)
             }
@@ -462,7 +462,7 @@ struct TodayView: View {
             Text("Ohne Health-Daten kann kein Plan erstellt werden.")
                 .foregroundStyle(.secondary)
         } else {
-            Text("Noch kein Plan. Zum Aktualisieren nach unten ziehen.")
+            Text("Noch kein Plan. Unten kannst du ihn neu erstellen lassen.")
                 .foregroundStyle(.secondary)
         }
     }
@@ -479,8 +479,8 @@ struct TodayView: View {
                     if text.count > DailyWish.maxLength {
                         wishDraft = String(text.prefix(DailyWish.maxLength))
                     }
-                    // Sofort speichern: Ziehen zum Aktualisieren nutzt den gespeicherten Wunsch und
-                    // soll auch dann mit ihm planen, wenn der Knopf nicht getippt wurde.
+                    // Sofort speichern: Jede Plananfrage des Tages nutzt den gespeicherten Wunsch, auch wenn
+                    // der Knopf nicht getippt wurde.
                     loader.setWish(wishDraft)
                 }
             Button {
@@ -502,7 +502,7 @@ struct TodayView: View {
         } header: {
             Text("Dein Wunsch für heute")
         } footer: {
-            Text("Gilt nur für heute. Dein Coach berücksichtigt ihn, soweit er in die Sicherheitsgrenzen passt (Umfang, Intensität, Ruhetag). Er wird beim Tippen gespeichert, Ziehen zum Aktualisieren nutzt ihn ebenfalls. Steht er nach dem Erstellen über dem Plan, ist er beim Server angekommen.")
+            Text("Gilt nur für heute. Dein Coach berücksichtigt ihn, soweit er in die Sicherheitsgrenzen passt (Umfang, Intensität, Ruhetag). Er wird beim Tippen gespeichert und gilt für jeden neuen Plan des Tages. Steht er nach dem Erstellen über dem Plan, ist er beim Server angekommen.")
         }
         .onAppear { wishDraft = loader.wish }
         .onChange(of: loader.wish) { old, new in

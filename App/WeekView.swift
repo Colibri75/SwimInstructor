@@ -92,8 +92,8 @@ struct WeekView: View {
                     }
                 }
             }
-            // Liest Health neu und stimmt die Tage einmal am Tag ab. Einen neuen Tagesplan holt nur der Tab Heute.
-            .refreshable { await todayLoader.refreshIfNeeded() }
+            // Ziehen liest nur Health neu, der Plan bleibt.
+            .refreshable { await todayLoader.pullToRefresh() }
             .sheet(item: $editedDay) { item in
                 DayEditSheet(date: item.date)
             }

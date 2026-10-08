@@ -122,8 +122,8 @@ struct DashboardView: View {
                     withAnimation { dashboard.reset() }
                 }
             }
-            // Liest nur Health neu. Einen neuen Plan holt erst der Tab "Heute" (kostet einen Claude-Aufruf).
-            .refreshable { await loader.refreshIfNeeded() }
+            // Ziehen liest nur Health neu, der Plan bleibt.
+            .refreshable { await loader.pullToRefresh() }
         }
         .task { await loader.refreshIfNeeded() }
         // Beim Wechsel in einen anderen Tab endet das Bearbeiten.
