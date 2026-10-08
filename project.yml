@@ -28,6 +28,9 @@ targets:
       - target: SwimInstructorWatch
         embed: true
         codeSignOnCopy: true
+      - target: SwimInstructorWidgets
+        embed: true
+        codeSignOnCopy: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.kellner.SwimInstructor
@@ -61,6 +64,9 @@ targets:
       - path: Shared
     dependencies:
       - package: SwimInstructorCore
+      - target: SwimInstructorWatchWidgets
+        embed: true
+        codeSignOnCopy: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.kellner.SwimInstructor.watchkitapp
@@ -83,3 +89,60 @@ targets:
           DEVELOPMENT_TEAM: TTLJUNRA3R
           CODE_SIGN_IDENTITY: "Apple Distribution"
           PROVISIONING_PROFILE_SPECIFIER: "match AppStore com.kellner.SwimInstructor.watchkitapp 1790706588"
+
+  # Widget auf Home- und Sperrbildschirm: die nächste Einheit aus der App-Gruppe (PlanGlanceStore).
+  SwimInstructorWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widgets
+      - path: WidgetsShared
+      - path: Shared/Theme.swift
+    dependencies:
+      - package: SwimInstructorCore
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kellner.SwimInstructor.widgets
+        INFOPLIST_FILE: Widgets/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Widgets/Widgets.entitlements
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        SKIP_INSTALL: "YES"
+      configs:
+        Debug:
+          CODE_SIGN_STYLE: Automatic
+        Release:
+          # Profilname setzt die beta-Lane (update_code_signing_settings) aus match.
+          CODE_SIGN_STYLE: Manual
+          DEVELOPMENT_TEAM: TTLJUNRA3R
+          CODE_SIGN_IDENTITY: "Apple Distribution"
+
+  # Komplikation auf dem Zifferblatt, im Watch-App-Bundle.
+  SwimInstructorWatchWidgets:
+    type: app-extension
+    platform: watchOS
+    sources:
+      - path: WatchWidgets
+      - path: WidgetsShared
+      - path: Shared/Theme.swift
+    dependencies:
+      - package: SwimInstructorCore
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kellner.SwimInstructor.watchkitapp.widgets
+        INFOPLIST_FILE: WatchWidgets/Info.plist
+        CODE_SIGN_ENTITLEMENTS: WatchWidgets/WatchWidgets.entitlements
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "4"
+        SKIP_INSTALL: "YES"
+      configs:
+        Debug:
+          CODE_SIGN_STYLE: Automatic
+        Release:
+          CODE_SIGN_STYLE: Manual
+          DEVELOPMENT_TEAM: TTLJUNRA3R
+          CODE_SIGN_IDENTITY: "Apple Distribution"

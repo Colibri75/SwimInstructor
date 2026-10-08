@@ -82,7 +82,11 @@ struct TodayView: View {
         .task(id: tomorrowPreviewKey) { await loadTomorrowIfNeeded() }
         .onChange(of: todayDone) { _, done in
             if done { showsToday = false }
+            coach.updateGlance()
         }
+        // Widget und Sperrbildschirm zeigen, was hier steht.
+        .onChange(of: loader.response) { _, _ in coach.updateGlance() }
+        .onChange(of: loader.previews) { _, _ in coach.updateGlance() }
         .onChange(of: scenePhase) { _, phase in
             // Über Nacht offen gelassen: beim Zurückkommen den Plan für den neuen Tag holen.
             if phase == .active {

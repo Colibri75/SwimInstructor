@@ -104,6 +104,16 @@ Je eine Einheit, danach in der Fitness-App Strecke, Karte und Herzfrequenz prüf
 - [ ] Einstellungen › Mitteilungen: "Plan am Morgen" aus: keine Morgen-Mitteilung mehr; "Nach dem Training fragen" aus:
       keine "Wie war's?"-Mitteilung
 
+## 4b. Widget und Komplikation
+
+- [ ] iPhone: Widget "Nächste Einheit" (klein, mittel) auf den Home-Bildschirm und auf den Sperrbildschirm (rechteckig,
+      rund, Zeile): "Heute" mit den Einheiten aus Aktuell; nach erledigtem Training "Morgen"; Ruhetag mit Mond
+- [ ] Im Plan-Tab heute ändern: Das Widget folgt, sobald Aktuell den neuen Plan hat
+- [ ] Watch: Komplikation "Nächste Einheit" aufs Zifferblatt (rechteckig, rund, Ecke, Zeile): zeigt den Plan vom iPhone;
+      Tippen öffnet die Watch-App
+- [ ] Am nächsten Morgen ohne Öffnen der App: Statt eines alten Plans steht "Öffne Peaksmith für deinen Plan" oder der
+      vorab geholte Plan
+
 ## 5. Wetter (wenn es passt)
 
 - [ ] An einem Tag mit Gewitter- oder Sturmwarnung: Rad steht "drinnen (Rolle)" im Plan, Laufen ohne Laufband bleibt

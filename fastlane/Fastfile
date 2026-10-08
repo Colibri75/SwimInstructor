@@ -125,7 +125,9 @@ platform :ios do
 
     targets_to_bundle_ids = {
       "SwimInstructor" => "com.kellner.SwimInstructor",
-      "SwimInstructorWatch" => "com.kellner.SwimInstructor.watchkitapp"
+      "SwimInstructorWatch" => "com.kellner.SwimInstructor.watchkitapp",
+      "SwimInstructorWidgets" => "com.kellner.SwimInstructor.widgets",
+      "SwimInstructorWatchWidgets" => "com.kellner.SwimInstructor.watchkitapp.widgets"
     }
 
     # project.yml keeps CODE_SIGN_STYLE Automatic for convenient local Xcode use, but xcodebuild

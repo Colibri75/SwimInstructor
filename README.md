@@ -53,6 +53,10 @@ Eine weitere Sportart: [Neue Sportart hinzufügen](docs/neue-sportart.md) (acht 
   erledigt, holt die App den Plan für morgen schon im Hintergrund. Er kommt morgens zur eingestellten Uhrzeit als
   Mitteilung, und Aktuell zeigt ihn sofort (`App/BackgroundCoach.swift`, Einstellungen "Mitteilungen"). Nach dem Ende einer
   Einheit fragt die Watch nach der Anstrengung (1 bis 10) und speichert sie in Health.
+- **Widget und Komplikation:** "Nächste Einheit" auf Home- und Sperrbildschirm des iPhones und auf dem Zifferblatt
+  (`Widgets/`, `WatchWidgets/`, gemeinsam `WidgetsShared/`). App und Watch schreiben den Stand (`PlanGlance`) in die
+  App-Gruppe `group.com.kellner.SwimInstructor`; neue App-IDs oder Capabilities brauchen danach einmal den Workflow
+  "Profile erneuern".
 - **Triathlon:** Koppeltraining (Laufen nach Rad), drinnen auf Rolle oder Laufband, Freiwasser (Ziel im Freiwasser:
   in den 8 Wochen davor jede Woche eine Einheit im See, ohne Zugang Freiwasser-Elemente im Becken), Wetter (bei Gewitter, Sturm,
   Starkregen oder Glätte nach drinnen), Kalender (volle Tage werden kürzer oder "keine Zeit"), Kraft- und
