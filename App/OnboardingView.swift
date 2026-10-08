@@ -50,6 +50,7 @@ struct OnboardingView: View {
 
     private var welcome: some View {
         VStack(alignment: .leading, spacing: 16) {
+            SparkPeak(size: 72, peakColor: .primary)
             Text("Willkommen bei Peaksmith")
                 .font(.largeTitle.bold())
             Text("In drei Schritten zu deinem Plan: Ziel festlegen, deine Trainingstage eintragen und angeben, wo du gerade stehst. Danach rechnet die App den Gesamtplan bis zu deinem Ziel.")
@@ -62,14 +63,16 @@ struct OnboardingView: View {
             } label: {
                 Text("Los geht's").frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
+            .buttonStyle(.ember)
         }
         .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Theme.background)
     }
 
     private var done: some View {
         VStack(alignment: .leading, spacing: 16) {
+            SparkPeak(size: 72, peakColor: .primary)
             Text("Fertig eingerichtet")
                 .font(.largeTitle.bold())
             Text("Die App rechnet jetzt deinen Gesamtplan und die nächsten 14 Tage. Das dauert ein paar Minuten.")
@@ -81,12 +84,13 @@ struct OnboardingView: View {
             } label: {
                 Text("Plan erstellen").frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
+            .buttonStyle(.ember)
             Button("Zurück") { move(by: -1) }
                 .frame(maxWidth: .infinity)
         }
         .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Theme.background)
     }
 
     private func move(by offset: Int) {

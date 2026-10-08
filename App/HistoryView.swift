@@ -5,6 +5,7 @@ import SwimInstructorCore
 /// Verlauf: Was war geplant, was hast du gemacht? Die letzten 4 Wochen, über alle Sportarten.
 struct HistoryView: View {
     @EnvironmentObject private var loader: MultiSportTodayLoader
+    @EnvironmentObject private var layouts: ScreenLayouts
 
     private let calculator = MultiSportAdherenceCalculator()
 
@@ -17,32 +18,34 @@ struct HistoryView: View {
             )
             List {
                 Group {
-                    workoutsSection
-                    if entries.isEmpty {
-                        Section {
-                            Text("Noch kein Verlauf. Ab jetzt merkt sich die App jeden Tagesplan und legt ihn neben deine Einheiten. Rückwirkend gibt es nichts zu vergleichen.")
-                                .foregroundStyle(.secondary)
-                        }
-                    } else {
-                        SummarySection(summary: calculator.summary(of: entries))
-                        ChartSection(entries: entries)
-                        Section("Tage") {
-                            ForEach(entries) { entry in
-                                NavigationLink {
-                                    HistoryDayView(entry: entry, workouts: workouts(on: entry.date), input: statisticInput)
-                                } label: {
-                                    HistoryRow(entry: entry)
-                                }
+                    // Reihenfolge und Auswahl der Bereiche: "Bereiche anpassen" unten in der Liste.
+                    ForEach(layouts.visible(.history)) { section in
+                        switch section.id {
+                        case "workouts":
+                            workoutsSection
+                        case "summary":
+                            if !entries.isEmpty {
+                                SummarySection(summary: calculator.summary(of: entries))
                             }
+                        case "chart":
+                            if !entries.isEmpty {
+                                ChartSection(entries: entries)
+                            }
+                        case "days":
+                            daysSection(entries)
+                        default:
+                            EmptyView()
                         }
                     }
                 }
                 .cardRows()
+                CustomizeSectionsRow(screen: .history)
             }
             .themedList()
             .navigationTitle("Verlauf")
             .settingsToolbar()
-            .refreshable { await loader.refreshIfNeeded() }
+            // Ziehen liest nur Health neu, der Plan bleibt.
+            .refreshable { await loader.pullToRefresh() }
         }
         .task { await loader.refreshIfNeeded() }
     }
@@ -60,6 +63,27 @@ extension HistoryView {
         (loader.reading?.allWorkouts ?? [])
             .filter { PlanFormatting.isoDay($0.startDate) == day }
             .sorted { $0.startDate > $1.startDate }
+    }
+
+    /// Jeder Tag mit gespeichertem Plan; ohne Verlauf der Hinweis, dass er ab jetzt entsteht.
+    @ViewBuilder
+    fileprivate func daysSection(_ entries: [MultiSportAdherenceEntry]) -> some View {
+        if entries.isEmpty {
+            Section {
+                Text("Noch kein Verlauf. Ab jetzt merkt sich die App jeden Tagesplan und legt ihn neben deine Einheiten. Rückwirkend gibt es nichts zu vergleichen.")
+                    .foregroundStyle(.secondary)
+            }
+        } else {
+            Section("Tage") {
+                ForEach(entries) { entry in
+                    NavigationLink {
+                        HistoryDayView(entry: entry, workouts: workouts(on: entry.date), input: statisticInput)
+                    } label: {
+                        HistoryRow(entry: entry)
+                    }
+                }
+            }
+        }
     }
 
     /// Die Einheiten aus Health (neueste zuerst), früher auf dem Heute-Bildschirm. Antippen öffnet die Einheit.

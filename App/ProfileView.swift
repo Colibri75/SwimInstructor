@@ -20,38 +20,42 @@ struct ProfileView: View {
 
     var body: some View {
         List {
-            Section {
-                ForEach(profileLoader.entries(for: nil)) { entry in
-                    entryLink(entry)
-                }
-            } header: {
-                Text("Für alle Sportarten")
-            }
-            ForEach(sportIDs, id: \.self) { sport in
+            Group {
                 Section {
-                    ForEach(profileLoader.entries(for: sport)) { entry in
+                    ForEach(profileLoader.entries(for: nil)) { entry in
                         entryLink(entry)
                     }
-                    if !hasConfirmedValue(sport) {
-                        Text(testSettings.offer
-                             ? "Noch kein Test. In der ersten Woche plant die App einen Einstiegstest ein, danach alle \(testSettings.intervalWeeks) Wochen einen Test."
-                             : "Noch kein Test. Die Werte sind aus deinen Einheiten geschätzt.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
                 } header: {
-                    Label(registry.displayName(for: sport), systemImage: registry.symbolName(for: sport))
+                    Text("Für alle Sportarten")
+                }
+                ForEach(sportIDs, id: \.self) { sport in
+                    Section {
+                        ForEach(profileLoader.entries(for: sport)) { entry in
+                            entryLink(entry)
+                        }
+                        if !hasConfirmedValue(sport) {
+                            Text(testSettings.offer
+                                 ? "Noch kein Test. In der ersten Woche plant die App einen Einstiegstest ein, danach alle \(testSettings.intervalWeeks) Wochen einen Test."
+                                 : "Noch kein Test. Die Werte sind aus deinen Einheiten geschätzt.")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    } header: {
+                        Label(registry.displayName(for: sport), systemImage: registry.symbolName(for: sport))
+                    }
+                }
+                resultSection
+                testSettingsSection
+                Section {
+                    Button("Alle bestätigten Werte löschen", role: .destructive) { confirmsReset = true }
+                } footer: {
+                    Text("Danach gelten wieder die Schätzungen aus Health.")
                 }
             }
-            resultSection
-            testSettingsSection
-            Section {
-                Button("Alle bestätigten Werte löschen", role: .destructive) { confirmsReset = true }
-            } footer: {
-                Text("Danach gelten wieder die Schätzungen aus Health.")
-            }
+            .cardRows()
         }
+        .themedList()
         .navigationTitle("Leistungsprofil")
         .onAppear { testSettings = testSettingsStore.settings() }
         .onChange(of: testSettings) { _, settings in testSettingsStore.save(settings) }
@@ -178,38 +182,42 @@ struct ProfileEntryDetailView: View {
 
     var body: some View {
         List {
-            if let entry {
-                Section {
-                    ProfileEntryRow(entry: entry)
-                    if entry.current?.source.isConfirmed == false {
-                        Text("Geschätzt aus deinen Einheiten. Ein Test oder ein Wert von dir geht immer vor.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+            Group {
+                if let entry {
+                    Section {
+                        ProfileEntryRow(entry: entry)
+                        if entry.current?.source.isConfirmed == false {
+                            Text("Geschätzt aus deinen Einheiten. Ein Test oder ein Wert von dir geht immer vor.")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
                     }
-                }
-                manualSection(entry.definition)
-                Section("Verlauf") {
-                    if entry.history.isEmpty {
-                        Text("Noch kein bestätigter Wert.")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        ForEach(Array(entry.history.reversed().enumerated()), id: \.offset) { _, value in
-                            LabeledContent {
-                                Text(PlanV2Formatting.performanceValue(value.value, unit: entry.definition.unit))
-                                    .monospacedDigit()
-                            } label: {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(value.measuredAt.formatted(date: .abbreviated, time: .omitted))
-                                    Text(PlanV2Formatting.origin(value.source))
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
+                    manualSection(entry.definition)
+                    Section("Verlauf") {
+                        if entry.history.isEmpty {
+                            Text("Noch kein bestätigter Wert.")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ForEach(Array(entry.history.reversed().enumerated()), id: \.offset) { _, value in
+                                LabeledContent {
+                                    Text(PlanV2Formatting.performanceValue(value.value, unit: entry.definition.unit))
+                                        .monospacedDigit()
+                                } label: {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(value.measuredAt.formatted(date: .abbreviated, time: .omitted))
+                                        Text(PlanV2Formatting.origin(value.source))
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
+            .cardRows()
         }
+        .themedList()
         .navigationTitle(entry?.definition.displayName ?? "Leistungswert")
         .swipeClosesKeyboard()
         .navigationBarTitleDisplayMode(.inline)

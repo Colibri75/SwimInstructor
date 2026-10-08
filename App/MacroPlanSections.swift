@@ -6,6 +6,8 @@ import SwimInstructorCore
 /// Wochenplan), das Leistungsprofil, Testtermine, die Fortschreibung mit Plan gegen Ist und darunter das Feedback mit der Liste der Änderungen
 /// und dem Verlauf der Runden.
 struct MacroPlanSections: View {
+    /// Die angezeigten Bereiche in ihrer Reihenfolge (`LayoutScreen.macro`).
+    let sections: [String]
     /// Öffnet die Woche (Montag) im Wochenplan.
     let onSelectWeek: (String) -> Void
 
@@ -18,19 +20,35 @@ struct MacroPlanSections: View {
     @State private var errorFromFeedback = false
     @State private var confirmsRegenerate = false
 
-    init(onSelectWeek: @escaping (String) -> Void) {
+    init(sections: [String] = LayoutScreen.macro.sections.map(\.id), onSelectWeek: @escaping (String) -> Void) {
+        self.sections = sections
         self.onSelectWeek = onSelectWeek
     }
 
     var body: some View {
-        overviewSection
-        if let plan = macroLoader.plan {
-            weeksSection(plan)
-        }
-        profileSection
-        if let plan = macroLoader.plan {
-            reviewSection(plan)
-            feedbackSection(plan)
+        ForEach(sections, id: \.self) { section in
+            switch section {
+            case "racePlan":
+                RacePlanLinkSection()
+            case "overview":
+                overviewSection
+            case "weeks":
+                if let plan = macroLoader.plan {
+                    weeksSection(plan)
+                }
+            case "profile":
+                profileSection
+            case "review":
+                if let plan = macroLoader.plan {
+                    reviewSection(plan)
+                }
+            case "feedback":
+                if let plan = macroLoader.plan {
+                    feedbackSection(plan)
+                }
+            default:
+                EmptyView()
+            }
         }
     }
 

@@ -10,6 +10,7 @@ struct TodayView: View {
     @EnvironmentObject private var settings: BackendSettings
     @EnvironmentObject private var testResultInbox: WatchTestResultInbox
     @EnvironmentObject private var feedbackBook: SessionFeedbackBook
+    @EnvironmentObject private var layouts: ScreenLayouts
     @Environment(\.scenePhase) private var scenePhase
     @State private var showsSettings = false
     @State private var wishDraft = ""
@@ -50,31 +51,17 @@ struct TodayView: View {
     var body: some View {
         NavigationStack {
             List {
-                Group {
-                    watchResultSection
-                    adaptationSection
-                    feedbackSection
-                    doneSection
+                // Reihenfolge und Auswahl der Bereiche: "Bereiche anpassen" unten in der Liste.
+                ForEach(layouts.visible(.today)) { section in
+                    todaySection(section.id)
                 }
-                .cardRows()
-                // Die Tageskarte hat ihren eigenen Grund (Nacht).
-                weekTodaySection
-                Group {
-                    if showsTomorrow {
-                        tomorrowSections
-                    } else {
-                        planSection
-                        extrasSections
-                        wishSection
-                    }
-                }
-                .cardRows()
+                CustomizeSectionsRow(screen: .today)
             }
             .themedList()
             .navigationTitle("Aktuell")
             .swipeClosesKeyboard()
             .settingsToolbar(isPresented: $showsSettings)
-            .refreshable { await loader.refresh() }
+            .refreshable { await loader.pullToRefresh() }
             .sheet(item: $resultTest) { target in
                 TestResultSheet(sport: target.sport, testID: target.testID, watchResult: target.watchResult)
             }
@@ -97,6 +84,45 @@ struct TodayView: View {
             if phase == .active {
                 Task { await loader.refreshIfNeeded() }
             }
+        }
+    }
+
+    /// Ein Bereich des Tabs. Nach erledigtem Training steht statt des Tagesplans der für morgen, ohne Wunsch-Feld.
+    @ViewBuilder
+    private func todaySection(_ id: String) -> some View {
+        switch id {
+        case "watchResult":
+            watchResultSection
+                .cardRows()
+        case "adaptation":
+            adaptationSection
+                .cardRows()
+        case "feedback":
+            feedbackSection
+                .cardRows()
+        case "done":
+            doneSection
+                .cardRows()
+        case "dayCard":
+            // Die Tageskarte hat ihren eigenen Grund (Nacht).
+            weekTodaySection
+        case "plan":
+            Group {
+                if showsTomorrow {
+                    tomorrowSections
+                } else {
+                    planSection
+                    extrasSections
+                }
+            }
+            .cardRows()
+        case "wish":
+            if !showsTomorrow {
+                wishSection
+                    .cardRows()
+            }
+        default:
+            EmptyView()
         }
     }
 
@@ -462,7 +488,7 @@ struct TodayView: View {
             Text("Ohne Health-Daten kann kein Plan erstellt werden.")
                 .foregroundStyle(.secondary)
         } else {
-            Text("Noch kein Plan. Zum Aktualisieren nach unten ziehen.")
+            Text("Noch kein Plan. Unten kannst du ihn neu erstellen lassen.")
                 .foregroundStyle(.secondary)
         }
     }
@@ -479,8 +505,8 @@ struct TodayView: View {
                     if text.count > DailyWish.maxLength {
                         wishDraft = String(text.prefix(DailyWish.maxLength))
                     }
-                    // Sofort speichern: Ziehen zum Aktualisieren nutzt den gespeicherten Wunsch und
-                    // soll auch dann mit ihm planen, wenn der Knopf nicht getippt wurde.
+                    // Sofort speichern: Jede Plananfrage des Tages nutzt den gespeicherten Wunsch, auch wenn
+                    // der Knopf nicht getippt wurde.
                     loader.setWish(wishDraft)
                 }
             Button {
@@ -502,7 +528,7 @@ struct TodayView: View {
         } header: {
             Text("Dein Wunsch für heute")
         } footer: {
-            Text("Gilt nur für heute. Dein Coach berücksichtigt ihn, soweit er in die Sicherheitsgrenzen passt (Umfang, Intensität, Ruhetag). Er wird beim Tippen gespeichert, Ziehen zum Aktualisieren nutzt ihn ebenfalls. Steht er nach dem Erstellen über dem Plan, ist er beim Server angekommen.")
+            Text("Gilt nur für heute. Dein Coach berücksichtigt ihn, soweit er in die Sicherheitsgrenzen passt (Umfang, Intensität, Ruhetag). Er wird beim Tippen gespeichert und gilt für jeden neuen Plan des Tages. Steht er nach dem Erstellen über dem Plan, ist er beim Server angekommen.")
         }
         .onAppear { wishDraft = loader.wish }
         .onChange(of: loader.wish) { old, new in

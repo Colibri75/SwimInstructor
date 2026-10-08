@@ -8,7 +8,7 @@ es jetzt geregelt ist.
 | Entscheidung | Umsetzung |
 |---|---|
 | Änderungen von Hand bleiben dauerhaft | Von Hand geänderte Tage (`isEdited`) bleiben beim Neu-Abstimmen und gehen als `fixed_days` an den Server; der plant die anderen Tage darum herum (ihr Umfang zählt in die Wochengrenzen, feste harte Tage bei "nie zwei harte Tage hintereinander"). Im Tagesblatt: "Wieder deinem Coach überlassen". "Doch wieder Zeit" gibt den Tag dem Coach zurück. |
-| Heute bleibt stabil, nur auf deinen Wunsch geändert | Heute steht fest, sobald es einen Tagesplan oder eine Vorschau gibt oder schon trainiert wurde (`isTodayLocked`). Das Neu-Abstimmen (täglich, Beschwerden, Gesamtplan) ändert heute dann nicht mehr. Ändern: Plan-Tab, Wunsch oder Ziehen auf Heute. |
+| Heute bleibt stabil, nur auf deinen Wunsch geändert | Heute steht fest, sobald es einen Tagesplan oder eine Vorschau gibt oder schon trainiert wurde (`isTodayLocked`). Das Neu-Abstimmen (täglich, Beschwerden, Gesamtplan) ändert heute dann nicht mehr. Ändern: Plan-Tab, Wunsch oder Knopf „Plan neu erstellen“ auf Heute. |
 | Vorschau am Tag selbst übernehmen | Gibt es für heute eine Vorschau mit gleicher Vorgabe, wird sie beim ersten Öffnen der Tagesplan, ohne Claude-Aufruf. |
 | Verlauf: letzter Stand des Tages | Der Verlauf hält je Tag den letzten Tagesplan; "Plan gegen Ist" vergleicht damit. |
 | Sofort-Fixes F1, F2, F4 | Eine Antwort, deren Vorgabe sich unterwegs geändert hat, wird verworfen und neu gefragt. Mehrere Tipps hintereinander ergeben eine Anfrage (1,5 s Pause). Ein Ersatzplan gilt nicht als passend und zeigt einen Hinweis. |
@@ -80,7 +80,8 @@ drei nicht im Gleichschritt laufen, sieht man Widersprüche.
 | Rückmeldung mit Beschwerden, sehr harter Einheit, Ausfall gestern | wie oben, die 7 Tage werden **außer der Reihe** neu abgestimmt |
 | Gesamtplan überarbeitet oder fortgeschrieben | Stempel ändert sich → 7 Tage **neu abgestimmt** |
 | Knopf „Nächste 7 Tage neu planen“ | 7 Tage neu |
-| Ziehen auf Heute, „Plan mit Wunsch neu erstellen“ | neuer Tagesplan von Claude, danach Übernahme in die Woche |
+| Knopf „Plan mit/ohne Wunsch neu erstellen“ | neuer Tagesplan von Claude, danach Übernahme in die Woche |
+| Ziehen zum Aktualisieren (jeder Tab) | `pullToRefresh`: nur Health lesen, kein Plan wird neu geholt oder abgestimmt |
 | Änderung im Tagesblatt (Umfang, Sportart, Einheit, Ruhetag, keine Zeit, Tausch) | Woche gespeichert → `onEdit` → `syncWithTodayTarget` holt einen neuen Tagesplan |
 
 ## 5. Wo es heute bricht
@@ -152,7 +153,7 @@ gibt nichts mehr, was nachgezogen werden muss. Die bisherigen Dateien werden bei
 | R5 | Ein Ersatzplan bekommt keine passende `revision`. Heute zeigt ihn mit Hinweis „Ersatzplan von …“ und „Jetzt anpassen“. | F4 |
 | R6 | Der Verlauf hält den Stand, der beim ersten Training des Tages galt (sonst den letzten des Tages). „Plan gegen Ist“ vergleicht damit. | F5 |
 | R7 | Wird ein Tag zu heute und hat er eine Vorschau mit gleicher `revision`, wird sie der Tagesplan, ohne neuen Claude-Aufruf. Neu geholt wird nur, wenn sich die Vorgabe geändert hat oder du es willst. | F6 |
-| R8 | Ein neuer Tagesplan aus Heute (Wunsch, Ziehen) ändert `target` mit `origin = adopted` und erhöht die `revision`. Alle Sichten zeigen sofort dasselbe. | F7 |
+| R8 | Ein neuer Tagesplan aus Heute (Wunsch, Knopf) ändert `target` mit `origin = adopted` und erhöht die `revision`. Alle Sichten zeigen sofort dasselbe. | F7 |
 | R9 | Die Watch bekommt bei jeder Änderung von heute den neuen Stand. Wird gerade angepasst, schickt das iPhone sofort „wird angepasst“ mit, damit die Uhr nicht still den alten Plan zeigt. | F8 |
 
 ### So sieht es danach aus

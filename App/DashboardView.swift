@@ -6,6 +6,7 @@ struct DashboardView: View {
     @EnvironmentObject private var loader: MultiSportTodayLoader
     @EnvironmentObject private var weekLoader: MultiSportWeekLoader
     @EnvironmentObject private var dashboard: StatisticDashboard
+    @EnvironmentObject private var layouts: ScreenLayouts
 
     @State private var showsAddTile = false
     @State private var confirmsReset = false
@@ -39,36 +40,28 @@ struct DashboardView: View {
         NavigationStack {
             List {
                 if let reading = loader.reading {
-                    Section {
-                        if dashboard.tiles.isEmpty {
-                            Text("Keine Kacheln.")
-                                .foregroundStyle(.secondary)
+                    // Reihenfolge und Auswahl der Bereiche: "Bereiche anpassen" unten in der Liste.
+                    ForEach(layouts.visible(.dashboard)) { section in
+                        switch section.id {
+                        case "statistics":
+                            statisticsSection
+                        case "week":
+                            Section("Diese Woche") {
+                                WeekStatsRows(
+                                    summary: weekProgress.summary(of: weekStatuses),
+                                    hasPlan: weekLoader.week(starting: weekLoader.currentWeekStart) != nil
+                                )
+                                RecoveryRow(reading: reading)
+                            }
+                            .cardRows()
+                        case "goal":
+                            GoalSection(snapshot: reading.snapshot)
                                 .cardRows()
+                        default:
+                            EmptyView()
                         }
-                        StatisticTileRows(dashboard: dashboard, input: statisticInput, isEditing: isEditing) { tile in
-                            openedTileID = tile.id
-                        }
-                        Button {
-                            showsAddTile = true
-                        } label: {
-                            Label("Kachel hinzufügen", systemImage: "plus.circle.fill")
-                        }
-                        .cardRows()
-                    } header: {
-                        Text("Statistik")
-                    } footer: {
-                        Text("Tippen: Details mit allen Werten. Lange drücken: Sportart, Kennzahl und Zeitraum wählen. Nach links wischen: entfernen. \"Bearbeiten\": entfernen und Reihenfolge ändern.")
                     }
-                    Section("Diese Woche") {
-                        WeekStatsRows(
-                            summary: weekProgress.summary(of: weekStatuses),
-                            hasPlan: weekLoader.week(starting: weekLoader.currentWeekStart) != nil
-                        )
-                        RecoveryRow(reading: reading)
-                    }
-                    .cardRows()
-                    GoalSection(snapshot: reading.snapshot)
-                        .cardRows()
+                    CustomizeSectionsRow(screen: .dashboard)
                 } else if loader.isLoadingHealth {
                     HStack(spacing: 12) {
                         ForgeAnimation()
@@ -89,7 +82,7 @@ struct DashboardView: View {
                 StatisticDetailView(dashboard: dashboard, tileID: id, input: statisticInput)
             }
             .toolbar {
-                if loader.reading != nil {
+                if loader.reading != nil, layouts.visible(.dashboard).contains(where: { $0.id == "statistics" }) {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button(isEditing ? "Fertig" : "Bearbeiten") {
                             withAnimation { editMode = isEditing ? .inactive : .active }
@@ -122,12 +115,36 @@ struct DashboardView: View {
                     withAnimation { dashboard.reset() }
                 }
             }
-            // Liest nur Health neu. Einen neuen Plan holt erst der Tab "Heute" (kostet einen Claude-Aufruf).
-            .refreshable { await loader.refreshIfNeeded() }
+            // Ziehen liest nur Health neu, der Plan bleibt.
+            .refreshable { await loader.pullToRefresh() }
         }
         .task { await loader.refreshIfNeeded() }
         // Beim Wechsel in einen anderen Tab endet das Bearbeiten.
         .onDisappear { editMode = .inactive }
+    }
+
+    /// Die Kacheln der Statistik mit Hinzufügen.
+    private var statisticsSection: some View {
+        Section {
+            if dashboard.tiles.isEmpty {
+                Text("Keine Kacheln.")
+                    .foregroundStyle(.secondary)
+                    .cardRows()
+            }
+            StatisticTileRows(dashboard: dashboard, input: statisticInput, isEditing: isEditing) { tile in
+                openedTileID = tile.id
+            }
+            Button {
+                showsAddTile = true
+            } label: {
+                Label("Kachel hinzufügen", systemImage: "plus.circle.fill")
+            }
+            .cardRows()
+        } header: {
+            Text("Statistik")
+        } footer: {
+            Text("Tippen: Details mit allen Werten. Lange drücken: Sportart, Kennzahl und Zeitraum wählen. Nach links wischen: entfernen. \"Bearbeiten\": entfernen und Reihenfolge ändern.")
+        }
     }
 }
 

@@ -13,6 +13,7 @@ struct SwimInstructorApp: App {
     @StateObject private var planSync: PhonePlanSync
     @StateObject private var testResultInbox: WatchTestResultInbox
     @StateObject private var statisticDashboard: StatisticDashboard
+    @StateObject private var screenLayouts: ScreenLayouts
     @StateObject private var reviewRunner: MacroReviewRunner
     @StateObject private var feedbackBook: SessionFeedbackBook
     @StateObject private var raceLoader: RacePlanLoader
@@ -176,6 +177,8 @@ struct SwimInstructorApp: App {
             planProvider: { [weak settings] in settings?.configuration.map { PlanAPIClient(configuration: $0) } }
         ))
         _statisticDashboard = StateObject(wrappedValue: StatisticDashboard(store: UserDefaultsStatisticLayoutStore()))
+        // Reihenfolge und Auswahl der Bereiche je Tab, auf dem Gerät gespeichert.
+        _screenLayouts = StateObject(wrappedValue: ScreenLayouts(store: UserDefaultsScreenLayoutStore()))
     }
 
     var body: some Scene {
@@ -189,6 +192,7 @@ struct SwimInstructorApp: App {
                 .environmentObject(profileLoader)
                 .environmentObject(testResultInbox)
                 .environmentObject(statisticDashboard)
+                .environmentObject(screenLayouts)
                 .environmentObject(reviewRunner)
                 .environmentObject(feedbackBook)
                 .environmentObject(raceLoader)

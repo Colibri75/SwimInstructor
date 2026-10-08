@@ -22,67 +22,71 @@ struct WorkoutDetailView: View {
 
     var body: some View {
         List {
-            Section {
-                HStack(spacing: 14) {
-                    Image(systemName: registry.symbolName(for: workout.sport))
-                        .font(.largeTitle)
-                        .foregroundStyle(Theme.accent)
-                        .frame(width: 48)
-                        .accessibilityHidden(true)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(registry.displayName(for: workout.sport))
-                            .font(.title2.weight(.semibold))
-                        Text(StatisticFormatting.workoutTime(workout))
-                            .font(.subheadline)
+            Group {
+                Section {
+                    HStack(spacing: 14) {
+                        Image(systemName: registry.symbolName(for: workout.sport))
+                            .font(.largeTitle)
+                            .foregroundStyle(Theme.accent)
+                            .frame(width: 48)
+                            .accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(registry.displayName(for: workout.sport))
+                                .font(.title2.weight(.semibold))
+                            Text(StatisticFormatting.workoutTime(workout))
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                    .accessibilityElement(children: .combine)
+                }
+
+                Section("Werte") {
+                    ForEach(calculator.values(of: workout, input: input)) { item in
+                        LabeledContent(StatisticFormatting.workoutValueName(item.definition)) {
+                            Text(StatisticFormatting.text(item.value, definition: item.definition))
+                                .monospacedDigit()
+                        }
+                    }
+                    if let energy = workout.activeEnergyKilocalories, energy > 0 {
+                        LabeledContent("Aktive Energie") {
+                            Text("\(Int(energy.rounded())) kcal")
+                                .monospacedDigit()
+                        }
+                    }
+                }
+                .font(.body)
+
+                if let report, !report.isEmpty {
+                    WorkoutSplitSections(report: report, field: field)
+                } else if let splitError {
+                    Section("Runden") {
+                        Text(splitError)
+                            .foregroundStyle(.red)
+                    }
+                }
+
+                Section("Puls") {
+                    if let curve, !curve.points.isEmpty {
+                        HeartRateChart(curve: curve, averageHeartRate: workout.averageHeartRate)
+                    } else if curve != nil {
+                        Text("Keine Pulswerte für diese Einheit in Health.")
                             .foregroundStyle(.secondary)
-                    }
-                }
-                .padding(.vertical, 4)
-                .accessibilityElement(children: .combine)
-            }
-
-            Section("Werte") {
-                ForEach(calculator.values(of: workout, input: input)) { item in
-                    LabeledContent(StatisticFormatting.workoutValueName(item.definition)) {
-                        Text(StatisticFormatting.text(item.value, definition: item.definition))
-                            .monospacedDigit()
-                    }
-                }
-                if let energy = workout.activeEnergyKilocalories, energy > 0 {
-                    LabeledContent("Aktive Energie") {
-                        Text("\(Int(energy.rounded())) kcal")
-                            .monospacedDigit()
+                    } else if let heartRateError {
+                        Text("Puls: \(heartRateError)")
+                            .foregroundStyle(.red)
+                    } else {
+                        HStack(spacing: 12) {
+                            ForgeAnimation()
+                            Text("Lese Pulswerte …").foregroundStyle(.secondary)
+                        }
                     }
                 }
             }
-            .font(.body)
-
-            if let report, !report.isEmpty {
-                WorkoutSplitSections(report: report, field: field)
-            } else if let splitError {
-                Section("Runden") {
-                    Text(splitError)
-                        .foregroundStyle(.red)
-                }
-            }
-
-            Section("Puls") {
-                if let curve, !curve.points.isEmpty {
-                    HeartRateChart(curve: curve, averageHeartRate: workout.averageHeartRate)
-                } else if curve != nil {
-                    Text("Keine Pulswerte für diese Einheit in Health.")
-                        .foregroundStyle(.secondary)
-                } else if let heartRateError {
-                    Text("Puls: \(heartRateError)")
-                        .foregroundStyle(.red)
-                } else {
-                    HStack(spacing: 12) {
-                        ForgeAnimation()
-                        Text("Lese Pulswerte …").foregroundStyle(.secondary)
-                    }
-                }
-            }
+            .cardRows()
         }
+        .themedList()
         .navigationTitle(registry.displayName(for: workout.sport))
         .navigationBarTitleDisplayMode(.inline)
         .task(id: workout.id) {

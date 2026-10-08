@@ -113,41 +113,45 @@ struct SessionFeedbackSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    LabeledContent(registry.displayName(for: workout.sport), value: workout.startDate.formatted(date: .abbreviated, time: .shortened))
-                }
-                Section {
-                    VStack(alignment: .leading) {
-                        Text("Anstrengung \(Int(effort)) von 10")
-                            .font(.headline)
-                        Slider(value: $effort, in: 1...10, step: 1)
-                        Text(effortHint)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+                Group {
+                    Section {
+                        LabeledContent(registry.displayName(for: workout.sport), value: workout.startDate.formatted(date: .abbreviated, time: .shortened))
                     }
-                } header: {
-                    Text("Wie anstrengend war es?")
-                }
-                Section {
-                    Picker("Beschwerden", selection: $pain) {
-                        ForEach(PainLevel.allCases, id: \.self) { level in
-                            Text(level.displayName).tag(level)
+                    Section {
+                        VStack(alignment: .leading) {
+                            Text("Anstrengung \(Int(effort)) von 10")
+                                .font(.headline)
+                            Slider(value: $effort, in: 1...10, step: 1)
+                            Text(effortHint)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
                         }
+                    } header: {
+                        Text("Wie anstrengend war es?")
                     }
-                    .pickerStyle(.segmented)
-                    if pain != .none {
-                        Picker("Wo?", selection: $area) {
-                            ForEach(PainArea.allCases) { area in
-                                Text(area.displayName).tag(area)
+                    Section {
+                        Picker("Beschwerden", selection: $pain) {
+                            ForEach(PainLevel.allCases, id: \.self) { level in
+                                Text(level.displayName).tag(level)
                             }
                         }
+                        .pickerStyle(.segmented)
+                        if pain != .none {
+                            Picker("Wo?", selection: $area) {
+                                ForEach(PainArea.allCases) { area in
+                                    Text(area.displayName).tag(area)
+                                }
+                            }
+                        }
+                    } header: {
+                        Text("Tut etwas weh?")
+                    } footer: {
+                        Text(painHint)
                     }
-                } header: {
-                    Text("Tut etwas weh?")
-                } footer: {
-                    Text(painHint)
                 }
+                .cardRows()
             }
+            .themedList()
             .navigationTitle("Wie war's?")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

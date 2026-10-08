@@ -39,27 +39,31 @@ struct TestResultSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                if let test, let module {
-                    if let pending {
-                        resultSections(pending)
-                    } else if test.maximalEffort {
-                        inputSections(test, module: module)
-                    } else {
-                        Section {
-                            Text(test.resultHint.isEmpty ? "Dieser Test ändert dein Profil nicht." : test.resultHint)
-                                .fixedSize(horizontal: false, vertical: true)
+                Group {
+                    if let test, let module {
+                        if let pending {
+                            resultSections(pending)
+                        } else if test.maximalEffort {
+                            inputSections(test, module: module)
+                        } else {
+                            Section {
+                                Text(test.resultHint.isEmpty ? "Dieser Test ändert dein Profil nicht." : test.resultHint)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                         }
+                    } else {
+                        Text("Diesen Test kennt die App nicht.")
+                            .foregroundStyle(.secondary)
                     }
-                } else {
-                    Text("Diesen Test kennt die App nicht.")
-                        .foregroundStyle(.secondary)
+                    if let error = profileLoader.error {
+                        Label(error, systemImage: "exclamationmark.triangle")
+                            .font(.footnote)
+                            .foregroundStyle(.orange)
+                    }
                 }
-                if let error = profileLoader.error {
-                    Label(error, systemImage: "exclamationmark.triangle")
-                        .font(.footnote)
-                        .foregroundStyle(.orange)
-                }
+                .cardRows()
             }
+            .themedList()
             .navigationTitle(test?.displayName ?? "Testergebnis")
             .swipeClosesKeyboard()
             .navigationBarTitleDisplayMode(.inline)
