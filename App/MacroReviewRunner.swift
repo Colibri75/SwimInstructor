@@ -10,7 +10,7 @@ import SwimInstructorCore
 final class MacroReviewRunner: ObservableObject {
     private let macroLoader: MultiSportMacroLoader
     private let pauseStore: PauseReportStoring
-    /// Nach einer Fortschreibung: die nächsten sieben Tage und den Tag neu abstimmen.
+    /// Nach einer Fortschreibung: die nächsten 14 Tage und den Tag neu abstimmen.
     var onReviewed: (@MainActor () async -> Void)?
     private var task: Task<Void, Never>?
     private var backgroundTask = UIBackgroundTaskIdentifier.invalid

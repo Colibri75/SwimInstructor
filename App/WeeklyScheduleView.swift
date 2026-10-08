@@ -2,7 +2,7 @@ import SwiftUI
 import SwimInstructorCore
 
 /// Wochenraster: je Wochentag, ob und wann trainiert wird, wie lange höchstens und auf Wunsch nur eine Sportart.
-/// Ein gültiger Wochenraster wird sofort gespeichert und gilt ab der nächsten Abstimmung der sieben Tage.
+/// Ein gültiger Wochenraster wird sofort gespeichert und gilt ab der nächsten Abstimmung der 14 Tage.
 struct WeeklyScheduleView: View {
     private let store: WeeklyScheduleStoring
     private let goalStore: TrainingGoalStoring
@@ -99,7 +99,7 @@ struct WeeklyScheduleView: View {
                 LabeledContent("Zusammen", value: schedule.summary)
             }
         } footer: {
-            Text("Der Plan legt Training nur auf deine Trainingstage und bleibt unter der Zeit des Tages. Mit einer festen Sportart gibt es an dem Tag nur diese. Änderungen gelten ab der nächsten Abstimmung der sieben Tage, der Gesamtplan bleibt.")
+            Text("Der Plan legt Training nur auf deine Trainingstage und bleibt unter der Zeit des Tages. Mit einer festen Sportart gibt es an dem Tag nur diese. Änderungen gelten ab der nächsten Abstimmung der 14 Tage, der Gesamtplan bleibt.")
         }
         .font(.footnote)
     }

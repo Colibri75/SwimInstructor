@@ -208,6 +208,23 @@ describe("POST /v1/plan/week mit plan_version 2", () => {
     expect(response.body.plan.total_minutes).toBe(171);
   });
 
+  it("plant mit days 14 die naechsten 14 Tage", async () => {
+    const days = goodWeek().days.map((day) => day.sessions);
+    const complete = claude(weekPlan([...days, ...days]));
+
+    const response = await request(appWith(complete).app).post("/v1/plan/week").set(auth).send(weekBody({ days: 14 }));
+
+    expect(response.status).toBe(200);
+    expect(response.body.plan.days).toHaveLength(14);
+  });
+
+  it("lehnt eine andere Zahl von Tagen als 7 oder 14 ab", async () => {
+    const response = await request(appWith(claude(goodWeek())).app).post("/v1/plan/week").set(auth).send(weekBody({ days: 10 }));
+
+    expect(response.status).toBe(400);
+    expect(detailPaths(response.body)).toContain("days");
+  });
+
   it("nimmt die Vorgabe des Gesamtplans an, wenn die Woche an einem Montag beginnt", async () => {
     const complete = claude(goodWeek());
 

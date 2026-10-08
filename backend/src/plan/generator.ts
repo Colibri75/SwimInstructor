@@ -20,7 +20,7 @@ export interface StructuredGenerator {
 }
 
 export interface CallOptions {
-  /** Gesamtplan oder Ueberarbeitung: bekommt das laengere Zeitlimit (`ClaudeOptions.macroTimeoutMs`). */
+  /** Gesamtplan, Ueberarbeitung oder Plan fuer 14 Tage: bekommt das laengere Zeitlimit (`ClaudeOptions.macroTimeoutMs`). */
   macro?: boolean;
 }
 

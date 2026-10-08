@@ -86,7 +86,7 @@ struct MacroPlanSections: View {
         } header: {
             Text("Wochen bis zum Ziel (\(plan.weeks.count))")
         } footer: {
-            Text("Tippe auf eine Woche, um sie im Wochenplan zu sehen. Einzelne Einheiten gibt es für die nächsten sieben Tage, spätere Wochen zeigen die Vorgabe von hier.")
+            Text("Tippe auf eine Woche, um sie im Wochenplan zu sehen. Einzelne Einheiten gibt es für die nächsten 14 Tage, spätere Wochen zeigen die Vorgabe von hier.")
         }
     }
 
@@ -168,7 +168,7 @@ private struct ActualWeekRow: View {
                         .foregroundStyle(.orange)
                 }
             } else {
-                Text("Noch kein Gesamtplan. Er legt die Wochen bis zu deinem Ziel für alle Sportarten fest, die nächsten sieben Tage richten sich danach.")
+                Text("Noch kein Gesamtplan. Er legt die Wochen bis zu deinem Ziel für alle Sportarten fest, die nächsten 14 Tage richten sich danach.")
                     .foregroundStyle(.secondary)
             }
             // Ohne gültigen Plan direkt; einen gültigen Plan neu zu erstellen, fragt erst nach (Feedback beginnt von vorn).
@@ -194,7 +194,7 @@ private struct ActualWeekRow: View {
             .confirmationDialog("Gesamtplan neu erstellen?", isPresented: $confirmsRegenerate, titleVisibility: .visible) {
                 Button("Neu erstellen") { regenerate() }
             } message: {
-                Text("Dein Coach plant alle Wochen bis zum Ziel neu, mit deinem aktuellen Stand. Die laufende Woche bleibt, die Feedback-Runden beginnen von vorn. Danach werden die nächsten sieben Tage angepasst; deine festgelegten Tage und heute bleiben.")
+                Text("Dein Coach plant alle Wochen bis zum Ziel neu, mit deinem aktuellen Stand. Die laufende Woche bleibt, die Feedback-Runden beginnen von vorn. Danach werden die nächsten 14 Tage angepasst; deine festgelegten Tage und heute bleiben.")
             }
             if let error = macroLoader.error, !errorFromFeedback {
                 Label(error, systemImage: "exclamationmark.triangle")
@@ -208,7 +208,7 @@ private struct ActualWeekRow: View {
         }
     }
 
-    /// Neu berechnen und danach die nächsten sieben Tage an den neuen Gesamtplan anpassen.
+    /// Neu berechnen und danach die nächsten 14 Tage an den neuen Gesamtplan anpassen.
     private func regenerate() {
         guard let snapshot = todayLoader.reading?.snapshot else { return }
         errorFromFeedback = false
@@ -308,7 +308,7 @@ private struct ActualWeekRow: View {
                 Task {
                     if await macroLoader.revise(feedback: feedback, snapshot: snapshot) {
                         feedback = ""
-                        // Die nächsten sieben Tage an den neuen Gesamtplan anpassen (einmal je Fassung).
+                        // Die nächsten 14 Tage an den neuen Gesamtplan anpassen (einmal je Fassung).
                         await todayLoader.refreshIfNeeded()
                     }
                 }
@@ -353,7 +353,7 @@ private struct ActualWeekRow: View {
         } header: {
             Text("Feedback zum Gesamtplan")
         } footer: {
-            Text("Schreib, was am Gesamtplan anders sein soll. Dein Coach überarbeitet ihn und listet, was sich ändert; die Sicherheitsgrenzen gelten weiter. Die nächsten sieben Tage passen sich danach an.")
+            Text("Schreib, was am Gesamtplan anders sein soll. Dein Coach überarbeitet ihn und listet, was sich ändert; die Sicherheitsgrenzen gelten weiter. Die nächsten 14 Tage passen sich danach an.")
         }
     }
 }

@@ -85,7 +85,7 @@ public final class MultiSportMacroLoader: ObservableObject {
     public var upcomingWeeks: [MacroWeekV2] { plan?.weeks(from: currentWeekStart) ?? [] }
 
     /// Die Wochen des Gesamtplans, in die die Tage `dates` fallen, ohne Doppelte. Sie gehen mit der Anfrage für die
-    /// nächsten sieben Tage an den Server.
+    /// nächsten 14 Tage an den Server.
     public func weeks(overlapping dates: [String]) -> [MacroWeekV2] {
         guard let plan else { return [] }
         var seen = Set<String>()
@@ -107,7 +107,7 @@ public final class MultiSportMacroLoader: ObservableObject {
         return max((days + 6) / 7, 0)
     }
 
-    /// Ein Merkmal des Plans, das sich mit jeder neuen Fassung ändert. Der Plan der nächsten sieben Tage nutzt es, um
+    /// Ein Merkmal des Plans, das sich mit jeder neuen Fassung ändert. Der Plan der nächsten 14 Tage nutzt es, um
     /// sich nach einer Überarbeitung neu abzustimmen.
     public var revisionStamp: String {
         guard let plan else { return "" }
@@ -133,7 +133,7 @@ public final class MultiSportMacroLoader: ObservableObject {
     }
 
     /// Berechnet den Gesamtplan neu. Die Feedback-Runden beginnen von vorn. Die laufende Woche des bisherigen Plans
-    /// bleibt, damit die nächsten sieben Tage nicht unter dem Athleten wegrutschen. Scheitert es, bleibt der bisherige
+    /// bleibt, damit die nächsten 14 Tage nicht unter dem Athleten wegrutschen. Scheitert es, bleibt der bisherige
     /// stehen.
     @discardableResult
     public func regenerate(snapshot: AthleteStateSnapshot) async -> Bool {

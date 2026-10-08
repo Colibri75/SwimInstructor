@@ -1,14 +1,17 @@
 import XCTest
 @testable import SwimInstructorCore
 
-/// Bausteine für die Tests der nächsten sieben Tage in Plan v2. "Heute" ist Mittwoch, der 30.09.2026 (TestFixtures.now).
+/// Bausteine für die Tests der nächsten 14 Tage in Plan v2. "Heute" ist Mittwoch, der 30.09.2026 (TestFixtures.now).
 private enum WeekLoaderV2Data {
     static let bikeTest = PlannedTest(
         id: "threshold_30min", displayName: "30-Minuten-Test", maximalEffort: true, produces: [.thresholdHeartRate, .thresholdPower]
     )
 
-    /// Die sieben Tage ab heute, die der Lader anfragt.
-    static let window = ["2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05", "2026-10-06"]
+    /// Die 14 Tage ab heute, die der Lader anfragt.
+    static let window = [
+        "2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05", "2026-10-06",
+        "2026-10-07", "2026-10-08", "2026-10-09", "2026-10-10", "2026-10-11", "2026-10-12", "2026-10-13"
+    ]
 
     /// Eine Einheit; Schwimmen in Metern, Rad und Laufen in Minuten.
     static func session(
@@ -197,7 +200,7 @@ final class MultiSportWeekLoaderTests: XCTestCase {
 
     // MARK: - Planen
 
-    func testPlanningAsksForTheSevenDaysFromTodayWithEverythingTheServerNeeds() async throws {
+    func testPlanningAsksForTheFourteenDaysFromTodayWithEverythingTheServerNeeds() async throws {
         let provider = FakeProvider()
         let loader = makeLoader(provider: provider)
         let macro = MacroWeekV2(
@@ -222,6 +225,7 @@ final class MultiSportWeekLoaderTests: XCTestCase {
         XCTAssertEqual(request.snapshot, TestFixtures.snapshot)
         XCTAssertEqual(request.fromDate, "2026-09-30")
         XCTAssertEqual(request.today, "2026-09-30")
+        XCTAssertEqual(request.days, 14)
         XCTAssertEqual(request.unavailableDates, [])
         XCTAssertEqual(request.recentTraining, [])
         XCTAssertEqual(request.macroWeeks, [macro])
@@ -273,7 +277,7 @@ final class MultiSportWeekLoaderTests: XCTestCase {
     }
 
     func testReplanningKeepsPastEditsDaysWithoutTimeAndDaysBeyondTheWindow() async throws {
-        // Montag (vorbei) von Hand geändert, Freitag keine Zeit, in der nächsten Woche schon der Donnerstag geplant.
+        // Montag (vorbei) von Hand geändert, Freitag keine Zeit, in der übernächsten Woche schon der Donnerstag geplant.
         let monday = WeekLoaderV2Data.day(
             "2026-09-28", [WeekLoaderV2Data.session(.run, amount: 25, minutes: 25, meters: 4_200)], focus: "Kurz gelaufen", isEdited: true
         )
@@ -281,8 +285,8 @@ final class MultiSportWeekLoaderTests: XCTestCase {
             "2026-10-02", [WeekLoaderV2Data.session(.run, amount: 45, minutes: 45, meters: 7_560, focus: "Lang")], focus: "Laufen lang"
         )
         let current = WeekLoaderV2Data.week(days: [monday, WeekLoaderV2Data.restDay("2026-09-29"), friday])
-        let later = WeekLoaderV2Data.week("2026-10-05", days: [
-            WeekLoaderV2Data.day("2026-10-08", [WeekLoaderV2Data.session(.bike, amount: 60, minutes: 60, meters: 25_200)])
+        let later = WeekLoaderV2Data.week("2026-10-12", days: [
+            WeekLoaderV2Data.day("2026-10-15", [WeekLoaderV2Data.session(.bike, amount: 60, minutes: 60, meters: 25_200)])
         ])
         let store = MemoryStore([current, later])
         let provider = FakeProvider()
@@ -308,9 +312,9 @@ final class MultiSportWeekLoaderTests: XCTestCase {
         // Die übrigen Tage im Fenster kommen vom Server.
         XCTAssertEqual(week.day(on: "2026-10-01")?.sessions.map(\.sport), [SportID.swim])
         XCTAssertEqual(week.day(on: "2026-10-03")?.sessions.map(\.sport), [SportID.run, SportID.swim])
-        // Nach dem Fenster (endet am 06.10.): Der ältere Plan bleibt.
-        XCTAssertEqual(loader.week(starting: "2026-10-05")?.days.map(\.date), ["2026-10-05", "2026-10-06", "2026-10-08"])
-        XCTAssertEqual(loader.day(on: "2026-10-08")?.sessions.first?.sport, SportID.bike)
+        // Nach dem Fenster (endet am 13.10.): Der ältere Plan bleibt.
+        XCTAssertEqual(loader.week(starting: "2026-10-12")?.days.map(\.date), ["2026-10-15"])
+        XCTAssertEqual(loader.day(on: "2026-10-15")?.sessions.first?.sport, SportID.bike)
         XCTAssertEqual(store.stored, loader.weeks)
 
         // Wieder Zeit: Das Geplante von vorher kommt zurück.
@@ -769,17 +773,20 @@ final class MultiSportWeekLoaderTests: XCTestCase {
 
     // MARK: - Woche wechseln
 
-    func testShiftingTheWeekIsLimitedToFourWeeksBackAndOneAheadWithoutGesamtplan() {
+    func testShiftingTheWeekIsLimitedToFourWeeksBackAndTheFourteenDaysAheadWithoutGesamtplan() {
         let loader = makeLoader(provider: nil)
 
+        // Die 14 Tage enden am Dienstag, 13.10.: bis zu dessen Woche lässt sich vorblättern.
         XCTAssertTrue(loader.canShiftSelectedWeek(by: 1))
         loader.shiftSelectedWeek(by: 1)
         XCTAssertEqual(loader.selectedWeekStart, "2026-10-05")
+        loader.shiftSelectedWeek(by: 1)
+        XCTAssertEqual(loader.selectedWeekStart, "2026-10-12")
         XCTAssertFalse(loader.canShiftSelectedWeek(by: 1))
         loader.shiftSelectedWeek(by: 1)
-        XCTAssertEqual(loader.selectedWeekStart, "2026-10-05")
+        XCTAssertEqual(loader.selectedWeekStart, "2026-10-12")
 
-        for _ in 0..<6 { loader.shiftSelectedWeek(by: -1) }
+        for _ in 0..<7 { loader.shiftSelectedWeek(by: -1) }
         XCTAssertEqual(loader.selectedWeekStart, "2026-08-31")
         XCTAssertFalse(loader.canShiftSelectedWeek(by: -1))
 
@@ -795,9 +802,9 @@ final class MultiSportWeekLoaderTests: XCTestCase {
         XCTAssertEqual(loader.selectedWeekStart, "2026-11-02")
         XCTAssertFalse(loader.canShiftSelectedWeek(by: 1))
 
-        // Ein Gesamtplan, der vor der nächsten Woche endet, nimmt das Vorblättern um eine Woche nicht weg.
+        // Ein Gesamtplan, der früher endet, nimmt das Vorblättern bis zum letzten geplanten Tag nicht weg.
         loader.lastWeekStartProvider = { "2026-09-28" }
-        XCTAssertEqual(loader.latestWeekStart, "2026-10-05")
+        XCTAssertEqual(loader.latestWeekStart, "2026-10-12")
     }
 
     func testSelectingAWeekByDateStaysInRange() {
@@ -811,13 +818,13 @@ final class MultiSportWeekLoaderTests: XCTestCase {
         XCTAssertEqual(loader.selectedWeekStart, "2026-10-19")
     }
 
-    func testDaysAfterTheSevenDayWindowAreBeyondIt() {
+    func testDaysAfterTheFourteenDayWindowAreBeyondIt() {
         let loader = makeLoader(provider: nil)
 
-        // Heute ist Mittwoch, der 30.09.: geplant wird bis Dienstag, den 06.10.
-        XCTAssertEqual(loader.windowEnd, "2026-10-06")
-        XCTAssertFalse(loader.isBeyondWindow("2026-10-06"))
-        XCTAssertTrue(loader.isBeyondWindow("2026-10-07"))
+        // Heute ist Mittwoch, der 30.09.: geplant wird bis Dienstag, den 13.10.
+        XCTAssertEqual(loader.windowEnd, "2026-10-13")
+        XCTAssertFalse(loader.isBeyondWindow("2026-10-13"))
+        XCTAssertTrue(loader.isBeyondWindow("2026-10-14"))
         XCTAssertFalse(loader.isBeyondWindow("2026-09-28"))
     }
 }

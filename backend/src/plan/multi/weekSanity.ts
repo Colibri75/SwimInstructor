@@ -12,7 +12,7 @@ import { chooseTest, TestPlan, TestRef, testRef } from "./tests";
 import { inOpenWaterBlock, openWaterAllowed, openWaterBlocked, raceInOpenWater } from "./openWater";
 
 /**
- * Sicherheitsschicht fuer den Wochenplan ueber mehrere Sportarten (die naechsten sieben Tage). Reiner Code: korrigiert
+ * Sicherheitsschicht fuer den Wochenplan ueber mehrere Sportarten (die naechsten 7 oder 14 Tage, je Block von 7 Tagen). Reiner Code: korrigiert
  * deterministisch oder blockt. Regeln (docs/multisport-planning.md): genau die angefragten Tage; keine Zeit heisst
  * Ruhetag; hoechstens zwei Einheiten und eine harte je Tag; je Sportart Einheitengrenze, Wochengrenze und Zahl der
  * Einheiten; die Grenzen fuer heute; hoechstens zwei harte Tage ueber alle Sportarten, nie hintereinander (auch nicht
@@ -23,7 +23,7 @@ import { inOpenWaterBlock, openWaterAllowed, openWaterBlocked, raceInOpenWater }
  */
 export interface WeekContextV2 {
   today: string;
-  /** Die sieben Tage ab `from_date`, aufsteigend. */
+  /** Die geplanten Tage ab `from_date` (7 oder 14), aufsteigend; die Wochengrenzen gelten je Block von 7 Tagen. */
   dates: string[];
   unavailable: string[];
   /**
@@ -52,6 +52,8 @@ export interface WeekContextV2 {
   supplements?: Supplements;
   macroWeeks?: MacroWeekTargetV2[];
   testSettings?: TestSettings;
+  /** Tests, die schon vor diesen Tagen geplant sind (im Block davor): kein zweiter derselben Sportart, keiner am Tag danach. */
+  priorTests?: { date: string; sport: string }[];
 }
 
 export interface WeekSessionV2 {
@@ -178,11 +180,57 @@ function focusWithoutTest(focus: string, sessions: readonly Draft[]): string {
   return /test/i.test(focus) && !sessions.some((draft) => draft.session_type === "test") ? EASY_INSTEAD_OF_TEST : focus;
 }
 
+/** So viele Tage hat ein Block, fuer den die Wochengrenzen gelten (Umfang, Einheiten, Trainingstage, harte Tage, Ruhetag). */
+export const WEEK_BLOCK_DAYS = 7;
+
+/**
+ * Prueft den Plan Block fuer Block (je `WEEK_BLOCK_DAYS` Tage, bei 14 Tagen also zwei): Jeder Block bekommt die
+ * Wochengrenzen, und was der Block davor plant, zaehlt fuer den naechsten wie Training vor dem Plan (die Spanne von
+ * 7 Tagen ueber die Blockgrenze, harte Tage nie hintereinander, kein zweiter Test derselben Sportart).
+ */
 export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, context: WeekContextV2): WeekSanityResultV2 {
-  const problem = findProblem(input);
+  const problem = findProblem(input, context.dates.length);
   if (problem !== null) return { plan: { rationale: input.rationale, total_minutes: 0, days: [] }, adjustments: [], blocked: problem };
 
   const notes: string[] = [];
+  const result: WeekDayV2[] = [];
+  const reports = context.reports ?? context.recent;
+  let recent = context.recent;
+  let priorTests = context.priorTests ?? [];
+  for (let start = 0; start < context.dates.length; start += WEEK_BLOCK_DAYS) {
+    const dates = context.dates.slice(start, start + WEEK_BLOCK_DAYS);
+    const block = sanitizeBlock(input, snapshot, { ...context, dates, recent, reports, priorTests }, notes);
+    result.push(...block);
+    recent = [...recent, ...block.flatMap(plannedAsRecent)];
+    priorTests = [...priorTests, ...block.flatMap((day) => day.sessions.filter((session) => session.test !== null).map((session) => ({ date: day.date, sport: session.sport })))];
+  }
+
+  const adjustments = notes.slice(0, MULTI_RULES.maxAdjustmentLines);
+  if (notes.length > MULTI_RULES.maxAdjustmentLines) adjustments.push(`… und ${notes.length - MULTI_RULES.maxAdjustmentLines} weitere Korrekturen`);
+  return {
+    plan: {
+      rationale: withNote(input.rationale, notes),
+      total_minutes: result.reduce((sum, day) => sum + day.sessions.reduce((s, session) => s + session.minutes, 0), 0),
+      days: result
+    },
+    adjustments,
+    blocked: null
+  };
+}
+
+/** Ein geplanter Tag als Training vor dem naechsten Block (fuer die 7-Tage-Spanne und "nie zwei harte Tage hintereinander"). */
+function plannedAsRecent(day: WeekDayV2): RecentTraining[] {
+  return day.sessions.map((session) => ({
+    date: day.date,
+    sport: session.sport,
+    minutes: session.minutes,
+    meters: session.distance_meters,
+    hard: session.intensity === "hard"
+  }));
+}
+
+/** Die Regeln fuer einen Block von hoechstens `WEEK_BLOCK_DAYS` Tagen; Korrekturen landen in `notes`. */
+function sanitizeBlock(input: MultiWeekPlanRaw, snapshot: SnapshotV2, context: WeekContextV2, notes: string[]): WeekDayV2[] {
   const unplanned = new Set<string>();
   // Feste Tage: stehen schon, ihr Umfang geht von den Grenzen der Woche ab.
   const base = weekLimitsV2(snapshot, context);
@@ -323,26 +371,15 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
   // 14. Die festen Tage zurueck, wie der Athlet sie festgelegt hat.
   days = days.map((day) => pinned.get(day.date) ?? day);
 
-  const result = days.map(finalizeDay);
-  const adjustments = notes.slice(0, MULTI_RULES.maxAdjustmentLines);
-  if (notes.length > MULTI_RULES.maxAdjustmentLines) adjustments.push(`… und ${notes.length - MULTI_RULES.maxAdjustmentLines} weitere Korrekturen`);
-  return {
-    plan: {
-      rationale: withNote(input.rationale, notes),
-      total_minutes: result.reduce((sum, day) => sum + day.sessions.reduce((s, session) => s + session.minutes, 0), 0),
-      days: result
-    },
-    adjustments,
-    blocked: null
-  };
+  return days.map(finalizeDay);
 }
 
 // --- Bausteine ---
 
-function findProblem(input: MultiWeekPlanRaw): string | null {
+function findProblem(input: MultiWeekPlanRaw, requested: number): string | null {
   if (input.rationale.trim() === "") return "Begründung fehlt";
   if (input.days.length === 0) return "Wochenplan ohne Tage";
-  if (input.days.length > 14) return `zu viele Tage (${input.days.length})`;
+  if (input.days.length > Math.max(requested, WEEK_BLOCK_DAYS) * 2) return `zu viele Tage (${input.days.length})`;
   for (const day of input.days) {
     if (day.sessions.length > 6) return "zu viele Einheiten an einem Tag";
     for (const session of day.sessions) {
@@ -716,8 +753,8 @@ function applyToday(day: DraftDay, today: DayLimitsV2, notes: string[]): DraftDa
 
 /** Setzt die Testeinheiten ein oder macht aus einem unpassenden Test eine normale Einheit. */
 function placeTests(days: DraftDay[], snapshot: SnapshotV2, context: WeekContextV2, week: WeekLimitsV2, notes: string[]): DraftDay[] {
-  let previousTestDay: string | null = null;
-  const testedSports = new Set<string>();
+  let previousTestDay: string | null = (context.priorTests ?? []).reduce<string | null>((last, test) => (last === null || test.date > last ? test.date : last), null);
+  const testedSports = new Set<string>((context.priorTests ?? []).map((test) => test.sport));
   // Tests werden nie gekuerzt: zusammen passen sie in die Wochenstunden.
   let testMinutes = 0;
   return days.map((day) => {

@@ -92,7 +92,7 @@ struct SwimInstructorApp: App {
             cache: FileDayPlanV2Cache.standard(),
             history: FileDayPlanV2History.standard(),
             wishStore: wishStore,
-            // Der Tagesplan richtet sich nach der Vorgabe der sieben Tage für heute.
+            // Der Tagesplan richtet sich nach der Vorgabe der nächsten Tage für heute.
             dayTarget: { [weak weekLoader] in weekLoader?.todayTarget },
             // Nur das Equipment, das der Athlet in den Einstellungen angegeben hat.
             equipment: equipment,
@@ -103,7 +103,7 @@ struct SwimInstructorApp: App {
             testSettings: { testSettingsStore.settings() },
             extras: { planningExtras([PlanFormatting.isoDay(Date())]) },
             // Beim ersten Öffnen am Tag, nach dem Lesen von Health und vor dem Tagesplan: Gesamtplan sicherstellen und
-            // die nächsten sieben Tage neu abstimmen. Nach einer Überarbeitung des Gesamtplans gilt der Tag wieder als
+            // die nächsten 14 Tage neu abstimmen. Nach einer Überarbeitung des Gesamtplans gilt der Tag wieder als
             // offen, damit die Tage zum neuen Gesamtplan passen.
             prepare: { [weak macroLoader, weak weekLoader, weak reviewRunner, weak locationProvider] reading in
                 guard let macroLoader, let weekLoader else { return }
@@ -118,7 +118,7 @@ struct SwimInstructorApp: App {
                     stamp: "\(macroLoader.currentGoalKey)|\(macroLoader.revisionStamp)"
                 )
             },
-            // Vorschau kommender Tage im Plan-Tab: Vorgabe der sieben Tage und freie Zeit des Tags.
+            // Vorschau kommender Tage im Plan-Tab: Vorgabe der nächsten Tage und freie Zeit des Tags.
             previewStore: FileDayPlanPreviewStore.standard(),
             targetOn: { [weak weekLoader] date in weekLoader?.day(on: date)?.target },
             extrasOn: { date in planningExtras([date]) },
@@ -127,7 +127,7 @@ struct SwimInstructorApp: App {
         )
         // Eine Änderung an heute im Plan-Tab gilt auch in Heute und auf der Watch (mehrere Tipps hintereinander: eine Anfrage).
         weekLoader.onEdit = { [weak loader] in loader?.scheduleSync() }
-        // Steht heute fest (Tagesplan, Vorschau, schon trainiert), bleibt es beim Neu-Abstimmen der sieben Tage.
+        // Steht heute fest (Tagesplan, Vorschau, schon trainiert), bleibt es beim Neu-Abstimmen der nächsten Tage.
         weekLoader.todayLockedProvider = { [weak loader] in loader?.isTodayLocked ?? false }
         reviewRunner.onReviewed = { [weak loader] in await loader?.refreshIfNeeded() }
         weekLoader.equipmentProvider = equipment
@@ -135,7 +135,7 @@ struct SwimInstructorApp: App {
         // Beschwerden und Anstrengung aus den Rückmeldungen: Der Plan reagiert darauf von selbst.
         weekLoader.feedbackProvider = { [weak feedbackBook] in feedbackBook?.entries ?? [] }
         weekLoader.testSettingsProvider = { testSettingsStore.settings() }
-        // Die nächsten sieben Tage richten sich nach den Wochen des Gesamtplans.
+        // Die nächsten 14 Tage richten sich nach den Wochen des Gesamtplans.
         weekLoader.macroProvider = { [weak macroLoader] dates in macroLoader?.weeks(overlapping: dates) ?? [] }
         // Im Plan-Tab lässt sich bis zur letzten Woche des Gesamtplans vorblättern.
         weekLoader.lastWeekStartProvider = { [weak macroLoader] in macroLoader?.plan?.weeks.last?.weekStart }

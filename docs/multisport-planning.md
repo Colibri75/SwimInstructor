@@ -1,6 +1,6 @@
 # Planung für mehrere Sportarten
 
-Der Server plant Schwimmen, Rad und Laufen gemeinsam: einen Gesamtplan bis zum Ziel, die nächsten sieben Tage und
+Der Server plant Schwimmen, Rad und Laufen gemeinsam: einen Gesamtplan bis zum Ziel, die nächsten 14 Tage und
 den Tag mit allen Schritten. Jede Anfrage nennt `plan_version: 2` im Body (so heißt die Version des Formats; die frühere
 Planung nur für Schwimmen, Plan v1, gibt es nicht mehr, eine Anfrage ohne das Feld ist ein Fehler 400 mit dem Hinweis,
 dass die App veraltet ist).
@@ -120,7 +120,7 @@ Wochenstunden des Ziels wie bisher.
 In der App liegt der Wochenraster getrennt vom Ziel (`WeeklySchedule`, Einstellungen → Wochenraster). Ohne gespeicherten
 Wochenraster rechnet die App einen aus Trainingstagen und Stunden des Ziels. Trainingstage und Stunden im Snapshot kommen
 aus dem Wochenraster, damit ältere Server dasselbe sehen. Der Gesamtplan hängt nur an Zielart, Disziplinen, Zieltag und
-Schwerpunkten (`TrainingGoal.planKey`); eine Änderung am Wochenraster gilt ab der nächsten Abstimmung der sieben Tage.
+Schwerpunkten (`TrainingGoal.planKey`); eine Änderung am Wochenraster gilt ab der nächsten Abstimmung der 14 Tage.
 Beim ersten Start führt die App durch Ziel, Wochenraster und Startniveau (`OnboardingView`), erst danach entsteht der
 Gesamtplan. Wer die App schon nutzt, sieht die Einrichtung nach dem Update einmal, vorausgefüllt mit dem gespeicherten Ziel.
 
@@ -155,7 +155,7 @@ Die App schickt den Plan ab vier Wochen vor der laufenden Woche, das Ist dieser 
 den Wochen; die App behält die vergangenen Wochen und die laufende Woche des bisherigen Plans und ersetzt nur die
 Wochen danach. Jede Fortschreibung hängt als `MacroReview` am Plan; danach geht wieder genau eine Feedback-Runde
 (`canGiveFeedback`). Ein Fehlschlag lässt den Plan stehen; versucht wird höchstens einmal am Tag je Anlass. Nach einer
-Fortschreibung stimmt die App die sieben Tage neu ab und meldet sich mit einer Mitteilung.
+Fortschreibung stimmt die App die 14 Tage neu ab und meldet sich mit einer Mitteilung.
 
 Neue bestätigte Leistungswerte seit dem letzten Stand (Test oder Eingabe, `PerformanceProfile.changes(since:)`) gehen
 als `performance_changes` mit dem Wert davor mit ("CSS-Pace 1:50 → 1:44 pro 100 m"). Die Zonen der Tagespläne richten
@@ -169,7 +169,11 @@ heute nichts Hartes war, die letzte harte Einheit mindestens zwei Tage zurückli
 höchstens ein harter Tag war; sonst höchstens `moderate`. Je Sportart gilt heute zusätzlich der Rest der rollenden
 Wochengrenze.
 
-**Sieben Tage:** genau die angefragten Tage; ein Tag ohne Zeit wird Ruhetag. Höchstens zwei harte Tage über alle
+**Die nächsten Tage:** genau die angefragten Tage (`days`: 7 oder 14, die App fragt 14 an, ohne Angabe 7); ein Tag ohne
+Zeit wird Ruhetag. Bei 14 Tagen plant Claude in einem Aufruf (mit dem längeren Zeitlimit des Gesamtplans), die
+Sicherheitsschicht prüft in zwei Blöcken von 7 Tagen: Jeder Block bekommt die Wochengrenzen unten, und was der erste
+Block plant, zählt für den zweiten wie Training vor dem Plan (Spanne von 7 Tagen, harte Tage, kein zweiter Test
+derselben Sportart). Höchstens zwei harte Tage über alle
 Sportarten, nie hintereinander, auch nicht direkt nach einem harten Tag vor dem Plan. Nicht mehr Trainingstage als im
 Ziel, mindestens ein Ruhetag, insgesamt höchstens die Wochenstunden. Je Sportart Einheiten- und Wochengrenze und die
 Zahl der Einheiten. Die Wochengrenze gilt wie im Tagesplan für jede Spanne von 7 Tagen, auch über den Planbeginn: Für
@@ -230,7 +234,7 @@ Stelle). Beides geht mit `recent_training` an den Server; ohne eigene Angabe zä
 - **Beschwerden** bremsen die Sportart der Einheit: leicht 1 Tag nichts Hartes, deutlich 2 Tage nur locker mit höchstens
   50 % der Einheitengrenze, stark 3 Tage gar nicht. Die anderen Sportarten bleiben frei. Grenzen und Prompt nennen die
   Stelle; die Sicherheitsschicht setzt es durch (`painRestriction` in `limits.ts`, `applyPain` in `weekSanity.ts`).
-- **Außer der Reihe neu planen:** Die App plant die sieben Tage sofort neu, wenn deutliche oder starke Beschwerden, eine
+- **Außer der Reihe neu planen:** Die App plant die 14 Tage sofort neu, wenn deutliche oder starke Beschwerden, eine
   Einheit ab 8 oder eine gestern ausgefallene Einheit vorliegen, jeder Anlass einmal. `reason` (`pain`, `effort`,
   `missed`, sonst `daily` oder `manual`) und `missed_sessions` gehen mit; Ausgefallenes wird nicht nachgeholt oder
   gestapelt, wichtige Inhalte rücken in die nächsten Tage.

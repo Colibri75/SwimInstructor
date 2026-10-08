@@ -9,7 +9,7 @@ TestFlight, die Health-Freigaben und die gespeicherten Daten verloren gingen:
 | Name der App und in allen Texten | Repo, Xcode-Targets und Scheme, Bundle-IDs (`com.kellner.SwimInstructor`), Swift-Package `SwimInstructorCore`, Ordner auf dem Gerät (`Application Support/SwimInstructor/`), Server (Hostname, Container, `/etc/swiminstructor/`) |
 
 iOS- und watchOS-App für das Training im Triathlon: Sie liest Einheiten und Vitaldaten aus Apple Health, Claude plant
-daraus über einen eigenen Server Gesamtplan, die nächsten sieben Tage und den Tag, und die Watch führt durch die Einheit.
+daraus über einen eigenen Server Gesamtplan, die nächsten 14 Tage und den Tag, und die Watch führt durch die Einheit.
 Jede Sportart ist ein **Modul**; was nicht zu einer Sportart gehört, macht der Kern für alle gleich.
 
 Der Code wird auf einem beliebigen Rechner (z. B. Windows) bearbeitet. Bauen, Signieren und Verteilen läuft über GitHub
@@ -43,17 +43,17 @@ Eine weitere Sportart: [Neue Sportart hinzufügen](docs/neue-sportart.md) (acht 
   `GoalTemplates`).
 - **Zustand** aus Health: Snapshot v2 mit Werten je Sportart, Gesamtlast und Leistungsprofil
   ([`docs/AthleteStateSnapshot.md`](docs/AthleteStateSnapshot.md)).
-- **Planung** auf dem Server: Gesamtplan bis zum Ziel, sieben Tage, Tagesplan, Überarbeitung nach Feedback; die
+- **Planung** auf dem Server: Gesamtplan bis zum Ziel, die nächsten 14 Tage, Tagesplan, Überarbeitung nach Feedback; die
   Sicherheitsschicht hält die Grenzen der Module und die übergreifenden Regeln ein
   ([`docs/multisport-planning.md`](docs/multisport-planning.md)).
 - **Plan reagiert auf echtes Training:** Nach jeder Einheit fragt Heute "Wie war's?" (Anstrengung, Beschwerden mit
   Stelle). Bei deutlichen oder starken Beschwerden, einer sehr harten Einheit (ab 8 von 10) oder einer ausgefallenen
-  Einheit plant die App die sieben Tage außer der Reihe neu; der Server bremst die betroffene Sportart.
+  Einheit plant die App die 14 Tage außer der Reihe neu; der Server bremst die betroffene Sportart.
 - **Triathlon:** Koppeltraining (Laufen nach Rad), drinnen auf Rolle oder Laufband, Freiwasser (Ziel im Freiwasser:
   in den 8 Wochen davor jede Woche eine Einheit im See, ohne Zugang Freiwasser-Elemente im Becken), Wetter (bei Gewitter, Sturm,
   Starkregen oder Glätte nach drinnen), Kalender (volle Tage werden kürzer oder "keine Zeit"), Kraft- und
   Mobilitätsblöcke mit Übungen und ein Plan für den Wettkampftag (Ablauf, Pacing, Wechsel, Verpflegung, Packliste).
-- **iPhone:** Heute (Einheiten des Tages, Wunsch, Rückmeldung, Testergebnis bestätigen), Plan (sieben Tage anpassen,
+- **iPhone:** Heute (Einheiten des Tages, Wunsch, Rückmeldung, Testergebnis bestätigen), Plan (14 Tage anpassen,
   Sportart tauschen, Gesamtplan mit Feedback, Wettkampftag), Dashboard (Kacheln, Woche gegen Plan, Erholung, Ziel),
   Verlauf, Leistungsprofil. Einstellungen "Planung": Kraft und Mobilität pro Woche, Wetter (ungefährer Ort), Kalender
   (Trainingsfenster), unter Equipment Rolle, Laufband und Zugang zu Freiwasser.

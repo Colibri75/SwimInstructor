@@ -1,6 +1,6 @@
 import Foundation
 
-/// Steuert "Heute": Health lesen, Snapshot bauen, Tagesplan für alle Sportarten holen, zwischenspeichern. Die Vorgabe kommt aus den sieben Tagen (`DayTargetV2`), dazu gehen das
+/// Steuert "Heute": Health lesen, Snapshot bauen, Tagesplan für alle Sportarten holen, zwischenspeichern. Die Vorgabe kommt aus den 14 Tagen (`DayTargetV2`), dazu gehen das
 /// bisherige Training und die Testeinstellungen mit. Absichtlich ohne SwiftUI, damit der Ablauf per Unit-Test prüfbar ist.
 @MainActor
 public final class MultiSportTodayLoader: ObservableObject {
@@ -8,7 +8,7 @@ public final class MultiSportTodayLoader: ObservableObject {
     @Published public private(set) var reading: AthleteStateReading?
     @Published public private(set) var isLoadingHealth = false
     @Published public private(set) var isLoadingPlan = false
-    /// Läuft gerade die Vorbereitung nach dem Lesen von Health (Gesamtplan, sieben Tage)?
+    /// Läuft gerade die Vorbereitung nach dem Lesen von Health (Gesamtplan, 14 Tage)?
     @Published public private(set) var isPreparing = false
     /// Fehler beim Lesen aus Health.
     @Published public private(set) var healthError: String?
@@ -48,12 +48,12 @@ public final class MultiSportTodayLoader: ObservableObject {
 
     /// - Parameters:
     ///   - planProvider: liefert den API-Client zur aktuellen Konfiguration, `nil` ohne Token.
-    ///   - dayTarget: die Vorgabe der sieben Tage für heute, `nil` ohne Plan.
+    ///   - dayTarget: die Vorgabe der 14 Tage für heute, `nil` ohne Plan.
     ///   - recentTraining: die Einheiten der letzten Tage samt heute, aus dem frisch gelesenen Zustand.
-    ///   - prepare: läuft nach dem Lesen von Health und vor dem Tagesplan (Gesamtplan, sieben Tage).
+    ///   - prepare: läuft nach dem Lesen von Health und vor dem Tagesplan (Gesamtplan, 14 Tage).
     ///   - previewStore, targetOn, extrasOn: für die Vorschau kommender Tage im Plan-Tab: wo sie liegen, die Vorgabe
-    ///     der sieben Tage und Kraft, Ort und freie Zeit für einen Tag.
-    ///   - adoptPlan: übernimmt einen neuen Tagesplan in die sieben Tage und liefert die Vorgabe danach (`nil`: keine).
+    ///     der 14 Tage und Kraft, Ort und freie Zeit für einen Tag.
+    ///   - adoptPlan: übernimmt einen neuen Tagesplan in die 14 Tage und liefert die Vorgabe danach (`nil`: keine).
     public init(
         authorizer: HealthDataAuthorizing?,
         snapshotBuilder: SnapshotBuilding,
@@ -114,8 +114,8 @@ public final class MultiSportTodayLoader: ObservableObject {
         return response.date == todayKey && response.source != .fallback
     }
 
-    /// Passt der angezeigte Plan zur Vorgabe der sieben Tage für heute? Nach einer Änderung am heutigen Tag im Plan-Tab
-    /// (Umfang, Sportart, Ruhetag) oder einer neuen Planung der sieben Tage nicht mehr.
+    /// Passt der angezeigte Plan zur Vorgabe der 14 Tage für heute? Nach einer Änderung am heutigen Tag im Plan-Tab
+    /// (Umfang, Sportart, Ruhetag) oder einer neuen Planung der 14 Tage nicht mehr.
     public var matchesTodayTarget: Bool {
         response?.requestedTarget == dayTarget()
     }
@@ -131,13 +131,13 @@ public final class MultiSportTodayLoader: ObservableObject {
         await load(force: true, regenerate: true)
     }
 
-    /// Ziehen zum Aktualisieren, in jedem Tab: nur Health neu lesen. Gesamtplan, sieben Tage und Tagesplan bleiben, wie
+    /// Ziehen zum Aktualisieren, in jedem Tab: nur Health neu lesen. Gesamtplan, 14 Tage und Tagesplan bleiben, wie
     /// sie sind; einen neuen Plan gibt es nur über den Knopf oder eine Änderung im Plan-Tab.
     public func pullToRefresh() async {
         await readHealth()
     }
 
-    /// Nur Health lesen (mit Erlaubnis), ohne Gesamtplan, sieben Tage und Tagesplan: für die Einrichtung, die beim
+    /// Nur Health lesen (mit Erlaubnis), ohne Gesamtplan, 14 Tage und Tagesplan: für die Einrichtung, die beim
     /// Startniveau zeigt, was Health weiß, bevor es ein Ziel und einen Plan gibt.
     public func readHealth() async {
         guard !isLoading else { return }
@@ -172,7 +172,7 @@ public final class MultiSportTodayLoader: ObservableObject {
     }
 
     /// Ob heute feststeht: Es gibt schon einen Tagesplan oder eine Vorschau für heute, oder heute wurde schon trainiert.
-    /// Dann ändert das Neu-Abstimmen der sieben Tage heute nicht mehr, nur noch du (Plan-Tab, Wunsch, Knopf).
+    /// Dann ändert das Neu-Abstimmen der 14 Tage heute nicht mehr, nur noch du (Plan-Tab, Wunsch, Knopf).
     public var isTodayLocked: Bool {
         let today = todayKey
         if hasFreshPlanForToday || previews[today] != nil { return true }
@@ -203,7 +203,7 @@ public final class MultiSportTodayLoader: ObservableObject {
     // MARK: - Ein Tag im Plan-Tab
 
     /// Der konkrete Plan eines Tags: heute der Tagesplan, vorher der letzte Stand aus dem Verlauf, später die Vorschau, solange
-    /// sie zur Vorgabe der sieben Tage passt (nach einer Änderung im Plan-Tab nicht mehr).
+    /// sie zur Vorgabe der 14 Tage passt (nach einer Änderung im Plan-Tab nicht mehr).
     public func dayPlan(on date: String) -> DayPlanV2Response? {
         let today = todayKey
         if date == today {
@@ -283,7 +283,7 @@ public final class MultiSportTodayLoader: ObservableObject {
         }
         isLoadingHealth = false
 
-        // Erst Gesamtplan und sieben Tage auf den frischen Zustand abstimmen: Der Tagesplan richtet sich danach.
+        // Erst Gesamtplan und 14 Tage auf den frischen Zustand abstimmen: Der Tagesplan richtet sich danach.
         if let reading {
             isPreparing = true
             await prepare(reading)
@@ -326,7 +326,7 @@ public final class MultiSportTodayLoader: ObservableObject {
         }
     }
 
-    /// Holt den Tagesplan zur aktuellen Vorgabe und übernimmt ihn in die sieben Tage (`adoptPlan`). Hat sich die Vorgabe
+    /// Holt den Tagesplan zur aktuellen Vorgabe und übernimmt ihn in die 14 Tage (`adoptPlan`). Hat sich die Vorgabe
     /// geändert, während die Anfrage lief, ist die Antwort veraltet: Sie wird verworfen und mit dem neuen Stand neu
     /// gefragt, statt deine Änderung zu überschreiben.
     private func fetchPlan(provider: DayPlanV2Providing, reading: AthleteStateReading, regenerate: Bool) async {

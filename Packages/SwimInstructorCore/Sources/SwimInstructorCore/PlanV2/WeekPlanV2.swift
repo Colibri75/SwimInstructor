@@ -61,7 +61,7 @@ public struct DayTargetV2: Codable, Equatable, Sendable {
     }
 }
 
-/// Eine Einheit im Plan der nächsten sieben Tage: Sportart, Art, Umfang und Schwerpunkt. Die Schritte entstehen am Tag
+/// Eine Einheit im Plan der nächsten 14 Tage: Sportart, Art, Umfang und Schwerpunkt. Die Schritte entstehen am Tag
 /// selbst im Tagesplan.
 public struct WeekSession: Codable, Equatable, Sendable {
     public var sport: SportID
@@ -281,7 +281,7 @@ public struct WeekPlanV2: Codable, Equatable, Sendable, Identifiable {
     }
 }
 
-/// Antwort von `POST /v1/plan/week` mit `plan_version: 2`: die angefragten sieben Tage ab `from_date`.
+/// Antwort von `POST /v1/plan/week` mit `plan_version: 2`: die angefragten 14 Tage ab `from_date`.
 public struct WeekPlanV2Response: Decodable, Equatable, Sendable {
     public struct Plan: Decodable, Equatable, Sendable {
         public let rationale: String

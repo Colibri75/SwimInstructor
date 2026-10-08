@@ -114,6 +114,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
             snapshot: data.snapshot,
             fromDate: data.from_date,
             today: data.today,
+            days: data.days ?? 7,
             unavailable: data.unavailable_dates ?? [],
             fixed: data.fixed_days,
             recent: data.recent_training ?? [],

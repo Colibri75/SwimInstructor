@@ -49,7 +49,7 @@ import {
   TestSettings
 } from "./schemas";
 import { asRawDayPlan, DayPlanStoreV2, StoredDayV2 } from "./store";
-import { sanitizeWeekV2, WeekContextV2, WeekPlanV2 } from "./weekSanity";
+import { sanitizeWeekV2, WEEK_BLOCK_DAYS, WeekContextV2, WeekPlanV2 } from "./weekSanity";
 
 /**
  * Plan v2 fuer mehrere Sportarten: Tag, sieben Tage, Gesamtplan und Feedback zum Gesamtplan. Ablauf:
@@ -110,6 +110,8 @@ export interface WeekInputV2 {
   snapshot: SnapshotV2;
   fromDate: string;
   today: string;
+  /** So viele Tage ab `fromDate` (7 oder 14); ohne Angabe 7. */
+  days?: number;
   unavailable: string[];
   /** Feste Tage (von Hand geaendert, heute schon geplant): bleiben, wie sie sind. */
   fixed?: FixedDay[];
@@ -351,7 +353,7 @@ export class MultiPlanService {
 
   private async weekPlan(input: WeekInputV2, user: string, attempt: Attempt): Promise<WeekResultV2> {
     const wishes = input.wishes?.trim() || undefined;
-    const dates = windowDates(input.fromDate, 7);
+    const dates = windowDates(input.fromDate, input.days ?? WEEK_BLOCK_DAYS);
     const weather = input.location !== undefined ? await this.weatherFor(input.location, dates) : [];
     const context: WeekContextV2 = {
       today: input.today,
@@ -375,11 +377,13 @@ export class MultiPlanService {
       buildWeekUserMessageV2({ snapshot: input.snapshot, context, wishes, equipment: input.equipment }),
       MultiWeekPlanSchema,
       user,
-      attempt
+      attempt,
+      // 14 Tage brauchen etwa doppelt so lange wie 7 und passen nicht sicher ins kurze Zeitlimit.
+      dates.length > WEEK_BLOCK_DAYS ? { macro: true } : {}
     );
     const sanitized = sanitizeWeekV2(generated.data, input.snapshot, context);
     if (sanitized.blocked !== null) throw this.blocked("week", sanitized.blocked);
-    this.logGenerated("week", generated.meta, sanitized.adjustments.length, { wishChars: wishes?.length ?? 0 });
+    this.logGenerated("week", generated.meta, sanitized.adjustments.length, { days: dates.length, wishChars: wishes?.length ?? 0 });
     return { fromDate: input.fromDate, generatedAt: this.now().toISOString(), plan: sanitized.plan, adjustments: sanitized.adjustments, ...(wishes ? { wishes } : {}) };
   }
 
