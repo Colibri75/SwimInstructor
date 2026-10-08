@@ -8,6 +8,8 @@ type("appstore")
 
 app_identifier([
   "com.kellner.SwimInstructor",
-  "com.kellner.SwimInstructor.watchkitapp"
+  "com.kellner.SwimInstructor.watchkitapp",
+  "com.kellner.SwimInstructor.widgets",
+  "com.kellner.SwimInstructor.watchkitapp.widgets"
 ])
 username(ENV["APPLE_ID"])

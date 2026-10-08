@@ -1,6 +1,7 @@
 import Foundation
 import SwimInstructorCore
 import WatchConnectivity
+import WidgetKit
 
 /// Hält den Tagesplan auf der Watch, mit allen Einheiten des Tages. Er kommt ausschließlich vom iPhone (siehe
 /// `PhonePlanSync`) und wird lokal gespeichert, damit er im Schwimmbad oder unterwegs auch ohne iPhone da ist.
@@ -70,6 +71,16 @@ final class WatchPlanStore: NSObject, ObservableObject {
         self.response = response
         message = nil
         try? cache.save(response)
+        updateComplication()
+    }
+
+    /// Die Komplikation zeigt den Plan vom iPhone (nur Tagespläne, keine Vorschau).
+    func updateComplication() {
+        guard let response else { return }
+        let glance = PlanGlance.make(date: response.date, todayDone: false, plan: response.plan, now: Date())
+        if PlanGlanceStore.shared().save(glance) {
+            WidgetCenter.shared.reloadAllTimelines()
+        }
     }
 }
 

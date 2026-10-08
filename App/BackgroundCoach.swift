@@ -2,6 +2,7 @@ import BackgroundTasks
 import HealthKit
 import UIKit
 import UserNotifications
+import WidgetKit
 import SwimInstructorCore
 
 /// Der Coach arbeitet, ohne dass die App offen ist: Landet eine Einheit in Health (Health weckt die App) oder gibt iOS der
@@ -67,6 +68,7 @@ final class BackgroundCoach: ObservableObject {
     func didEnterBackground() {
         scheduleRefresh()
         scheduleMorningNotice()
+        updateGlance()
     }
 
     func save(_ preferences: NotificationPreferences) {
@@ -147,19 +149,22 @@ final class BackgroundCoach: ObservableObject {
         notifyNewWorkouts(reading.allWorkouts, now: now)
 
         let today = weekLoader.todayKey
-        guard let tomorrow = weekCalendar.addingDays(1, to: today), isDayDone(today, workouts: reading.allWorkouts, now: now) else {
+        defer {
             scheduleMorningNotice()
+            updateGlance()
+        }
+        // Erledigt oder heute nichts geplant (Ruhetag, keine Zeit): den Plan für morgen holen.
+        let nothingToday = weekLoader.day(on: today).map { $0.sessions.isEmpty || $0.isUnavailable } ?? true
+        guard let tomorrow = weekCalendar.addingDays(1, to: today), nothingToday || isTrainingDone(today, workouts: reading.allWorkouts, now: now) else {
             return
         }
         if loader.dayPlan(on: tomorrow) == nil, loader.canPreview(tomorrow), !Task.isCancelled {
             await loader.loadPreview(for: tomorrow)
         }
-        scheduleMorningNotice()
     }
 
-    /// Erledigt: alles Geplante gemacht, oder heute ist nichts geplant (Ruhetag, keine Zeit).
-    private func isDayDone(_ date: String, workouts: [Workout], now: Date) -> Bool {
-        guard let day = weekLoader.day(on: date), !day.sessions.isEmpty else { return true }
+    /// Alles, was heute geplant war, ist gemacht (wie in Aktuell).
+    private func isTrainingDone(_ date: String, workouts: [Workout], now: Date) -> Bool {
         let status = MultiSportWeekProgressCalculator().statuses(
             plan: weekLoader.week(starting: weekLoader.currentWeekStart),
             weekStart: weekLoader.currentWeekStart,
@@ -167,6 +172,28 @@ final class BackgroundCoach: ObservableObject {
             now: now
         ).first { $0.date == date }
         return status?.isTrainingDone == true
+    }
+
+    // MARK: - Widget
+
+    /// Schreibt, was Widget und Sperrbildschirm zeigen: heute, nach erledigtem Training morgen; der konkrete Plan, sonst
+    /// die Vorgabe der 14 Tage. Nur bei einer Änderung laden die Widgets neu.
+    func updateGlance() {
+        let now = Date()
+        let today = weekLoader.todayKey
+        let done = isTrainingDone(today, workouts: loader.reading?.allWorkouts ?? [], now: now)
+        let date = done ? (weekCalendar.addingDays(1, to: today) ?? today) : today
+        let glance: PlanGlance
+        if let plan = loader.dayPlan(on: date) {
+            glance = PlanGlance.make(date: date, todayDone: done, plan: plan.plan, now: now)
+        } else if let day = weekLoader.day(on: date) {
+            glance = PlanGlance.make(day: day, todayDone: done, now: now)
+        } else {
+            return
+        }
+        if PlanGlanceStore.shared().save(glance) {
+            WidgetCenter.shared.reloadAllTimelines()
+        }
     }
 
     // MARK: - Mitteilungen
