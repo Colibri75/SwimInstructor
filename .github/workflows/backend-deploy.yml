@@ -2,6 +2,7 @@ name: Backend Deploy
 
 # Spielt das Backend nach einem grünen Backend-CI auf main automatisch auf den Server. Nur aktiv, wenn die Secrets
 # DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY und DEPLOY_KNOWN_HOSTS gesetzt sind; sonst endet der Job ohne Fehler.
+# DEPLOY_PORT ist optional (Standard 22).
 # Auf dem Server erzwingt der Schlüssel in authorized_keys das Deploy-Skript (command="..."), er kann nichts anderes
 # (Einrichtung: docs/backend-deploy.md, Abschnitt "Automatisch deployen").
 
@@ -26,6 +27,7 @@ jobs:
       DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+      DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
     steps:
       - name: Ohne Secrets nichts tun
         id: check
@@ -45,7 +47,7 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
           # Der Befehl auf dem Server ist durch authorized_keys festgelegt; hier wird nur verbunden.
-          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST" deploy
+          ssh -i ~/.ssh/deploy_key -p "${DEPLOY_PORT:-22}" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST" deploy
 
       - name: Schlüssel entfernen
         if: always()
