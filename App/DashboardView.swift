@@ -8,15 +8,8 @@ struct DashboardView: View {
     @EnvironmentObject private var dashboard: StatisticDashboard
     @EnvironmentObject private var layouts: ScreenLayouts
 
-    @State private var showsAddTile = false
-    @State private var confirmsReset = false
     /// Die Kachel, deren Detail offen ist.
     @State private var openedTileID: UUID?
-    /// Eigener Bearbeiten-Zustand statt `EditButton`: Der reagierte in der Toolbar oft erst beim zweiten Tipp und blieb
-    /// beim Tabwechsel an.
-    @State private var editMode: EditMode = .inactive
-
-    private var isEditing: Bool { editMode.isEditing }
 
     private let weekProgress = MultiSportWeekProgressCalculator()
 
@@ -61,7 +54,7 @@ struct DashboardView: View {
                             EmptyView()
                         }
                     }
-                    CustomizeSectionsRow(screen: .dashboard)
+                    CustomizeSectionsRow(screen: .dashboard, statisticInput: statisticInput)
                 } else if loader.isLoadingHealth {
                     HStack(spacing: 12) {
                         ForgeAnimation()
@@ -75,75 +68,32 @@ struct DashboardView: View {
                 }
             }
             .themedList()
-            .environment(\.editMode, $editMode)
             .navigationTitle("Dashboard")
             .settingsToolbar()
             .navigationDestination(item: $openedTileID) { id in
                 StatisticDetailView(dashboard: dashboard, tileID: id, input: statisticInput)
             }
-            .toolbar {
-                if loader.reading != nil, layouts.visible(.dashboard).contains(where: { $0.id == "statistics" }) {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(isEditing ? "Fertig" : "Bearbeiten") {
-                            withAnimation { editMode = isEditing ? .inactive : .active }
-                        }
-                        .fontWeight(isEditing ? .semibold : .regular)
-                    }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Button {
-                            showsAddTile = true
-                        } label: {
-                            Label("Kachel hinzufügen", systemImage: "plus")
-                        }
-                        Button(role: .destructive) {
-                            confirmsReset = true
-                        } label: {
-                            Label("Standard-Kacheln wiederherstellen", systemImage: "arrow.counterclockwise")
-                        }
-                    } label: {
-                        Label("Kacheln", systemImage: "plus")
-                    }
-                }
-            }
-            .sheet(isPresented: $showsAddTile) {
-                AddStatisticTileSheet(dashboard: dashboard, input: statisticInput)
-            }
-            .confirmationDialog("Deine Auswahl geht verloren.", isPresented: $confirmsReset, titleVisibility: .visible) {
-                Button("Standard-Kacheln wiederherstellen", role: .destructive) {
-                    withAnimation { dashboard.reset() }
-                }
-            }
             // Ziehen liest nur Health neu, der Plan bleibt.
             .refreshable { await loader.pullToRefresh() }
         }
         .task { await loader.refreshIfNeeded() }
-        // Beim Wechsel in einen anderen Tab endet das Bearbeiten.
-        .onDisappear { editMode = .inactive }
     }
 
-    /// Die Kacheln der Statistik mit Hinzufügen.
+    /// Die Kacheln der Statistik. Hinzufügen, ändern und umsortieren unter "Bereiche anpassen".
     private var statisticsSection: some View {
         Section {
             if dashboard.tiles.isEmpty {
-                Text("Keine Kacheln.")
+                Text("Keine Kacheln. Unter \"Bereiche anpassen\" fügst du welche hinzu.")
                     .foregroundStyle(.secondary)
                     .cardRows()
             }
-            StatisticTileRows(dashboard: dashboard, input: statisticInput, isEditing: isEditing) { tile in
+            StatisticTileRows(dashboard: dashboard, input: statisticInput) { tile in
                 openedTileID = tile.id
             }
-            Button {
-                showsAddTile = true
-            } label: {
-                Label("Kachel hinzufügen", systemImage: "plus.circle.fill")
-            }
-            .cardRows()
         } header: {
             Text("Statistik")
         } footer: {
-            Text("Tippen: Details mit allen Werten. Lange drücken: Sportart, Kennzahl und Zeitraum wählen. Nach links wischen: entfernen. \"Bearbeiten\": entfernen und Reihenfolge ändern.")
+            Text("Tippen: Details mit allen Werten. Kacheln hinzufügen, ändern, entfernen und sortieren: \"Bereiche anpassen\" unten.")
         }
     }
 }

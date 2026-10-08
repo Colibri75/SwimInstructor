@@ -108,8 +108,9 @@ Je eine Einheit, danach in der Fitness-App Strecke, Karte und Herzfrequenz prüf
 - [ ] Feedback zum Gesamtplan ("weniger Laufen im Winter"): Änderungen werden aufgelistet
 - [ ] Ziel ändern (Feinjustierung sofort, neues Ziel höchstens alle 7 Tage): neuer Gesamtplan
 - [ ] Pause melden (krank, 7 Tage): Fortschreibung, danach behutsamer Wiedereinstieg
-- [ ] Dashboard: "Kachel hinzufügen" unter den Kacheln, eine Kachel nach links wischen und löschen, mit "Bearbeiten"
-      umsortieren, im Detail einer Kachel "Kachel entfernen"; nach einem Neustart ist alles noch so
+- [ ] Dashboard, "Bereiche anpassen": Kachel hinzufügen, eine antippen und ändern, eine mit Minus entfernen, Kacheln
+      umsortieren; nach einem Neustart ist alles noch so
+- [ ] Jeder Tab, "Bereiche anpassen": Bereiche umsortieren, ausblenden, wieder hinzufügen, Standard wiederherstellen
 - [ ] Dashboard-Kachel auf "Laufen, Pace pro km" stellen, App neu starten: Einstellung bleibt, Zahl stimmt mit der
       Fitness-App
 - [ ] Verlauf: Plan gegen Ist ist nach ein paar Tagen sinnvoll

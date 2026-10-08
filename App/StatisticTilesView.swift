@@ -3,13 +3,11 @@ import SwiftUI
 import SwimInstructorCore
 
 /// Die Kacheln der Statistik, jede eine eigene Zeile der Liste. Tippen: die Kachel groß mit allen Werten
-/// (`StatisticDetailView`). Lange drücken: Sportart, Kennzahl und Zeitraum wählen oder die Kachel entfernen. Nach links
-/// wischen: entfernen. Mit "Bearbeiten" entfernen und umsortieren. Gespeichert wird auf dem Gerät (`StatisticDashboard`).
+/// (`StatisticDetailView`). Hinzufügen, ändern, entfernen und umsortieren nur über "Bereiche anpassen"
+/// (`ArrangeSectionsSheet`). Gespeichert wird auf dem Gerät (`StatisticDashboard`).
 struct StatisticTileRows: View {
     @ObservedObject var dashboard: StatisticDashboard
     let input: StatisticInput
-    /// Beim Bearbeiten (entfernen, umsortieren) öffnen Tippen und langes Drücken nichts.
-    var isEditing = false
     /// Öffnet das Detail einer Kachel. Die Navigation hängt am Dashboard, nicht in dieser Liste.
     let onOpen: (StatisticTile) -> Void
 
@@ -17,31 +15,14 @@ struct StatisticTileRows: View {
 
     var body: some View {
         ForEach(calculator.results(for: dashboard.tiles, input: input)) { result in
-            StatisticTileView(result: result, showsDisclosure: !isEditing)
+            StatisticTileView(result: result)
                 .contentShape(RoundedRectangle(cornerRadius: 14))
-                .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 14))
-                .onTapGesture {
-                    if !isEditing { onOpen(result.tile) }
-                }
+                .onTapGesture { onOpen(result.tile) }
                 .accessibilityAddTraits(.isButton)
                 .accessibilityAction { onOpen(result.tile) }
-                .contextMenu {
-                    if !isEditing {
-                        StatisticTileMenu(dashboard: dashboard, tile: result.tile)
-                    }
-                }
-                .accessibilityAction(named: "Nach vorn") { dashboard.move(result.tile.id, by: -1) }
-                .accessibilityAction(named: "Nach hinten") { dashboard.move(result.tile.id, by: 1) }
-                .accessibilityAction(named: "Kachel entfernen") { dashboard.remove(result.tile.id) }
                 .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
-        }
-        .onDelete { offsets in
-            withAnimation { dashboard.remove(atOffsets: offsets) }
-        }
-        .onMove { source, destination in
-            dashboard.move(fromOffsets: source, toOffset: destination)
         }
     }
 }
@@ -122,7 +103,7 @@ struct StatisticTileView: View {
         .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(StatisticFormatting.accessibilityLabel(result))
-        .accessibilityHint("Öffnet die Details. Lange drücken, um Sportart, Kennzahl und Zeitraum zu ändern.")
+        .accessibilityHint("Öffnet die Details.")
     }
 
     private var trendSymbol: String {
@@ -186,79 +167,27 @@ private struct StatisticSparkline: View {
 
 // MARK: - Auswahl
 
-/// Kontextmenü einer Kachel: Sportart, Kennzahl und Zeitraum, Entfernen.
-private struct StatisticTileMenu: View {
-    @ObservedObject var dashboard: StatisticDashboard
-    let tile: StatisticTile
-
-    var body: some View {
-        Menu {
-            Picker("Sportart", selection: sport) {
-                ForEach(dashboard.sports, id: \.self) { sport in
-                    Label(StatisticFormatting.sportName(sport), systemImage: StatisticFormatting.symbolName(sport))
-                        .tag(sport?.rawValue ?? "")
-                }
-            }
-        } label: {
-            Label("Sportart: \(StatisticFormatting.sportName(tile.sport))", systemImage: StatisticFormatting.symbolName(tile.sport))
-        }
-        Menu {
-            Picker("Kennzahl", selection: metric) {
-                ForEach(dashboard.catalog(for: tile.sport)) { definition in
-                    Text(definition.displayName).tag(definition.metric)
-                }
-            }
-        } label: {
-            Label("Kennzahl: \(currentMetricName)", systemImage: "number")
-        }
-        Menu {
-            Picker("Zeitraum", selection: period) {
-                ForEach(StatisticPeriod.allCases, id: \.self) { period in
-                    Text(period.displayName).tag(period)
-                }
-            }
-        } label: {
-            Label("Zeitraum: \(tile.period.displayName)", systemImage: "calendar")
-        }
-        Divider()
-        Button(role: .destructive) {
-            withAnimation { dashboard.remove(tile.id) }
-        } label: {
-            Label("Kachel entfernen", systemImage: "trash")
-        }
-    }
-
-    private var currentMetricName: String {
-        dashboard.catalog(for: tile.sport).first { $0.metric == tile.metric }?.displayName ?? tile.metric.rawValue
-    }
-
-    /// Leerer Text: alle Sportarten.
-    private var sport: Binding<String> {
-        Binding(
-            get: { tile.sport?.rawValue ?? "" },
-            set: { dashboard.setSport($0.isEmpty ? nil : SportID(rawValue: $0), for: tile.id) }
-        )
-    }
-
-    private var metric: Binding<StatisticMetric> {
-        Binding(get: { tile.metric }, set: { dashboard.setMetric($0, for: tile.id) })
-    }
-
-    private var period: Binding<StatisticPeriod> {
-        Binding(get: { tile.period }, set: { dashboard.setPeriod($0, for: tile.id) })
-    }
-}
-
-/// Neue Kachel: Sportart, Kennzahl und Zeitraum wählen, mit Vorschau aus den echten Daten.
+/// Neue Kachel oder eine bestehende ändern: Sportart, Kennzahl und Zeitraum wählen, mit Vorschau aus den echten Daten.
 struct AddStatisticTileSheet: View {
     @ObservedObject var dashboard: StatisticDashboard
     let input: StatisticInput
+    /// Die Kachel, die geändert wird; `nil` für eine neue.
+    let editedTile: StatisticTile?
 
     @Environment(\.dismiss) private var dismiss
     /// Leerer Text: alle Sportarten.
-    @State private var sport = ""
-    @State private var metric = StatisticMetric.duration
-    @State private var period = StatisticPeriod.standard
+    @State private var sport: String
+    @State private var metric: StatisticMetric
+    @State private var period: StatisticPeriod
+
+    init(dashboard: StatisticDashboard, input: StatisticInput, editing tile: StatisticTile? = nil) {
+        self.dashboard = dashboard
+        self.input = input
+        self.editedTile = tile
+        _sport = State(initialValue: tile?.sport?.rawValue ?? "")
+        _metric = State(initialValue: tile?.metric ?? .duration)
+        _period = State(initialValue: tile?.period ?? .standard)
+    }
 
     private var sportID: SportID? { sport.isEmpty ? nil : SportID(rawValue: sport) }
 
@@ -301,15 +230,21 @@ struct AddStatisticTileSheet: View {
                     metric = first.metric
                 }
             }
-            .navigationTitle("Kachel hinzufügen")
+            .navigationTitle(editedTile == nil ? "Kachel hinzufügen" : "Kachel ändern")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Abbrechen") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Hinzufügen") {
-                        dashboard.add(sport: sportID, metric: metric, period: period)
+                    Button(editedTile == nil ? "Hinzufügen" : "Sichern") {
+                        if let editedTile {
+                            dashboard.setSport(sportID, for: editedTile.id)
+                            dashboard.setMetric(metric, for: editedTile.id)
+                            dashboard.setPeriod(period, for: editedTile.id)
+                        } else {
+                            dashboard.add(sport: sportID, metric: metric, period: period)
+                        }
                         dismiss()
                     }
                 }

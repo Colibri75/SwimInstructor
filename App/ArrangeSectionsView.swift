@@ -5,6 +5,8 @@ import SwimInstructorCore
 /// Hinzufügen. Steht unten in der Liste statt in der Toolbar, damit rechts oben nur die Aktionen des Tabs bleiben.
 struct CustomizeSectionsRow: View {
     let screen: LayoutScreen
+    /// Nur im Dashboard: Daten für die Vorschau beim Hinzufügen und Ändern von Kacheln.
+    var statisticInput: StatisticInput?
 
     @State private var showsSheet = false
 
@@ -19,7 +21,7 @@ struct CustomizeSectionsRow: View {
             }
             .listRowBackground(Color.clear)
             .sheet(isPresented: $showsSheet) {
-                ArrangeSectionsSheet(screen: screen)
+                ArrangeSectionsSheet(screen: screen, statisticInput: statisticInput)
             }
         }
     }
@@ -29,10 +31,17 @@ struct CustomizeSectionsRow: View {
 /// ausgeblendete mit Plus wieder hinzufügen. Jede Änderung gilt sofort und bleibt auf dem Gerät gespeichert.
 struct ArrangeSectionsSheet: View {
     let screen: LayoutScreen
+    /// Im Dashboard: Mit Daten gibt es zusätzlich die Kacheln der Statistik zum Hinzufügen, Ändern, Entfernen und Sortieren.
+    var statisticInput: StatisticInput?
 
     @EnvironmentObject private var layouts: ScreenLayouts
+    @EnvironmentObject private var dashboard: StatisticDashboard
     @Environment(\.dismiss) private var dismiss
     @State private var confirmsReset = false
+    @State private var confirmsTileReset = false
+    @State private var showsAddTile = false
+    /// Die Kachel, die gerade geändert wird.
+    @State private var editedTile: StatisticTile?
 
     var body: some View {
         NavigationStack {
@@ -40,6 +49,9 @@ struct ArrangeSectionsSheet: View {
                 Group {
                     visibleSection
                     hiddenSection
+                    if screen == .dashboard, statisticInput != nil {
+                        tilesSection
+                    }
                     Section {
                         Button("Standard wiederherstellen", role: .destructive) {
                             confirmsReset = true
@@ -64,6 +76,55 @@ struct ArrangeSectionsSheet: View {
                     withAnimation { layouts.reset(screen) }
                 }
             }
+            .confirmationDialog("Deine Kacheln gehen verloren.", isPresented: $confirmsTileReset, titleVisibility: .visible) {
+                Button("Standard-Kacheln wiederherstellen", role: .destructive) {
+                    withAnimation { dashboard.reset() }
+                }
+            }
+            .sheet(isPresented: $showsAddTile) {
+                if let statisticInput {
+                    AddStatisticTileSheet(dashboard: dashboard, input: statisticInput)
+                }
+            }
+            .sheet(item: $editedTile) { tile in
+                if let statisticInput {
+                    AddStatisticTileSheet(dashboard: dashboard, input: statisticInput, editing: tile)
+                }
+            }
+        }
+    }
+
+    /// Die Kacheln der Statistik: tippen ändert Sportart, Kennzahl und Zeitraum, ziehen sortiert, Minus entfernt.
+    private var tilesSection: some View {
+        Section {
+            ForEach(dashboard.tiles) { tile in
+                Button {
+                    editedTile = tile
+                } label: {
+                    TileLine(tile: tile, dashboard: dashboard)
+                }
+                .buttonStyle(.plain)
+                .accessibilityAction(named: "Nach oben") { dashboard.move(tile.id, by: -1) }
+                .accessibilityAction(named: "Nach unten") { dashboard.move(tile.id, by: 1) }
+            }
+            .onMove { source, destination in
+                dashboard.move(fromOffsets: source, toOffset: destination)
+            }
+            .onDelete { offsets in
+                withAnimation { dashboard.remove(atOffsets: offsets) }
+            }
+            Button {
+                showsAddTile = true
+            } label: {
+                Label("Kachel hinzufügen", systemImage: "plus.circle.fill")
+            }
+            Button("Standard-Kacheln wiederherstellen", role: .destructive) {
+                confirmsTileReset = true
+            }
+        } header: {
+            Text("Kacheln der Statistik")
+        } footer: {
+            Text("Tippen ändert Sportart, Kennzahl und Zeitraum. Ziehen ändert die Reihenfolge, Minus entfernt die Kachel.")
         }
     }
 
@@ -116,6 +177,42 @@ struct ArrangeSectionsSheet: View {
         } footer: {
             Text("Plus fügt den Bereich unten wieder an.")
         }
+    }
+}
+
+/// Eine Kachel in der Liste: Symbol der Sportart, Kennzahl, Sportart und Zeitraum.
+private struct TileLine: View {
+    let tile: StatisticTile
+    @ObservedObject var dashboard: StatisticDashboard
+
+    private var metricName: String {
+        dashboard.catalog(for: tile.sport).first { $0.metric == tile.metric }?.displayName ?? tile.metric.rawValue
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: StatisticFormatting.symbolName(tile.sport))
+                .font(.title3)
+                .foregroundStyle(.tint)
+                .frame(width: 30)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(metricName)
+                    .font(.body.weight(.semibold))
+                Text("\(StatisticFormatting.sportName(tile.sport)) · \(tile.period.displayName)")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 4)
+            Image(systemName: "pencil")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+        }
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityHint("Ändert Sportart, Kennzahl und Zeitraum.")
     }
 }
 
