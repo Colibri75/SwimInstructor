@@ -194,8 +194,7 @@ public struct DayPlanV2Request: Equatable, Sendable {
     }
 }
 
-/// Anfrage für die nächsten sieben Tage v2 (`POST /v1/plan/week` mit `plan_version: 2`).
-/// Ein fester Tag für die Anfrage der sieben Tage (`fixed_days`): Datum und Vorgabe wie beim Tagesplan.
+/// Ein fester Tag für die Anfrage der nächsten Tage (`fixed_days`): Datum und Vorgabe wie beim Tagesplan.
 public struct FixedDayV2: Encodable, Equatable, Sendable {
     public let date: String
     public let focus: String?
@@ -210,17 +209,20 @@ public struct FixedDayV2: Encodable, Equatable, Sendable {
     }
 }
 
+/// Anfrage für die nächsten Tage v2 (`POST /v1/plan/week` mit `plan_version: 2`).
 public struct WeekPlanV2Request: Equatable, Sendable {
     public var snapshot: AthleteStateSnapshot
-    /// Erster der sieben Tage, meist heute.
+    /// Erster der geplanten Tage, meist heute.
     public var fromDate: String
     public var today: String
+    /// So viele Tage ab `fromDate`: 7 oder 14.
+    public var days: Int
     /// Tage ohne Zeit, sie werden Ruhetage.
     public var unavailableDates: [String]
     /// Feste Tage (von Hand geändert, heute schon geplant): Sie bleiben, die anderen Tage richten sich danach.
     public var fixedDays: [FixedDayV2]
     public var recentTraining: [RecentTrainingEntry]
-    /// Die Wochen des Gesamtplans, in die die sieben Tage fallen (höchstens drei gehen mit).
+    /// Die Wochen des Gesamtplans, in die die Tage fallen (höchstens drei gehen mit).
     public var macroWeeks: [MacroWeekV2]
     public var wishes: String?
     public var equipment: [String]?
@@ -236,6 +238,7 @@ public struct WeekPlanV2Request: Equatable, Sendable {
         snapshot: AthleteStateSnapshot,
         fromDate: String,
         today: String,
+        days: Int = 7,
         unavailableDates: [String] = [],
         fixedDays: [FixedDayV2] = [],
         recentTraining: [RecentTrainingEntry] = [],
@@ -250,6 +253,7 @@ public struct WeekPlanV2Request: Equatable, Sendable {
         self.snapshot = snapshot
         self.fromDate = fromDate
         self.today = today
+        self.days = days
         self.unavailableDates = unavailableDates
         self.fixedDays = fixedDays
         self.recentTraining = recentTraining
@@ -380,13 +384,15 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
     }
 
     public func fetchWeekPlanV2(_ request: WeekPlanV2Request) async throws -> WeekPlanV2Response {
-        try await postV2(path: "v1/plan/week", body: WeekBody(
+        // 14 Tage brauchen beim Server das längere Zeitlimit des Gesamtplans.
+        try await postV2(path: "v1/plan/week", timeout: request.days > 7 ? Self.macroTimeout : Self.planTimeout, body: WeekBody(
             planVersion: Self.planVersion,
             snapshot: request.snapshot,
             fromDate: request.fromDate,
             today: request.today,
+            days: request.days,
             unavailableDates: request.unavailableDates,
-            fixedDays: request.fixedDays.isEmpty ? nil : Array(request.fixedDays.prefix(7)),
+            fixedDays: request.fixedDays.isEmpty ? nil : Array(request.fixedDays.prefix(14)),
             recentTraining: request.recentTraining,
             macroWeeks: request.macroWeeks.isEmpty ? nil : Array(request.macroWeeks.prefix(3)),
             wishes: Self.cleaned(request.wishes),
@@ -500,6 +506,7 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
         let snapshot: AthleteStateSnapshot
         let fromDate: String
         let today: String
+        let days: Int
         let unavailableDates: [String]
         let fixedDays: [FixedDayV2]?
         let recentTraining: [RecentTrainingEntry]

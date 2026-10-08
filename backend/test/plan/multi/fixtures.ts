@@ -126,14 +126,14 @@ export function session(sport: string, patch: Partial<MultiDayPlanRaw["sessions"
   };
 }
 
-export function weekDates(from = TODAY): string[] {
-  return Array.from({ length: 7 }, (_, index) => shiftDate(from, index));
+export function weekDates(from = TODAY, count = 7): string[] {
+  return Array.from({ length: count }, (_, index) => shiftDate(from, index));
 }
 
 export function weekPlan(days: Array<MultiWeekPlanRaw["days"][number]["sessions"]>, from = TODAY): MultiWeekPlanRaw {
   return {
     rationale: "Woche mit Grundlage in allen drei Sportarten, Ziel im Blick.",
-    days: weekDates(from).map((date, index) => ({ date, focus: (days[index] ?? []).length > 0 ? "Training" : "Ruhetag", sessions: days[index] ?? [] }))
+    days: weekDates(from, Math.max(7, days.length)).map((date, index) => ({ date, focus: (days[index] ?? []).length > 0 ? "Training" : "Ruhetag", sessions: days[index] ?? [] }))
   };
 }
 

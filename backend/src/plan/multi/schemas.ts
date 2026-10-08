@@ -308,12 +308,14 @@ export const WeekRequestV2Schema = z
   .object({
     plan_version: PlanVersion,
     snapshot: SnapshotSchema,
-    /** Erster der sieben geplanten Tage (rollender Plan), meist heute. */
+    /** Erster der geplanten Tage (rollender Plan), meist heute. */
     from_date: DateString,
     today: DateString,
-    unavailable_dates: z.array(DateString).max(7).optional(),
+    /** So viele Tage ab `from_date`: 7 oder 14 (ohne Angabe 7, wie aeltere App-Versionen). */
+    days: z.union([z.literal(7), z.literal(14)]).optional(),
+    unavailable_dates: z.array(DateString).max(14).optional(),
     /** Feste Tage: bleiben unveraendert, die anderen Tage werden um sie herum geplant. */
-    fixed_days: z.array(FixedDaySchema).max(7).optional(),
+    fixed_days: z.array(FixedDaySchema).max(14).optional(),
     recent_training: RecentTrainingSchema.optional(),
     missed_sessions: z.array(MissedSessionSchema).max(14).optional(),
     reason: z.enum(REPLAN_REASONS).optional(),

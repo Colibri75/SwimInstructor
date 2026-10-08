@@ -69,10 +69,10 @@ extension URLSession: HTTPTransport {
 
 /// Spricht mit dem Backend: Pläne (die Aufrufe stehen in `PlanV2Client.swift`) und `GET /v1/status`.
 public struct PlanAPIClient: Sendable {
-    /// Tages- und Wochenplan: Der Server wartet bis zu 75 s auf Claude (höchstens 85 s). Etwas darüber,
+    /// Tagesplan und Plan für 7 Tage: Der Server wartet bis zu 75 s auf Claude (höchstens 85 s). Etwas darüber,
     /// damit die App nicht vor dem Server aufgibt.
     public static let planTimeout: TimeInterval = 95
-    /// Gesamtplan und seine Überarbeitung brauchen deutlich länger: Der Server wartet bis zu 180 s
+    /// Gesamtplan, seine Überarbeitung und der Plan für 14 Tage brauchen deutlich länger: Der Server wartet bis zu 180 s
     /// (höchstens 230 s), Caddy bricht nach 240 s ab. Etwas darüber, damit die Meldung des Servers ankommt.
     public static let macroTimeout: TimeInterval = 245
     public static let statusTimeout: TimeInterval = 15

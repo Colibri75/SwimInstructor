@@ -259,7 +259,7 @@ struct SettingsView: View {
                 LabeledContent("Wochenraster", value: scheduleSummary)
             }
         } footer: {
-            Text("An welchen Tagen du trainierst, wann und wie lange höchstens. Gilt ab der nächsten Abstimmung der sieben Tage.")
+            Text("An welchen Tagen du trainierst, wann und wie lange höchstens. Gilt ab der nächsten Abstimmung der 14 Tage.")
         }
     }
 

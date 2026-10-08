@@ -3,7 +3,7 @@ import SwimInstructorCore
 
 /// Plan-Tab, getrennt in zwei Teile: der Wochenplan (eine Kalenderwoche mit den geplanten Tagen, null bis zwei Einheiten
 /// je Tag über alle Sportarten, jeden Tag beim ersten Öffnen neu auf Zustand, Training und Gesamtplan abgestimmt) und der
-/// Gesamtplan bis zum Ziel mit Fortschreibung und Feedback. Einheiten gibt es nur für die nächsten sieben Tage; spätere
+/// Gesamtplan bis zum Ziel mit Fortschreibung und Feedback. Einheiten gibt es nur für die nächsten 14 Tage; spätere
 /// Wochen zeigen die Vorgabe des Gesamtplans und den Wochenraster. Die Schritte entstehen am Tag selbst im Tab Heute.
 struct WeekView: View {
     private enum Part: Hashable {
@@ -30,10 +30,10 @@ struct WeekView: View {
     private var plan: WeekPlanV2? { weekLoader.selectedWeek }
     private var macroWeek: MacroWeekV2? { macroLoader.plan?.week(starting: weekStart) }
 
-    /// Die Woche liegt ganz nach den geplanten sieben Tagen: Es gibt nur die Vorgabe des Gesamtplans.
+    /// Die Woche liegt ganz nach den geplanten 14 Tagen: Es gibt nur die Vorgabe des Gesamtplans.
     private var isPreviewWeek: Bool { weekLoader.isBeyondWindow(weekStart) }
 
-    /// Die Woche enthält Tage der nächsten sieben Tage: Hier lässt sich neu planen.
+    /// Die Woche enthält Tage der nächsten 14 Tage: Hier lässt sich neu planen.
     private var overlapsWindow: Bool { weekStart <= weekLoader.windowEnd && weekEnd >= weekLoader.todayKey }
 
     private var statuses: [MultiSportDayStatus] {
@@ -171,14 +171,14 @@ struct WeekView: View {
         }
     }
 
-    /// Ab wann die Einheiten der Woche feststehen: Die App plant immer die nächsten sieben Tage.
+    /// Ab wann die Einheiten der Woche feststehen: Die App plant immer die nächsten 14 Tage.
     private var previewText: String {
         let plannedFrom = weekCalendar.addingDays(-(MultiSportWeekLoader.windowDays - 1), to: weekStart) ?? weekStart
         let when = PlanFormatting.germanDate(plannedFrom)
         if macroWeek != nil {
-            return "Die einzelnen Einheiten plant die App immer für die nächsten sieben Tage, für diese Woche ab \(when). Bis dahin siehst du hier die Vorgabe aus dem Gesamtplan und deinen Wochenraster."
+            return "Die einzelnen Einheiten plant die App immer für die nächsten 14 Tage, für diese Woche ab \(when). Bis dahin siehst du hier die Vorgabe aus dem Gesamtplan und deinen Wochenraster."
         }
-        return "Die einzelnen Einheiten plant die App immer für die nächsten sieben Tage, für diese Woche ab \(when). Für diese Woche gibt es noch keine Vorgabe aus dem Gesamtplan."
+        return "Die einzelnen Einheiten plant die App immer für die nächsten 14 Tage, für diese Woche ab \(when). Für diese Woche gibt es noch keine Vorgabe aus dem Gesamtplan."
     }
 
     /// Was der Gesamtplan für die Woche vorgibt: Phase, Umfang je Sportart, Tests und Schwerpunkt.
@@ -269,7 +269,7 @@ struct WeekView: View {
                         Text("Dein Coach plant die nächsten Tage …")
                     }
                 } else {
-                    Text("Nächste 7 Tage neu planen")
+                    Text("Nächste 14 Tage neu planen")
                 }
             }
             .disabled(weekLoader.isLoading || !settings.hasToken)
@@ -286,7 +286,7 @@ struct WeekView: View {
         } header: {
             Text("Planen")
         } footer: {
-            Text("Die App plant die nächsten sieben Tage jeden Tag beim ersten Öffnen neu und stimmt sie auf deinen Zustand, dein Training der letzten Tage und den Gesamtplan ab. \"Keine Zeit\" und deine Änderungen von Hand bleiben dabei, bis du einen Tag wieder deinem Coach überlässt. Heute bleibt, sobald es einen Plan dafür gibt, und ändert sich nur auf deinen Wunsch. Die genauen Schritte mit Equipment stehen im Tab Aktuell.")
+            Text("Die App plant die nächsten 14 Tage jeden Tag beim ersten Öffnen neu und stimmt sie auf deinen Zustand, dein Training der letzten Tage und den Gesamtplan ab. \"Keine Zeit\" und deine Änderungen von Hand bleiben dabei, bis du einen Tag wieder deinem Coach überlässt. Heute bleibt, sobald es einen Plan dafür gibt, und ändert sich nur auf deinen Wunsch. Die genauen Schritte mit Equipment stehen im Tab Aktuell.")
         }
     }
 }
@@ -299,7 +299,7 @@ private struct EditedDay: Identifiable {
 
 // MARK: - Zeile
 
-/// Ein Tag nach den geplanten sieben Tagen: nur was der Wochenraster vorsieht.
+/// Ein Tag nach den geplanten 14 Tagen: nur was der Wochenraster vorsieht.
 private struct WeekDayPreviewRow: View {
     let date: String
     let scheduled: WeeklySchedule.Day?
@@ -331,7 +331,7 @@ private struct WeekDayPreviewRow: View {
                     Text("Ruhetag laut Wochenraster")
                         .font(.subheadline)
                 }
-                Text("Einheiten folgen sieben Tage vorher")
+                Text("Einheiten folgen 14 Tage vorher")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

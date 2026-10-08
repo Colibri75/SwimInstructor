@@ -26,7 +26,7 @@ import {
 } from "./schemas";
 import { emphasisOf, formatAmount, planningContext, plannedSports, raceAmount, raceSeconds, sportName } from "./sports";
 import { chooseTest, lastConfirmedTest, preferredTest, scheduleMacroTests } from "./tests";
-import { indoorAllowed, MIN_FREE_MINUTES, WeekContextV2, weekLimitsV2 } from "./weekSanity";
+import { indoorAllowed, MIN_FREE_MINUTES, WEEK_BLOCK_DAYS, WeekContextV2, weekLimitsV2 } from "./weekSanity";
 import { DayWeather, severeWeather, weatherText } from "../weather";
 import { EXTRA_RULES, perWeek, strengthBlackout } from "./extras";
 import { inOpenWaterBlock, OPEN_WATER_RULES, openWaterAllowed, raceInOpenWater } from "./openWater";
@@ -110,14 +110,14 @@ Ein Kraft- oder Mobilitätsblock (extras) hat drei bis acht Übungen (exercises)
 ## Ausgabe
 Antworte ausschließlich im vorgegebenen JSON-Format und auf Deutsch. Die rationale hat höchstens vier Sätze und nennt zwei bis drei konkrete Zahlen aus dem Snapshot und den Bezug zum Ziel. coach_notes enthält null bis drei kurze Hinweise.`;
 
-export const MULTI_WEEK_SYSTEM_PROMPT = `${ROLE} Du planst die nächsten sieben Tage, jeden Tag neu: Du justierst den Plan auf den Zustand, das Training der Vortage und die Vorgabe des Gesamtplans. Du planst nur das Gerüst jedes Tages: null (Ruhetag) bis zwei Einheiten mit Sportart, Typ, Intensität, Umfang (amount in der Einheit der Sportart) und einem kurzen Schwerpunkt. Die Schritte entstehen am Tag selbst.
+export const MULTI_WEEK_SYSTEM_PROMPT = `${ROLE} Du planst die nächsten Tage (sieben oder vierzehn, die Nutzernachricht nennt sie), jeden Tag neu: Du justierst den Plan auf den Zustand, das Training der Vortage und die Vorgabe des Gesamtplans. Du planst nur das Gerüst jedes Tages: null (Ruhetag) bis zwei Einheiten mit Sportart, Typ, Intensität, Umfang (amount in der Einheit der Sportart) und einem kurzen Schwerpunkt. Die Schritte entstehen am Tag selbst.
 
 ${SNAPSHOT_AND_RULES}
 
 ${DAY_AND_WEEK_RULES}
 
 ## Ausgabe
-Antworte ausschließlich im vorgegebenen JSON-Format und auf Deutsch. days enthält genau die genannten Tage, jeden einmal. Ein Ruhetag hat keine Einheiten. Tage, an denen der Athlet keine Zeit hat, sind Ruhetage mit dem Schwerpunkt "Keine Zeit"; verteile den Umfang auf die übrigen Tage. Schwerpunkte haben höchstens 60 Zeichen. Die rationale hat höchstens vier Sätze und nennt zwei bis drei konkrete Zahlen.`;
+Antworte ausschließlich im vorgegebenen JSON-Format und auf Deutsch. days enthält genau die genannten Tage, jeden einmal. Bei vierzehn Tagen gelten die Regeln pro Woche (harte Tage, Ruhetag, Wochengrenzen) für jeden der beiden Blöcke von sieben Tagen. Ein Ruhetag hat keine Einheiten. Tage, an denen der Athlet keine Zeit hat, sind Ruhetage mit dem Schwerpunkt "Keine Zeit"; verteile den Umfang auf die übrigen Tage. Schwerpunkte haben höchstens 60 Zeichen. Die rationale hat höchstens vier Sätze und nennt zwei bis drei konkrete Zahlen.`;
 
 const MACRO_TASK = "Du planst die Zeit von heute bis zum Zieltag als Gerüst in Abschnitten von einer bis sechs Wochen: je Abschnitt und Sportart den Wochenumfang der ersten und der letzten Woche ohne Entlastung (amount in der Einheit der Sportart, dazwischen steigt er gleichmäßig), die Zahl der Einheiten je Woche, ob die letzte Woche des Abschnitts eine Entlastungswoche ist, und einen kurzen Schwerpunkt. Die einzelnen Tage plant die App danach jeden Tag neu auf den Zustand des Athleten; dein Gesamtplan gibt die Richtung vor.";
 
@@ -696,23 +696,28 @@ function carriedText(sport: SportDefinition, context: WeekContextV2): string | n
 export function buildWeekUserMessageV2(input: WeekPromptInput): string {
   const { snapshot, context } = input;
   const week = weekLimitsV2(snapshot, context);
-  const lines = [`Plane die nächsten sieben Tage. Heute ist ${weekdayName(context.today)}, ${context.today}.`];
+  const blocks = Math.ceil(context.dates.length / WEEK_BLOCK_DAYS);
+  const blockDays = Math.min(context.dates.length, WEEK_BLOCK_DAYS);
+  const lines = [`Plane die nächsten ${blocks > 1 ? `${context.dates.length} Tage` : "sieben Tage"}. Heute ist ${weekdayName(context.today)}, ${context.today}.`];
   if (context.reason !== undefined && context.reason !== "daily") lines.push(`Anlass der Neuplanung: ${REPLAN_REASON_TEXT[context.reason]}.`);
   lines.push("", "Zu planende Tage:");
-  for (const date of context.dates) {
+  context.dates.forEach((date, index) => {
+    if (blocks > 1 && index % WEEK_BLOCK_DAYS === 0) lines.push(`Block ${index / WEEK_BLOCK_DAYS + 1}:`);
     const scheduled = scheduleDayText(snapshot, date);
     const extra = dayExtrasText(date, context.availability, context.weather);
     const pinned = fixedDayText(context, date);
     lines.push(`- ${weekdayName(date)} ${date}${context.unavailable.includes(date) ? " (keine Zeit: Ruhetag)" : pinned !== null ? ` (fest: ${pinned})` : scheduled !== null ? ` (${scheduled})` : ""}${extra !== "" ? `; ${extra}` : ""}`);
-  }
+  });
   if ((context.fixed ?? []).some((day) => context.dates.includes(day.date))) {
     lines.push("Tage mit \"fest\" hat der Athlet selbst festgelegt: Übernimm sie genau so (gleiche Einheiten), sie zählen voll für alle Grenzen. Plane die anderen Tage passend dazu, zum Beispiel nichts Hartes direkt vor oder nach einem festen harten Tag.");
   }
 
   lines.push(
     "",
-    "Grenzen (vom System berechnet, verbindlich):",
-    `- Über alle Sportarten: höchstens ${Math.min(week.maxTrainingDays, context.dates.length >= 6 ? context.dates.length - 1 : context.dates.length)} Trainingstage, an einem Tag höchstens ${MULTI_RULES.maxSessionsPerDay} Einheiten und höchstens eine harte, höchstens ${week.maxHardDays} harte Tage und nie zwei hintereinander${week.hardBefore ? " (der Tag vor dem ersten geplanten Tag war hart)" : ""}, an einem Tag höchstens ${snapshot.training_goal.weekly_schedule !== undefined ? "die Minuten des Wochenrasters (bei den Tagen oben)" : `${week.maxDayMinutes} min`}, zusammen höchstens ${week.maxMinutes} min.`
+    blocks > 1
+      ? `Grenzen (vom System berechnet, verbindlich; "zusammen" und die Zahl der Tage und Einheiten gelten für jeden Block von ${WEEK_BLOCK_DAYS} Tagen, die Wochengrenze einer Sportart für jede Spanne von 7 Tagen, auch über die Blockgrenze):`
+      : "Grenzen (vom System berechnet, verbindlich):",
+    `- Über alle Sportarten: höchstens ${Math.min(week.maxTrainingDays, blockDays >= 6 ? blockDays - 1 : blockDays)} Trainingstage, an einem Tag höchstens ${MULTI_RULES.maxSessionsPerDay} Einheiten und höchstens eine harte, höchstens ${week.maxHardDays} harte Tage und nie zwei hintereinander${week.hardBefore ? " (der Tag vor dem ersten geplanten Tag war hart)" : ""}, an einem Tag höchstens ${snapshot.training_goal.weekly_schedule !== undefined ? "die Minuten des Wochenrasters (bei den Tagen oben)" : `${week.maxDayMinutes} min`}, zusammen höchstens ${week.maxMinutes} min.`
   );
   for (const limits of week.sports.values()) {
     const sport = limits.sport;

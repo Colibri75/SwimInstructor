@@ -74,7 +74,7 @@ struct PauseReportView: View {
         if draft.triggersReview() {
             return "Ab \(PauseReport.reviewDays) Tagen schreibt die App den Gesamtplan gleich fort. Das dauert ein bis drei Minuten, danach kommt eine Mitteilung."
         }
-        return "\(days) Tage: Kürzere Pausen fängt der Plan der nächsten sieben Tage auf. Ab \(PauseReport.reviewDays) Tagen schreibt die App den Gesamtplan fort."
+        return "\(days) Tage: Kürzere Pausen fängt der Plan der nächsten 14 Tage auf. Ab \(PauseReport.reviewDays) Tagen schreibt die App den Gesamtplan fort."
     }
 
     private func period(_ report: PauseReport) -> String {

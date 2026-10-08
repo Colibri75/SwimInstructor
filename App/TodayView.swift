@@ -1,7 +1,7 @@
 import SwiftUI
 import SwimInstructorCore
 
-/// Tab "Aktuell": was der Plan der nächsten sieben Tage für heute vorsieht, darunter je Einheit eine Karte mit allen
+/// Tab "Aktuell": was der Plan der nächsten 14 Tage für heute vorsieht, darunter je Einheit eine Karte mit allen
 /// Schritten, dazu der Wunsch für heute. Ist das Training von heute erledigt, steht hier der Plan für morgen (die Vorschau,
 /// die morgen der Tagesplan wird); heute bleibt per Umschalter erreichbar.
 struct TodayView: View {
@@ -81,7 +81,7 @@ struct TodayView: View {
             .sheet(item: $feedbackWorkout) { workout in
                 SessionFeedbackSheet(workout: workout) { feedback in
                     feedbackBook.record(feedback)
-                    // Beschwerden oder eine sehr harte Einheit: Die sieben Tage und heute passen sich sofort an.
+                    // Beschwerden oder eine sehr harte Einheit: Die nächsten 14 Tage und heute passen sich sofort an.
                     Task { await loader.refreshIfNeeded() }
                 }
             }

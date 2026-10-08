@@ -386,6 +386,20 @@ describe("MultiPlanService.planWeek", () => {
     expect(result.wishes).toBe("Am Wochenende lieber Rad");
   });
 
+  it("plant 14 Tage in einem Aufruf mit dem laengeren Zeitlimit", async () => {
+    const days = goodWeek().days.map((day) => day.sessions);
+    const complete = jest.fn().mockResolvedValue(generated(weekPlan([...days, ...days])));
+    const { service } = setup({ complete });
+
+    const result = await service.planWeek(weekInput({ days: 14 }));
+
+    const [, user, , options] = complete.mock.calls[0];
+    expect(options).toEqual({ macro: true });
+    expect(user).toContain("Plane die nächsten 14 Tage.");
+    expect(result.plan.days).toHaveLength(14);
+    expect(result.plan.days[13].date).toBe("2026-10-13");
+  });
+
   it("nimmt nur Training vor from_date in den Verlauf", async () => {
     const complete = jest.fn().mockResolvedValue(generated(goodWeek()));
     const { service } = setup({ complete });

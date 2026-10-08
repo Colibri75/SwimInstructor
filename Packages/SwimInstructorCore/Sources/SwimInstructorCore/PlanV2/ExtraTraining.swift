@@ -33,7 +33,7 @@ public enum ExtraKind: String, Codable, Sendable, CaseIterable {
     }
 }
 
-/// Ein Kraft- oder Mobilitätsblock im Plan der sieben Tage.
+/// Ein Kraft- oder Mobilitätsblock im Plan der 14 Tage.
 public struct WeekExtra: Codable, Equatable, Sendable {
     public var kind: ExtraKind
     public var minutes: Double

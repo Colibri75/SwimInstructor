@@ -1,8 +1,8 @@
 import Foundation
 
-/// Änderungen des Athleten an den sieben Tagen in Plan v2: Tag ohne Zeit, Ruhetag, Umfang einer Einheit, Sportart
+/// Änderungen des Athleten an den 14 Tagen in Plan v2: Tag ohne Zeit, Ruhetag, Umfang einer Einheit, Sportart
 /// tauschen, Einheit dazu, Tage tauschen, Verpasstes verschieben. Reine Funktionen ohne Speicher und ohne Server; danach
-/// kann "Nächste 7 Tage neu planen" die Woche wieder ins Gleichgewicht bringen.
+/// kann "Nächste 14 Tage neu planen" die Woche wieder ins Gleichgewicht bringen.
 public enum MultiSportWeekEditor {
     /// Höchstens so viele Einheiten an einem Tag, wie beim Server.
     public static let maxSessionsPerDay = 2

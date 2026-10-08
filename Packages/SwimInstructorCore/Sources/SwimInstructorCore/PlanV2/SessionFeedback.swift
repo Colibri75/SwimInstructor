@@ -119,7 +119,7 @@ public struct FileSessionFeedbackStore: SessionFeedbackStoring {
 
 // MARK: - Plan reagiert auf das echte Training
 
-/// Warum die App die sieben Tage neu plant. Die Rohwerte sind die des Servers (`reason`).
+/// Warum die App die 14 Tage neu plant. Die Rohwerte sind die des Servers (`reason`).
 public enum ReplanReason: String, Codable, Sendable {
     case daily, missed, effort, pain, manual
 }
@@ -141,7 +141,7 @@ public struct MissedSession: Codable, Equatable, Sendable {
     }
 }
 
-/// Ein Anlass, die sieben Tage sofort neu abzustimmen, mit einem Schlüssel, damit derselbe Anlass nur einmal zählt.
+/// Ein Anlass, die 14 Tage sofort neu abzustimmen, mit einem Schlüssel, damit derselbe Anlass nur einmal zählt.
 public struct AdaptationSignal: Equatable, Sendable {
     public let reason: ReplanReason
     public let key: String

@@ -72,7 +72,7 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Fertig eingerichtet")
                 .font(.largeTitle.bold())
-            Text("Die App rechnet jetzt deinen Gesamtplan und die nächsten sieben Tage. Das dauert ein bis zwei Minuten.")
+            Text("Die App rechnet jetzt deinen Gesamtplan und die nächsten 14 Tage. Das dauert ein paar Minuten.")
             Text("Ziel, Wochenraster und Startniveau kannst du jederzeit in den Einstellungen ändern.")
                 .foregroundStyle(.secondary)
             Spacer()

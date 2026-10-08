@@ -73,7 +73,7 @@ struct ExtraCardView: View {
     }
 }
 
-/// Kraft und Mobilität eines Tages im Plan der sieben Tage, in einer Zeile.
+/// Kraft und Mobilität eines Tages im Plan der nächsten Tage, in einer Zeile.
 struct WeekExtrasLine: View {
     let extras: [WeekExtra]
 

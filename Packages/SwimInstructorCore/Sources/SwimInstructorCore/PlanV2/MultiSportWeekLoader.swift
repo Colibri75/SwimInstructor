@@ -1,6 +1,6 @@
 import Foundation
 
-/// Steuert die nächsten sieben Tage in Plan v2: vom Server holen, Änderungen des Athleten anwenden, alles auf dem Gerät
+/// Steuert die nächsten 14 Tage in Plan v2: vom Server holen, Änderungen des Athleten anwenden, alles auf dem Gerät
 /// speichern. Null bis zwei Einheiten je Tag über alle Sportarten. Absichtlich ohne SwiftUI.
 @MainActor
 public final class MultiSportWeekLoader: ObservableObject {
@@ -18,7 +18,9 @@ public final class MultiSportWeekLoader: ObservableObject {
     /// So viele Kalenderwochen hebt die App auf.
     public static let retainedWeeks = 8
     /// So viele Tage plant der rollende Plan voraus.
-    public static let windowDays = 7
+    public static let windowDays = 14
+    /// So viele Tage vor heute gehen als bisheriges Training mit (die Grenzen gelten für jede Spanne von 7 Tagen).
+    public static let historyDays = 7
 
     @Published public private(set) var weeks: [WeekPlanV2]
     @Published public private(set) var isLoading = false
@@ -27,7 +29,7 @@ public final class MultiSportWeekLoader: ObservableObject {
     @Published public private(set) var needsConfiguration = false
     /// Die Woche, die der Plan-Tab zeigt (Montag, `yyyy-MM-dd`).
     @Published public var selectedWeekStart: String
-    /// Warum die sieben Tage zuletzt außer der Reihe neu geplant wurden (Beschwerden, sehr harte Einheit, Ausfall);
+    /// Warum die nächsten Tage zuletzt außer der Reihe neu geplant wurden (Beschwerden, sehr harte Einheit, Ausfall);
     /// `nil`, wenn es die tägliche Abstimmung war.
     @Published public private(set) var lastAdaptation: AdaptationSignal?
 
@@ -104,10 +106,10 @@ public final class MultiSportWeekLoader: ObservableObject {
     /// Die Vorgabe für den Tagesplan (geht an den Server), `nil` ohne Plan für heute.
     public var todayTarget: DayTargetV2? { todayEntry?.target }
 
-    /// Der letzte Tag, den der rollende Plan abdeckt (heute und sechs weitere Tage).
+    /// Der letzte Tag, den der rollende Plan abdeckt (heute und 13 weitere Tage).
     public var windowEnd: String { weekCalendar.addingDays(Self.windowDays - 1, to: todayKey) ?? todayKey }
 
-    /// Ob `date` nach den geplanten sieben Tagen liegt: Für diese Tage gibt es noch keine Einheiten, nur die Vorgabe des
+    /// Ob `date` nach den geplanten 14 Tagen liegt: Für diese Tage gibt es noch keine Einheiten, nur die Vorgabe des
     /// Gesamtplans für die Woche und den Wochenraster.
     public func isBeyondWindow(_ date: String) -> Bool { date > windowEnd }
 
@@ -135,7 +137,7 @@ public final class MultiSportWeekLoader: ObservableObject {
 
     /// Das Training der sieben Tage vor heute und von heute, für den Tagesplan.
     public func recentTrainingForToday(snapshot: AthleteStateSnapshot, workouts: [Workout]) -> [RecentTrainingEntry] {
-        let start = weekCalendar.addingDays(-Self.windowDays, to: todayKey) ?? todayKey
+        let start = weekCalendar.addingDays(-Self.historyDays, to: todayKey) ?? todayKey
         let end = weekCalendar.addingDays(1, to: todayKey) ?? todayKey
         return recentTraining(from: start, before: end, snapshot: snapshot, workouts: workouts)
     }
@@ -161,7 +163,7 @@ public final class MultiSportWeekLoader: ObservableObject {
         )
     }
 
-    /// Plant die nächsten sieben Tage ab heute neu, abgestimmt auf Zustand, bisheriges Training und Gesamtplan. Tage ohne
+    /// Plant die nächsten 14 Tage ab heute neu, abgestimmt auf Zustand, bisheriges Training und Gesamtplan. Tage ohne
     /// Zeit bleiben Ruhetage. Liefert `true`, wenn der Plan erneuert wurde.
     @discardableResult
     public func planNextDays(wishes: String? = nil, reason: ReplanReason = .manual) async -> Bool {
@@ -185,12 +187,13 @@ public final class MultiSportWeekLoader: ObservableObject {
             snapshot: context.snapshot,
             fromDate: fromDate,
             today: fromDate,
+            days: Self.windowDays,
             unavailableDates: unavailable.sorted(),
             fixedDays: fixed.compactMap { date in day(on: date).map { FixedDayV2(date: date, target: $0.target) } },
             // Mit heute: Beschwerden nach einer Einheit von heute bremsen schon die nächsten Tage (der Server zählt
             // heutige Einheiten nur dafür, nicht für die Grenzen davor).
             recentTraining: recentTraining(
-                from: weekCalendar.addingDays(-Self.windowDays, to: fromDate) ?? fromDate,
+                from: weekCalendar.addingDays(-Self.historyDays, to: fromDate) ?? fromDate,
                 before: weekCalendar.addingDays(1, to: fromDate) ?? fromDate,
                 snapshot: context.snapshot,
                 workouts: context.workouts
@@ -217,7 +220,7 @@ public final class MultiSportWeekLoader: ObservableObject {
         }
     }
 
-    /// Einmal am Tag, beim ersten Öffnen: die nächsten sieben Tage neu abstimmen. Schlägt es fehl, gilt der Tag nicht als
+    /// Einmal am Tag, beim ersten Öffnen: die nächsten 14 Tage neu abstimmen. Schlägt es fehl, gilt der Tag nicht als
     /// erledigt. Ändert sich `stamp` (etwa mit dem Ziel oder dem Gesamtplan), gilt der Tag wieder als offen.
     ///
     /// Außer der Reihe, auch mehrmals am Tag: Hat der Athlet Beschwerden gemeldet, war eine Einheit sehr hart oder ist
@@ -384,11 +387,13 @@ public final class MultiSportWeekLoader: ObservableObject {
     /// So weit zurück lässt sich blättern: vier Wochen.
     public var earliestWeekStart: String { weekCalendar.addingDays(-28, to: currentWeekStart) ?? currentWeekStart }
 
-    /// So weit voraus lässt sich blättern: bis zur letzten Woche des Gesamtplans, mindestens eine Woche.
+    /// So weit voraus lässt sich blättern: bis zur letzten Woche des Gesamtplans, mindestens bis zur Woche mit dem letzten
+    /// geplanten Tag.
     public var latestWeekStart: String {
         let nextWeek = weekCalendar.addingDays(7, to: currentWeekStart) ?? currentWeekStart
-        guard let last = lastWeekStartProvider(), let date = weekCalendar.date(from: last) else { return nextWeek }
-        return max(nextWeek, weekCalendar.weekStart(containing: date))
+        let planned = max(nextWeek, weekStart(of: windowEnd) ?? nextWeek)
+        guard let last = lastWeekStartProvider(), let date = weekCalendar.date(from: last) else { return planned }
+        return max(planned, weekCalendar.weekStart(containing: date))
     }
 
     public func canShiftSelectedWeek(by weeksDelta: Int) -> Bool {

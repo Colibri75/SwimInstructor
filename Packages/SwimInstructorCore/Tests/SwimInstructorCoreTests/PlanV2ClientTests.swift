@@ -198,6 +198,7 @@ final class PlanV2ClientTests: XCTestCase {
         XCTAssertEqual(body["plan_version"] as? Int, 2)
         XCTAssertEqual(body["from_date"] as? String, "2026-09-30")
         XCTAssertEqual(body["today"] as? String, "2026-09-30")
+        XCTAssertEqual(body["days"] as? Int, 7)
         XCTAssertEqual(body["unavailable_dates"] as? [String], ["2026-10-02"])
         XCTAssertEqual(body["wishes"] as? String, "Freitag habe ich viel Zeit")
         XCTAssertEqual(body["equipment"] as? [String], ["kickboard"])
@@ -233,13 +234,24 @@ final class PlanV2ClientTests: XCTestCase {
         XCTAssertEqual(tests.first?["display_name"] as? String, "30-Minuten-Test")
     }
 
+    func testFourteenDaysAskForFourteenDaysAndWaitAsLongAsTheMacroPlan() async throws {
+        let transport = StubTransport(status: 200, body: try Self.contract("plan-v2-week-response.json"))
+        let request = WeekPlanV2Request(snapshot: TestFixtures.snapshot, fromDate: "2026-09-30", today: "2026-09-30", days: 14)
+
+        _ = try await makeClient(transport).fetchWeekPlanV2(request)
+
+        let sent = try XCTUnwrap(transport.requests.first)
+        XCTAssertEqual(sent.timeoutInterval, PlanAPIClient.macroTimeout)
+        XCTAssertEqual(try Self.body(sent)["days"] as? Int, 14)
+    }
+
     func testWeekPlanWithoutMacroWeeksStillSendsTheLists() async throws {
         let transport = StubTransport(status: 200, body: try Self.contract("plan-v2-week-response.json"))
 
         _ = try await makeClient(transport).fetchWeekPlanV2(WeekPlanV2Request(snapshot: TestFixtures.snapshot, fromDate: "2026-09-30", today: "2026-09-30", wishes: " "))
 
         let body = try Self.body(transport.requests.first)
-        XCTAssertEqual(Set(body.keys), ["plan_version", "snapshot", "from_date", "today", "unavailable_dates", "recent_training"])
+        XCTAssertEqual(Set(body.keys), ["plan_version", "snapshot", "from_date", "today", "days", "unavailable_dates", "recent_training"])
         XCTAssertEqual(body["unavailable_dates"] as? [String], [])
         XCTAssertEqual((body["recent_training"] as? [Any])?.count, 0)
     }

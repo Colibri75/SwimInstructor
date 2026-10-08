@@ -188,7 +188,7 @@ public struct MultiSportAdherenceCalculator: Sendable {
     }
 }
 
-// MARK: - Woche (Plan der nächsten sieben Tage)
+// MARK: - Woche (Plan der nächsten 14 Tage)
 
 /// Ein Tag der Woche im Plan v2 neben dem, was der Athlet gemacht hat.
 public struct MultiSportDayStatus: Identifiable, Equatable, Sendable {
