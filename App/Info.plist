@@ -30,6 +30,14 @@
 	<string>$(APP_DISPLAY_NAME) nutzt deinen ungefähren Ort (etwa 10 km genau) nur für die Wettervorhersage, damit dein Plan bei Gewitter, Sturm oder Glätte nach drinnen ausweicht.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>$(APP_DISPLAY_NAME) liest, wann deine Termine liegen, und plant an vollen Tagen weniger. Titel und Inhalte der Termine bleiben auf dem iPhone.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.kellner.SwimInstructor.coach</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UIApplicationSceneManifest</key>

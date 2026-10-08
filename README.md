@@ -49,6 +49,10 @@ Eine weitere Sportart: [Neue Sportart hinzufügen](docs/neue-sportart.md) (acht 
 - **Plan reagiert auf echtes Training:** Nach jeder Einheit fragt Heute "Wie war's?" (Anstrengung, Beschwerden mit
   Stelle). Bei deutlichen oder starken Beschwerden, einer sehr harten Einheit (ab 8 von 10) oder einer ausgefallenen
   Einheit plant die App die 14 Tage außer der Reihe neu; der Server bremst die betroffene Sportart.
+- **Coach im Hintergrund:** Landet eine Einheit in Health, fragt eine Mitteilung "Wie war's?"; ist das Training des Tages
+  erledigt, holt die App den Plan für morgen schon im Hintergrund. Er kommt morgens zur eingestellten Uhrzeit als
+  Mitteilung, und Aktuell zeigt ihn sofort (`App/BackgroundCoach.swift`, Einstellungen "Mitteilungen"). Nach dem Ende einer
+  Einheit fragt die Watch nach der Anstrengung (1 bis 10) und speichert sie in Health.
 - **Triathlon:** Koppeltraining (Laufen nach Rad), drinnen auf Rolle oder Laufband, Freiwasser (Ziel im Freiwasser:
   in den 8 Wochen davor jede Woche eine Einheit im See, ohne Zugang Freiwasser-Elemente im Becken), Wetter (bei Gewitter, Sturm,
   Starkregen oder Glätte nach drinnen), Kalender (volle Tage werden kürzer oder "keine Zeit"), Kraft- und
