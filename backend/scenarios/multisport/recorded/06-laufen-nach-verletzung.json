@@ -2,24 +2,24 @@
   "macro": {
     "source": "claude",
     "model": "claude-opus-5-5",
-    "recorded_at": "2026-10-04T10:43:42.428Z",
+    "recorded_at": "2026-10-08T19:35:20.419Z",
     "usage": {
-      "inputTokens": 9491,
-      "outputTokens": 3731
+      "inputTokens": 11323,
+      "outputTokens": 3298
     },
     "raw": {
-      "rationale": "Bis zur Zielwoche sind es 24 Wochen, geplant als sechs Aufbauabschnitte, eine Woche Zuspitzen und die Zielwoche, jeweils mit Entlastungswochen nach spätestens drei Belastungswochen. Nach 45 Tagen Laufpause steigst du locker mit 55 min Laufen in 3 Einheiten ein und steigerst um höchstens etwa 8 bis 9 % pro Woche bis zum Höhepunkt von 180 min. Das Rad startet bei 140 min (jetzt 110 min Schnitt) und trägt anfangs die Ausdauer bis 190 min. Später gibt es Zeit an das Laufen ab und liegt am Höhepunkt bei 120 min, insgesamt also bei 300 min. Mit einem getesteten Schwellentempo von 5:15/km sind 2:00 h für 21,1 km realistisch, sofern der Laufaufbau verletzungsfrei gelingt. Im Wochenplan dürfen dafür nur die Long Runs schrittweise in Richtung 90 bis 100 min wachsen.",
+      "rationale": "Bis zu deinem Halbmarathon am 21. März 2027 bleiben 25 Wochen. Weil du seit 45 Tagen nicht gelaufen bist, startest du locker mit 60 min Laufen und 140 min Rad pro Woche. Das Laufen steigt um höchstens 10 % pro Woche bis auf 180 min am Höhepunkt Anfang März. Das Rad trägt anfangs mehr Ausdauer und sinkt dann auf 120 min, damit die 300 Wochenminuten eingehalten werden. Mit deinem getesteten Schwellentempo von 5:15 pro km sind 2:00 h (etwa 5:41 pro km) gut erreichbar, wenn der Aufbau ohne Beschwerden gelingt.",
       "blocks": [
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Lauf-Wiedereinstieg locker, Rad-Grundlage Zone 2",
+          "focus": "Lauf-Wiedereinstieg locker, Rad-Grundlage",
           "sports": [
             {
               "sport": "run",
-              "start_amount": 55,
-              "end_amount": 66,
-              "deload_amount": 46,
+              "start_amount": 60,
+              "end_amount": 72,
+              "deload_amount": 50,
               "sessions": 3
             },
             {
@@ -27,27 +27,27 @@
               "start_amount": 140,
               "end_amount": 160,
               "deload_amount": 112,
-              "sessions": 2
+              "sessions": 3
             }
           ]
         },
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Grundlage aufbauen, Laufumfang behutsam steigern",
+          "focus": "Lockere Grundlage, Laufumfang behutsam steigern",
           "sports": [
             {
               "sport": "run",
-              "start_amount": 70,
-              "end_amount": 82,
-              "deload_amount": 57,
+              "start_amount": 78,
+              "end_amount": 90,
+              "deload_amount": 63,
               "sessions": 3
             },
             {
               "sport": "bike",
               "start_amount": 165,
-              "end_amount": 180,
-              "deload_amount": 125,
+              "end_amount": 175,
+              "deload_amount": 122,
               "sessions": 3
             }
           ]
@@ -55,124 +55,124 @@
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Grundlage, längerer Lauf, Rad trägt Ausdauer",
+          "focus": "Grundlage, vierte Laufeinheit, längerer Lauf",
           "sports": [
             {
               "sport": "run",
-              "start_amount": 88,
-              "end_amount": 104,
-              "deload_amount": 72,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 180,
-              "end_amount": 190,
-              "deload_amount": 130,
-              "sessions": 3
-            }
-          ]
-        },
-        {
-          "weeks": 4,
-          "deload_last": true,
-          "focus": "Grundlage plus erste Tempoläufe, Long Run wächst",
-          "sports": [
-            {
-              "sport": "run",
-              "start_amount": 112,
-              "end_amount": 130,
-              "deload_amount": 90,
+              "start_amount": 98,
+              "end_amount": 114,
+              "deload_amount": 79,
               "sessions": 4
             },
             {
               "sport": "bike",
               "start_amount": 170,
               "end_amount": 170,
-              "deload_amount": 115,
-              "sessions": 2
+              "deload_amount": 119,
+              "sessions": 3
             }
           ]
         },
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Schwellenläufe und Halbmarathon-Tempo",
+          "focus": "Langer Lauf wächst, erste Tempoabschnitte",
           "sports": [
             {
               "sport": "run",
-              "start_amount": 138,
-              "end_amount": 158,
-              "deload_amount": 110,
+              "start_amount": 124,
+              "end_amount": 144,
+              "deload_amount": 100,
               "sessions": 4
             },
             {
               "sport": "bike",
               "start_amount": 150,
-              "end_amount": 140,
-              "deload_amount": 95,
-              "sessions": 2
+              "end_amount": 150,
+              "deload_amount": 105,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Schwelle und Halbmarathon-Tempo im Lauf",
+          "sports": [
+            {
+              "sport": "run",
+              "start_amount": 154,
+              "end_amount": 170,
+              "deload_amount": 119,
+              "sessions": 4
+            },
+            {
+              "sport": "bike",
+              "start_amount": 140,
+              "end_amount": 130,
+              "deload_amount": 91,
+              "sessions": 3
             }
           ]
         },
         {
           "weeks": 3,
           "deload_last": false,
-          "focus": "Höhepunkt: langer Lauf, Wettkampftempo-Abschnitte",
+          "focus": "Höhepunkt: wettkampfnahe Läufe, langer Lauf",
           "sports": [
             {
               "sport": "run",
-              "start_amount": 166,
+              "start_amount": 175,
               "end_amount": 180,
               "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "start_amount": 130,
+              "start_amount": 120,
               "end_amount": 120,
               "deload_amount": null,
-              "sessions": 2
+              "sessions": 3
             }
           ]
         },
         {
           "weeks": 1,
           "deload_last": false,
-          "focus": "Zuspitzen: weniger Umfang, kurze Tempoabschnitte",
+          "focus": "Zuspitzen: weniger Umfang, Tempo bleibt",
           "sports": [
             {
               "sport": "run",
-              "start_amount": 105,
-              "end_amount": 105,
+              "start_amount": 95,
+              "end_amount": 95,
               "deload_amount": null,
-              "sessions": 3
+              "sessions": 4
             },
             {
               "sport": "bike",
-              "start_amount": 70,
-              "end_amount": 70,
+              "start_amount": 60,
+              "end_amount": 60,
               "deload_amount": null,
-              "sessions": 2
+              "sessions": 3
             }
           ]
         },
         {
           "weeks": 1,
           "deload_last": false,
-          "focus": "Zielwoche: frisch bleiben, Halbmarathon am Sonntag",
+          "focus": "Zielwoche: kurz, frisch, Halbmarathon",
           "sports": [
             {
               "sport": "run",
-              "start_amount": 80,
-              "end_amount": 80,
+              "start_amount": 75,
+              "end_amount": 75,
               "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "start_amount": 40,
-              "end_amount": 40,
+              "start_amount": 30,
+              "end_amount": 30,
               "deload_amount": null,
               "sessions": 1
             }
@@ -184,77 +184,40 @@
   "week": {
     "source": "claude",
     "model": "claude-opus-5-5",
-    "recorded_at": "2026-10-04T10:44:08.183Z",
+    "recorded_at": "2026-10-08T19:35:49.267Z",
     "usage": {
-      "inputTokens": 8532,
-      "outputTokens": 2581
+      "inputTokens": 12381,
+      "outputTokens": 2942
     },
     "raw": {
-      "rationale": "Nach 45 Tagen Laufpause steigst du knieschonend mit drei flachen, lockeren Läufen von 15 bis 20 min (zusammen 55 min) ein, wie gewünscht ohne Intervalle. Bleibt das Knie empfindlich oder schmerzt es, lass es bitte ärztlich abklären. Der Rad-Schwellentest liegt am Freitag nach einem Ruhetag, am Sonntag folgen 80 min lockere Grundlage in Zone 2. Mehr Laufumfang erlauben die Grenzen beim Wiedereinstieg noch nicht, die 2:00 h im März sind bei stabilem Knie mit deinem Schwellentempo von 5:15/km aber realistisch.",
+      "rationale": "Nach 45 Tagen ohne Laufen steigst du mit drei flachen, lockeren Läufen von je 20 Minuten wieder ein, insgesamt 60 Minuten. Wegen deines empfindlichen Knies gibt es keine Intervalle und keine Hügel; wenn die Beschwerden anhalten oder stärker werden, lass das bitte ärztlich abklären. Beim Rad zählen die 120 Minuten vom Wochenende schon für die Grenze von 140 Minuten in 7 Tagen, deshalb kommt der 30-Minuten-Test erst am Sonntag nach einem Ruhetag. Am Dienstag folgt eine lockere Grundlagenfahrt über 80 Minuten.",
       "days": [
         {
           "date": "2026-09-30",
-          "focus": "Lauf-Wiedereinstieg locker",
-          "sessions": [
-            {
-              "sport": "run",
-              "session_type": "recovery",
-              "intensity": "easy",
-              "amount": 15,
-              "focus": "Flach und locker, Gehpausen erlaubt",
-              "test_id": null
-            }
-          ]
-        },
-        {
-          "date": "2026-10-01",
-          "focus": "Ruhetag vor dem Test",
-          "sessions": []
-        },
-        {
-          "date": "2026-10-02",
-          "focus": "Rad-Leistungstest",
-          "sessions": [
-            {
-              "sport": "bike",
-              "session_type": "test",
-              "intensity": "hard",
-              "amount": 58,
-              "focus": "30-min-Test zur Bestimmung der Schwelle",
-              "test_id": "threshold_30min"
-            }
-          ]
-        },
-        {
-          "date": "2026-10-03",
-          "focus": "Lockerer Lauf nach dem Test",
+          "focus": "Lockerer Lauf-Wiedereinstieg",
           "sessions": [
             {
               "sport": "run",
               "session_type": "endurance",
               "intensity": "easy",
               "amount": 20,
-              "focus": "Flach, Gesprächstempo, Gehpausen erlaubt",
-              "test_id": null
+              "focus": "Flach und locker, Gehpausen erlaubt",
+              "test_id": null,
+              "brick": false,
+              "indoor": false,
+              "open_water": false
             }
-          ]
+          ],
+          "extras": []
         },
         {
-          "date": "2026-10-04",
-          "focus": "Rad-Grundlage",
-          "sessions": [
-            {
-              "sport": "bike",
-              "session_type": "endurance",
-              "intensity": "easy",
-              "amount": 80,
-              "focus": "Lange Ausfahrt Zone 2, gleichmäßig",
-              "test_id": null
-            }
-          ]
+          "date": "2026-10-01",
+          "focus": "Ruhetag",
+          "sessions": [],
+          "extras": []
         },
         {
-          "date": "2026-10-05",
+          "date": "2026-10-02",
           "focus": "Lockerer Lauf",
           "sessions": [
             {
@@ -262,15 +225,74 @@
               "session_type": "endurance",
               "intensity": "easy",
               "amount": 20,
-              "focus": "Flach und locker, Knie beobachten",
-              "test_id": null
+              "focus": "Flache Strecke, Gespräch möglich, Knie schonen",
+              "test_id": null,
+              "brick": false,
+              "indoor": false,
+              "open_water": false
             }
-          ]
+          ],
+          "extras": []
+        },
+        {
+          "date": "2026-10-03",
+          "focus": "Ruhetag vor dem Test",
+          "sessions": [],
+          "extras": []
+        },
+        {
+          "date": "2026-10-04",
+          "focus": "Leistungstest Rad",
+          "sessions": [
+            {
+              "sport": "bike",
+              "session_type": "test",
+              "intensity": "hard",
+              "amount": 58,
+              "focus": "30-Minuten-Test mit Ein- und Ausfahren",
+              "test_id": "threshold_30min",
+              "brick": false,
+              "indoor": false,
+              "open_water": false
+            }
+          ],
+          "extras": []
+        },
+        {
+          "date": "2026-10-05",
+          "focus": "Lockerer Lauf nach dem Test",
+          "sessions": [
+            {
+              "sport": "run",
+              "session_type": "recovery",
+              "intensity": "easy",
+              "amount": 20,
+              "focus": "Sehr locker und flach, Knie beobachten",
+              "test_id": null,
+              "brick": false,
+              "indoor": false,
+              "open_water": false
+            }
+          ],
+          "extras": []
         },
         {
           "date": "2026-10-06",
-          "focus": "Ruhetag",
-          "sessions": []
+          "focus": "Rad-Grundlage",
+          "sessions": [
+            {
+              "sport": "bike",
+              "session_type": "endurance",
+              "intensity": "easy",
+              "amount": 80,
+              "focus": "Gleichmäßig locker, ruhige Trittfrequenz",
+              "test_id": null,
+              "brick": false,
+              "indoor": false,
+              "open_water": false
+            }
+          ],
+          "extras": []
         }
       ]
     }
@@ -278,23 +300,26 @@
   "day": {
     "source": "claude",
     "model": "claude-opus-5-5",
-    "recorded_at": "2026-10-04T10:44:27.461Z",
+    "recorded_at": "2026-10-08T19:36:09.569Z",
     "usage": {
-      "inputTokens": 9609,
-      "outputTokens": 1738
+      "inputTokens": 14213,
+      "outputTokens": 1922
     },
     "raw": {
-      "rationale": "Nach 45 Tagen ohne Lauf und 0 min längster Laufeinheit in den letzten 4 Wochen steigst du heute mit 17 min im Lauf-Geh-Wechsel locker wieder ein, wie im Wochenplan vorgesehen. Die Gesamtlast ist mit einem Verhältnis von 1,09 stabil, die Erholung ist gut, und die 120 Radminuten der letzten 7 Tage geben dir eine solide Grundlage. Für die 21,1 km in 2 h 00 min bleiben 24 Wochen Aufbau. Bei deinem getesteten Schwellentempo von 5:15 pro km ist das Ziel realistisch, wenn der Laufumfang geduldig um etwa 10 % pro Woche wächst.",
+      "rationale": "Nach 45 Tagen ohne Lauf steigst du heute kurz und locker wieder ein: höchstens 20 Minuten, mit Gehpausen und nach Gefühl statt nach Tempo, weil das System beim Wiedereinstieg nach einer Pause nur lockere Läufe zulässt. Dein Rad lief zuletzt stabil mit 120 Minuten in den letzten 7 Tagen bei einem Schnitt von 110 Minuten, daher bleibt das Rad heute frei und du sammelst die Lauferfahrung ohne Zusatzbelastung. Bis zum Halbmarathon sind es noch 172 Tage. In der Aufbauphase zählt jetzt vor allem, dass die Beine sich langsam wieder ans Laufen gewöhnen, damit der Umfang später verletzungsfrei wachsen kann.",
       "sessions": [
         {
           "sport": "run",
-          "session_type": "recovery",
+          "session_type": "endurance",
           "intensity": "easy",
-          "focus": "Wiedereinstieg: flach, locker, mit Gehpausen",
+          "focus": "Wiedereinstieg: flach und locker mit Gehpausen",
           "test_id": null,
+          "brick": false,
+          "indoor": false,
+          "open_water": false,
           "steps": [
             {
-              "name": "Einlaufen (Gehen)",
+              "name": "Einlaufen",
               "repetitions": 1,
               "measure": "duration",
               "distance_meters": null,
@@ -302,84 +327,83 @@
               "target_type": "perceived_effort",
               "target_value": 2,
               "rest_seconds": 0,
-              "instructions": "Geh 3 Minuten zügig auf flachem Untergrund, damit sich Muskeln und Gelenke an die Bewegung gewöhnen.",
+              "instructions": "Geh 3 Minuten zügig auf flachem Weg und lockere dabei Schultern und Arme.",
               "cue": "Zügig gehen",
               "equipment": []
             },
             {
-              "name": "Hauptteil Laufen mit Gehpausen",
+              "name": "Hauptteil",
               "repetitions": 4,
               "measure": "duration",
               "distance_meters": null,
-              "duration_seconds": 120,
+              "duration_seconds": 180,
               "target_type": "perceived_effort",
               "target_value": 3,
               "rest_seconds": 60,
-              "instructions": "Lauf jeweils 2 Minuten so locker, dass du dich problemlos unterhalten kannst, mit kurzen, leichten Schritten. Nach jedem Laufabschnitt gehst du 1 Minute.",
-              "cue": "Locker, Gespräch möglich",
+              "instructions": "Lauf 3 Minuten so locker, dass du dich problemlos unterhalten könntest, mit kurzen, leichten Schritten. In der Pause 1 Minute gehen.",
+              "cue": "Locker laufen",
               "equipment": []
             },
             {
-              "name": "Auslaufen (Gehen)",
+              "name": "Auslaufen",
               "repetitions": 1,
               "measure": "duration",
               "distance_meters": null,
-              "duration_seconds": 120,
+              "duration_seconds": 60,
               "target_type": "perceived_effort",
               "target_value": 2,
               "rest_seconds": 0,
-              "instructions": "Geh 2 Minuten ruhig aus und lass den Atem zur Ruhe kommen.",
+              "instructions": "Geh zum Abschluss noch 1 Minute ruhig aus und lass den Atem zur Ruhe kommen.",
               "cue": "Ruhig ausgehen",
               "equipment": []
             }
           ]
         }
       ],
+      "extras": [],
       "coach_notes": [
-        "Lauf lieber zu langsam als zu schnell: Nach 45 Tagen Pause müssen sich Sehnen und Knochen erst wieder an die Stoßbelastung gewöhnen.",
-        "Wenn du während des Laufens oder am Tag danach Schmerzen spürst, sag es im Feedback, dann wechseln wir aufs Rad.",
-        "Trink nach der Einheit etwas und dehne locker Waden und Oberschenkel."
+        "Lieber zu langsam als zu schnell: Wenn du außer Atem kommst, verlängere einfach die Gehpause.",
+        "Achte morgen auf Waden, Schienbeine und Knie. Leichter Muskelkater ist normal, stechende oder anhaltende Schmerzen nicht – dann melde sie und lass sie bei Bedarf ärztlich abklären.",
+        "Wähle eine flache Strecke, gern auf weichem Untergrund wie Waldweg oder Schotter."
       ]
     }
   },
   "revise": {
     "source": "claude",
     "model": "claude-opus-5-5",
-    "recorded_at": "2026-10-04T10:46:10.216Z",
+    "recorded_at": "2026-10-08T19:37:00.870Z",
     "usage": {
-      "inputTokens": 12432,
-      "outputTokens": 10038
+      "inputTokens": 14213,
+      "outputTokens": 5046
     },
     "raw": {
-      "rationale": "Wie gewünscht trägt das Rad in den ersten Wochen mehr Ausdauer, während das Laufen kürzer und mit Gehpausen startet, damit sich das Knie an die Belastung gewöhnen kann. In der ersten Woche liegt das Rad bereits an der Grenze von 140 min, deshalb steigt es erst ab der zweiten Woche über den bisherigen Plan. Der Laufumfang wächst danach in Schritten von höchstens 10 Prozent. Weil er niedriger startet, erreicht er im Höhepunkt 170 statt 180 min, das Rad gleicht das aus. Die 2:00 h sind bei deinem Schwellentempo von 5:15 pro km realistisch, wenn das Knie mitspielt; bei anhaltenden Knieschmerzen lass das bitte ärztlich abklären, bevor du den Laufumfang weiter steigerst.",
+      "rationale": "Wie gewünscht startet der Plan knieschonend mit weniger und kürzeren Läufen; das Rad nimmt in den ersten Wochen den zusätzlichen Umfang auf. Beim Rad ist mehr als 140 Minuten in der ersten Woche nicht möglich, danach steigt es um höchstens 10 Prozent pro Woche, damit der Körper mitkommt. Ab Ende November verlagert sich der Umfang schrittweise zurück zum Laufen, damit du im Frühjahr gut auf die 21,1 km in 2 Stunden vorbereitet bist. Die ersten Läufe sind ausschließlich locker, gern mit Gehpausen. Treten am Knie anhaltende oder zunehmende Beschwerden auf, lass das bitte ärztlich abklären und ersetze Läufe bis dahin durch Rad.",
       "changes": [
-        "Laufen startet mit 45 statt 55 min und bleibt bis Mitte Dezember 10 bis 15 min pro Woche unter dem bisherigen Plan.",
-        "In den Wochen 1 bis 4 gibt es nur zwei kurze, lockere Läufe mit Gehpausen statt drei.",
-        "Mehr Rad in Woche 1 ist nicht möglich, weil 140 min die Grenze sind; ab Woche 2 steigt das Rad auf bis zu 210 statt 190 min.",
-        "Das Rad hat in den Wochen 1 bis 4 und 13 bis 20 drei statt zwei Einheiten, damit die längeren Umfänge verteilt sind.",
-        "In den Wochen 9 bis 12 sind es drei statt vier Läufe, vier Läufe kommen erst ab Woche 13.",
-        "Der Laufhöhepunkt liegt wegen des vorsichtigeren Starts bei 170 statt 180 min.",
-        "Das Rad liegt im Höhepunkt mit 150 bis 130 min etwas höher als bisher, damit der Gesamtumfang erhalten bleibt.",
-        "Den Lauftest in der Woche ab 16.11. machst du nur mit beschwerdefreiem Knie, sonst läufst du stattdessen locker."
+        "Laufen startet mit 45 statt 60 Minuten pro Woche und in den ersten vier Wochen mit 2 statt 3 Einheiten.",
+        "Das Rad steigt in den ersten Wochen stärker: bis 210 Minuten Anfang November statt 175 Minuten.",
+        "Mehr als 140 Minuten Rad in der ersten Woche sind wegen der Steigerungsgrenze nicht möglich; der Rad-Zuwachs kommt schrittweise.",
+        "Der Laufumfang wächst danach langsamer; die vierte Laufeinheit kommt erst ab Ende Dezember statt Ende November.",
+        "Ab Ende November wird Umfang schrittweise vom Rad zurück zum Laufen verlagert, passend zu den Schwerpunkten 60 zu 40.",
+        "Der Lauf-Höhepunkt liegt bei 170 statt 180 Minuten pro Woche, das Zuspitzen bei 90 statt 95 Minuten."
       ],
       "blocks": [
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Knie schonen: kurze Läufe mit Gehpausen, Rad Zone 2",
+          "focus": "Knieschonender Laufeinstieg, mehr Rad-Grundlage",
           "sports": [
             {
               "sport": "bike",
               "start_amount": 140,
-              "end_amount": 168,
+              "end_amount": 165,
               "deload_amount": 115,
               "sessions": 3
             },
             {
               "sport": "run",
               "start_amount": 45,
-              "end_amount": 53,
-              "deload_amount": 37,
+              "end_amount": 55,
+              "deload_amount": 38,
               "sessions": 2
             }
           ]
@@ -387,41 +411,20 @@
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Rad-Grundlage ausbauen, Laufen behutsam steigern",
+          "focus": "Rad-Grundlage ausbauen, Laufen locker in 3 Einheiten",
           "sports": [
             {
               "sport": "bike",
               "start_amount": 180,
-              "end_amount": 200,
-              "deload_amount": 139,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 58,
-              "end_amount": 68,
-              "deload_amount": 47,
-              "sessions": 3
-            }
-          ]
-        },
-        {
-          "weeks": 4,
-          "deload_last": true,
-          "focus": "Grundlage, Rad trägt Ausdauer, Lauf wächst langsam",
-          "sports": [
-            {
-              "sport": "bike",
-              "start_amount": 200,
               "end_amount": 210,
               "deload_amount": 145,
               "sessions": 3
             },
             {
               "sport": "run",
-              "start_amount": 74,
-              "end_amount": 86,
-              "deload_amount": 60,
+              "start_amount": 60,
+              "end_amount": 70,
+              "deload_amount": 49,
               "sessions": 3
             }
           ]
@@ -429,20 +432,41 @@
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Grundlage, längerer Lauf, erste lockere Steigerungen",
+          "focus": "Grundlage, Laufumfang behutsam steigern",
           "sports": [
             {
               "sport": "bike",
               "start_amount": 200,
               "end_amount": 190,
-              "deload_amount": 132,
+              "deload_amount": 133,
               "sessions": 3
             },
             {
               "sport": "run",
-              "start_amount": 94,
-              "end_amount": 110,
-              "deload_amount": 76,
+              "start_amount": 75,
+              "end_amount": 88,
+              "deload_amount": 61,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Vierte Laufeinheit, längerer lockerer Lauf",
+          "sports": [
+            {
+              "sport": "bike",
+              "start_amount": 170,
+              "end_amount": 150,
+              "deload_amount": 105,
+              "sessions": 3
+            },
+            {
+              "sport": "run",
+              "start_amount": 95,
+              "end_amount": 112,
+              "deload_amount": 78,
               "sessions": 4
             }
           ]
@@ -450,20 +474,20 @@
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Schwellenläufe und Halbmarathon-Tempo",
+          "focus": "Schwelle und Halbmarathon-Tempo im Lauf",
           "sports": [
             {
               "sport": "bike",
-              "start_amount": 175,
-              "end_amount": 160,
-              "deload_amount": 111,
+              "start_amount": 140,
+              "end_amount": 130,
+              "deload_amount": 91,
               "sessions": 3
             },
             {
               "sport": "run",
               "start_amount": 120,
               "end_amount": 140,
-              "deload_amount": 97,
+              "deload_amount": 98,
               "sessions": 4
             }
           ]
@@ -471,14 +495,14 @@
         {
           "weeks": 3,
           "deload_last": false,
-          "focus": "Höhepunkt: langer Lauf, Wettkampftempo-Abschnitte",
+          "focus": "Höhepunkt: wettkampfnahe Läufe, langer Lauf",
           "sports": [
             {
               "sport": "bike",
-              "start_amount": 150,
-              "end_amount": 130,
+              "start_amount": 120,
+              "end_amount": 120,
               "deload_amount": null,
-              "sessions": 2
+              "sessions": 3
             },
             {
               "sport": "run",
@@ -492,40 +516,40 @@
         {
           "weeks": 1,
           "deload_last": false,
-          "focus": "Zuspitzen: weniger Umfang, kurze Tempoabschnitte",
+          "focus": "Zuspitzen: weniger Umfang, Tempo bleibt",
           "sports": [
             {
               "sport": "bike",
-              "start_amount": 70,
-              "end_amount": 70,
+              "start_amount": 60,
+              "end_amount": 60,
               "deload_amount": null,
-              "sessions": 2
+              "sessions": 3
             },
             {
               "sport": "run",
-              "start_amount": 100,
-              "end_amount": 100,
+              "start_amount": 90,
+              "end_amount": 90,
               "deload_amount": null,
-              "sessions": 3
+              "sessions": 4
             }
           ]
         },
         {
           "weeks": 1,
           "deload_last": false,
-          "focus": "Zielwoche: frisch bleiben, Halbmarathon am Sonntag",
+          "focus": "Zielwoche: kurz, frisch, Halbmarathon",
           "sports": [
             {
               "sport": "bike",
-              "start_amount": 40,
-              "end_amount": 40,
+              "start_amount": 30,
+              "end_amount": 30,
               "deload_amount": null,
               "sessions": 1
             },
             {
               "sport": "run",
-              "start_amount": 80,
-              "end_amount": 80,
+              "start_amount": 75,
+              "end_amount": 75,
               "deload_amount": null,
               "sessions": 3
             }

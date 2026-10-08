@@ -2,66 +2,66 @@
   "macro": {
     "source": "claude",
     "model": "claude-opus-5-5",
-    "recorded_at": "2026-10-04T10:40:47.303Z",
+    "recorded_at": "2026-10-08T19:27:16.485Z",
     "usage": {
-      "inputTokens": 11314,
-      "outputTokens": 10620
+      "inputTokens": 13146,
+      "outputTokens": 8899
     },
     "raw": {
-      "rationale": "Bis zur Zielwoche sind es 39 Wochen; du startest bei etwa 3600 m Schwimmen, 100 min Rad und 30 min Laufen pro Woche (rund 3,5 h). Am Höhepunkt in den Wochen 37 und 38 stehen 9500 m Schwimmen, 155 min Rad und 100 min Laufen, zusammen etwa 445 von 450 erlaubten Minuten. Gesteigert wird höchstens um 10 % pro Woche, beim Laufen bewusst langsamer in 3-min-Schritten von heute 15 min Wochenschnitt aus, mit einer Entlastungswoche nach jeweils höchstens drei Belastungswochen. Das Schwimmen bekommt den größten Anteil; das Rad trägt anfangs mehr Umfang, solange das Schwimmen noch wächst, und wird später auf etwa 155 min gehalten. Mit deiner CSS von 1:45/100 m sind die 1500 m in 30 min gut erreichbar, die 40 km in 80 min (30 km/h) sind ehrgeizig, aber realistisch, und der 10-km-Lauf bleibt wegen der knappen Laufbasis der Engpass.",
+      "rationale": "Bis zum Wettkampf am 4. Juli 2027 sind es 39 Wochen. Der Plan startet bei rund 230 Minuten pro Woche (Schwimmen 4000 m, Rad 110 min, Laufen 40 min) und steigt bis zum Höhepunkt in den Wochen ab 7. Juni auf etwa 440 Minuten (9400 m, 140 min, 115 min). Damit bleibt er unter deinen 7,5 Stunden pro Woche. Nach höchstens drei Belastungswochen folgt eine Entlastungswoche mit etwa 30 % weniger Umfang. Laufen ist mit bisher höchstens 25 Minuten am Stück der Engpass und steigt nur um etwa 10 % pro Woche, bekommt aber für die 10 km etwas mehr als seine 20 %; mit diesem geduldigen Aufbau ist das Ziel realistisch erreichbar.",
       "blocks": [
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Einstieg: Schwimmtechnik und lockere Grundlage",
+          "focus": "Grundlage, Technik, lockerer Laufeinstieg",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 3600,
-              "end_amount": 4000,
-              "deload_amount": 2800,
+              "start_amount": 4000,
+              "end_amount": 4800,
+              "deload_amount": 3300,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "start_amount": 100,
+              "start_amount": 110,
               "end_amount": 120,
               "deload_amount": 84,
               "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 30,
-              "end_amount": 36,
-              "deload_amount": 25,
+              "start_amount": 40,
+              "end_amount": 48,
+              "deload_amount": 33,
               "sessions": 2
             }
           ]
         },
         {
-          "weeks": 4,
+          "weeks": 3,
           "deload_last": true,
-          "focus": "Grundlage aufbauen, Laufen langsam steigern",
+          "focus": "Grundlage ausbauen, Schwimmtechnik festigen",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 4400,
-              "end_amount": 5200,
-              "deload_amount": 3600,
+              "start_amount": 5200,
+              "end_amount": 5600,
+              "deload_amount": 3900,
               "sessions": 3
             },
             {
               "sport": "bike",
               "start_amount": 125,
-              "end_amount": 145,
-              "deload_amount": 100,
-              "sessions": 3
+              "end_amount": 130,
+              "deload_amount": 90,
+              "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 39,
-              "end_amount": 45,
-              "deload_amount": 31,
+              "start_amount": 50,
+              "end_amount": 54,
+              "deload_amount": 37,
               "sessions": 2
             }
           ]
@@ -69,54 +69,26 @@
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Grundlage, Schwimmtechnik, längere Ausfahrt",
+          "focus": "Mehr Schwimmeinheiten, dritter lockerer Lauf",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 5600,
-              "end_amount": 6400,
-              "deload_amount": 4400,
+              "start_amount": 6000,
+              "end_amount": 6800,
+              "deload_amount": 4700,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "start_amount": 150,
-              "end_amount": 155,
-              "deload_amount": 108,
-              "sessions": 3
+              "start_amount": 130,
+              "end_amount": 135,
+              "deload_amount": 94,
+              "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 48,
-              "end_amount": 54,
-              "deload_amount": 37,
-              "sessions": 3
-            }
-          ]
-        },
-        {
-          "weeks": 4,
-          "deload_last": true,
-          "focus": "Grundlage, erste CSS-Serien im Wasser",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 6800,
-              "end_amount": 7600,
-              "deload_amount": 5300,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 155,
-              "end_amount": 160,
-              "deload_amount": 112,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 57,
-              "end_amount": 63,
+              "start_amount": 58,
+              "end_amount": 64,
               "deload_amount": 44,
               "sessions": 3
             }
@@ -125,27 +97,55 @@
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Grundlage, Tempoabschnitte auf dem Rad",
+          "focus": "Ausdauer aufbauen, lange lockere Einheiten",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 8000,
+              "start_amount": 7200,
+              "end_amount": 8000,
+              "deload_amount": 5600,
+              "sessions": 4
+            },
+            {
+              "sport": "bike",
+              "start_amount": 135,
+              "end_amount": 140,
+              "deload_amount": 98,
+              "sessions": 2
+            },
+            {
+              "sport": "run",
+              "start_amount": 68,
+              "end_amount": 76,
+              "deload_amount": 53,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Grundlage, erste lockere Tempoabschnitte",
+          "sports": [
+            {
+              "sport": "swim",
+              "start_amount": 8200,
               "end_amount": 8600,
               "deload_amount": 6000,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "start_amount": 160,
-              "end_amount": 160,
-              "deload_amount": 112,
-              "sessions": 3
+              "start_amount": 140,
+              "end_amount": 140,
+              "deload_amount": 98,
+              "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 66,
-              "end_amount": 72,
-              "deload_amount": 50,
+              "start_amount": 80,
+              "end_amount": 88,
+              "deload_amount": 61,
               "sessions": 3
             }
           ]
@@ -153,81 +153,25 @@
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Grundlage, längerer Dauerlauf, CSS-Serien",
+          "focus": "Ausdauer, CSS-Serien und längerer Lauf",
           "sports": [
             {
               "sport": "swim",
               "start_amount": 8800,
-              "end_amount": 9200,
-              "deload_amount": 6400,
+              "end_amount": 9000,
+              "deload_amount": 6300,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "start_amount": 160,
-              "end_amount": 160,
-              "deload_amount": 112,
-              "sessions": 3
+              "start_amount": 140,
+              "end_amount": 140,
+              "deload_amount": 98,
+              "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 75,
-              "end_amount": 81,
-              "deload_amount": 56,
-              "sessions": 3
-            }
-          ]
-        },
-        {
-          "weeks": 4,
-          "deload_last": true,
-          "focus": "Grundlage festigen, Schwelle auf dem Rad dosiert",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 9200,
-              "end_amount": 9500,
-              "deload_amount": 6600,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 155,
-              "end_amount": 155,
-              "deload_amount": 108,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 84,
-              "end_amount": 90,
-              "deload_amount": 63,
-              "sessions": 3
-            }
-          ]
-        },
-        {
-          "weeks": 4,
-          "deload_last": true,
-          "focus": "Übergang: Schwelle und erste Koppeleinheiten",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 9200,
-              "end_amount": 9500,
-              "deload_amount": 6600,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 150,
-              "end_amount": 155,
-              "deload_amount": 108,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 92,
+              "start_amount": 90,
               "end_amount": 96,
               "deload_amount": 67,
               "sessions": 3
@@ -237,54 +181,110 @@
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Wettkampftempo, Koppeltraining Rad-Lauf",
+          "focus": "Grundlage halten, Tempo- und Schwellenteile",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 9300,
-              "end_amount": 9500,
-              "deload_amount": 6600,
+              "start_amount": 9000,
+              "end_amount": 9200,
+              "deload_amount": 6400,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "start_amount": 150,
-              "end_amount": 155,
-              "deload_amount": 108,
-              "sessions": 3
+              "start_amount": 140,
+              "end_amount": 140,
+              "deload_amount": 98,
+              "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 96,
-              "end_amount": 100,
-              "deload_amount": 70,
+              "start_amount": 98,
+              "end_amount": 104,
+              "deload_amount": 72,
               "sessions": 3
             }
           ]
         },
         {
-          "weeks": 2,
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Übergang: Schwelle und erste Koppelläufe",
+          "sports": [
+            {
+              "sport": "swim",
+              "start_amount": 9200,
+              "end_amount": 9400,
+              "deload_amount": 6500,
+              "sessions": 4
+            },
+            {
+              "sport": "bike",
+              "start_amount": 140,
+              "end_amount": 140,
+              "deload_amount": 98,
+              "sessions": 2
+            },
+            {
+              "sport": "run",
+              "start_amount": 104,
+              "end_amount": 108,
+              "deload_amount": 75,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 4,
+          "deload_last": true,
+          "focus": "Wettkampftempo, Koppeltraining, Freiwasser",
+          "sports": [
+            {
+              "sport": "swim",
+              "start_amount": 9400,
+              "end_amount": 9400,
+              "deload_amount": 6500,
+              "sessions": 4
+            },
+            {
+              "sport": "bike",
+              "start_amount": 140,
+              "end_amount": 140,
+              "deload_amount": 98,
+              "sessions": 2
+            },
+            {
+              "sport": "run",
+              "start_amount": 108,
+              "end_amount": 112,
+              "deload_amount": 78,
+              "sessions": 3
+            }
+          ]
+        },
+        {
+          "weeks": 3,
           "deload_last": false,
           "focus": "Höhepunkt: wettkampfnahe Intervalle, Koppeln",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 9500,
-              "end_amount": 9500,
+              "start_amount": 9400,
+              "end_amount": 9400,
               "deload_amount": null,
               "sessions": 4
             },
             {
               "sport": "bike",
-              "start_amount": 155,
-              "end_amount": 155,
+              "start_amount": 140,
+              "end_amount": 140,
               "deload_amount": null,
-              "sessions": 3
+              "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 100,
-              "end_amount": 100,
+              "start_amount": 112,
+              "end_amount": 115,
               "deload_amount": null,
               "sessions": 3
             }
@@ -293,54 +293,54 @@
         {
           "weeks": 1,
           "deload_last": false,
-          "focus": "Zuspitzen: weniger Umfang, Intensität halten",
+          "focus": "Zuspitzen: weniger Umfang, Tempo bleibt",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 5500,
-              "end_amount": 5500,
+              "start_amount": 5000,
+              "end_amount": 5000,
               "deload_amount": null,
-              "sessions": 3
+              "sessions": 4
             },
             {
               "sport": "bike",
-              "start_amount": 90,
-              "end_amount": 90,
+              "start_amount": 75,
+              "end_amount": 75,
               "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 58,
-              "end_amount": 58,
+              "start_amount": 60,
+              "end_amount": 60,
               "deload_amount": null,
-              "sessions": 2
+              "sessions": 3
             }
           ]
         },
         {
           "weeks": 1,
           "deload_last": false,
-          "focus": "Zielwoche: kurz, frisch, Wettkampf",
+          "focus": "Wettkampfwoche: kurz, frisch, Wettkampf",
           "sports": [
             {
               "sport": "swim",
               "start_amount": 3000,
               "end_amount": 3000,
               "deload_amount": null,
-              "sessions": 2
+              "sessions": 3
             },
             {
               "sport": "bike",
-              "start_amount": 60,
-              "end_amount": 60,
+              "start_amount": 50,
+              "end_amount": 50,
               "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 40,
-              "end_amount": 40,
+              "start_amount": 35,
+              "end_amount": 35,
               "deload_amount": null,
               "sessions": 2
             }
@@ -352,50 +352,76 @@
   "week": {
     "source": "claude",
     "model": "claude-opus-5-5",
-    "recorded_at": "2026-10-04T10:41:18.032Z",
+    "recorded_at": "2026-10-08T19:27:58.143Z",
     "usage": {
-      "inputTokens": 9884,
-      "outputTokens": 3099
+      "inputTokens": 14254,
+      "outputTokens": 4313
     },
     "raw": {
-      "rationale": "Erholung ist gut und die Belastung liegt mit einem Verhältnis von 1,08 im grünen Bereich, daher startet die Woche mit dem lockeren Lauf-Einstiegstest und legt den 30-Minuten-Radtest auf den frischen Samstag nach einem Ruhetag. Das Schwimmen trägt mit 4300 m in drei lockeren Technik- und Grundlageneinheiten den größten Anteil, weil Rad (120 min) und Laufen (50 min) an ihren Grenzen bzw. am vorsichtigen Laufaufbau liegen. Der Samstag ist der einzige harte Tag, alles andere bleibt locker im Sinne der Aufbauphase. Mit 277 Tagen bis zum Ziel ist die Olympische Distanz gut erreichbar.",
+      "rationale": "In den letzten 7 Tagen bist du schon 3500 m geschwommen, deshalb bleiben bis Samstag nur 850 m. Die vollen 1750 m pro Einheit folgen am Montag und Dienstag. Die 90 Minuten Rad vom 27.09. zählen noch bis Samstag mit, darum liegt der 30-Minuten-Test erst am Sonntag nach zwei Ruhetagen, und die Radzeit endet bei 120 Minuten. Beim Laufen ist deine längste Einheit 25 Minuten, also ist keine Laufeinheit länger als 27 Minuten. Bis auf den Radtest bleibt die Woche passend zur Aufbauphase locker.",
       "days": [
         {
           "date": "2026-09-30",
-          "focus": "Lauf-Einstiegstest locker",
+          "focus": "Lockerer Lauf-Einstiegstest",
           "sessions": [
             {
               "sport": "run",
               "session_type": "test",
               "intensity": "easy",
-              "amount": 30,
-              "focus": "Einstiegstest locker nach Gefühl",
-              "test_id": "entry_easy_25min"
+              "amount": 27,
+              "focus": "Einstiegstest locker, gleichmäßig im Gesprächstempo",
+              "test_id": "entry_easy_25min",
+              "brick": false,
+              "indoor": false,
+              "open_water": false
             }
-          ]
+          ],
+          "extras": []
         },
         {
           "date": "2026-10-01",
-          "focus": "Schwimmtechnik",
+          "focus": "Schwimmtechnik und lockeres Rad",
           "sessions": [
             {
               "sport": "swim",
               "session_type": "technique",
               "intensity": "easy",
-              "amount": 1500,
-              "focus": "Technikübungen und lockere Lage im Wasser",
-              "test_id": null
+              "amount": 850,
+              "focus": "Technik: Wasserlage und langer Armzug",
+              "test_id": null,
+              "brick": false,
+              "indoor": false,
+              "open_water": false
+            },
+            {
+              "sport": "bike",
+              "session_type": "endurance",
+              "intensity": "easy",
+              "amount": 30,
+              "focus": "Lockere Grundlage, Puls unter 81 % der Schwelle",
+              "test_id": null,
+              "brick": false,
+              "indoor": false,
+              "open_water": false
             }
-          ]
+          ],
+          "extras": []
         },
         {
           "date": "2026-10-02",
-          "focus": "Ruhetag vor dem Radtest",
-          "sessions": []
+          "focus": "Ruhetag",
+          "sessions": [],
+          "extras": []
         },
         {
           "date": "2026-10-03",
-          "focus": "Rad-Schwellentest",
+          "focus": "Ruhetag, frisch für den Radtest",
+          "sessions": [],
+          "extras": []
+        },
+        {
+          "date": "2026-10-04",
+          "focus": "Rad-Leistungstest 30 Minuten",
           "sessions": [
             {
               "sport": "bike",
@@ -403,58 +429,71 @@
               "intensity": "hard",
               "amount": 60,
               "focus": "30-Minuten-Test mit Ein- und Ausfahren",
-              "test_id": "threshold_30min"
+              "test_id": "threshold_30min",
+              "brick": false,
+              "indoor": false,
+              "open_water": false
             }
-          ]
+          ],
+          "extras": []
         },
         {
-          "date": "2026-10-04",
-          "focus": "Lockere Grundlage Schwimmen und Laufen",
+          "date": "2026-10-05",
+          "focus": "Lockere Grundlage nach dem Test",
           "sessions": [
             {
               "sport": "swim",
               "session_type": "endurance",
               "intensity": "easy",
-              "amount": 1400,
-              "focus": "Gleichmäßige Grundlage in Zone 2",
-              "test_id": null
+              "amount": 1750,
+              "focus": "Grundlage, Tempo 1:59 bis 2:11 pro 100 m",
+              "test_id": null,
+              "brick": false,
+              "indoor": false,
+              "open_water": false
             },
             {
               "sport": "run",
-              "session_type": "recovery",
+              "session_type": "endurance",
               "intensity": "easy",
               "amount": 20,
-              "focus": "Lockerer Lauf, Gespräch möglich",
-              "test_id": null
+              "focus": "Locker laufen, Gespräch möglich",
+              "test_id": null,
+              "brick": false,
+              "indoor": false,
+              "open_water": false
             }
-          ]
-        },
-        {
-          "date": "2026-10-05",
-          "focus": "Ruhetag",
-          "sessions": []
+          ],
+          "extras": []
         },
         {
           "date": "2026-10-06",
-          "focus": "Grundlage Rad und Schwimmtechnik",
+          "focus": "Grundlage Schwimmen und Rad",
           "sessions": [
+            {
+              "sport": "swim",
+              "session_type": "endurance",
+              "intensity": "easy",
+              "amount": 1750,
+              "focus": "Gleichmäßiges Tempo mit Technikteil",
+              "test_id": null,
+              "brick": false,
+              "indoor": false,
+              "open_water": false
+            },
             {
               "sport": "bike",
               "session_type": "endurance",
               "intensity": "easy",
-              "amount": 60,
-              "focus": "Lockere Ausfahrt in Zone 2",
-              "test_id": null
-            },
-            {
-              "sport": "swim",
-              "session_type": "technique",
-              "intensity": "easy",
-              "amount": 1400,
-              "focus": "Technik und ruhiges Grundlagentempo",
-              "test_id": null
+              "amount": 30,
+              "focus": "Lockere Ausfahrt mit ruhiger Trittfrequenz",
+              "test_id": null,
+              "brick": false,
+              "indoor": false,
+              "open_water": false
             }
-          ]
+          ],
+          "extras": []
         }
       ]
     }
@@ -462,28 +501,34 @@
   "day": {
     "source": "claude",
     "model": "claude-opus-5-5",
-    "recorded_at": "2026-10-04T10:41:38.286Z",
+    "recorded_at": "2026-10-08T19:28:35.072Z",
     "usage": {
-      "inputTokens": 10940,
-      "outputTokens": 1928
+      "inputTokens": 15743,
+      "outputTokens": 1905
     },
     "raw": {
-      "rationale": "Laut Wochenplan steht heute der lockere Einstiegstest Laufen an. Mit 25 min liegt er genau auf deiner längsten Laufeinheit der letzten 4 Wochen (25 min) und innerhalb der Grenze von 30 min. Bei guter Erholung und einem Belastungsverhältnis von 1,08 ergänzt eine kurze Technikeinheit Schwimmen über 800 m deinen Schwerpunkt Schwimmen (50 %), ohne dass der Tag hart wird. In der Aufbauphase mit 39 Wochen bis zur Zielwoche zählen jetzt Grundlage, Technik und verlässliche Laufwerte für die Olympische Distanz.",
+      "rationale": "Heute steht laut Wochenplan der lockere Einstiegstest im Laufen an: 25 Minuten entsprechen genau deiner längsten Laufeinheit der letzten 4 Wochen und liefern eine Grundlage für deine Laufzonen auf dem Weg zum 10-km-Lauf im Juli. Deine Erholung ist gut, und die Belastung der letzten 7 Tage liegt mit 1,08 nur leicht über dem Schnitt der letzten 4 Wochen. Dazu kommt eine kurze, lockere Technikeinheit im Wasser mit 800 m, weil Schwimmen mit 50 % dein Schwerpunkt ist und nach 3500 m in dieser Woche nur noch 850 m Platz haben. In der Aufbauphase bleibt der Tag bewusst locker, damit du dich vom harten Schwimmen am Sonntag weiter erholst.",
       "sessions": [
         {
           "sport": "run",
           "session_type": "test",
           "intensity": "easy",
-          "focus": "Einstiegstest locker für Laufwerte",
+          "focus": "Lockerer Einstiegstest für die Laufzonen",
           "test_id": "entry_easy_25min",
+          "brick": false,
+          "indoor": false,
+          "open_water": false,
           "steps": []
         },
         {
           "sport": "swim",
           "session_type": "technique",
           "intensity": "easy",
-          "focus": "Technik und gleichmäßiges Grundlagentempo",
+          "focus": "Lockere Wasserlage und ruhiger Armzug",
           "test_id": null,
+          "brick": false,
+          "indoor": false,
+          "open_water": false,
           "steps": [
             {
               "name": "Einschwimmen",
@@ -491,11 +536,11 @@
               "measure": "distance",
               "distance_meters": 200,
               "duration_seconds": null,
-              "target_type": "perceived_effort",
-              "target_value": 3,
+              "target_type": "pace_per_100m",
+              "target_value": 128,
               "rest_seconds": 30,
-              "instructions": "Schwimm 200 m locker Kraul und atme ruhig aus, während das Gesicht im Wasser ist.",
-              "cue": "Locker kraulen",
+              "instructions": "Ruhig und locker kraulen, gleichmäßig ausatmen und ins Wasser finden.",
+              "cue": "Locker einschwimmen",
               "equipment": []
             },
             {
@@ -507,91 +552,92 @@
               "target_type": "perceived_effort",
               "target_value": 3,
               "rest_seconds": 20,
-              "instructions": "Beim Abschlagschwimmen bleibt ein Arm vorne gestreckt, bis die andere Hand ihn nach dem Zug berührt, erst dann zieht er. So übst du eine lange Gleitphase und einen ruhigen Armzug.",
-              "cue": "Hand trifft Hand",
+              "instructions": "Kraulen, bei dem eine Hand vorne gestreckt wartet, bis die andere sie nach dem Zug berührt, erst dann zieht sie. So übst du einen langen Gleitzug und eine ruhige Wasserlage.",
+              "cue": "Hand vorne warten",
               "equipment": []
             },
             {
-              "name": "Hauptteil",
-              "repetitions": 3,
+              "name": "Hauptteil locker",
+              "repetitions": 4,
               "measure": "distance",
-              "distance_meters": 100,
+              "distance_meters": 50,
               "duration_seconds": null,
               "target_type": "pace_per_100m",
-              "target_value": 118,
+              "target_value": 125,
               "rest_seconds": 20,
-              "instructions": "Schwimm jede 100 m gleichmäßig in etwa 1:58 pro 100 m, deutlich langsamer als deine CSS-Pace von 1:45. Achte auf einen langen Zug und gleichmäßige Atmung.",
-              "cue": "Gleichmäßig 1:58",
+              "instructions": "Normal kraulen und das Gefühl vom langen Zug mitnehmen, ruhig und gleichmäßig.",
+              "cue": "Lang gleiten",
               "equipment": []
             },
             {
               "name": "Ausschwimmen",
               "repetitions": 1,
               "measure": "distance",
-              "distance_meters": 100,
+              "distance_meters": 200,
               "duration_seconds": null,
               "target_type": "perceived_effort",
               "target_value": 2,
               "rest_seconds": 0,
-              "instructions": "Schwimm 100 m ganz locker in einer Lage deiner Wahl und lass die Schultern entspannen.",
-              "cue": "Ganz locker",
+              "instructions": "Ganz locker ausschwimmen, gern im Wechsel Kraul und Rücken.",
+              "cue": "Locker ausschwimmen",
               "equipment": []
             }
           ]
         }
       ],
+      "extras": [],
       "coach_notes": [
-        "Lauf den Einstiegstest wirklich locker, du solltest dich dabei unterhalten können.",
-        "Schwimm erst nach dem Lauftest oder mit einigen Stunden Abstand, damit der Test unverfälscht bleibt.",
-        "Die Pulswerte für Rad und Laufen sind nur geschätzt; der heutige Test hilft, sie genauer zu machen."
+        "Lauf den Test wirklich locker, du solltest dich dabei unterhalten können.",
+        "Schwimm erst einige Stunden nach dem Lauf, ohne Eile und ohne Tempodruck.",
+        "Wenn sich die Schulter nach drei Schwimmtagen in fünf Tagen schwer anfühlt, lass das Schwimmen heute weg."
       ]
     }
   },
   "revise": {
     "source": "claude",
     "model": "claude-opus-5-5",
-    "recorded_at": "2026-10-04T10:43:04.808Z",
+    "recorded_at": "2026-10-08T19:29:57.524Z",
     "usage": {
-      "inputTokens": 16544,
-      "outputTokens": 9369
+      "inputTokens": 18382,
+      "outputTokens": 8014
     },
     "raw": {
-      "rationale": "Dein Wunsch nach mehr Laufen ist umgesetzt: Der Laufumfang steigt von 42 auf 135 statt bis 100 Minuten pro Woche. Er wächst dabei nie mehr als etwa 10 Prozent pro Woche, weil Laufen die verletzungsträchtigste Disziplin ist. Den Platz dafür schafft weniger Schwimmen, damit die Woche unter 450 Minuten bleibt. Der Höhepunkt liegt jetzt bei 8000 statt 9500 Metern, und das Rad bleibt ab Woche 9 bei 150 Minuten. Mit einer CSS von 1:45 pro 100 m, aktuell etwa 28 km/h auf dem Rad und 39 Wochen Zeit sind 1500 m in 30 Minuten, 40 km in 80 Minuten und ein sicherer 10-km-Lauf gut erreichbar.",
+      "rationale": "Wie gewünscht wächst das Laufen deutlich stärker als bisher, vor allem durch einen dritten und später vierten Lauf und längere lockere Dauerläufe. Dafür bleibt das Schwimmen bei drei Einheiten und erreicht höchstens 7200 m statt 9400 m pro Woche, obwohl in der App 50 % Schwimmen eingestellt sind. Das Laufen steigt trotzdem nur um etwa 5 bis 10 % pro Woche, weil es die verletzungsträchtigste Disziplin ist und deine längste Einheit der letzten vier Wochen erst 25 Minuten dauerte. Nach je drei Belastungswochen folgt eine Entlastungswoche, und der Höhepunkt liegt direkt vor der Woche zum Zuspitzen. Mit diesem Aufbau sind die 10 km am Stück am Wettkampftag gut erreichbar, und 1500 m in 30 Minuten passen zu deinem getesteten Schwimmtempo.",
       "changes": [
-        "Laufen beginnt mit 42 statt 30 Minuten pro Woche und erreicht am Höhepunkt 135 statt 100 Minuten.",
-        "Ab Woche 5 gibt es drei statt zwei Laufeinheiten pro Woche.",
-        "Laufen steigt nur um etwa 10 Prozent pro Woche; schneller geht es wegen der Laufgrenzen nicht.",
-        "Schwimmen beginnt mit 3400 statt 3600 Metern und erreicht am Höhepunkt 8000 statt 9500 Meter.",
-        "Radfahren bleibt ab Woche 9 bei 150 statt 155 bis 160 Minuten, damit die Woche unter 450 Minuten bleibt.",
-        "Entlastungswochen bleiben im Rhythmus aus drei Belastungswochen und einer Entlastungswoche.",
-        "Zuspitzen: Laufen 80 statt 60 Minuten, Schwimmen 4800 statt 5500 Meter.",
-        "Zielwoche: Laufen 50 statt 40 Minuten, Schwimmen und Rad bleiben gleich."
+        "Laufen steigt von 45 auf 160 Minuten pro Woche am Höhepunkt statt bisher bis 115 Minuten.",
+        "Ab Mitte November drei Läufe pro Woche, ab Mitte Januar vier Läufe, damit die einzelnen Läufe kurz und locker bleiben.",
+        "Schwimmen erreicht höchstens 7200 m statt 9400 m pro Woche und bleibt bei drei statt vier Einheiten.",
+        "Schwimmen bekommt damit etwa ein Drittel statt der Hälfte der Trainingszeit, wie von dir gewünscht.",
+        "Radfahren bleibt nahezu unverändert und erreicht wie bisher 140 Minuten pro Woche.",
+        "Die Abschnitte bestehen jetzt einheitlich aus drei Belastungswochen und einer Entlastungswoche, daher liegen die Entlastungswochen an anderen Terminen.",
+        "In der Woche zum Zuspitzen 85 Minuten Laufen und in der Wettkampfwoche 55 Minuten, jeweils höchstens die Hälfte des Höhepunkts.",
+        "Noch schneller kann das Laufen nicht steigen: Es darf höchstens 10 % mehr pro Woche sein, um Überlastung zu vermeiden."
       ],
       "blocks": [
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Einstieg: Schwimmtechnik, lockere Grundlage, Laufen",
+          "focus": "Grundlage, Technik, lockerer Laufeinstieg",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 3400,
-              "end_amount": 3800,
-              "deload_amount": 2650,
+              "start_amount": 4000,
+              "end_amount": 4400,
+              "deload_amount": 3000,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "start_amount": 100,
+              "start_amount": 110,
               "end_amount": 120,
-              "deload_amount": 84,
+              "deload_amount": 80,
               "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 42,
-              "end_amount": 50,
-              "deload_amount": 35,
+              "start_amount": 45,
+              "end_amount": 53,
+              "deload_amount": 37,
               "sessions": 2
             }
           ]
@@ -599,26 +645,26 @@
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Grundlage aufbauen, drei lockere Läufe pro Woche",
+          "focus": "Dritter lockerer Lauf, Schwimmtechnik festigen",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 4000,
-              "end_amount": 4600,
-              "deload_amount": 3200,
+              "start_amount": 4600,
+              "end_amount": 5000,
+              "deload_amount": 3500,
               "sessions": 3
             },
             {
               "sport": "bike",
               "start_amount": 125,
-              "end_amount": 145,
-              "deload_amount": 100,
-              "sessions": 3
+              "end_amount": 135,
+              "deload_amount": 94,
+              "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 55,
-              "end_amount": 65,
+              "start_amount": 56,
+              "end_amount": 64,
               "deload_amount": 45,
               "sessions": 3
             }
@@ -627,27 +673,27 @@
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Grundlage, Schwimmtechnik, längere Ausfahrt",
+          "focus": "Grundlage ausbauen, Laufzeit langsam steigern",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 4900,
-              "end_amount": 5500,
-              "deload_amount": 3850,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 150,
-              "end_amount": 150,
-              "deload_amount": 105,
+              "start_amount": 5200,
+              "end_amount": 5600,
+              "deload_amount": 3900,
               "sessions": 3
             },
             {
+              "sport": "bike",
+              "start_amount": 140,
+              "end_amount": 140,
+              "deload_amount": 98,
+              "sessions": 2
+            },
+            {
               "sport": "run",
-              "start_amount": 70,
-              "end_amount": 80,
-              "deload_amount": 56,
+              "start_amount": 68,
+              "end_amount": 76,
+              "deload_amount": 53,
               "sessions": 3
             }
           ]
@@ -655,27 +701,27 @@
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Grundlage, erste CSS-Serien, längerer Lauf",
+          "focus": "Ausdauer aufbauen, längerer lockerer Lauf",
           "sports": [
             {
               "sport": "swim",
               "start_amount": 5800,
-              "end_amount": 6400,
-              "deload_amount": 4450,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 150,
-              "end_amount": 150,
-              "deload_amount": 105,
+              "end_amount": 6200,
+              "deload_amount": 4300,
               "sessions": 3
             },
             {
+              "sport": "bike",
+              "start_amount": 140,
+              "end_amount": 140,
+              "deload_amount": 98,
+              "sessions": 2
+            },
+            {
               "sport": "run",
-              "start_amount": 86,
-              "end_amount": 98,
-              "deload_amount": 68,
+              "start_amount": 80,
+              "end_amount": 90,
+              "deload_amount": 63,
               "sessions": 3
             }
           ]
@@ -683,140 +729,140 @@
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Grundlage, Tempoabschnitte auf dem Rad",
+          "focus": "Vierter Lauf, erste lockere Tempoabschnitte",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 6700,
-              "end_amount": 7200,
-              "deload_amount": 5000,
-              "sessions": 4
+              "start_amount": 6300,
+              "end_amount": 6700,
+              "deload_amount": 4650,
+              "sessions": 3
             },
             {
               "sport": "bike",
-              "start_amount": 150,
-              "end_amount": 150,
-              "deload_amount": 105,
-              "sessions": 3
+              "start_amount": 140,
+              "end_amount": 140,
+              "deload_amount": 98,
+              "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 102,
-              "end_amount": 114,
-              "deload_amount": 79,
-              "sessions": 3
+              "start_amount": 94,
+              "end_amount": 104,
+              "deload_amount": 72,
+              "sessions": 4
             }
           ]
         },
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Grundlage, längerer Dauerlauf, CSS-Serien",
+          "focus": "Ausdauer, CSS-Serien und längerer Lauf",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 7400,
-              "end_amount": 7800,
-              "deload_amount": 5450,
-              "sessions": 4
+              "start_amount": 6800,
+              "end_amount": 7000,
+              "deload_amount": 4900,
+              "sessions": 3
             },
             {
               "sport": "bike",
-              "start_amount": 150,
-              "end_amount": 150,
-              "deload_amount": 105,
-              "sessions": 3
+              "start_amount": 140,
+              "end_amount": 140,
+              "deload_amount": 98,
+              "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 118,
-              "end_amount": 126,
-              "deload_amount": 88,
-              "sessions": 3
+              "start_amount": 108,
+              "end_amount": 118,
+              "deload_amount": 82,
+              "sessions": 4
             }
           ]
         },
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Grundlage festigen, Schwelle auf dem Rad dosiert",
+          "focus": "Grundlage halten, Tempo- und Schwellenteile",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 7900,
-              "end_amount": 8000,
-              "deload_amount": 5600,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 150,
-              "end_amount": 150,
-              "deload_amount": 105,
+              "start_amount": 7000,
+              "end_amount": 7000,
+              "deload_amount": 4900,
               "sessions": 3
             },
             {
+              "sport": "bike",
+              "start_amount": 140,
+              "end_amount": 140,
+              "deload_amount": 98,
+              "sessions": 2
+            },
+            {
               "sport": "run",
-              "start_amount": 128,
+              "start_amount": 122,
               "end_amount": 132,
               "deload_amount": 92,
-              "sessions": 3
+              "sessions": 4
             }
           ]
         },
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Übergang: Schwelle und erste Koppeleinheiten",
+          "focus": "Übergang: Schwelle und erste Koppelläufe",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 8000,
-              "end_amount": 8000,
-              "deload_amount": 5600,
-              "sessions": 4
+              "start_amount": 7000,
+              "end_amount": 7200,
+              "deload_amount": 5000,
+              "sessions": 3
             },
             {
               "sport": "bike",
-              "start_amount": 150,
-              "end_amount": 150,
-              "deload_amount": 105,
-              "sessions": 3
+              "start_amount": 140,
+              "end_amount": 140,
+              "deload_amount": 98,
+              "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 132,
-              "end_amount": 135,
-              "deload_amount": 94,
-              "sessions": 3
+              "start_amount": 136,
+              "end_amount": 144,
+              "deload_amount": 100,
+              "sessions": 4
             }
           ]
         },
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Wettkampftempo, Koppeltraining Rad-Lauf",
+          "focus": "Wettkampftempo, Koppeltraining, Freiwasser",
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 8000,
-              "end_amount": 8000,
-              "deload_amount": 5600,
-              "sessions": 4
+              "start_amount": 7200,
+              "end_amount": 7200,
+              "deload_amount": 5000,
+              "sessions": 3
             },
             {
               "sport": "bike",
-              "start_amount": 150,
-              "end_amount": 150,
-              "deload_amount": 105,
-              "sessions": 3
+              "start_amount": 140,
+              "end_amount": 140,
+              "deload_amount": 98,
+              "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 135,
-              "end_amount": 135,
-              "deload_amount": 94,
-              "sessions": 3
+              "start_amount": 148,
+              "end_amount": 156,
+              "deload_amount": 109,
+              "sessions": 4
             }
           ]
         },
@@ -827,80 +873,80 @@
           "sports": [
             {
               "sport": "swim",
-              "start_amount": 8000,
-              "end_amount": 8000,
-              "deload_amount": null,
-              "sessions": 4
-            },
-            {
-              "sport": "bike",
-              "start_amount": 150,
-              "end_amount": 150,
-              "deload_amount": null,
-              "sessions": 3
-            },
-            {
-              "sport": "run",
-              "start_amount": 135,
-              "end_amount": 135,
-              "deload_amount": null,
-              "sessions": 3
-            }
-          ]
-        },
-        {
-          "weeks": 1,
-          "deload_last": false,
-          "focus": "Zuspitzen: weniger Umfang, Intensität halten",
-          "sports": [
-            {
-              "sport": "swim",
-              "start_amount": 4800,
-              "end_amount": 4800,
+              "start_amount": 7200,
+              "end_amount": 7200,
               "deload_amount": null,
               "sessions": 3
             },
             {
               "sport": "bike",
-              "start_amount": 90,
-              "end_amount": 90,
+              "start_amount": 140,
+              "end_amount": 140,
               "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 80,
-              "end_amount": 80,
+              "start_amount": 156,
+              "end_amount": 160,
               "deload_amount": null,
-              "sessions": 3
+              "sessions": 4
             }
           ]
         },
         {
           "weeks": 1,
           "deload_last": false,
-          "focus": "Zielwoche: kurz, frisch, Wettkampf",
+          "focus": "Zuspitzen: weniger Umfang, Tempo bleibt",
+          "sports": [
+            {
+              "sport": "swim",
+              "start_amount": 3900,
+              "end_amount": 3900,
+              "deload_amount": null,
+              "sessions": 3
+            },
+            {
+              "sport": "bike",
+              "start_amount": 75,
+              "end_amount": 75,
+              "deload_amount": null,
+              "sessions": 2
+            },
+            {
+              "sport": "run",
+              "start_amount": 85,
+              "end_amount": 85,
+              "deload_amount": null,
+              "sessions": 4
+            }
+          ]
+        },
+        {
+          "weeks": 1,
+          "deload_last": false,
+          "focus": "Wettkampfwoche: kurz, frisch, Wettkampf",
           "sports": [
             {
               "sport": "swim",
               "start_amount": 3000,
               "end_amount": 3000,
               "deload_amount": null,
-              "sessions": 2
+              "sessions": 3
             },
             {
               "sport": "bike",
-              "start_amount": 60,
-              "end_amount": 60,
+              "start_amount": 50,
+              "end_amount": 50,
               "deload_amount": null,
               "sessions": 2
             },
             {
               "sport": "run",
-              "start_amount": 50,
-              "end_amount": 50,
+              "start_amount": 55,
+              "end_amount": 55,
               "deload_amount": null,
-              "sessions": 2
+              "sessions": 3
             }
           ]
         }

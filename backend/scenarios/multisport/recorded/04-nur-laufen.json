@@ -2,50 +2,50 @@
   "macro": {
     "source": "claude",
     "model": "claude-opus-5-5",
-    "recorded_at": "2026-10-04T09:28:33.331Z",
+    "recorded_at": "2026-10-08T19:32:34.586Z",
     "usage": {
-      "inputTokens": 8787,
-      "outputTokens": 2354
+      "inputTokens": 10619,
+      "outputTokens": 1866
     },
     "raw": {
-      "rationale": "Bis zum 10-km-Lauf am 13.12. bleiben 11 Wochen. Der Laufumfang steigt von jetzt 120 min (Schnitt 115 min) um weniger als 10 % pro Woche auf den Höhepunkt von 190 min in der Woche ab 23.11., mit Entlastungswochen bei 100 und 115 min. Die längste Einheit steigt dabei von 55 min nur schrittweise, rund 80 % bleiben locker, und es gibt höchstens eine harte Laufeinheit pro Woche. Die beiden 30-Minuten-Tests (Woche 1 und in der Entlastungswoche ab 09.11.) ersetzen je eine harte Einheit und legen die Zonen fest. 50 min entsprechen 5:00 pro km und damit dem geschätzten Schwellentempo; das ist ehrgeizig, aber machbar, wenn der erste Test diesen Wert bestätigt.",
+      "rationale": "Bis zu deinem 10-km-Wettkampf am 13. Dezember bleiben 10 Wochen plus Zielwoche; du läufst zurzeit etwa 115 bis 120 Minuten pro Woche. Der Plan steigert das schrittweise um höchstens 8 % pro Woche über 130, 140 und 150 bis auf einen Höhepunkt von 190 Minuten in der Woche ab 23. November, verteilt auf 4 Läufe. Nach jeweils drei Belastungswochen folgt eine Entlastungswoche mit etwa 30 % weniger Umfang. Danach sinkt der Umfang in der Zuspitzungswoche auf 100 Minuten und in der Zielwoche auf 80 Minuten, damit du frisch an den Start gehst. Eine Zielzeit von 50 Minuten entspricht etwa deinem geschätzten Schwellentempo von 5:00 pro km und ist damit anspruchsvoll, aber erreichbar; die beiden 30-Minuten-Tests zeigen, wo du wirklich stehst.",
       "blocks": [
         {
           "weeks": 4,
           "deload_last": true,
-          "focus": "Grundlage, Schwellentest, erste Tempoläufe",
+          "focus": "Grundlage festigen, Test, erste Schwellenläufe",
           "sports": [
             {
               "sport": "run",
-              "start_amount": 126,
+              "start_amount": 130,
               "end_amount": 150,
-              "deload_amount": 100,
+              "deload_amount": 105,
               "sessions": 4
             }
           ]
         },
         {
-          "weeks": 3,
+          "weeks": 4,
           "deload_last": true,
-          "focus": "Schwellenintervalle, langer Lauf, Test in Entlastung",
+          "focus": "Schwelle und 10-km-Tempo, längerer Dauerlauf",
           "sports": [
             {
               "sport": "run",
               "start_amount": 160,
-              "end_amount": 172,
-              "deload_amount": 115,
+              "end_amount": 180,
+              "deload_amount": 125,
               "sessions": 4
             }
           ]
         },
         {
-          "weeks": 2,
+          "weeks": 1,
           "deload_last": false,
-          "focus": "Wettkampftempo 5:00/km, Höhepunkt des Umfangs",
+          "focus": "Höhepunkt mit Wettkampftempo-Intervallen",
           "sports": [
             {
               "sport": "run",
-              "start_amount": 180,
+              "start_amount": 190,
               "end_amount": 190,
               "deload_amount": null,
               "sessions": 4
@@ -55,12 +55,12 @@
         {
           "weeks": 1,
           "deload_last": false,
-          "focus": "Zuspitzen: weniger Umfang, kurze Tempoabschnitte",
+          "focus": "Zuspitzen: weniger Umfang, Tempo bleibt",
           "sports": [
             {
               "sport": "run",
-              "start_amount": 110,
-              "end_amount": 110,
+              "start_amount": 100,
+              "end_amount": 100,
               "deload_amount": null,
               "sessions": 4
             }
@@ -69,12 +69,12 @@
         {
           "weeks": 1,
           "deload_last": false,
-          "focus": "Zielwoche: locker, kurze Steigerungen, frisch",
+          "focus": "Zielwoche: kurz, locker, frisch zum Wettkampf",
           "sports": [
             {
               "sport": "run",
-              "start_amount": 70,
-              "end_amount": 70,
+              "start_amount": 80,
+              "end_amount": 80,
               "deload_amount": null,
               "sessions": 3
             }
@@ -86,75 +86,103 @@
   "week": {
     "source": "claude",
     "model": "claude-opus-5-5",
-    "recorded_at": "2026-10-04T09:29:02.867Z",
+    "recorded_at": "2026-10-08T19:33:08.315Z",
     "usage": {
-      "inputTokens": 8107,
-      "outputTokens": 2843
+      "inputTokens": 11878,
+      "outputTokens": 3434
     },
     "raw": {
-      "rationale": "Mit guter Erholung, einer Belastungsquote von 1,04 und 120 min Laufen in den letzten 7 Tagen steht der 30-Minuten-Schwellentest (47 min) am Donnerstag nach einem Ruhetag auf frischen Beinen. Danach folgt nur lockere Grundlage: 38 min am Samstag bringen die Woche auf etwa 125 min, der Dienstag eröffnet mit 50 min locker die neue Woche, insgesamt 135 von erlaubten 145 min. Das Ziel 10 km in 50 min verlangt etwa 5:00 pro km, also genau dein geschätztes Schwellentempo. Es ist ehrgeizig, und erst der Test zeigt, ob es realistisch ist.",
+      "rationale": "In den letzten 7 Tagen bist du schon 120 Minuten gelaufen, und über jede 7-Tage-Spanne sind zum Schutz vor Überlastung höchstens 145 Minuten erlaubt. Deshalb läufst du heute nur kurz und locker, und der 30-Minuten-Test kommt am Freitag nach einem Ruhetag. Der Test liefert dein echtes Schwellentempo: Bisher ist es mit 5:00 pro km nur geschätzt, und genau dieses Tempo verlangt dein Ziel von 10 km in 50 Minuten. Das Ziel ist ehrgeizig, aber in den 10 Wochen bis zum Wettkampf erreichbar. Danach festigen zwei lockere Läufe von je 40 Minuten die Grundlage, bevor nächste Woche die ersten Schwellenläufe folgen.",
       "days": [
         {
           "date": "2026-09-30",
-          "focus": "Ruhetag vor dem Test",
-          "sessions": []
+          "focus": "Kurzer lockerer Lauf",
+          "sessions": [
+            {
+              "sport": "run",
+              "session_type": "recovery",
+              "intensity": "easy",
+              "amount": 15,
+              "focus": "Locker auslaufen, Gespräch möglich",
+              "test_id": null,
+              "brick": false,
+              "indoor": false,
+              "open_water": false
+            }
+          ],
+          "extras": []
         },
         {
           "date": "2026-10-01",
-          "focus": "Schwellentest Laufen",
+          "focus": "Ruhetag vor dem Test",
+          "sessions": [],
+          "extras": []
+        },
+        {
+          "date": "2026-10-02",
+          "focus": "Leistungstest Laufen",
           "sessions": [
             {
               "sport": "run",
               "session_type": "test",
               "intensity": "hard",
               "amount": 47,
-              "focus": "30-min-Test gleichmäßig, mit Ein- und Auslaufen",
-              "test_id": "threshold_30min"
+              "focus": "30-Minuten-Test, gleichmäßig voll laufen",
+              "test_id": "threshold_30min",
+              "brick": false,
+              "indoor": false,
+              "open_water": false
             }
-          ]
-        },
-        {
-          "date": "2026-10-02",
-          "focus": "Ruhetag nach dem Test",
-          "sessions": []
+          ],
+          "extras": []
         },
         {
           "date": "2026-10-03",
-          "focus": "Lockere Grundlage",
+          "focus": "Ruhetag nach dem Test",
+          "sessions": [],
+          "extras": []
+        },
+        {
+          "date": "2026-10-04",
+          "focus": "Lockerer Grundlagenlauf",
           "sessions": [
             {
               "sport": "run",
               "session_type": "endurance",
               "intensity": "easy",
-              "amount": 38,
-              "focus": "Locker in Zone 2, Gespräch möglich",
-              "test_id": null
+              "amount": 40,
+              "focus": "Ruhiger Dauerlauf im Gesprächstempo",
+              "test_id": null,
+              "brick": false,
+              "indoor": false,
+              "open_water": false
             }
-          ]
-        },
-        {
-          "date": "2026-10-04",
-          "focus": "Ruhetag",
-          "sessions": []
+          ],
+          "extras": []
         },
         {
           "date": "2026-10-05",
           "focus": "Ruhetag",
-          "sessions": []
+          "sessions": [],
+          "extras": []
         },
         {
           "date": "2026-10-06",
-          "focus": "Grundlagenlauf",
+          "focus": "Lockerer Lauf mit Steigerungen",
           "sessions": [
             {
               "sport": "run",
               "session_type": "endurance",
               "intensity": "easy",
-              "amount": 50,
-              "focus": "Ruhiger Dauerlauf Zone 2, am Ende 4 kurze Steigerungen",
-              "test_id": null
+              "amount": 40,
+              "focus": "Locker laufen, am Ende 4 kurze Steigerungen",
+              "test_id": null,
+              "brick": false,
+              "indoor": false,
+              "open_water": false
             }
-          ]
+          ],
+          "extras": []
         }
       ]
     }
@@ -162,18 +190,70 @@
   "day": {
     "source": "claude",
     "model": "claude-opus-5-5",
-    "recorded_at": "2026-10-04T09:29:09.286Z",
+    "recorded_at": "2026-10-08T19:33:23.500Z",
     "usage": {
-      "inputTokens": 9298,
-      "outputTokens": 406
+      "inputTokens": 13836,
+      "outputTokens": 1417
     },
     "raw": {
-      "rationale": "Der Wochenplan sieht heute einen Ruhetag vor, und den halten wir ein: Mit 3 Laufeinheiten und 120 Minuten in den letzten 7 Tagen liegst du bereits knapp über deinem Wochenschnitt von 115 Minuten (Verhältnis 1,04). Gestern bist du 40 Minuten gelaufen, am Sonntag hart, deshalb tut ein freier Tag deiner Grundlage gut. In der Aufbauphase mit noch 74 Tagen bis zu den 10 km in 50 Minuten zählt beständiges, verletzungsfreies Training mehr als zusätzliche Minuten.",
-      "sessions": [],
+      "rationale": "Du bist in den letzten 7 Tagen 120 Minuten gelaufen, kaum mehr als dein Schnitt von 115 Minuten pro Woche. Gestern warst du 40 Minuten unterwegs, und die harte Einheit am Sonntag liegt erst drei Tage zurück. Deshalb gibt es heute nur 15 Minuten ganz locker zur Erholung. In der Aufbauphase, 74 Tage vor deinem 10-km-Ziel in 50 Minuten, bauen solche kurzen, lockeren Läufe die Grundlage auf, ohne dich zu ermüden.",
+      "sessions": [
+        {
+          "sport": "run",
+          "session_type": "recovery",
+          "intensity": "easy",
+          "focus": "Locker auslaufen, Gespräch möglich",
+          "test_id": null,
+          "brick": false,
+          "indoor": false,
+          "open_water": false,
+          "steps": [
+            {
+              "name": "Einlaufen",
+              "repetitions": 1,
+              "measure": "duration",
+              "distance_meters": null,
+              "duration_seconds": 240,
+              "target_type": "perceived_effort",
+              "target_value": 2,
+              "rest_seconds": 0,
+              "instructions": "Ganz langsam antraben, gern auch die erste Minute zügig gehen. Die Beine dürfen sich von gestern noch schwer anfühlen.",
+              "cue": "Ganz locker starten",
+              "equipment": []
+            },
+            {
+              "name": "Hauptteil",
+              "repetitions": 1,
+              "measure": "duration",
+              "distance_meters": null,
+              "duration_seconds": 540,
+              "target_type": "perceived_effort",
+              "target_value": 3,
+              "rest_seconds": 0,
+              "instructions": "Laufe gleichmäßig in einem Tempo, bei dem du dich jederzeit in ganzen Sätzen unterhalten kannst. Mach kurze, lockere Schritte und lass die Schultern entspannt.",
+              "cue": "Locker, Gespräch möglich",
+              "equipment": []
+            },
+            {
+              "name": "Auslaufen",
+              "repetitions": 1,
+              "measure": "duration",
+              "distance_meters": null,
+              "duration_seconds": 120,
+              "target_type": "perceived_effort",
+              "target_value": 2,
+              "rest_seconds": 0,
+              "instructions": "Werde noch etwas langsamer und gehe zum Schluss eine Minute locker aus.",
+              "cue": "Austraben und gehen",
+              "equipment": []
+            }
+          ]
+        }
+      ],
+      "extras": [],
       "coach_notes": [
-        "Heute komplett frei. Lockeres Gehen oder leichtes Dehnen ist in Ordnung, aber kein Training.",
-        "Achte auf ausreichend Schlaf; deine 7,5 Stunden im Schnitt sind eine gute Basis.",
-        "Dein Schwellentempo von 5:00 pro km ist nur geschätzt. Ein Test in den kommenden Wochen würde die Steuerung genauer machen."
+        "Heute zählt nicht das Tempo: Lieber zu langsam als zu schnell, das Laufband ist bei schlechtem Wetter eine gute Alternative.",
+        "Spürst du Ziehen oder Schmerzen, brich ab und geh nach Hause. Bei anhaltenden Beschwerden lass dich ärztlich beraten."
       ]
     }
   }
