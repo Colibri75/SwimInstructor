@@ -27,43 +27,47 @@ struct StatisticDetailView: View {
     private func content(_ result: StatisticResult) -> some View {
         let selected = selectedPoint(in: result)
         return List {
-            Section {
-                StatisticDetailHeader(result: result)
-                StatisticDetailChart(result: result, selected: selected) { point in
-                    withAnimation(.easeInOut(duration: 0.15)) { selectedStart = point.start }
-                }
-            } footer: {
-                Text("Auf einen Balken oder Punkt tippen, um zu sehen, was dahinter steckt.")
-            }
-            if let selected {
-                StatisticBreakdownSection(
-                    result: result,
-                    breakdown: calculator.breakdown(of: result, at: selected, input: input),
-                    input: input
-                )
-            }
-            Section("Alle Abschnitte") {
-                ForEach(pastPoints(of: result).reversed()) { point in
-                    Button {
+            Group {
+                Section {
+                    StatisticDetailHeader(result: result)
+                    StatisticDetailChart(result: result, selected: selected) { point in
                         withAnimation(.easeInOut(duration: 0.15)) { selectedStart = point.start }
-                    } label: {
-                        HStack {
-                            Text(StatisticFormatting.pointTitle(point))
-                            Spacer()
-                            Text(StatisticFormatting.text(point.value, definition: result.definition))
-                                .monospacedDigit()
-                                .foregroundStyle(.secondary)
-                            Image(systemName: "checkmark")
-                                .foregroundStyle(Theme.accent)
-                                .opacity(point.start == selected?.start ? 1 : 0)
-                                .accessibilityHidden(true)
-                        }
                     }
-                    .foregroundStyle(.primary)
-                    .accessibilityAddTraits(point.start == selected?.start ? .isSelected : [])
+                } footer: {
+                    Text("Auf einen Balken oder Punkt tippen, um zu sehen, was dahinter steckt.")
+                }
+                if let selected {
+                    StatisticBreakdownSection(
+                        result: result,
+                        breakdown: calculator.breakdown(of: result, at: selected, input: input),
+                        input: input
+                    )
+                }
+                Section("Alle Abschnitte") {
+                    ForEach(pastPoints(of: result).reversed()) { point in
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.15)) { selectedStart = point.start }
+                        } label: {
+                            HStack {
+                                Text(StatisticFormatting.pointTitle(point))
+                                Spacer()
+                                Text(StatisticFormatting.text(point.value, definition: result.definition))
+                                    .monospacedDigit()
+                                    .foregroundStyle(.secondary)
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(Theme.accent)
+                                    .opacity(point.start == selected?.start ? 1 : 0)
+                                    .accessibilityHidden(true)
+                            }
+                        }
+                        .foregroundStyle(.primary)
+                        .accessibilityAddTraits(point.start == selected?.start ? .isSelected : [])
+                    }
                 }
             }
+            .cardRows()
         }
+        .themedList()
         .navigationTitle(result.definition.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

@@ -31,39 +31,43 @@ struct PauseReportView: View {
 
     var body: some View {
         Form {
-            Section {
-                Picker("Grund", selection: $kind) {
-                    ForEach(PauseReport.Kind.allCases) { kind in
-                        Text(kind.title).tag(kind)
+            Group {
+                Section {
+                    Picker("Grund", selection: $kind) {
+                        ForEach(PauseReport.Kind.allCases) { kind in
+                            Text(kind.title).tag(kind)
+                        }
+                    }
+                    DatePicker("Ab", selection: $from, displayedComponents: .date)
+                    Toggle("Dauert noch an", isOn: $isOngoing)
+                    if !isOngoing {
+                        DatePicker("Bis einschließlich", selection: $to, in: from..., displayedComponents: .date)
+                    }
+                } footer: {
+                    Text(footer)
+                }
+
+                Section {
+                    Button("Pause melden") { save() }
+                        .disabled(draft.problem != nil)
+                    if let problem = draft.problem {
+                        Text(problem).font(.footnote).foregroundStyle(.red)
                     }
                 }
-                DatePicker("Ab", selection: $from, displayedComponents: .date)
-                Toggle("Dauert noch an", isOn: $isOngoing)
-                if !isOngoing {
-                    DatePicker("Bis einschließlich", selection: $to, in: from..., displayedComponents: .date)
-                }
-            } footer: {
-                Text(footer)
-            }
 
-            Section {
-                Button("Pause melden") { save() }
-                    .disabled(draft.problem != nil)
-                if let problem = draft.problem {
-                    Text(problem).font(.footnote).foregroundStyle(.red)
-                }
-            }
-
-            if let existing {
-                Section("Zuletzt gemeldet") {
-                    LabeledContent(existing.kind.title, value: period(existing))
-                    Button("Meldung löschen", role: .destructive) {
-                        store.setReport(nil)
-                        self.existing = nil
+                if let existing {
+                    Section("Zuletzt gemeldet") {
+                        LabeledContent(existing.kind.title, value: period(existing))
+                        Button("Meldung löschen", role: .destructive) {
+                            store.setReport(nil)
+                            self.existing = nil
+                        }
                     }
                 }
             }
+            .cardRows()
         }
+        .themedList()
         .navigationTitle("Pause melden")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { existing = store.report() }

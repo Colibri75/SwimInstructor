@@ -19,11 +19,15 @@ struct WeeklyScheduleView: View {
 
     var body: some View {
         Form {
-            ForEach(schedule.days) { day in
-                daySection(day)
+            Group {
+                ForEach(schedule.days) { day in
+                    daySection(day)
+                }
+                statusSection
             }
-            statusSection
+            .cardRows()
         }
+        .themedList()
         .navigationTitle("Wochenraster")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {

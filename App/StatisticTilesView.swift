@@ -286,12 +286,14 @@ struct AddStatisticTileSheet: View {
                         }
                     }
                 }
+                .cardRows()
                 Section("Vorschau") {
                     StatisticTileView(result: preview, showsDisclosure: false)
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
                 }
             }
+            .themedList()
             // Die neue Sportart hat die Kennzahl vielleicht nicht: dann ihre erste.
             .onChange(of: sport) { _, _ in
                 let catalog = dashboard.catalog(for: sportID)

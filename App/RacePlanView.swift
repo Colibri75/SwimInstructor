@@ -39,23 +39,27 @@ struct RacePlanView: View {
 
     var body: some View {
         List {
-            inputSection
-            if let response = raceLoader.response {
-                if !raceLoader.matches(raceDay: raceDay) {
-                    Section {
-                        Label("Dieser Plan gehört zu einem früheren Ziel (\(PlanFormatting.shortGermanDate(response.raceDay))). Erstell ihn neu.", systemImage: "exclamationmark.triangle")
-                            .font(.footnote)
-                            .foregroundStyle(.orange)
+            Group {
+                inputSection
+                if let response = raceLoader.response {
+                    if !raceLoader.matches(raceDay: raceDay) {
+                        Section {
+                            Label("Dieser Plan gehört zu einem früheren Ziel (\(PlanFormatting.shortGermanDate(response.raceDay))). Erstell ihn neu.", systemImage: "exclamationmark.triangle")
+                                .font(.footnote)
+                                .foregroundStyle(.orange)
+                        }
                     }
+                    overviewSection(response)
+                    timelineSection(response)
+                    disciplinesSection(response)
+                    transitionsSection(response)
+                    nutritionSection(response)
+                    checklistSection(response)
                 }
-                overviewSection(response)
-                timelineSection(response)
-                disciplinesSection(response)
-                transitionsSection(response)
-                nutritionSection(response)
-                checklistSection(response)
             }
+            .cardRows()
         }
+        .themedList()
         .navigationTitle("Wettkampftag")
         .navigationBarTitleDisplayMode(.inline)
         .swipeClosesKeyboard()

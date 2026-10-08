@@ -17,10 +17,14 @@ struct StartingLevelView: View {
 
     var body: some View {
         Form {
-            ForEach(shownSports, id: \.self) { sport in
-                sportSection(sport)
+            Group {
+                ForEach(shownSports, id: \.self) { sport in
+                    sportSection(sport)
+                }
             }
+            .cardRows()
         }
+        .themedList()
         .navigationTitle("Startniveau")
         .navigationBarTitleDisplayMode(.inline)
         .swipeClosesKeyboard()

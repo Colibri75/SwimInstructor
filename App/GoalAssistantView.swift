@@ -44,25 +44,29 @@ struct GoalAssistantView: View {
 
     var body: some View {
         Form {
-            kindSection
-            if goal.kind == .race {
-                templateSection
-            }
-            if goal.kind.hasDisciplines {
-                ForEach(sports.ids, id: \.self) { sport in
-                    disciplineSection(sport)
+            Group {
+                kindSection
+                if goal.kind == .race {
+                    templateSection
                 }
-            } else {
-                sportsSection
+                if goal.kind.hasDisciplines {
+                    ForEach(sports.ids, id: \.self) { sport in
+                        disciplineSection(sport)
+                    }
+                } else {
+                    sportsSection
+                }
+                emphasisSection
+                trainingSection
+                if mode == .settings {
+                    applySection
+                } else {
+                    statusSection
+                }
             }
-            emphasisSection
-            trainingSection
-            if mode == .settings {
-                applySection
-            } else {
-                statusSection
-            }
+            .cardRows()
         }
+        .themedList()
         .navigationTitle("Mein Ziel")
         .swipeClosesKeyboard()
         .navigationBarTitleDisplayMode(.inline)
