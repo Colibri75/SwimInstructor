@@ -10,6 +10,7 @@ struct TodayView: View {
     @EnvironmentObject private var settings: BackendSettings
     @EnvironmentObject private var testResultInbox: WatchTestResultInbox
     @EnvironmentObject private var feedbackBook: SessionFeedbackBook
+    @EnvironmentObject private var layouts: ScreenLayouts
     @Environment(\.scenePhase) private var scenePhase
     @State private var showsSettings = false
     @State private var wishDraft = ""
@@ -50,25 +51,11 @@ struct TodayView: View {
     var body: some View {
         NavigationStack {
             List {
-                Group {
-                    watchResultSection
-                    adaptationSection
-                    feedbackSection
-                    doneSection
+                // Reihenfolge und Auswahl der Bereiche: "Bereiche anpassen" unten in der Liste.
+                ForEach(layouts.visible(.today)) { section in
+                    todaySection(section.id)
                 }
-                .cardRows()
-                // Die Tageskarte hat ihren eigenen Grund (Nacht).
-                weekTodaySection
-                Group {
-                    if showsTomorrow {
-                        tomorrowSections
-                    } else {
-                        planSection
-                        extrasSections
-                        wishSection
-                    }
-                }
-                .cardRows()
+                CustomizeSectionsRow(screen: .today)
             }
             .themedList()
             .navigationTitle("Aktuell")
@@ -97,6 +84,45 @@ struct TodayView: View {
             if phase == .active {
                 Task { await loader.refreshIfNeeded() }
             }
+        }
+    }
+
+    /// Ein Bereich des Tabs. Nach erledigtem Training steht statt des Tagesplans der für morgen, ohne Wunsch-Feld.
+    @ViewBuilder
+    private func todaySection(_ id: String) -> some View {
+        switch id {
+        case "watchResult":
+            watchResultSection
+                .cardRows()
+        case "adaptation":
+            adaptationSection
+                .cardRows()
+        case "feedback":
+            feedbackSection
+                .cardRows()
+        case "done":
+            doneSection
+                .cardRows()
+        case "dayCard":
+            // Die Tageskarte hat ihren eigenen Grund (Nacht).
+            weekTodaySection
+        case "plan":
+            Group {
+                if showsTomorrow {
+                    tomorrowSections
+                } else {
+                    planSection
+                    extrasSections
+                }
+            }
+            .cardRows()
+        case "wish":
+            if !showsTomorrow {
+                wishSection
+                    .cardRows()
+            }
+        default:
+            EmptyView()
         }
     }
 
