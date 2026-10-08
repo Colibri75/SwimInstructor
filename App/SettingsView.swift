@@ -8,6 +8,7 @@ struct SettingsView: View {
     @EnvironmentObject private var healthKitManager: HealthKitManager
     @EnvironmentObject private var locationProvider: LocationProvider
     @EnvironmentObject private var calendarProvider: CalendarAvailabilityProvider
+    @EnvironmentObject private var coach: BackgroundCoach
     @Environment(\.dismiss) private var dismiss
 
     /// Wird nach dem Speichern aufgerufen, damit der Heute-Bildschirm gleich einen Plan holt.
@@ -93,6 +94,8 @@ struct SettingsView: View {
                     }
 
                     planningSection
+
+                    notificationSection
 
                     Section {
                         ForEach(EquipmentItem.allCases) { item in
@@ -196,6 +199,49 @@ struct SettingsView: View {
         } footer: {
             Text("Kraft und Mobilität kommen als kurze Blöcke in die Woche, mit Übungen am Tag. Mit Wetter weicht der Plan bei Gewitter, Sturm oder Glätte nach drinnen aus (dein Ort geht auf etwa 10 km gerundet zum Server). Mit Kalender plant er an vollen Tagen weniger: Es zählt der längste freie Block im Trainingsfenster, Termine selbst bleiben auf dem iPhone.")
         }
+    }
+
+    // MARK: - Mitteilungen
+
+    private var notificationSection: some View {
+        Section {
+            Toggle("Plan am Morgen", isOn: notificationBinding(\.morningPlan))
+            if coach.preferences.morningPlan {
+                DatePicker("Uhrzeit", selection: morningTimeBinding, displayedComponents: .hourAndMinute)
+            }
+            Toggle("Nach dem Training fragen", isOn: notificationBinding(\.afterWorkout))
+        } header: {
+            Text("Mitteilungen")
+        } footer: {
+            Text("Ist dein Training erledigt, holt dein Coach im Hintergrund schon den Plan für morgen. Er kommt dann morgens zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Nach einer Einheit fragt er, wie es war. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt.")
+        }
+    }
+
+    private func notificationBinding(_ keyPath: WritableKeyPath<NotificationPreferences, Bool>) -> Binding<Bool> {
+        Binding(
+            get: { coach.preferences[keyPath: keyPath] },
+            set: { value in
+                var copy = coach.preferences
+                copy[keyPath: keyPath] = value
+                coach.save(copy)
+            }
+        )
+    }
+
+    private var morningTimeBinding: Binding<Date> {
+        Binding(
+            get: {
+                let preferences = coach.preferences
+                return Calendar.current.date(bySettingHour: preferences.morningHour, minute: preferences.morningMinute, second: 0, of: Date()) ?? Date()
+            },
+            set: { date in
+                let parts = Calendar.current.dateComponents([.hour, .minute], from: date)
+                var copy = coach.preferences
+                copy.morningHour = parts.hour ?? copy.morningHour
+                copy.morningMinute = parts.minute ?? copy.morningMinute
+                coach.save(copy)
+            }
+        )
     }
 
     private func planningBinding(_ keyPath: WritableKeyPath<PlanningPreferences, Int>) -> Binding<Int> {

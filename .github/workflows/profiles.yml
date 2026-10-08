@@ -1,0 +1,29 @@
+name: Profile erneuern
+
+# Von Hand starten (Actions > Profile erneuern > Run workflow), nachdem sich bei Apple App-IDs oder deren Capabilities
+# geändert haben. Erzeugt die App-Store-Profile aller Targets neu; danach baut die TestFlight-Lane wieder.
+on:
+  workflow_dispatch:
+
+jobs:
+  profiles:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Regenerate profiles
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_WRITE_AUTHORIZATION: ${{ secrets.MATCH_GIT_WRITE_AUTHORIZATION }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_KEY_CONTENT }}
+        run: bundle exec fastlane profiles

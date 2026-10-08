@@ -273,6 +273,10 @@ public final class MultiSportTodayLoader: ObservableObject {
     private func load(force: Bool, regenerate: Bool) async {
         guard !isLoading else { return }
 
+        // Steht heute schon fest (Vorschau von gestern, etwa im Hintergrund geholt), gleich zeigen, ohne auf Health und
+        // die 14 Tage zu warten: Das Abstimmen der 14 Tage lässt einen festen Tag stehen.
+        if !force { _ = adoptTodaysPreview() }
+
         isLoadingHealth = true
         do {
             try await authorizer?.requestAuthorization()
@@ -302,16 +306,20 @@ public final class MultiSportTodayLoader: ObservableObject {
         let todaysWish = wishStore?.wish(for: todayKey)
         wish = todaysWish ?? ""
 
-        // Die Vorschau von gestern für heute gilt, solange die Vorgabe gleich ist: kein neuer Claude-Aufruf.
-        if !force, var preview = previews[todayKey], preview.requestedTarget == dayTarget() {
-            previews[todayKey] = nil
-            try? previewStore?.save(previews.values.sorted { $0.date < $1.date })
-            preview.requestedTarget = adoptPlan(preview) ?? preview.requestedTarget
-            show(preview)
-            return
-        }
+        if !force, adoptTodaysPreview() { return }
 
         await fetchPlan(provider: provider, reading: reading, regenerate: regenerate)
+    }
+
+    /// Die Vorschau von gestern für heute gilt, solange die Vorgabe gleich ist: kein neuer Claude-Aufruf. `true`, wenn sie
+    /// jetzt der Tagesplan ist.
+    private func adoptTodaysPreview() -> Bool {
+        guard var preview = previews[todayKey], preview.requestedTarget == dayTarget() else { return false }
+        previews[todayKey] = nil
+        try? previewStore?.save(previews.values.sorted { $0.date < $1.date })
+        preview.requestedTarget = adoptPlan(preview) ?? preview.requestedTarget
+        show(preview)
+        return true
     }
 
     /// Zeigt einen Plan für heute, speichert ihn und hält den Verlauf auf dem letzten Stand des Tages.

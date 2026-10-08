@@ -88,6 +88,22 @@ Je eine Einheit, danach in der Fitness-App Strecke, Karte und Herzfrequenz prüf
       ohne die Einheit nachzuholen oder zu stapeln
 - [ ] Dieselbe Rückmeldung erneut öffnen und sichern: kein zweites Neuplanen
 
+## 4a. Coach im Hintergrund und Anstrengung auf der Uhr
+
+- [ ] Beim ersten Öffnen nach dem Update fragt das iPhone nach Mitteilungen (erlauben); die Watch fragt einmal neu nach
+      Health (Anstrengung schreiben)
+- [ ] Einheit mit der Watch beenden: Unter "Geschafft" steht "Wie anstrengend?"; mit der Crown oder +/- wählen, "Sichern":
+      "Anstrengung 7 von 10 gespeichert". In der Fitness-App steht die Anstrengung am Workout, in "Wie war's?" auf dem
+      iPhone ist sie vorbelegt
+- [ ] Nach einer Einheit (iPhone entsperrt, App zu): Mitteilung "Wie war's?" mit Sportart und Minuten, einmal je Einheit
+- [ ] Training des Tages erledigt, App zu lassen: Am Abend steht im Plan-Tab für morgen schon "Trainingsplan" (ohne Tippen
+      auf "Trainingsplan anzeigen"); morgens zur eingestellten Uhrzeit (Einstellungen › Mitteilungen) kommt "Dein Plan für
+      heute steht" mit den Einheiten
+- [ ] Am Morgen danach Aktuell öffnen: Der Plan steht sofort da, oben nur der kleine Hinweis "Dein Coach stimmt die
+      nächsten Tage ab …", keine große Schmiede
+- [ ] Einstellungen › Mitteilungen: "Plan am Morgen" aus: keine Morgen-Mitteilung mehr; "Nach dem Training fragen" aus:
+      keine "Wie war's?"-Mitteilung
+
 ## 5. Wetter (wenn es passt)
 
 - [ ] An einem Tag mit Gewitter- oder Sturmwarnung: Rad steht "drinnen (Rolle)" im Plan, Laufen ohne Laufband bleibt

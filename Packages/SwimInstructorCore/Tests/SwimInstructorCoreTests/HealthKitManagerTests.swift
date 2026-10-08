@@ -36,6 +36,12 @@ final class HealthKitManagerTests: XCTestCase {
         XCTAssertTrue(types.contains(HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!))
     }
 
+    func testTheWatchMayWriteTheEffortItAsksFor() throws {
+        guard #available(macOS 15.0, *) else { throw XCTSkip("Anstrengung erst ab macOS 15") }
+        XCTAssertEqual(HealthKitManager.effortShareTypes, [HKQuantityType(.workoutEffortScore)])
+        XCTAssertTrue(HealthKitManager.readTypes.contains(HKQuantityType(.workoutEffortScore)), "das iPhone liest sie")
+    }
+
     func testWorkoutShareTypesCoverRouteRunningAndCycling() {
         let types = HealthKitManager.workoutShareTypes
 
