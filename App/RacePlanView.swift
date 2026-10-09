@@ -166,6 +166,7 @@ struct RacePlanView: View {
                             }
                         }
                     }
+                    .accessibilityElement(children: .combine)
                 }
             }
         }
@@ -190,6 +191,7 @@ struct RacePlanView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
+                    .accessibilityElement(children: .combine)
                 }
                 if !discipline.notes.isEmpty {
                     Text(discipline.notes)
@@ -234,6 +236,7 @@ struct RacePlanView: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
+                .accessibilityElement(children: .combine)
             }
             ForEach(response.plan.nutrition.after, id: \.self) { item in
                 Label(item, systemImage: "cup.and.saucer")

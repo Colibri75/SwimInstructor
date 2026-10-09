@@ -95,6 +95,7 @@ extension HistoryView {
                     ForgeAnimation()
                     Text("Lese Health-Daten …").foregroundStyle(.secondary)
                 }
+                .accessibilityElement(children: .combine)
             } else if let error = loader.healthError {
                 Text("Health: \(error)").foregroundStyle(.red)
             } else if let workouts = loader.reading?.allWorkouts, !workouts.isEmpty {
@@ -165,6 +166,14 @@ private struct ChartSection: View {
             }
     }
 
+    /// Für VoiceOver: die Summen über die gezeigten Tage; die einzelnen Balken liest VoiceOver aus dem Diagramm selbst.
+    private var chartSummary: String {
+        let days = entries.prefix(14)
+        let planned = days.reduce(0.0) { sum, entry in sum + entry.comparisons.reduce(0.0) { $0 + $1.plannedMinutes } }
+        let actual = days.reduce(0.0) { sum, entry in sum + entry.comparisons.reduce(0.0) { $0 + $1.actualMinutes } }
+        return String(localized: "Geplant \(PlanV2Formatting.duration(minutes: planned)), trainiert \(PlanV2Formatting.duration(minutes: actual))")
+    }
+
     var body: some View {
         let data = bars
         if data.contains(where: { $0.minutes > 0 }) {
@@ -180,6 +189,7 @@ private struct ChartSection: View {
                 .chartForegroundStyleScale([String(localized: "Geplant"): Theme.accent.opacity(0.35), String(localized: "Trainiert"): Theme.accent])
                 .frame(height: 180)
                 .accessibilityLabel("Geplante und trainierte Minuten der letzten Tage")
+                .accessibilityValue(chartSummary)
             } header: {
                 Text("Geplant und trainiert")
             } footer: {

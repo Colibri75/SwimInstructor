@@ -68,6 +68,8 @@ private struct HomeScreenView: View {
                         Image(systemName: item.symbolName)
                             .foregroundStyle(Color(rgb: item.colorRGB))
                             .frame(width: 20)
+                            // Der Titel nennt die Sportart schon.
+                            .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 0) {
                             Text(item.title)
                                 .font(.subheadline.weight(.semibold))
@@ -88,5 +90,6 @@ private struct HomeScreenView: View {
         }
         .fontDesign(.rounded)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .accessibilityElement(children: .combine)
     }
 }

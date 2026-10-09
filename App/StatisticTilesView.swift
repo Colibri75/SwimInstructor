@@ -104,7 +104,7 @@ struct StatisticTileView: View {
         .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(StatisticFormatting.accessibilityLabel(result))
-        .accessibilityHint("Öffnet die Details.")
+        .accessibilityHint(showsDisclosure ? Text("Öffnet die Details.") : Text(verbatim: ""))
     }
 
     private var trendSymbol: String {

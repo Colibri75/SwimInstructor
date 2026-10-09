@@ -98,6 +98,8 @@ struct WatchTodayView: View {
                 Label(session.test.map { String(localized: "Test starten: \($0.displayName)") } ?? String(localized: "Starten"), systemImage: registry.symbolName(for: session.sport))
                     .font(.headline)
             }
+            // Das Symbol zeigt die Sportart, VoiceOver sagt sie.
+            .accessibilityLabel(session.test.map { String(localized: "Test starten: \($0.displayName)") } ?? String(localized: "\(registry.displayName(for: session.sport)) starten"))
             .tint(Theme.ember)
             // Koppeltraining: gleich nach dem Ende der Einheit davor hier starten; drinnen ist der Ort vorgewählt.
             ForEach(PlanV2Formatting.sessionHints(brick: session.brick, indoor: session.indoor, openWater: session.openWater, sport: session.sport, previous: previous, registry: registry), id: \.self) { hint in
@@ -169,6 +171,7 @@ struct WatchStepRow: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -299,9 +302,11 @@ struct PoolLengthView: View {
                         Spacer()
                         if preset == meters {
                             Image(systemName: "checkmark")
+                                .accessibilityHidden(true)
                         }
                     }
                 }
+                .accessibilityAddTraits(preset == meters ? .isSelected : [])
             }
             Stepper(value: $meters, in: PoolLength.range) {
                 Text("\(meters) m")

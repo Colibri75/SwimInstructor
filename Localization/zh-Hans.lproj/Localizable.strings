@@ -834,3 +834,11 @@
 "Übernommen. Der neue Gesamtplan entsteht jetzt im Hintergrund." = "已采用。新的总体计划正在后台生成。";
 "Farben für Grün-Schwäche" = "绿色弱配色";
 "Statt Grün und Rot: erfüllt Blau, abweichend Orange, verpasst Grau. Laufen wird Beere statt Violett, damit es sich von Schwimmen abhebt. Gilt hell und dunkel." = "不再使用绿色和红色：已完成为蓝色，有偏差为橙色，未完成为灰色。跑步由紫色改为莓红色，以便与游泳区分。适用于浅色和深色模式。";
+
+
+/* Barrierefreiheit (VoiceOver) */
+"Anstrengung" = "强度感受";
+"Jetzt starten" = "立即开始";
+"%@ starten" = "开始%@";
+"Geplant %@, trainiert %@" = "计划 %@，已训练 %@";
+"%lld Wochen, die umfangreichste mit %@" = "共 %lld 周，训练量最大的一周 %@";

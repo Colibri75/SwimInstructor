@@ -834,3 +834,11 @@
 "Übernommen. Der neue Gesamtplan entsteht jetzt im Hintergrund." = "Appliqué. Le nouveau plan global est en cours de création en arrière-plan.";
 "Farben für Grün-Schwäche" = "Couleurs pour la deutéranopie";
 "Statt Grün und Rot: erfüllt Blau, abweichend Orange, verpasst Grau. Laufen wird Beere statt Violett, damit es sich von Schwimmen abhebt. Gilt hell und dunkel." = "Au lieu du vert et du rouge : réalisé en bleu, écart en orange, manqué en gris. La course passe du violet au framboise pour se distinguer de la natation. S’applique en clair et en sombre.";
+
+
+/* Barrierefreiheit (VoiceOver) */
+"Anstrengung" = "Effort";
+"Jetzt starten" = "Démarrer maintenant";
+"%@ starten" = "Démarrer : %@";
+"Geplant %@, trainiert %@" = "Prévu %@, réalisé %@";
+"%lld Wochen, die umfangreichste mit %@" = "%lld semaines, la plus chargée avec %@";
