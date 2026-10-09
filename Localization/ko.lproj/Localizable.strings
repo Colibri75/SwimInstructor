@@ -248,6 +248,7 @@
 "Draußen" = "야외";
 "Drinnen" = "실내";
 "Drinnen (%@)" = "실내(%@)";
+"Dunkel" = "다크";
 "Durchschnitt" = "평균";
 "Egal" = "상관없음";
 "Eigenes Ziel" = "나만의 목표";
@@ -281,10 +282,12 @@
 "Erlaubt: %@ bis %@." = "허용 범위: %@~%@.";
 "Ersatzplan: Dein Coach war nicht erreichbar, der Plan passt vielleicht nicht zum Wochenplan." = "대체 계획: 코치에게 연결할 수 없어서 이 계획이 주간 계획과 맞지 않을 수 있어요.";
 "Erscheint, wenn ein Test von der Watch auf Bestätigung wartet." = "Watch에서 테스트가 확인을 기다릴 때 나타나요.";
+"Erscheinungsbild" = "화면 모드";
 "Erst nach deiner Bestätigung richten sich Zonen und Tempo im Plan nach dem neuen Wert." = "확인해야 계획의 영역과 페이스가 새 값을 따라요.";
 "Es gibt keinen freien Ruhetag mehr in dieser Woche." = "이번 주에는 더 이상 빈 휴식일이 없어요.";
 "Es gibt noch keinen Gesamtplan." = "아직 전체 계획이 없어요.";
 "Etwa %@" = "약 %@";
+"Farbschema" = "색상 테마";
 "Faustformel" = "경험 법칙";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung." = "피드백은 새 계획 후 한 번, 그리고 계획 업데이트마다 한 번 줄 수 있어요.";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung. Die nächste Gelegenheit kommt mit der nächsten Fortschreibung." = "피드백은 새 계획 후 한 번, 그리고 계획 업데이트마다 한 번 줄 수 있어요. 다음 기회는 다음 계획 업데이트 때예요.";
@@ -347,6 +350,8 @@
 "Health-Zugriff erneut anfragen" = "건강 앱 접근 다시 요청";
 "Health: %@" = "건강: %@";
 "Health: keine Einheiten in den letzten 4 Wochen." = "건강: 최근 4주간 세션 없음.";
+"Hell" = "라이트";
+"Hell ist der blaugraue Morgennebel, dunkel die Nacht aus dem Logo. Wie iPhone folgt der Einstellung des iPhones." = "라이트는 푸른 회색 아침 안개, 다크는 로고 속 밤이에요. 'iPhone과 동일'은 iPhone 설정을 따라요.";
 "Heute" = "오늘";
 "Heute erledigt" = "오늘 완료";
 "Heute ist laut Plan kein Training vorgesehen. Erhol dich gut." = "오늘은 계획상 훈련이 없어요. 푹 쉬세요.";
@@ -700,6 +705,7 @@
 "Wie anstrengend war es?" = "얼마나 힘들었나요?";
 "Wie anstrengend?" = "얼마나 힘들었나요?";
 "Wie es passt" = "알아서";
+"Wie iPhone" = "iPhone과 동일";
 "Wie sich dein Training auf die Sportarten verteilt. Ziehst du eine hoch, werden die anderen im Verhältnis kleiner; zusammen sind es immer 100 %." = "훈련을 종목별로 어떻게 나눌지 정해요. 하나를 올리면 나머지는 비율대로 줄어들고, 합계는 항상 100%예요.";
 "Wie war's?" = "어땠어요?";
 "Wieder deinem Coach überlassen" = "다시 코치에게 맡기기";

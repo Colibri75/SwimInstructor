@@ -248,6 +248,7 @@
 "Draußen" = "Outdoors";
 "Drinnen" = "Indoors";
 "Drinnen (%@)" = "Indoors (%@)";
+"Dunkel" = "Dark";
 "Durchschnitt" = "Average";
 "Egal" = "Any";
 "Eigenes Ziel" = "Custom goal";
@@ -281,10 +282,12 @@
 "Erlaubt: %@ bis %@." = "Allowed: %@ to %@.";
 "Ersatzplan: Dein Coach war nicht erreichbar, der Plan passt vielleicht nicht zum Wochenplan." = "Fallback plan: your coach couldn't be reached, so the plan may not match the weekly plan.";
 "Erscheint, wenn ein Test von der Watch auf Bestätigung wartet." = "Appears when a test from the Watch is waiting for confirmation.";
+"Erscheinungsbild" = "Appearance";
 "Erst nach deiner Bestätigung richten sich Zonen und Tempo im Plan nach dem neuen Wert." = "Zones and pace in the plan follow the new value only after you confirm it.";
 "Es gibt keinen freien Ruhetag mehr in dieser Woche." = "There are no free rest days left this week.";
 "Es gibt noch keinen Gesamtplan." = "There's no overall plan yet.";
 "Etwa %@" = "About %@";
+"Farbschema" = "Color scheme";
 "Faustformel" = "Rule of thumb";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung." = "You can give feedback once after a new plan and once for each plan update.";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung. Die nächste Gelegenheit kommt mit der nächsten Fortschreibung." = "You can give feedback once after a new plan and once for each plan update. The next chance comes with the next plan update.";
@@ -347,6 +350,8 @@
 "Health-Zugriff erneut anfragen" = "Request Health access again";
 "Health: %@" = "Health: %@";
 "Health: keine Einheiten in den letzten 4 Wochen." = "Health: no sessions in the last 4 weeks.";
+"Hell" = "Light";
+"Hell ist der blaugraue Morgennebel, dunkel die Nacht aus dem Logo. Wie iPhone folgt der Einstellung des iPhones." = "Light is the blue-gray morning mist, dark is the night from the logo. Like iPhone follows your iPhone's setting.";
 "Heute" = "Today";
 "Heute erledigt" = "Done today";
 "Heute ist laut Plan kein Training vorgesehen. Erhol dich gut." = "No training is planned for today. Enjoy the rest.";
@@ -700,6 +705,7 @@
 "Wie anstrengend war es?" = "How hard was it?";
 "Wie anstrengend?" = "How hard?";
 "Wie es passt" = "Whatever fits";
+"Wie iPhone" = "Like iPhone";
 "Wie sich dein Training auf die Sportarten verteilt. Ziehst du eine hoch, werden die anderen im Verhältnis kleiner; zusammen sind es immer 100 %." = "How your training is split across sports. If you raise one, the others shrink proportionally; together they always add up to 100 %.";
 "Wie war's?" = "How was it?";
 "Wieder deinem Coach überlassen" = "Hand back to your coach";

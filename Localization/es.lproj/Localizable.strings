@@ -248,6 +248,7 @@
 "Draußen" = "Exterior";
 "Drinnen" = "Interior";
 "Drinnen (%@)" = "Interior (%@)";
+"Dunkel" = "Oscuro";
 "Durchschnitt" = "Media";
 "Egal" = "Da igual";
 "Eigenes Ziel" = "Objetivo propio";
@@ -281,10 +282,12 @@
 "Erlaubt: %@ bis %@." = "Permitido: de %@ a %@.";
 "Ersatzplan: Dein Coach war nicht erreichbar, der Plan passt vielleicht nicht zum Wochenplan." = "Plan de reserva: tu coach no estaba disponible y puede que el plan no encaje con el plan semanal.";
 "Erscheint, wenn ein Test von der Watch auf Bestätigung wartet." = "Aparece cuando un test del Watch está pendiente de confirmación.";
+"Erscheinungsbild" = "Apariencia";
 "Erst nach deiner Bestätigung richten sich Zonen und Tempo im Plan nach dem neuen Wert." = "Solo después de que lo confirmes, las zonas y el ritmo del plan se basarán en el nuevo valor.";
 "Es gibt keinen freien Ruhetag mehr in dieser Woche." = "Ya no queda ningún día de descanso libre esta semana.";
 "Es gibt noch keinen Gesamtplan." = "Aún no hay plan general.";
 "Etwa %@" = "Aprox. %@";
+"Farbschema" = "Esquema de color";
 "Faustformel" = "Regla general";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung." = "Puedes dar feedback una vez tras un plan nuevo y una vez en cada actualización del plan.";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung. Die nächste Gelegenheit kommt mit der nächsten Fortschreibung." = "Puedes dar feedback una vez tras un plan nuevo y una vez en cada actualización del plan. La próxima oportunidad llega con la próxima actualización.";
@@ -347,6 +350,8 @@
 "Health-Zugriff erneut anfragen" = "Volver a solicitar acceso a Salud";
 "Health: %@" = "Salud: %@";
 "Health: keine Einheiten in den letzten 4 Wochen." = "Salud: ninguna sesión en las últimas 4 semanas.";
+"Hell" = "Claro";
+"Hell ist der blaugraue Morgennebel, dunkel die Nacht aus dem Logo. Wie iPhone folgt der Einstellung des iPhones." = "Claro es la niebla matinal gris azulada; oscuro, la noche del logo. «Como el iPhone» sigue el ajuste del iPhone.";
 "Heute" = "Hoy";
 "Heute erledigt" = "Hecho por hoy";
 "Heute ist laut Plan kein Training vorgesehen. Erhol dich gut." = "Según el plan, hoy no hay entrenamiento. Descansa bien.";
@@ -700,6 +705,7 @@
 "Wie anstrengend war es?" = "¿Qué tan duro fue?";
 "Wie anstrengend?" = "¿Qué tan duro?";
 "Wie es passt" = "Como mejor encaje";
+"Wie iPhone" = "Como el iPhone";
 "Wie sich dein Training auf die Sportarten verteilt. Ziehst du eine hoch, werden die anderen im Verhältnis kleiner; zusammen sind es immer 100 %." = "Cómo se reparte tu entrenamiento entre los deportes. Si subes uno, los demás bajan en proporción; en total siempre suman 100 %.";
 "Wie war's?" = "¿Qué tal fue?";
 "Wieder deinem Coach überlassen" = "Dejarlo de nuevo en manos de tu coach";

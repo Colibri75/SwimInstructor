@@ -177,7 +177,7 @@ private struct ChartSection: View {
                     .foregroundStyle(by: .value("Art", bar.kind))
                     .position(by: .value("Art", bar.kind))
                 }
-                .chartForegroundStyleScale([String(localized: "Geplant"): Color.gray.opacity(0.5), String(localized: "Trainiert"): Color.blue])
+                .chartForegroundStyleScale([String(localized: "Geplant"): Theme.accent.opacity(0.35), String(localized: "Trainiert"): Theme.accent])
                 .frame(height: 180)
                 .accessibilityLabel("Geplante und trainierte Minuten der letzten Tage")
             } header: {

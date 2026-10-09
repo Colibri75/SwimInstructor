@@ -248,6 +248,7 @@
 "Draußen" = "屋外";
 "Drinnen" = "屋内";
 "Drinnen (%@)" = "屋内（%@）";
+"Dunkel" = "ダーク";
 "Durchschnitt" = "平均";
 "Egal" = "指定なし";
 "Eigenes Ziel" = "カスタム目標";
@@ -281,10 +282,12 @@
 "Erlaubt: %@ bis %@." = "範囲：%@〜%@。";
 "Ersatzplan: Dein Coach war nicht erreichbar, der Plan passt vielleicht nicht zum Wochenplan." = "代替プラン：コーチに接続できなかったため、週間プランと合っていない可能性があります。";
 "Erscheint, wenn ein Test von der Watch auf Bestätigung wartet." = "ウォッチのテストが確定待ちのときに表示されます。";
+"Erscheinungsbild" = "外観";
 "Erst nach deiner Bestätigung richten sich Zonen und Tempo im Plan nach dem neuen Wert." = "確定して初めて、プランのゾーンとペースが新しい値に基づきます。";
 "Es gibt keinen freien Ruhetag mehr in dieser Woche." = "今週は空いている休養日がもうありません。";
 "Es gibt noch keinen Gesamtplan." = "まだ全体プランがありません。";
 "Etwa %@" = "約%@";
+"Farbschema" = "カラースキーム";
 "Faustformel" = "目安";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung." = "フィードバックは新しいプランの後に1回、プラン更新のたびに1回できます。";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung. Die nächste Gelegenheit kommt mit der nächsten Fortschreibung." = "フィードバックは新しいプランの後に1回、プラン更新のたびに1回できます。次の機会は次回のプラン更新です。";
@@ -347,6 +350,8 @@
 "Health-Zugriff erneut anfragen" = "ヘルスケアへのアクセスを再リクエスト";
 "Health: %@" = "ヘルスケア：%@";
 "Health: keine Einheiten in den letzten 4 Wochen." = "ヘルスケア：直近4週間にセッションがありません。";
+"Hell" = "ライト";
+"Hell ist der blaugraue Morgennebel, dunkel die Nacht aus dem Logo. Wie iPhone folgt der Einstellung des iPhones." = "ライトは青みがかった朝霧、ダークはロゴの夜。「iPhoneと同じ」はiPhoneの設定に従います。";
 "Heute" = "今日";
 "Heute erledigt" = "今日は完了";
 "Heute ist laut Plan kein Training vorgesehen. Erhol dich gut." = "今日はプラン上トレーニングの予定はありません。しっかり休みましょう。";
@@ -700,6 +705,7 @@
 "Wie anstrengend war es?" = "どれくらいきつかったですか？";
 "Wie anstrengend?" = "きつさは？";
 "Wie es passt" = "おまかせ";
+"Wie iPhone" = "iPhoneと同じ";
 "Wie sich dein Training auf die Sportarten verteilt. Ziehst du eine hoch, werden die anderen im Verhältnis kleiner; zusammen sind es immer 100 %." = "トレーニングを種目にどう配分するか。1つを上げると、他はその割合に応じて下がり、合計は常に100 %です。";
 "Wie war's?" = "どうだった？";
 "Wieder deinem Coach überlassen" = "コーチに任せ直す";

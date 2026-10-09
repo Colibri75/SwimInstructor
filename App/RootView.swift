@@ -13,6 +13,7 @@ struct RootView: View {
     private let onboardingStore: OnboardingStoring
     @State private var selection = Tab.today
     @State private var onboardingDone: Bool
+    @AppStorage(Appearance.storageKey) private var appearance = Appearance.system
 
     init(onboardingStore: OnboardingStoring = UserDefaultsOnboardingStore()) {
         self.onboardingStore = onboardingStore
@@ -36,6 +37,9 @@ struct RootView: View {
         // Design aus dem Logo: Glut als Akzent, runde Schrift wie die Linien des Gipfels.
         .tint(Theme.accent)
         .fontDesign(.rounded)
+        // Hell oder dunkel aus den Einstellungen.
+        .onAppear { appearance.apply() }
+        .onChange(of: appearance) { _, value in value.apply() }
     }
 
     private var tabs: some View {

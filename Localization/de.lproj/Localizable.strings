@@ -248,6 +248,7 @@
 "Draußen" = "Draußen";
 "Drinnen" = "Drinnen";
 "Drinnen (%@)" = "Drinnen (%@)";
+"Dunkel" = "Dunkel";
 "Durchschnitt" = "Durchschnitt";
 "Egal" = "Egal";
 "Eigenes Ziel" = "Eigenes Ziel";
@@ -281,10 +282,12 @@
 "Erlaubt: %@ bis %@." = "Erlaubt: %@ bis %@.";
 "Ersatzplan: Dein Coach war nicht erreichbar, der Plan passt vielleicht nicht zum Wochenplan." = "Ersatzplan: Dein Coach war nicht erreichbar, der Plan passt vielleicht nicht zum Wochenplan.";
 "Erscheint, wenn ein Test von der Watch auf Bestätigung wartet." = "Erscheint, wenn ein Test von der Watch auf Bestätigung wartet.";
+"Erscheinungsbild" = "Erscheinungsbild";
 "Erst nach deiner Bestätigung richten sich Zonen und Tempo im Plan nach dem neuen Wert." = "Erst nach deiner Bestätigung richten sich Zonen und Tempo im Plan nach dem neuen Wert.";
 "Es gibt keinen freien Ruhetag mehr in dieser Woche." = "Es gibt keinen freien Ruhetag mehr in dieser Woche.";
 "Es gibt noch keinen Gesamtplan." = "Es gibt noch keinen Gesamtplan.";
 "Etwa %@" = "Etwa %@";
+"Farbschema" = "Farbschema";
 "Faustformel" = "Faustformel";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung." = "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung.";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung. Die nächste Gelegenheit kommt mit der nächsten Fortschreibung." = "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung. Die nächste Gelegenheit kommt mit der nächsten Fortschreibung.";
@@ -347,6 +350,8 @@
 "Health-Zugriff erneut anfragen" = "Health-Zugriff erneut anfragen";
 "Health: %@" = "Health: %@";
 "Health: keine Einheiten in den letzten 4 Wochen." = "Health: keine Einheiten in den letzten 4 Wochen.";
+"Hell" = "Hell";
+"Hell ist der blaugraue Morgennebel, dunkel die Nacht aus dem Logo. Wie iPhone folgt der Einstellung des iPhones." = "Hell ist der blaugraue Morgennebel, dunkel die Nacht aus dem Logo. Wie iPhone folgt der Einstellung des iPhones.";
 "Heute" = "Heute";
 "Heute erledigt" = "Heute erledigt";
 "Heute ist laut Plan kein Training vorgesehen. Erhol dich gut." = "Heute ist laut Plan kein Training vorgesehen. Erhol dich gut.";
@@ -700,6 +705,7 @@
 "Wie anstrengend war es?" = "Wie anstrengend war es?";
 "Wie anstrengend?" = "Wie anstrengend?";
 "Wie es passt" = "Wie es passt";
+"Wie iPhone" = "Wie iPhone";
 "Wie sich dein Training auf die Sportarten verteilt. Ziehst du eine hoch, werden die anderen im Verhältnis kleiner; zusammen sind es immer 100 %." = "Wie sich dein Training auf die Sportarten verteilt. Ziehst du eine hoch, werden die anderen im Verhältnis kleiner; zusammen sind es immer 100 %.";
 "Wie war's?" = "Wie war's?";
 "Wieder deinem Coach überlassen" = "Wieder deinem Coach überlassen";

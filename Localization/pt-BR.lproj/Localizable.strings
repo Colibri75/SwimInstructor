@@ -248,6 +248,7 @@
 "Draußen" = "Ao ar livre";
 "Drinnen" = "Indoor";
 "Drinnen (%@)" = "Indoor (%@)";
+"Dunkel" = "Escuro";
 "Durchschnitt" = "Média";
 "Egal" = "Qualquer";
 "Eigenes Ziel" = "Objetivo próprio";
@@ -281,10 +282,12 @@
 "Erlaubt: %@ bis %@." = "Permitido: %@ a %@.";
 "Ersatzplan: Dein Coach war nicht erreichbar, der Plan passt vielleicht nicht zum Wochenplan." = "Plano reserva: seu coach não estava disponível, e o plano talvez não combine com o plano semanal.";
 "Erscheint, wenn ein Test von der Watch auf Bestätigung wartet." = "Aparece quando um teste do Watch aguarda confirmação.";
+"Erscheinungsbild" = "Aparência";
 "Erst nach deiner Bestätigung richten sich Zonen und Tempo im Plan nach dem neuen Wert." = "Só depois da sua confirmação as zonas e o ritmo do plano passam a seguir o novo valor.";
 "Es gibt keinen freien Ruhetag mehr in dieser Woche." = "Não há mais dia de descanso livre nesta semana.";
 "Es gibt noch keinen Gesamtplan." = "Ainda não há plano geral.";
 "Etwa %@" = "Cerca de %@";
+"Farbschema" = "Esquema de cores";
 "Faustformel" = "Regra prática";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung." = "Você pode dar feedback uma vez após um novo plano e uma vez a cada atualização do plano.";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung. Die nächste Gelegenheit kommt mit der nächsten Fortschreibung." = "Você pode dar feedback uma vez após um novo plano e uma vez a cada atualização do plano. A próxima oportunidade vem com a próxima atualização.";
@@ -347,6 +350,8 @@
 "Health-Zugriff erneut anfragen" = "Solicitar acesso ao Saúde novamente";
 "Health: %@" = "Saúde: %@";
 "Health: keine Einheiten in den letzten 4 Wochen." = "Saúde: nenhum treino nas últimas 4 semanas.";
+"Hell" = "Claro";
+"Hell ist der blaugraue Morgennebel, dunkel die Nacht aus dem Logo. Wie iPhone folgt der Einstellung des iPhones." = "Claro é a névoa da manhã cinza-azulada, escuro é a noite do logo. “Como o iPhone” segue o ajuste do iPhone.";
 "Heute" = "Hoje";
 "Heute erledigt" = "Concluído hoje";
 "Heute ist laut Plan kein Training vorgesehen. Erhol dich gut." = "Hoje não há treino previsto no plano. Descanse bem.";
@@ -700,6 +705,7 @@
 "Wie anstrengend war es?" = "Quão puxado foi?";
 "Wie anstrengend?" = "Quão puxado?";
 "Wie es passt" = "Como encaixar";
+"Wie iPhone" = "Como o iPhone";
 "Wie sich dein Training auf die Sportarten verteilt. Ziehst du eine hoch, werden die anderen im Verhältnis kleiner; zusammen sind es immer 100 %." = "Como seu treino se distribui entre os esportes. Se você aumentar um, os outros diminuem proporcionalmente; juntos, sempre somam 100 %.";
 "Wie war's?" = "Como foi?";
 "Wieder deinem Coach überlassen" = "Devolver ao seu coach";

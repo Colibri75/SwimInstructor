@@ -248,6 +248,7 @@
 "Draußen" = "बाहर";
 "Drinnen" = "इनडोर";
 "Drinnen (%@)" = "इनडोर (%@)";
+"Dunkel" = "डार्क";
 "Durchschnitt" = "औसत";
 "Egal" = "कभी भी";
 "Eigenes Ziel" = "अपना लक्ष्य";
@@ -281,10 +282,12 @@
 "Erlaubt: %@ bis %@." = "मान्य: %@ से %@।";
 "Ersatzplan: Dein Coach war nicht erreichbar, der Plan passt vielleicht nicht zum Wochenplan." = "वैकल्पिक प्लान: आपका कोच उपलब्ध नहीं था, हो सकता है यह प्लान साप्ताहिक प्लान से मेल न खाए।";
 "Erscheint, wenn ein Test von der Watch auf Bestätigung wartet." = "तब दिखता है जब Watch का कोई टेस्ट पुष्टि का इंतज़ार कर रहा हो।";
+"Erscheinungsbild" = "दिखावट";
 "Erst nach deiner Bestätigung richten sich Zonen und Tempo im Plan nach dem neuen Wert." = "आपकी पुष्टि के बाद ही प्लान के ज़ोन और पेस नए मान के अनुसार होंगे।";
 "Es gibt keinen freien Ruhetag mehr in dieser Woche." = "इस सप्ताह कोई ख़ाली आराम का दिन नहीं बचा।";
 "Es gibt noch keinen Gesamtplan." = "अभी कोई पूरा प्लान नहीं है।";
 "Etwa %@" = "लगभग %@";
+"Farbschema" = "कलर स्कीम";
 "Faustformel" = "अनुमानित फ़ॉर्मूला";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung." = "फ़ीडबैक एक बार नए प्लान के बाद और एक बार हर प्लान अपडेट पर दिया जा सकता है।";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung. Die nächste Gelegenheit kommt mit der nächsten Fortschreibung." = "फ़ीडबैक एक बार नए प्लान के बाद और एक बार हर प्लान अपडेट पर दिया जा सकता है। अगला मौक़ा अगले प्लान अपडेट के साथ आएगा।";
@@ -347,6 +350,8 @@
 "Health-Zugriff erneut anfragen" = "Health एक्सेस फिर से माँगें";
 "Health: %@" = "Health: %@";
 "Health: keine Einheiten in den letzten 4 Wochen." = "Health: पिछले 4 सप्ताह में कोई सेशन नहीं।";
+"Hell" = "लाइट";
+"Hell ist der blaugraue Morgennebel, dunkel die Nacht aus dem Logo. Wie iPhone folgt der Einstellung des iPhones." = "लाइट नीली-धूसर सुबह की धुंध है, डार्क लोगो की रात। “iPhone जैसा” आपके iPhone की सेटिंग अपनाता है।";
 "Heute" = "आज";
 "Heute erledigt" = "आज पूरा";
 "Heute ist laut Plan kein Training vorgesehen. Erhol dich gut." = "प्लान के अनुसार आज कोई ट्रेनिंग नहीं है। अच्छे से आराम करें।";
@@ -700,6 +705,7 @@
 "Wie anstrengend war es?" = "यह कितना मुश्किल था?";
 "Wie anstrengend?" = "कितना मुश्किल?";
 "Wie es passt" = "जो सही लगे";
+"Wie iPhone" = "iPhone जैसा";
 "Wie sich dein Training auf die Sportarten verteilt. Ziehst du eine hoch, werden die anderen im Verhältnis kleiner; zusammen sind es immer 100 %." = "आपकी ट्रेनिंग स्पोर्ट में कैसे बँटी है। एक को बढ़ाने पर बाकी उसी अनुपात में घट जाते हैं; कुल हमेशा 100 % रहता है।";
 "Wie war's?" = "कैसा रहा?";
 "Wieder deinem Coach überlassen" = "फिर से अपने कोच पर छोड़ें";

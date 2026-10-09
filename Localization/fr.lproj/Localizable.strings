@@ -248,6 +248,7 @@
 "Draußen" = "Extérieur";
 "Drinnen" = "Intérieur";
 "Drinnen (%@)" = "Intérieur (%@)";
+"Dunkel" = "Sombre";
 "Durchschnitt" = "Moyenne";
 "Egal" = "Peu importe";
 "Eigenes Ziel" = "Objectif personnalisé";
@@ -281,10 +282,12 @@
 "Erlaubt: %@ bis %@." = "Autorisé : %@ à %@.";
 "Ersatzplan: Dein Coach war nicht erreichbar, der Plan passt vielleicht nicht zum Wochenplan." = "Plan de secours : ton coach n’était pas joignable, le plan ne correspond peut-être pas au plan de la semaine.";
 "Erscheint, wenn ein Test von der Watch auf Bestätigung wartet." = "S’affiche quand un test de la Watch attend une confirmation.";
+"Erscheinungsbild" = "Apparence";
 "Erst nach deiner Bestätigung richten sich Zonen und Tempo im Plan nach dem neuen Wert." = "Les zones et allures du plan ne suivent la nouvelle valeur qu’après ta confirmation.";
 "Es gibt keinen freien Ruhetag mehr in dieser Woche." = "Il n’y a plus de jour de repos libre cette semaine.";
 "Es gibt noch keinen Gesamtplan." = "Il n’y a pas encore de plan global.";
 "Etwa %@" = "Environ %@";
+"Farbschema" = "Thème";
 "Faustformel" = "Règle empirique";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung." = "Tu peux donner ton avis une fois après un nouveau plan et une fois à chaque mise à jour du plan.";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung. Die nächste Gelegenheit kommt mit der nächsten Fortschreibung." = "Tu peux donner ton avis une fois après un nouveau plan et une fois à chaque mise à jour du plan. La prochaine occasion viendra avec la prochaine mise à jour.";
@@ -347,6 +350,8 @@
 "Health-Zugriff erneut anfragen" = "Redemander l’accès à Santé";
 "Health: %@" = "Santé : %@";
 "Health: keine Einheiten in den letzten 4 Wochen." = "Santé : aucune séance sur les 4 dernières semaines.";
+"Hell" = "Clair";
+"Hell ist der blaugraue Morgennebel, dunkel die Nacht aus dem Logo. Wie iPhone folgt der Einstellung des iPhones." = "Clair, c’est la brume matinale gris-bleu ; sombre, la nuit du logo. « Comme l’iPhone » suit le réglage de l’iPhone.";
 "Heute" = "Aujourd’hui";
 "Heute erledigt" = "Fait aujourd’hui";
 "Heute ist laut Plan kein Training vorgesehen. Erhol dich gut." = "Aucun entraînement n’est prévu au plan aujourd’hui. Bonne récup !";
@@ -700,6 +705,7 @@
 "Wie anstrengend war es?" = "C’était dur à quel point ?";
 "Wie anstrengend?" = "Quel effort ?";
 "Wie es passt" = "Selon les besoins";
+"Wie iPhone" = "Comme l’iPhone";
 "Wie sich dein Training auf die Sportarten verteilt. Ziehst du eine hoch, werden die anderen im Verhältnis kleiner; zusammen sind es immer 100 %." = "Comment ton entraînement se répartit entre les sports. Si tu en augmentes un, les autres diminuent proportionnellement ; le total fait toujours 100 %.";
 "Wie war's?" = "C’était comment ?";
 "Wieder deinem Coach überlassen" = "Rendre la main à ton coach";

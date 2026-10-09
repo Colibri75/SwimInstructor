@@ -248,6 +248,7 @@
 "Draußen" = "户外";
 "Drinnen" = "室内";
 "Drinnen (%@)" = "室内（%@）";
+"Dunkel" = "深色";
 "Durchschnitt" = "平均";
 "Egal" = "不限";
 "Eigenes Ziel" = "自定目标";
@@ -281,10 +282,12 @@
 "Erlaubt: %@ bis %@." = "允许范围：%@ 至 %@。";
 "Ersatzplan: Dein Coach war nicht erreichbar, der Plan passt vielleicht nicht zum Wochenplan." = "备用计划：无法联系到你的教练，此计划可能与周计划不符。";
 "Erscheint, wenn ein Test von der Watch auf Bestätigung wartet." = "当手表上的测试等待确认时显示。";
+"Erscheinungsbild" = "外观";
 "Erst nach deiner Bestätigung richten sich Zonen und Tempo im Plan nach dem neuen Wert." = "只有在你确认后，计划中的区间和配速才会以新数值为准。";
 "Es gibt keinen freien Ruhetag mehr in dieser Woche." = "本周已没有空闲的休息日。";
 "Es gibt noch keinen Gesamtplan." = "还没有总体计划。";
 "Etwa %@" = "约 %@";
+"Farbschema" = "配色方案";
 "Faustformel" = "经验公式";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung." = "每个新计划之后和每次计划更新时，各有一次反馈机会。";
 "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung. Die nächste Gelegenheit kommt mit der nächsten Fortschreibung." = "每个新计划之后和每次计划更新时，各有一次反馈机会。下一次机会在下次计划更新时。";
@@ -347,6 +350,8 @@
 "Health-Zugriff erneut anfragen" = "重新请求“健康”访问权限";
 "Health: %@" = "健康：%@";
 "Health: keine Einheiten in den letzten 4 Wochen." = "健康：最近 4 周没有训练。";
+"Hell" = "浅色";
+"Hell ist der blaugraue Morgennebel, dunkel die Nacht aus dem Logo. Wie iPhone folgt der Einstellung des iPhones." = "浅色是蓝灰色的晨雾，深色是标志中的夜晚。“跟随 iPhone”使用 iPhone 的设置。";
 "Heute" = "今天";
 "Heute erledigt" = "今天已完成";
 "Heute ist laut Plan kein Training vorgesehen. Erhol dich gut." = "按计划今天没有训练。好好休息。";
@@ -700,6 +705,7 @@
 "Wie anstrengend war es?" = "有多累？";
 "Wie anstrengend?" = "有多累？";
 "Wie es passt" = "视情况而定";
+"Wie iPhone" = "跟随 iPhone";
 "Wie sich dein Training auf die Sportarten verteilt. Ziehst du eine hoch, werden die anderen im Verhältnis kleiner; zusammen sind es immer 100 %." = "你的训练在各运动项目之间如何分配。调高其中一项，其他项会按比例减少；合计始终为 100 %。";
 "Wie war's?" = "感觉如何？";
 "Wieder deinem Coach überlassen" = "重新交给你的教练";
