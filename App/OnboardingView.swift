@@ -5,10 +5,11 @@ import SwimInstructorCore
 /// nicht mit dem Standardziel entsteht. Jeder Schritt speichert sofort; `onFinish` kommt nach dem letzten.
 struct OnboardingView: View {
     private enum Step: Int, CaseIterable {
-        case welcome, goal, schedule, startingLevel, done
+        case welcome, goal, schedule, startingLevel, consent, done
     }
 
     @EnvironmentObject private var loader: MultiSportTodayLoader
+    @EnvironmentObject private var consent: AIDataConsent
 
     let onFinish: () -> Void
 
@@ -23,6 +24,9 @@ struct OnboardingView: View {
                         ToolbarItem(placement: .cancellationAction) {
                             Button("Zurück") { move(by: -1) }
                         }
+                    }
+                    // Bei der Einwilligung geht es nur über "Zustimmen" oder "Nicht jetzt" weiter.
+                    if step != .welcome && step != .done && step != .consent {
                         ToolbarItem(placement: .confirmationAction) {
                             Button("Weiter") { move(by: 1) }
                                 .disabled(step == .goal && !goalIsValid)
@@ -43,6 +47,17 @@ struct OnboardingView: View {
             WeeklyScheduleView()
         case .startingLevel:
             StartingLevelView()
+        case .consent:
+            AIConsentContent(
+                onAgree: {
+                    consent.grant()
+                    move(by: 1)
+                },
+                onDecline: {
+                    consent.decline()
+                    move(by: 1)
+                }
+            )
         case .done:
             done
         }
@@ -94,7 +109,11 @@ struct OnboardingView: View {
     }
 
     private func move(by offset: Int) {
-        guard let next = Step(rawValue: step.rawValue + offset) else { return }
+        guard var next = Step(rawValue: step.rawValue + offset) else { return }
+        // Wer schon zugestimmt hat, sieht die Einwilligung nicht noch einmal.
+        if next == .consent, consent.isGranted, let skipped = Step(rawValue: next.rawValue + offset) {
+            next = skipped
+        }
         step = next
     }
 }

@@ -842,3 +842,20 @@
 "%@ starten" = "%@を開始";
 "Geplant %@, trainiert %@" = "予定 %@、実施 %@";
 "%lld Wochen, die umfangreichste mit %@" = "%lld週間、最も多い週は%@";
+
+
+/* Datenschutz und Einwilligung */
+"Kein neuer Plan: Dafür brauchst du deine Zustimmung zur Datenweitergabe (Einstellungen › Datenschutz)." = "新しいプランはありません：データ共有への同意が必要です（設定 › プライバシー）。";
+"Deine Daten und dein Coach" = "あなたのデータとコーチ";
+"Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic (USA): Umfang und Dauer deiner Einheiten, Abweichungen von Ruhepuls und HRV, Schlaf, Leistungswerte, Beschwerden, dein Ziel und deine Wünsche." = "コーチは Anthropic の Claude を使ってプランを作成します。そのため、トレーニングと健康のデータが当社のサーバーと Anthropic（米国）に送信されます：セッションの量と時間、安静時心拍数と HRV の変化、睡眠、パフォーマンス値、不調、目標と希望。";
+"Einzelne Messwerte aus Health und Kalendertermine bleiben auf dem iPhone, und Anthropic erfährt weder deinen Namen noch deine E-Mail-Adresse. Die Daten dienen nur deinem Plan, nie der Werbung, und werden nicht verkauft." = "「ヘルスケア」の個々の測定値とカレンダーの予定は iPhone に残り、Anthropic にあなたの名前やメールアドレスが伝わることはありません。データはプランのためだけに使われ、広告には使われず、販売されることもありません。";
+"Du kannst deine Zustimmung jederzeit in den Einstellungen unter Datenschutz widerrufen. Ohne Zustimmung erstellt dein Coach keine neuen Pläne." = "同意はいつでも設定の「プライバシー」で取り消せます。同意がない場合、コーチは新しいプランを作成しません。";
+"Datenschutzerklärung" = "プライバシーポリシー";
+"Zustimmen" = "同意する";
+"Nicht jetzt" = "今はしない";
+"Zugestimmt am" = "同意日";
+"Zustimmung widerrufen" = "同意を取り消す";
+"Ohne deine Zustimmung zur Datenweitergabe erstellt dein Coach keine neuen Pläne. Gespeicherte Pläne bleiben." = "データ共有への同意がない場合、コーチは新しいプランを作成しません。保存済みのプランは残ります。";
+"Zustimmen …" = "同意する…";
+"Datenschutz" = "プライバシー";
+"Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung." = "コーチは Anthropic の Claude を使ってプランを作成します。そのため、トレーニングと健康のデータが当社のサーバーと Anthropic に送信されます。トラッキングも広告もありません。";

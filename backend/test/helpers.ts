@@ -24,7 +24,8 @@ export const testConfig: Config = {
   maxGenerationsPerDay: 20,
   maxGenerationsTotalPerHour: 15,
   maxGenerationsTotalPerDay: 60,
-  alerts: undefined
+  alerts: undefined,
+  privacy: { name: undefined, address: undefined, email: undefined, hoster: undefined }
 };
 
 export function buildApp(options: AppOptions = {}): Express {
