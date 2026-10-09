@@ -8,11 +8,11 @@ import UIKit
 /// (Gelb) nur für Erfolge, Gipfel (Weiß) für Text und Linien. Orange ist auf Weiß als Schrift nicht lesbar (etwa 2:1):
 /// Im hellen Modus ist der Akzent deshalb dunkler, und Glut erscheint nur als Fläche mit Navy-Schrift.
 enum Theme {
-    static let night = Color(rgb: 0x14213D)
+    static let night = Color(rgb: 0x22335C)
     static let ember = Color(rgb: 0xFF9F43)
     static let spark = Color(rgb: 0xFFD166)
     /// Schrift auf Glut- und Funke-Flächen.
-    static let onBright = Color(rgb: 0x14213D)
+    static let onBright = Color(rgb: 0x22335C)
 
     /// Akzent für Knöpfe, Links und aktive Tabs: Glut im Dunkeln, hell ein dunkleres Orange (5,1:1 auf den hellen Karten).
     static let accent = Color.dynamic(light: 0xA8540A, dark: 0xFF9F43)
@@ -45,8 +45,8 @@ enum Theme {
         greenWeak ? .dynamic(light: 0x868E9F, dark: 0x8C95A8) : .red
     }
 
-    /// Tageskarte auf Aktuell: hell die Nacht-Karte, dunkel wie die übrigen Karten ("Dämmerung").
-    static let dayCard = Color.dynamic(light: 0x14213D, dark: 0x22335C)
+    /// Tageskarte auf Aktuell: die Nacht-Karte, hell wie dunkel.
+    static let dayCard = night
 
     /// Text und Linien auf der Nacht-Karte (immer dunkel, auch im hellen Modus).
     static let nightSecondary = Color(rgb: 0xA9B4CC)

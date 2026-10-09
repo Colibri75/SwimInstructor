@@ -5,7 +5,7 @@ das Training. Entwürfe: Artifact "Peaksmith Design-Entwürfe". Im Code stehen d
 
 | Name | Wert | Rolle |
 |---|---|---|
-| Nacht | `#14213D` | Logo, Widget-Grund, die Tageskarte auf Aktuell im Hellen; der Dunkelmodus "Dämmerung" ist eine Stufe heller (Grund `#18264A`, Karten und Tageskarte `#22335C`) |
+| Nacht | `#22335C` | Logo, App-Icon, Widget-Grund, Karten und Tageskarte ("Dämmerung", vorher `#14213D`); Grund im Dunkeln `#18264A` |
 | Glut | `#FF9F43` | nur Aktionen: Hauptknöpfe, aktiver Tab, Fortschritt, aktueller Schritt auf der Watch |
 | Funke | `#FFD166` | nur Erfolge: erledigt, Bestwerte, Pausen auf der Watch, Fahne auf dem Gipfel |
 | Gipfel | `#FFFFFF` | Text und Linien auf Nacht |
