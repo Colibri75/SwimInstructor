@@ -19,6 +19,7 @@
 "%@ verworfen: %@ ohne Messung." = "%@ rejeté : %@ sans mesure.";
 "%@ verworfen: keine Strecke gemessen." = "%@ rejeté : aucune distance mesurée.";
 "%@ vom %@ ansehen" = "Voir %@ du %@";
+"%@ von %@" = "%@ sur %@";
 "%@, %lld min. Sag deinem Coach, wie anstrengend es war und ob etwas wehtut." = "%@, %lld min. Dis à ton coach si c’était dur et si tu as mal quelque part.";
 "%@, etwa %@" = "%@, environ %@";
 "%@, etwa %@ (Entlastung)" = "%@, environ %@ (récupération)";

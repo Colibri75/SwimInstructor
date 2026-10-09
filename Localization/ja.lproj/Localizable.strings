@@ -19,6 +19,7 @@
 "%@ verworfen: %@ ohne Messung." = "%@を破棄：%@の間計測なし。";
 "%@ verworfen: keine Strecke gemessen." = "%@を破棄：距離が計測されていません。";
 "%@ vom %@ ansehen" = "%2$@の%1$@を表示";
+"%@ von %@" = "%@ / %@";
 "%@, %lld min. Sag deinem Coach, wie anstrengend es war und ob etwas wehtut." = "%@、%lld min。どれくらいきつかったか、痛みがないかをコーチに伝えましょう。";
 "%@, etwa %@" = "%@、約%@";
 "%@, etwa %@ (Entlastung)" = "%@、約%@（回復週）";

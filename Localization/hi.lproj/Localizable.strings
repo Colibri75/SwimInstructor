@@ -19,6 +19,7 @@
 "%@ verworfen: %@ ohne Messung." = "%1$@ रद्द: %2$@ तक कोई माप नहीं।";
 "%@ verworfen: keine Strecke gemessen." = "%@ रद्द: कोई दूरी नहीं मापी गई।";
 "%@ vom %@ ansehen" = "%2$@ का %1$@ देखें";
+"%@ von %@" = "%2$@ में से %1$@";
 "%@, %lld min. Sag deinem Coach, wie anstrengend es war und ob etwas wehtut." = "%1$@, %2$lld min। अपने कोच को बताएँ कि यह कितना मुश्किल था और कहीं दर्द तो नहीं हुआ।";
 "%@, etwa %@" = "%@, लगभग %@";
 "%@, etwa %@ (Entlastung)" = "%@, लगभग %@ (रिकवरी)";

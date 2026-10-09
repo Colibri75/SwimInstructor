@@ -19,6 +19,7 @@
 "%@ verworfen: %@ ohne Messung." = "%@ discarded: %@ without measurement.";
 "%@ verworfen: keine Strecke gemessen." = "%@ discarded: no distance measured.";
 "%@ vom %@ ansehen" = "View %@ from %@";
+"%@ von %@" = "%@ of %@";
 "%@, %lld min. Sag deinem Coach, wie anstrengend es war und ob etwas wehtut." = "%@, %lld min. Tell your coach how hard it was and whether anything hurts.";
 "%@, etwa %@" = "%@, about %@";
 "%@, etwa %@ (Entlastung)" = "%@, about %@ (recovery)";

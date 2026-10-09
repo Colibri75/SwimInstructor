@@ -19,6 +19,7 @@
 "%@ verworfen: %@ ohne Messung." = "%@ descartado: %@ sem medição.";
 "%@ verworfen: keine Strecke gemessen." = "%@ descartado: nenhuma distância medida.";
 "%@ vom %@ ansehen" = "Ver %@ de %@";
+"%@ von %@" = "%@ de %@";
 "%@, %lld min. Sag deinem Coach, wie anstrengend es war und ob etwas wehtut." = "%@, %lld min. Conte ao seu coach o quanto foi puxado e se algo está doendo.";
 "%@, etwa %@" = "%@, cerca de %@";
 "%@, etwa %@ (Entlastung)" = "%@, cerca de %@ (recuperação)";

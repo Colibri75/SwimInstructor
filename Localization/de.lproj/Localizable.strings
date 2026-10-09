@@ -19,6 +19,7 @@
 "%@ verworfen: %@ ohne Messung." = "%@ verworfen: %@ ohne Messung.";
 "%@ verworfen: keine Strecke gemessen." = "%@ verworfen: keine Strecke gemessen.";
 "%@ vom %@ ansehen" = "%@ vom %@ ansehen";
+"%@ von %@" = "%@ von %@";
 "%@, %lld min. Sag deinem Coach, wie anstrengend es war und ob etwas wehtut." = "%@, %lld min. Sag deinem Coach, wie anstrengend es war und ob etwas wehtut.";
 "%@, etwa %@" = "%@, etwa %@";
 "%@, etwa %@ (Entlastung)" = "%@, etwa %@ (Entlastung)";

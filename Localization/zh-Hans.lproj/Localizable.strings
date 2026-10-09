@@ -19,6 +19,7 @@
 "%@ verworfen: %@ ohne Messung." = "%@ 已舍弃：%@ 没有测量数据。";
 "%@ verworfen: keine Strecke gemessen." = "%@ 已舍弃：未测量到距离。";
 "%@ vom %@ ansehen" = "查看%2$@的%1$@";
+"%@ von %@" = "%@ / %@";
 "%@, %lld min. Sag deinem Coach, wie anstrengend es war und ob etwas wehtut." = "%@，%lld 分钟。告诉你的教练这次有多累，以及有没有哪里疼。";
 "%@, etwa %@" = "%@，约 %@";
 "%@, etwa %@ (Entlastung)" = "%@，约 %@（恢复）";

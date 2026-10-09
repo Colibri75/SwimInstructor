@@ -19,6 +19,7 @@
 "%@ verworfen: %@ ohne Messung." = "%@ 무효 처리: %@ 측정값 없음.";
 "%@ verworfen: keine Strecke gemessen." = "%@ 무효 처리: 측정된 거리 없음.";
 "%@ vom %@ ansehen" = "%2$@ %1$@ 보기";
+"%@ von %@" = "%@ / %@";
 "%@, %lld min. Sag deinem Coach, wie anstrengend es war und ob etwas wehtut." = "%@, %lld min. 얼마나 힘들었는지, 아픈 곳은 없는지 코치에게 알려 주세요.";
 "%@, etwa %@" = "%@, 약 %@";
 "%@, etwa %@ (Entlastung)" = "%@, 약 %@(회복 주간)";
