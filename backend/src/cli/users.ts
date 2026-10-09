@@ -14,7 +14,8 @@ const USAGE = `Nutzer verwalten:
   add <kennung> [--name "Name"] [--admin]   neuen Nutzer anlegen, gibt den Token aus
   list                                      alle Nutzer
   rotate <kennung>                          neuer Token, der alte gilt sofort nicht mehr
-  disable <kennung> | enable <kennung>      sperren oder entsperren
+  disable <kennung> | enable <kennung>      sperren oder entsperren (enable gibt auch neue Apple-Konten frei)
+  pending                                   gesperrte Apple-Konten, die auf Freigabe warten (APPLE_SIGNUP=closed)
   remove <kennung>                          Nutzer löschen (seine gespeicherten Pläne bleiben im Ordner users/<kennung>)`;
 
 export function run(args: string[], dataDir: string, print: (line: string) => void): number {
@@ -28,15 +29,23 @@ export function run(args: string[], dataDir: string, print: (line: string) => vo
         const name = nameIndex >= 0 ? rest[nameIndex + 1] : undefined;
         const { user, token } = addUser(file, id, { name, admin: rest.includes("--admin") });
         print(`Nutzer "${user.id}" (${user.name}) angelegt${user.admin ? " als Admin" : ""}.`);
-        print(`Token (nur jetzt sichtbar, in der App unter Einstellungen > Server eintragen):`);
+        print(`Token (nur jetzt sichtbar, in der App unter Einstellungen > Erweitert eintragen):`);
         print(token);
         return 0;
       }
       case "list": {
         print(`${OWNER_ID}\tBesitzer\tAdmin\t(Token aus API_TOKEN)`);
         for (const user of readUsers(file)) {
-          print([user.id, user.name, user.admin ? "Admin" : "", user.disabled ? "gesperrt" : "aktiv", user.created_at].join("\t"));
+          print(
+            [user.id, user.name, user.admin ? "Admin" : "", user.disabled ? "gesperrt" : "aktiv", user.apple_sub ? "Apple" : "Token", user.email ?? "", user.created_at].join("\t")
+          );
         }
+        return 0;
+      }
+      case "pending": {
+        const pending = readUsers(file).filter((user) => user.apple_sub !== undefined && user.disabled === true);
+        if (pending.length === 0) print("Keine Apple-Konten warten auf Freigabe.");
+        for (const user of pending) print([user.id, user.name, user.email ?? "", user.created_at].join("\t"));
         return 0;
       }
       case "rotate": {

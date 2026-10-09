@@ -319,6 +319,48 @@ docker run --rm --volumes-from swiminstructor-backend -v /tmp/restore/data:/rest
 rm -rf /tmp/restore
 ```
 
+## Anmeldung mit Apple
+
+In der App meldet man sich mit „Mit Apple anmelden" an, ohne Token von Hand. So läuft es:
+
+1. Die App holt bei Apple ein Identitätstoken (ein von Apple signiertes JWT) und schickt es an
+   `POST /v1/auth/apple` (öffentlich, ohne Bearer-Token) als `{ "identityToken": "…", "name": "…" }`. Den Namen
+   gibt Apple nur bei der allerersten Anmeldung heraus.
+2. Der Server prüft das JWT mit Apples öffentlichen Schlüsseln (`https://appleid.apple.com/auth/keys`, RS256, einen
+   Tag zwischengespeichert): Aussteller `https://appleid.apple.com`, Empfänger eine der `APPLE_BUNDLE_IDS`, Ablauf
+   und die Apple-Kennung `sub`.
+3. Zur Apple-Kennung sucht oder legt er einen Nutzer in `users.json` an (Kennung `a-` plus ein Stück Hash der
+   Apple-Kennung, Felder `apple_sub` und, falls Apple sie schickt, `email`), erzeugt einen neuen zufälligen Token und
+   speichert nur dessen SHA-256 (`token_sha256s`, eine Sitzung je Gerät, höchstens 10). Antwort:
+   `{ "token": "…", "user": { "id": "a-…", "name": "…" } }`.
+4. Die App legt den Token in den Schlüsselbund, an dieselbe Stelle wie früher den Token von Hand; alle anderen
+   Aufrufe laufen unverändert mit `Authorization: Bearer <token>`.
+
+Für Apple-Nutzer gelten dieselben Budgets wie für alle (`PLAN_MAX_GENERATIONS_PER_*` je Nutzer, `…_TOTAL_…` für den
+Server). Anmeldeversuche sind je IP auf 20 pro Minute begrenzt (Antwort 429). `DELETE /v1/account` (mit Token)
+löscht den eigenen Eintrag in `users.json` und den Ordner `/data/users/<kennung>/`; das verlangt Apple für Apps mit
+Konten (in der App: *Einstellungen → Konto → Konto löschen*). Der Besitzer kann sich so nicht löschen (409).
+
+Umgebungsvariablen (in `/etc/swiminstructor/backend.env`, alle optional):
+
+| Variable | Standard | Bedeutung |
+| --- | --- | --- |
+| `APPLE_BUNDLE_IDS` | `com.kellner.SwimInstructor` | Bundle-IDs (mit Komma getrennt), für die Apple-Tokens gelten |
+| `APPLE_SIGNUP` | `open` | `open`: jede Apple-ID bekommt sofort ein Konto. `closed`: neue Konten entstehen gesperrt, die App zeigt „noch nicht freigeschaltet" (403 `signup_closed`), bis du sie freigibst |
+
+Bei `APPLE_SIGNUP=closed` freigeben:
+
+```bash
+docker exec swiminstructor-backend node dist/cli/users.js pending          # wartende Apple-Konten
+docker exec swiminstructor-backend node dist/cli/users.js enable a-1a2b3c4d5e6f
+```
+
+Danach meldet sich die Person in der App noch einmal an. Voraussetzung auf Apple-Seite: Die App-ID
+`com.kellner.SwimInstructor` hat die Capability *Sign In with Apple*, und die Profile sind danach neu erzeugt.
+
+Der Token des Besitzers (`API_TOKEN`) und Tokens aus `users.js add` funktionieren weiter: In der App stehen
+Server-Adresse und Token unter *Einstellungen → Erweitert*.
+
 ## Nutzer (ein Token je Person)
 
 Jede Person bekommt einen eigenen Token. Damit hat sie ihren eigenen gespeicherten Tagesplan und ihr eigenes
@@ -328,14 +370,14 @@ nur sie. Der Token aus `API_TOKEN` ist der Besitzer (`owner`) und Admin; seine D
 
 ```bash
 docker exec swiminstructor-backend node dist/cli/users.js add anna --name "Anna"   # zeigt den Token einmal
-docker exec swiminstructor-backend node dist/cli/users.js list
-docker exec swiminstructor-backend node dist/cli/users.js rotate anna             # neuer Token, alter gilt nicht mehr
+docker exec swiminstructor-backend node dist/cli/users.js list                     # auch Apple-Nutzer (a-…)
+docker exec swiminstructor-backend node dist/cli/users.js rotate anna             # neuer Token, alter und Apple-Sitzungen gelten nicht mehr
 docker exec swiminstructor-backend node dist/cli/users.js disable anna            # sperren (enable: entsperren)
 docker exec swiminstructor-backend node dist/cli/users.js remove anna
 ```
 
 Der Server liest `users.json` bei Änderungen selbst neu, ein Neustart ist nicht nötig. In der Datei steht nur der
-SHA-256 jedes Tokens. Den Token trägt die Person in der App unter *Einstellungen → Server* ein. Über alle Nutzer
+SHA-256 jedes Tokens. Den Token trägt die Person in der App unter *Einstellungen → Erweitert* ein. Über alle Nutzer
 zusammen gilt zusätzlich eine Kostenbremse für den ganzen Server (`PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR`, Standard
 15, und `PLAN_MAX_GENERATIONS_TOTAL_PER_DAY`, Standard 60). Admin-Rechte für weitere Nutzer gibt `add … --admin`.
 

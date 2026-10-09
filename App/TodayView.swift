@@ -497,9 +497,10 @@ struct TodayView: View {
     private var emptyPlanRow: some View {
         if loader.needsConfiguration || !settings.hasToken {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Noch kein Server-Token hinterlegt.")
-                Button("Einstellungen öffnen") { showsSettings = true }
-                    .buttonStyle(.ember)
+                Text("Melde dich an, damit dein Coach Pläne erstellen kann.")
+                AppleSignInButton {
+                    Task { await loader.refresh() }
+                }
             }
             .padding(.vertical, 4)
         } else if loader.healthError != nil {

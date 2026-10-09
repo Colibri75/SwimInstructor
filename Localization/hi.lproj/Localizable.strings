@@ -859,3 +859,28 @@
 "Zustimmen …" = "सहमत हूँ …";
 "Datenschutz" = "गोपनीयता";
 "Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung." = "आपका कोच Anthropic के Claude से प्लान बनाता है। इसके लिए आपका ट्रेनिंग और स्वास्थ्य डेटा हमारे सर्वर और Anthropic को भेजा जाता है। कोई ट्रैकिंग नहीं, कोई विज्ञापन नहीं।";
+
+
+/* Mit Apple anmelden, Konto */
+"Anmelden" = "साइन इन करें";
+"Anmeldung läuft …" = "साइन इन हो रहा है …";
+"Angemeldet als %@" = "%@ के रूप में साइन इन";
+"Mit Server-Token verbunden" = "सर्वर टोकन से जुड़ा है";
+"Abmelden" = "साइन आउट करें";
+"Konto" = "खाता";
+"Konto löschen" = "खाता हटाएँ";
+"Konto löschen?" = "खाता हटाएँ?";
+"Konto wird gelöscht …" = "खाता हटाया जा रहा है …";
+"Konto und Pläne löschen" = "खाता और योजनाएँ हटाएँ";
+"Dein Konto und deine Pläne auf dem Server werden endgültig gelöscht. Deine Daten in Apple Health und deine Einstellungen auf diesem iPhone bleiben." = "सर्वर पर आपका खाता और आपकी योजनाएँ स्थायी रूप से हटा दी जाएँगी। Apple Health में आपका डेटा और इस iPhone पर आपकी सेटिंग्स बनी रहेंगी।";
+"Melde dich an, damit dein Coach Pläne erstellen kann." = "साइन इन करें, ताकि आपका कोच योजनाएँ बना सके।";
+"Mit deiner Apple-ID meldest du dich beim Server deines Coaches an. Gespeichert werden dort eine Kennung von Apple und, falls du sie teilst, dein Name und deine E-Mail-Adresse." = "आप अपनी Apple ID से अपने कोच के सर्वर में साइन इन करते हैं। वहाँ Apple की एक पहचान और, यदि आप साझा करें, आपका नाम और ईमेल पता सहेजा जाता है।";
+"Erweitert" = "उन्नत";
+"Nur für eigene Server: Server-Adresse und ein Token vom Server (beim Besitzer der Wert von API_TOKEN). Der Token wird nur im Schlüsselbund dieses iPhones gespeichert. Mit Apple angemeldet brauchst du hier nichts." = "केवल अपने सर्वर के लिए: सर्वर का पता और सर्वर से मिला टोकन (मालिक के लिए API_TOKEN का मान)। टोकन केवल इस iPhone के कीचेन में सहेजा जाता है। Apple से साइन इन होने पर यहाँ कुछ नहीं चाहिए।";
+"Dein Konto ist noch nicht freigeschaltet. Versuche es später noch einmal." = "आपका खाता अभी सक्रिय नहीं हुआ है। बाद में फिर से कोशिश करें।";
+"Die Anmeldung mit Apple hat nicht geklappt. Versuche es noch einmal." = "Apple से साइन इन नहीं हो पाया। फिर से कोशिश करें।";
+"Zu viele Anmeldeversuche. Warte eine Minute und versuche es dann noch einmal." = "बहुत अधिक साइन-इन प्रयास। एक मिनट रुकें और फिर से कोशिश करें।";
+"Der Zugang des Server-Besitzers lässt sich in der App nicht löschen." = "सर्वर मालिक की पहुँच ऐप में नहीं हटाई जा सकती।";
+"Deine Anmeldung gilt nicht mehr. Melde dich neu an und lösche das Konto dann." = "आपका साइन-इन अब मान्य नहीं है। फिर से साइन इन करें और फिर खाता हटाएँ।";
+"Apple ist gerade nicht erreichbar. Versuche es später noch einmal." = "Apple अभी उपलब्ध नहीं है। बाद में फिर से कोशिश करें।";
+"Der Server hat die Anmeldung abgelehnt. Melde dich in den Einstellungen neu an." = "सर्वर ने आपका साइन-इन अस्वीकार कर दिया। सेटिंग्स में फिर से साइन इन करें।";

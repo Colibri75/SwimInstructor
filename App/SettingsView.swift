@@ -1,8 +1,8 @@
 import SwiftUI
 import SwimInstructorCore
 
-/// Server-Adresse und Token. Das Token steht nie im Code, es wird hier einmal eingegeben und
-/// landet im Schlüsselbund.
+/// Einstellungen: Konto (Anmeldung mit Apple), Ziel, Planung usw. Server-Adresse und Token von Hand (für den Besitzer
+/// und eigene Server) stehen eingeklappt unter "Erweitert". Der Token landet immer im Schlüsselbund.
 struct SettingsView: View {
     @EnvironmentObject private var settings: BackendSettings
     @EnvironmentObject private var healthKitManager: HealthKitManager
@@ -19,6 +19,7 @@ struct SettingsView: View {
     @State private var message: String?
     @State private var messageIsError = false
     @State private var isChecking = false
+    @State private var showsAdvanced = false
     @State private var ownedEquipment: Set<EquipmentItem> = []
     private let equipmentStore = UserDefaultsOwnedEquipmentStore()
     @State private var trainingGoal = TrainingGoal.default
@@ -44,31 +45,7 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Group {
-                    Section {
-                        TextField("https://…", text: $urlText)
-                            .keyboardType(.URL)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                        SecureField(settings.hasToken ? "Token gespeichert (leer lassen = behalten)" : "API-Token", text: $tokenText)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                    } header: {
-                        Text("Server")
-                    } footer: {
-                        Text("Dein persönlicher Token vom Server (beim Besitzer der Wert von API_TOKEN, sonst von ihm angelegt). Er wird nur im Schlüsselbund dieses iPhones gespeichert.")
-                    }
-
-                    Section {
-                        Button(isChecking ? "Prüft …" : "Verbindung testen") {
-                            Task { await checkConnection() }
-                        }
-                        .disabled(isChecking)
-                        if let message {
-                            Text(message)
-                                .font(.footnote)
-                                .foregroundStyle(messageIsError ? Color.red : Theme.done(greenWeak: greenWeak))
-                        }
-                    }
+                    AccountSection(onSignedIn: onSave)
 
                     goalSection
                         // Auch beim Zurückkommen aus dem Ziel-Assistenten neu lesen.
@@ -128,13 +105,7 @@ struct SettingsView: View {
 
                     PrivacySettingsSection()
 
-                    if settings.hasToken {
-                        Section {
-                            Button("Token entfernen", role: .destructive) {
-                                try? settings.removeToken()
-                            }
-                        }
-                    }
+                    advancedSection
                 }
                 .cardRows()
             }
@@ -151,10 +122,41 @@ struct SettingsView: View {
             }
             .onAppear {
                 urlText = settings.baseURL.absoluteString
+                // Offen, wenn schon von Hand eingerichtet (Token ohne Apple-Konto oder eigener Server).
+                showsAdvanced = (settings.hasToken && !settings.isSignedInWithApple)
+                    || settings.baseURL != BackendConfiguration.defaultBaseURL
                 ownedEquipment = Set(equipmentStore.ownedEquipment().compactMap(EquipmentItem.init(rawValue:)))
                 indoorOwned = Set(indoorStore.ownedIndoorEquipment())
                 planning = planningStore.preferences()
             }
+        }
+    }
+
+    // MARK: - Erweitert
+
+    /// Server-Adresse und Token von Hand: für den Besitzer (Wert von API_TOKEN) und eigene Server.
+    private var advancedSection: some View {
+        Section {
+            DisclosureGroup("Erweitert", isExpanded: $showsAdvanced) {
+                TextField("https://…", text: $urlText)
+                    .keyboardType(.URL)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                SecureField(settings.hasToken ? "Token gespeichert (leer lassen = behalten)" : "API-Token", text: $tokenText)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                Button(isChecking ? "Prüft …" : "Verbindung testen") {
+                    Task { await checkConnection() }
+                }
+                .disabled(isChecking)
+                if let message {
+                    Text(message)
+                        .font(.footnote)
+                        .foregroundStyle(messageIsError ? Color.red : Theme.done(greenWeak: greenWeak))
+                }
+            }
+        } footer: {
+            Text("Nur für eigene Server: Server-Adresse und ein Token vom Server (beim Besitzer der Wert von API_TOKEN). Der Token wird nur im Schlüsselbund dieses iPhones gespeichert. Mit Apple angemeldet brauchst du hier nichts.")
         }
     }
 
@@ -383,7 +385,12 @@ struct SettingsView: View {
 
     private func save() {
         do {
-            try settings.save(baseURLString: urlText, token: tokenText)
+            // Ohne Token (Anmeldung mit Apple oder noch gar keine): nur die Adresse sichern.
+            if tokenText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !settings.hasToken {
+                try settings.saveBaseURL(urlText)
+            } else {
+                try settings.save(baseURLString: urlText, token: tokenText)
+            }
             dismiss()
             onSave()
         } catch {

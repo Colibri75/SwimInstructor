@@ -1,15 +1,16 @@
 import SwiftUI
 import SwimInstructorCore
 
-/// Einrichtung beim ersten Start: Ziel, Wochenraster, Startniveau. Erst danach gibt es einen Gesamtplan, damit er
-/// nicht mit dem Standardziel entsteht. Jeder Schritt speichert sofort; `onFinish` kommt nach dem letzten.
+/// Einrichtung beim ersten Start: Ziel, Wochenraster, Startniveau, Anmeldung. Erst danach gibt es einen Gesamtplan,
+/// damit er nicht mit dem Standardziel entsteht. Jeder Schritt speichert sofort; `onFinish` kommt nach dem letzten.
 struct OnboardingView: View {
     private enum Step: Int, CaseIterable {
-        case welcome, goal, schedule, startingLevel, consent, done
+        case welcome, goal, schedule, startingLevel, consent, account, done
     }
 
     @EnvironmentObject private var loader: MultiSportTodayLoader
     @EnvironmentObject private var consent: AIDataConsent
+    @EnvironmentObject private var settings: BackendSettings
 
     let onFinish: () -> Void
 
@@ -58,6 +59,8 @@ struct OnboardingView: View {
                     move(by: 1)
                 }
             )
+        case .account:
+            account
         case .done:
             done
         }
@@ -79,6 +82,33 @@ struct OnboardingView: View {
                 Text("Los geht's").frame(maxWidth: .infinity)
             }
             .buttonStyle(.ember)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Theme.background)
+    }
+
+    /// Anmelden mit Apple. Überspringen geht ("Weiter"), dann fehlt nur der Plan, bis man sich in den Einstellungen anmeldet.
+    private var account: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            SparkPeak(size: 72, peakColor: .primary)
+            Text("Anmelden")
+                .font(.largeTitle.bold())
+            if settings.hasToken {
+                if let name = settings.accountName {
+                    Label("Angemeldet als \(name)", systemImage: "person.crop.circle.badge.checkmark")
+                } else {
+                    Label("Mit Server-Token verbunden", systemImage: "key")
+                }
+            } else {
+                Text("Melde dich an, damit dein Coach Pläne erstellen kann.")
+                Text("Mit deiner Apple-ID meldest du dich beim Server deines Coaches an. Gespeichert werden dort eine Kennung von Apple und, falls du sie teilst, dein Name und deine E-Mail-Adresse.")
+                    .foregroundStyle(.secondary)
+                AppleSignInButton {
+                    move(by: 1)
+                }
+            }
+            Spacer()
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

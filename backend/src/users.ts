@@ -19,10 +19,18 @@ export const USERS_FILE = "users.json";
 /** Kleinbuchstaben, Ziffern und Bindestrich: Die Kennung ist auch der Name des Datenordners. */
 export const USER_ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,31}$/;
 
+const Sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
+
 const UserRecordSchema = z.object({
   id: z.string().regex(USER_ID_PATTERN),
   name: z.string().max(80),
-  token_sha256: z.string().regex(/^[0-9a-f]{64}$/),
+  /** Token von Hand (CLI: `add`, `rotate`). Fehlt bei Nutzern, die sich nur mit Apple anmelden. */
+  token_sha256: Sha256Schema.optional(),
+  /** Sitzungen aus "Mit Apple anmelden", eine je Gerät (die neueste zuletzt, höchstens `MAX_SESSIONS`). */
+  token_sha256s: z.array(Sha256Schema).optional(),
+  /** Stabile Kennung der Apple-ID (`sub` im Identitaetstoken), nur bei Apple-Nutzern. */
+  apple_sub: z.string().min(1).max(255).optional(),
+  email: z.string().max(320).optional(),
   created_at: z.string(),
   admin: z.boolean().optional(),
   disabled: z.boolean().optional()
@@ -31,6 +39,9 @@ const UserRecordSchema = z.object({
 const UsersFileSchema = z.object({ users: z.array(UserRecordSchema) });
 
 export type UserRecord = z.infer<typeof UserRecordSchema>;
+
+/** Hoechstens so viele Apple-Sitzungen je Nutzer; eine weitere verdraengt die aelteste. */
+export const MAX_SESSIONS = 10;
 
 export function sha256Hex(value: string): string {
   return createHash("sha256").update(value).digest("hex");
@@ -43,6 +54,8 @@ export function newToken(): string {
 
 export interface UserDirectory {
   authenticate(token: string): AuthUser | null;
+  /** Nach einer Aenderung von `users.json` durch den Server selbst: sofort neu lesen statt erst nach `recheckMs`. */
+  invalidate?(): void;
 }
 
 /**
@@ -73,11 +86,16 @@ export class FileUserDirectory implements UserDirectory {
     if (timingSafeEqual(digest, this.ownerDigest)) return { id: OWNER_ID, name: "Besitzer", admin: true };
     for (const record of this.current()) {
       if (record.disabled === true) continue;
-      if (timingSafeEqual(digest, Buffer.from(record.token_sha256, "hex"))) {
+      if (recordDigests(record).some((hex) => timingSafeEqual(digest, Buffer.from(hex, "hex")))) {
         return { id: record.id, name: record.name, admin: record.admin === true };
       }
     }
     return null;
+  }
+
+  invalidate(): void {
+    this.checkedAt = -Infinity;
+    this.loadedMtimeMs = -1;
   }
 
   private current(): UserRecord[] {
@@ -118,6 +136,11 @@ export class SingleUserDirectory implements UserDirectory {
   }
 }
 
+/** Alle gueltigen Token-Hashes eines Nutzers: der von Hand und die Apple-Sitzungen. */
+function recordDigests(record: UserRecord): string[] {
+  return [...(record.token_sha256 === undefined ? [] : [record.token_sha256]), ...(record.token_sha256s ?? [])];
+}
+
 // MARK: - Datei lesen und schreiben (Verwaltung)
 
 export function readUsers(file: string): UserRecord[] {
@@ -130,9 +153,14 @@ export function readUsers(file: string): UserRecord[] {
   }
   const parsed = UsersFileSchema.parse(JSON.parse(content));
   const ids = new Set<string>();
+  const subs = new Set<string>();
   for (const user of parsed.users) {
     if (user.id === OWNER_ID || ids.has(user.id)) throw new Error(`Kennung doppelt oder reserviert: ${user.id}`);
     ids.add(user.id);
+    if (user.apple_sub !== undefined) {
+      if (subs.has(user.apple_sub)) throw new Error(`Apple-ID doppelt: ${user.id}`);
+      subs.add(user.apple_sub);
+    }
   }
   return parsed.users;
 }
@@ -164,13 +192,20 @@ export function addUser(file: string, id: string, options: { name?: string; admi
   return { user, token };
 }
 
-/** Neuer Token fuer einen Nutzer; der alte gilt sofort nicht mehr. */
+/** Neuer Token fuer einen Nutzer; der alte und alle Apple-Sitzungen gelten sofort nicht mehr. */
 export function rotateUser(file: string, id: string): string {
   const users = readUsers(file);
   const user = users.find((entry) => entry.id === id);
   if (user === undefined) throw new UserAdminError(`Nutzer "${id}" gibt es nicht`);
   const token = newToken();
-  writeUsers(file, users.map((entry) => (entry.id === id ? { ...entry, token_sha256: sha256Hex(token) } : entry)));
+  writeUsers(
+    file,
+    users.map((entry) => {
+      if (entry.id !== id) return entry;
+      const { token_sha256s: _sessions, ...rest } = entry;
+      return { ...rest, token_sha256: sha256Hex(token) };
+    })
+  );
   return token;
 }
 
@@ -191,6 +226,73 @@ export function removeUser(file: string, id: string): void {
   const users = readUsers(file);
   if (!users.some((entry) => entry.id === id)) throw new UserAdminError(`Nutzer "${id}" gibt es nicht`);
   writeUsers(file, users.filter((entry) => entry.id !== id));
+}
+
+// MARK: - Mit Apple anmelden
+
+export interface AppleIdentity {
+  sub: string;
+  email?: string;
+}
+
+export type AppleSignInResult =
+  | { status: "ok"; token: string; user: UserRecord; created: boolean }
+  /** Gesperrt: neu angelegt bei `APPLE_SIGNUP=closed` oder vom Besitzer gesperrt. Kein Token. */
+  | { status: "disabled"; user: UserRecord; created: boolean };
+
+/**
+ * Kennung eines Apple-Nutzers: "a-" und ein Stueck des SHA-256 der Apple-Kennung (passt zu `USER_ID_PATTERN`, verraet
+ * nichts ueber die Apple-ID). Ist sie schon vergeben, wird das Stueck laenger.
+ */
+export function appleUserId(sub: string, taken: (id: string) => boolean): string {
+  const digest = sha256Hex(`apple:${sub}`);
+  for (const length of [12, 16, 20, 24, 30]) {
+    const id = `a-${digest.slice(0, length)}`;
+    if (!taken(id)) return id;
+  }
+  throw new UserAdminError("Keine freie Kennung fuer diese Apple-ID");
+}
+
+/**
+ * Findet den Nutzer zur Apple-ID oder legt ihn an und gibt ihm eine neue Sitzung (nur ihr SHA-256 wird gespeichert).
+ * Bei `signupOpen = false` entsteht ein neuer Nutzer gesperrt; der Besitzer gibt ihn mit `enable` frei.
+ */
+export function signInWithApple(
+  file: string,
+  identity: AppleIdentity,
+  options: { name?: string; signupOpen: boolean; now?: Date }
+): AppleSignInResult {
+  const users = readUsers(file);
+  const name = options.name?.trim().slice(0, 80) || undefined;
+  let user = users.find((entry) => entry.apple_sub === identity.sub);
+  const created = user === undefined;
+  if (user === undefined) {
+    const ids = new Set(users.map((entry) => entry.id));
+    user = {
+      id: appleUserId(identity.sub, (id) => id === OWNER_ID || ids.has(id)),
+      name: name ?? "Apple-ID",
+      apple_sub: identity.sub,
+      ...(identity.email === undefined ? {} : { email: identity.email.slice(0, 320) }),
+      created_at: (options.now ?? new Date()).toISOString(),
+      ...(options.signupOpen ? {} : { disabled: true })
+    };
+  } else {
+    // Den Namen gibt Apple nur bei der ersten Anmeldung heraus: ein spaeter mitgeschickter ersetzt den alten.
+    user = {
+      ...user,
+      ...(name === undefined ? {} : { name }),
+      ...(identity.email === undefined ? {} : { email: identity.email.slice(0, 320) })
+    };
+  }
+
+  let token: string | undefined;
+  if (user.disabled !== true) {
+    token = newToken();
+    user = { ...user, token_sha256s: [...(user.token_sha256s ?? []), sha256Hex(token)].slice(-MAX_SESSIONS) };
+  }
+  const saved = user;
+  writeUsers(file, created ? [...users, saved] : users.map((entry) => (entry.id === saved.id ? saved : entry)));
+  return token === undefined ? { status: "disabled", user: saved, created } : { status: "ok", token, user: saved, created };
 }
 
 /** Datenordner eines Nutzers: der Besitzer im Datenverzeichnis selbst (wie vor der Nutzertrennung), alle anderen darunter. */

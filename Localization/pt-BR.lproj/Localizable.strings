@@ -859,3 +859,28 @@
 "Zustimmen …" = "Concordar …";
 "Datenschutz" = "Privacidade";
 "Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung." = "Seu coach cria planos com o Claude, da Anthropic. Para isso, seus dados de treino e de saúde vão para o nosso servidor e para a Anthropic. Sem rastreamento, sem anúncios.";
+
+
+/* Mit Apple anmelden, Konto */
+"Anmelden" = "Entrar";
+"Anmeldung läuft …" = "Entrando …";
+"Angemeldet als %@" = "Conectado como %@";
+"Mit Server-Token verbunden" = "Conectado com token do servidor";
+"Abmelden" = "Sair";
+"Konto" = "Conta";
+"Konto löschen" = "Excluir conta";
+"Konto löschen?" = "Excluir conta?";
+"Konto wird gelöscht …" = "Excluindo conta …";
+"Konto und Pläne löschen" = "Excluir conta e planos";
+"Dein Konto und deine Pläne auf dem Server werden endgültig gelöscht. Deine Daten in Apple Health und deine Einstellungen auf diesem iPhone bleiben." = "Sua conta e seus planos no servidor serão excluídos definitivamente. Seus dados no Apple Saúde e seus ajustes neste iPhone permanecem.";
+"Melde dich an, damit dein Coach Pläne erstellen kann." = "Entre para que seu coach possa criar planos.";
+"Mit deiner Apple-ID meldest du dich beim Server deines Coaches an. Gespeichert werden dort eine Kennung von Apple und, falls du sie teilst, dein Name und deine E-Mail-Adresse." = "Você entra no servidor do seu coach com seu ID Apple. Lá ficam salvos um identificador da Apple e, se você compartilhar, seu nome e seu e-mail.";
+"Erweitert" = "Avançado";
+"Nur für eigene Server: Server-Adresse und ein Token vom Server (beim Besitzer der Wert von API_TOKEN). Der Token wird nur im Schlüsselbund dieses iPhones gespeichert. Mit Apple angemeldet brauchst du hier nichts." = "Só para servidor próprio: endereço do servidor e um token do servidor (para o proprietário, o valor de API_TOKEN). O token fica salvo apenas nas chaves deste iPhone. Conectado com a Apple, você não precisa de nada aqui.";
+"Dein Konto ist noch nicht freigeschaltet. Versuche es später noch einmal." = "Sua conta ainda não foi ativada. Tente novamente mais tarde.";
+"Die Anmeldung mit Apple hat nicht geklappt. Versuche es noch einmal." = "Não foi possível entrar com a Apple. Tente novamente.";
+"Zu viele Anmeldeversuche. Warte eine Minute und versuche es dann noch einmal." = "Muitas tentativas de entrar. Aguarde um minuto e tente novamente.";
+"Der Zugang des Server-Besitzers lässt sich in der App nicht löschen." = "O acesso do proprietário do servidor não pode ser excluído no app.";
+"Deine Anmeldung gilt nicht mehr. Melde dich neu an und lösche das Konto dann." = "Seu login não é mais válido. Entre novamente e depois exclua a conta.";
+"Apple ist gerade nicht erreichbar. Versuche es später noch einmal." = "A Apple não está acessível no momento. Tente novamente mais tarde.";
+"Der Server hat die Anmeldung abgelehnt. Melde dich in den Einstellungen neu an." = "O servidor recusou seu login. Entre novamente nos ajustes.";

@@ -80,13 +80,17 @@ public enum BackendSettingsError: Error, Equatable, LocalizedError {
     }
 }
 
-/// Server-Adresse (UserDefaults) und Token (Schlüsselbund), wie sie in den Einstellungen stehen.
+/// Server-Adresse (UserDefaults) und Token (Schlüsselbund), wie sie in den Einstellungen stehen. Der Token kommt aus der
+/// Anmeldung mit Apple (`signIn`) oder, für den Besitzer und eigene Server, von Hand (`save`).
 @MainActor
 public final class BackendSettings: ObservableObject {
     static let baseURLKey = "backend.baseURL"
+    static let accountNameKey = "backend.accountName"
 
     @Published public private(set) var baseURL: URL
     @Published public private(set) var hasToken: Bool
+    /// Name des mit Apple angemeldeten Kontos; `nil` ohne Anmeldung oder mit Token von Hand.
+    @Published public private(set) var accountName: String?
 
     private let defaults: UserDefaults
     private let secrets: SecretStoring
@@ -96,8 +100,13 @@ public final class BackendSettings: ObservableObject {
         self.secrets = secrets
         self.baseURL = defaults.string(forKey: Self.baseURLKey).flatMap(Self.validatedURL)
             ?? BackendConfiguration.defaultBaseURL
-        self.hasToken = !(secrets.read() ?? "").isEmpty
+        let hasToken = !(secrets.read() ?? "").isEmpty
+        self.hasToken = hasToken
+        self.accountName = hasToken ? defaults.string(forKey: Self.accountNameKey) : nil
     }
+
+    /// Mit Apple angemeldet (und nicht nur mit einem Token von Hand).
+    public var isSignedInWithApple: Bool { hasToken && accountName != nil }
 
     /// `nil`, solange kein Token hinterlegt ist.
     public var configuration: BackendConfiguration? {
@@ -115,14 +124,43 @@ public final class BackendSettings: ObservableObject {
         if !trimmedToken.isEmpty {
             try secrets.write(trimmedToken)
             hasToken = true
+            // Ein Token von Hand gehört nicht zum Apple-Konto.
+            clearAccountName()
         }
         defaults.set(url.absoluteString, forKey: Self.baseURLKey)
         baseURL = url
     }
 
+    /// Speichert nur die Server-Adresse (ohne Token, etwa vor der Anmeldung mit Apple).
+    public func saveBaseURL(_ string: String) throws {
+        guard let url = Self.validatedURL(string) else { throw BackendSettingsError.invalidURL }
+        defaults.set(url.absoluteString, forKey: Self.baseURLKey)
+        baseURL = url
+    }
+
+    /// Nach der Anmeldung mit Apple: Der Token des Servers kommt an dieselbe Stelle wie ein Token von Hand, damit alle
+    /// Aufrufe unverändert funktionieren.
+    public func signIn(_ session: AccountSession) throws {
+        try secrets.write(session.token)
+        hasToken = true
+        defaults.set(session.name, forKey: Self.accountNameKey)
+        accountName = session.name
+    }
+
+    /// Abmelden: Token und Kontoname weg, die Server-Adresse bleibt.
+    public func signOut() throws {
+        try removeToken()
+    }
+
     public func removeToken() throws {
         try secrets.delete()
         hasToken = false
+        clearAccountName()
+    }
+
+    private func clearAccountName() {
+        defaults.removeObject(forKey: Self.accountNameKey)
+        accountName = nil
     }
 
     /// Nur https mit Host; ein abschließender Schrägstrich wird entfernt.

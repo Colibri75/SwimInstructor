@@ -859,3 +859,28 @@
 "Zustimmen …" = "Agree …";
 "Datenschutz" = "Privacy";
 "Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung." = "Your coach creates plans with Claude from Anthropic. To do this, your training and health data is sent to our server and to Anthropic. No tracking, no ads.";
+
+
+/* Mit Apple anmelden, Konto */
+"Anmelden" = "Sign in";
+"Anmeldung läuft …" = "Signing in …";
+"Angemeldet als %@" = "Signed in as %@";
+"Mit Server-Token verbunden" = "Connected with server token";
+"Abmelden" = "Sign out";
+"Konto" = "Account";
+"Konto löschen" = "Delete account";
+"Konto löschen?" = "Delete account?";
+"Konto wird gelöscht …" = "Deleting account …";
+"Konto und Pläne löschen" = "Delete account and plans";
+"Dein Konto und deine Pläne auf dem Server werden endgültig gelöscht. Deine Daten in Apple Health und deine Einstellungen auf diesem iPhone bleiben." = "Your account and your plans on the server will be permanently deleted. Your data in Apple Health and your settings on this iPhone stay.";
+"Melde dich an, damit dein Coach Pläne erstellen kann." = "Sign in so your coach can create plans.";
+"Mit deiner Apple-ID meldest du dich beim Server deines Coaches an. Gespeichert werden dort eine Kennung von Apple und, falls du sie teilst, dein Name und deine E-Mail-Adresse." = "You sign in to your coach's server with your Apple ID. It stores an identifier from Apple and, if you share them, your name and email address.";
+"Erweitert" = "Advanced";
+"Nur für eigene Server: Server-Adresse und ein Token vom Server (beim Besitzer der Wert von API_TOKEN). Der Token wird nur im Schlüsselbund dieses iPhones gespeichert. Mit Apple angemeldet brauchst du hier nichts." = "Only for your own server: server address and a token from the server (for the owner, the value of API_TOKEN). The token is stored only in this iPhone's keychain. Signed in with Apple, you don't need anything here.";
+"Dein Konto ist noch nicht freigeschaltet. Versuche es später noch einmal." = "Your account hasn't been activated yet. Try again later.";
+"Die Anmeldung mit Apple hat nicht geklappt. Versuche es noch einmal." = "Signing in with Apple didn't work. Please try again.";
+"Zu viele Anmeldeversuche. Warte eine Minute und versuche es dann noch einmal." = "Too many sign-in attempts. Wait a minute and then try again.";
+"Der Zugang des Server-Besitzers lässt sich in der App nicht löschen." = "The server owner's access can't be deleted in the app.";
+"Deine Anmeldung gilt nicht mehr. Melde dich neu an und lösche das Konto dann." = "Your sign-in is no longer valid. Sign in again and then delete the account.";
+"Apple ist gerade nicht erreichbar. Versuche es später noch einmal." = "Apple can't be reached right now. Try again later.";
+"Der Server hat die Anmeldung abgelehnt. Melde dich in den Einstellungen neu an." = "The server rejected your sign-in. Sign in again in Settings.";

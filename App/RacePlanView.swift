@@ -107,7 +107,7 @@ struct RacePlanView: View {
                     .foregroundStyle(.secondary)
             }
             if raceLoader.needsConfiguration {
-                Text("Noch kein Server-Token hinterlegt.")
+                Text("Melde dich an, damit dein Coach Pläne erstellen kann.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

@@ -859,3 +859,28 @@
 "Zustimmen …" = "Accetto …";
 "Datenschutz" = "Privacy";
 "Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung." = "Il tuo coach crea i piani con Claude di Anthropic. Per farlo, i tuoi dati di allenamento e di salute vengono inviati al nostro server e ad Anthropic. Nessun tracciamento, nessuna pubblicità.";
+
+
+/* Mit Apple anmelden, Konto */
+"Anmelden" = "Accedi";
+"Anmeldung läuft …" = "Accesso in corso …";
+"Angemeldet als %@" = "Accesso effettuato come %@";
+"Mit Server-Token verbunden" = "Connesso con token del server";
+"Abmelden" = "Esci";
+"Konto" = "Account";
+"Konto löschen" = "Elimina account";
+"Konto löschen?" = "Eliminare l'account?";
+"Konto wird gelöscht …" = "Eliminazione dell'account …";
+"Konto und Pläne löschen" = "Elimina account e piani";
+"Dein Konto und deine Pläne auf dem Server werden endgültig gelöscht. Deine Daten in Apple Health und deine Einstellungen auf diesem iPhone bleiben." = "Il tuo account e i tuoi piani sul server verranno eliminati definitivamente. I tuoi dati in Apple Salute e le tue impostazioni su questo iPhone restano.";
+"Melde dich an, damit dein Coach Pläne erstellen kann." = "Accedi perché il tuo coach possa creare i piani.";
+"Mit deiner Apple-ID meldest du dich beim Server deines Coaches an. Gespeichert werden dort eine Kennung von Apple und, falls du sie teilst, dein Name und deine E-Mail-Adresse." = "Accedi al server del tuo coach con il tuo ID Apple. Lì vengono salvati un identificativo di Apple e, se li condividi, il tuo nome e il tuo indirizzo email.";
+"Erweitert" = "Avanzate";
+"Nur für eigene Server: Server-Adresse und ein Token vom Server (beim Besitzer der Wert von API_TOKEN). Der Token wird nur im Schlüsselbund dieses iPhones gespeichert. Mit Apple angemeldet brauchst du hier nichts." = "Solo per un server tuo: indirizzo del server e un token del server (per il proprietario, il valore di API_TOKEN). Il token viene salvato solo nel portachiavi di questo iPhone. Se hai effettuato l'accesso con Apple, qui non serve nulla.";
+"Dein Konto ist noch nicht freigeschaltet. Versuche es später noch einmal." = "Il tuo account non è ancora stato attivato. Riprova più tardi.";
+"Die Anmeldung mit Apple hat nicht geklappt. Versuche es noch einmal." = "L'accesso con Apple non è riuscito. Riprova.";
+"Zu viele Anmeldeversuche. Warte eine Minute und versuche es dann noch einmal." = "Troppi tentativi di accesso. Aspetta un minuto e riprova.";
+"Der Zugang des Server-Besitzers lässt sich in der App nicht löschen." = "L'accesso del proprietario del server non può essere eliminato nell'app.";
+"Deine Anmeldung gilt nicht mehr. Melde dich neu an und lösche das Konto dann." = "Il tuo accesso non è più valido. Accedi di nuovo e poi elimina l'account.";
+"Apple ist gerade nicht erreichbar. Versuche es später noch einmal." = "Apple non è raggiungibile al momento. Riprova più tardi.";
+"Der Server hat die Anmeldung abgelehnt. Melde dich in den Einstellungen neu an." = "Il server ha rifiutato l'accesso. Accedi di nuovo nelle impostazioni.";

@@ -72,4 +72,52 @@ final class BackendSettingsTests: XCTestCase {
         XCTAssertFalse(settings.hasToken)
         XCTAssertNil(settings.configuration)
     }
+
+    func testSignInWithAppleStoresTokenAndName() throws {
+        let secrets = InMemorySecretStore()
+        let settings = BackendSettings(defaults: defaults, secrets: secrets)
+
+        try settings.signIn(AccountSession(token: "server-token", userID: "a-1", name: "Anna"))
+
+        XCTAssertTrue(settings.hasToken)
+        XCTAssertTrue(settings.isSignedInWithApple)
+        XCTAssertEqual(settings.accountName, "Anna")
+        // Dieselbe Stelle wie ein Token von Hand: alle Aufrufe nutzen ihn.
+        XCTAssertEqual(settings.configuration?.token, "server-token")
+        let reloaded = BackendSettings(defaults: defaults, secrets: secrets)
+        XCTAssertEqual(reloaded.accountName, "Anna")
+    }
+
+    func testSignOutRemovesTokenAndName() throws {
+        let secrets = InMemorySecretStore()
+        let settings = BackendSettings(defaults: defaults, secrets: secrets)
+        try settings.signIn(AccountSession(token: "t", userID: "a-1", name: "Anna"))
+
+        try settings.signOut()
+
+        XCTAssertFalse(settings.hasToken)
+        XCTAssertNil(settings.accountName)
+        XCTAssertFalse(settings.isSignedInWithApple)
+        XCTAssertNil(BackendSettings(defaults: defaults, secrets: secrets).accountName)
+    }
+
+    func testManualTokenReplacesAppleAccount() throws {
+        let settings = BackendSettings(defaults: defaults, secrets: InMemorySecretStore())
+        try settings.signIn(AccountSession(token: "t", userID: "a-1", name: "Anna"))
+
+        try settings.save(baseURLString: "https://plan.example.test", token: "von-hand")
+
+        XCTAssertNil(settings.accountName)
+        XCTAssertEqual(settings.configuration?.token, "von-hand")
+    }
+
+    func testSaveBaseURLWithoutToken() throws {
+        let settings = BackendSettings(defaults: defaults, secrets: InMemorySecretStore())
+
+        try settings.saveBaseURL("https://eigen.example.test/")
+
+        XCTAssertEqual(settings.baseURL.absoluteString, "https://eigen.example.test")
+        XCTAssertFalse(settings.hasToken)
+        XCTAssertThrowsError(try settings.saveBaseURL("http://unsicher.example.test"))
+    }
 }
