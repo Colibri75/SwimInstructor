@@ -17,13 +17,13 @@ enum Theme {
     /// Akzent für Knöpfe, Links und aktive Tabs: Glut im Dunkeln, hell ein dunkleres Orange (5,1:1 auf den hellen Karten).
     static let accent = Color.dynamic(light: 0xA8540A, dark: 0xFF9F43)
     /// Grund hinter Listen: hell gedämpftes Blaugrau ("Morgennebel"), nicht grell.
-    static let background = Color.dynamic(light: 0xDCE2EC, dark: 0x0D1629)
+    static let background = Color.dynamic(light: 0xDCE2EC, dark: 0x18264A)
     /// Karten und Listenzeilen: hell nicht ganz weiß.
-    static let card = Color.dynamic(light: 0xEFF2F7, dark: 0x14213D)
+    static let card = Color.dynamic(light: 0xEFF2F7, dark: 0x22335C)
     /// Karte für "heute" und "diese Woche": Karte mit einem Hauch Glut.
-    static let highlightedCard = Color.dynamic(light: 0xF2E0D0, dark: 0x30303E)
+    static let highlightedCard = Color.dynamic(light: 0xF2E0D0, dark: 0x3A3A55)
     /// Leere Spur von Balken und Ringen.
-    static let track = Color.dynamic(light: 0xC9D2E0, dark: 0x26375F)
+    static let track = Color.dynamic(light: 0xC9D2E0, dark: 0x33477A)
 
     // MARK: Grün-Schwäche
 
@@ -45,6 +45,9 @@ enum Theme {
         greenWeak ? .dynamic(light: 0x868E9F, dark: 0x8C95A8) : .red
     }
 
+    /// Tageskarte auf Aktuell: hell die Nacht-Karte, dunkel wie die übrigen Karten ("Dämmerung").
+    static let dayCard = Color.dynamic(light: 0x14213D, dark: 0x22335C)
+
     /// Text und Linien auf der Nacht-Karte (immer dunkel, auch im hellen Modus).
     static let nightSecondary = Color(rgb: 0xA9B4CC)
 
@@ -61,7 +64,7 @@ enum Theme {
     /// Farbe einer Phase im Bergprofil: Grundlage Nacht, dann zunehmend Glut, Ziel Funke.
     static func phase(_ phase: MacroPhase) -> Color {
         switch phase {
-        case .base: return Color.dynamic(light: 0x8C9BBE, dark: 0x2E4372)
+        case .base: return Color.dynamic(light: 0x8C9BBE, dark: 0x3F5A96)
         case .specific: return Color(rgb: 0xC27A3E)
         case .taper: return ember
         case .goalWeek: return spark

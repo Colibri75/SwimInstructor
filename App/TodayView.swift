@@ -212,7 +212,7 @@ struct TodayView: View {
                 .environment(\.colorScheme, .dark)
                 .listRowBackground(
                     ZStack(alignment: .bottomTrailing) {
-                        Theme.night
+                        Theme.dayCard
                         PeakShape()
                             .stroke(.white.opacity(0.1), style: StrokeStyle(lineWidth: 16, lineCap: .round, lineJoin: .round))
                             .frame(width: 150, height: 86)
