@@ -106,6 +106,7 @@ struct SessionCardView: View {
             Spacer()
             IntensityBadge(intensity: session.intensity)
         }
+        .accessibilityElement(children: .combine)
     }
 
     private var subtitle: String {
@@ -172,6 +173,7 @@ struct PlanStepRow: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+        .accessibilityElement(children: .combine)
     }
 }
 

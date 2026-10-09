@@ -236,6 +236,7 @@ private struct ActualWeekRow: View {
                     ForgeAnimation()
                     Text("Dein Coach schreibt den Gesamtplan fort …")
                 }
+                .accessibilityElement(children: .combine)
             }
             if let review = plan.reviews.last {
                 ReviewView(review: review)
@@ -626,6 +627,12 @@ private struct MacroChart: View {
         }
     }
 
+    /// Für VoiceOver: wie viele Wochen und die umfangreichste; die einzelnen Balken liest VoiceOver aus dem Diagramm selbst.
+    private var chartSummary: String {
+        let peak = plan.weeks.map(\.totalMinutes).max() ?? 0
+        return String(localized: "\(plan.weeks.count) Wochen, die umfangreichste mit \(PlanV2Formatting.duration(minutes: peak))")
+    }
+
     var body: some View {
         let data = bars
         if data.contains(where: { $0.hours > 0 }) {
@@ -641,6 +648,7 @@ private struct MacroChart: View {
             .chartYAxisLabel("Stunden")
             .frame(height: 160)
             .accessibilityLabel("Wochenstunden je Sportart bis zum Ziel")
+            .accessibilityValue(chartSummary)
         }
     }
 }
@@ -673,6 +681,7 @@ private struct MacroWeekRow: View {
             Image(systemName: "chevron.right")
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())

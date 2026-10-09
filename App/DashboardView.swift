@@ -60,6 +60,7 @@ struct DashboardView: View {
                         ForgeAnimation()
                         Text("Lese Health-Daten …").foregroundStyle(.secondary)
                     }
+                    .accessibilityElement(children: .combine)
                 } else if let error = loader.healthError {
                     Text("Health: \(error)").foregroundStyle(.red)
                 } else {

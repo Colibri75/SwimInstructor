@@ -191,6 +191,7 @@ struct TodayView: View {
                         Spacer()
                         statusBadge(entry)
                     }
+                    .accessibilityElement(children: .combine)
                     if entry.isUnavailable || entry.isRestDay || entry.sessions.isEmpty {
                         Text(entry.isUnavailable ? "Keine Zeit" : "Ruhetag")
                             .font(.title.weight(.heavy))
@@ -244,6 +245,8 @@ struct TodayView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
+        // Die Schmiede ist stumm, VoiceOver liest den Text daneben als eine Zeile.
+        .accessibilityElement(children: .combine)
     }
 
     /// Der gespeicherte Tagesplan, solange er zum Wochenplan passt oder kein neuer unterwegs ist. Während der Coach den

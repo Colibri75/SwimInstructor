@@ -174,6 +174,7 @@ private struct WorkoutMetricsView: View {
                     Image(systemName: "heart.fill")
                         .font(.system(size: 18))
                         .foregroundStyle(.red)
+                        .accessibilityLabel("Puls")
                     Text(metrics.heartRate.map { "\(Int($0.rounded()))" } ?? "--")
                         .font(.system(size: 30, weight: .semibold, design: .rounded).monospacedDigit())
                         .lineLimit(1)
@@ -188,6 +189,7 @@ private struct WorkoutMetricsView: View {
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                 }
+                .accessibilityElement(children: .combine)
                 StepBlock(status: status, compact: true)
                 Spacer(minLength: 0)
                 let secondary = profile.secondaryFields.compactMap { LiveFieldFormatting.text($0, metrics: metrics) }
@@ -256,7 +258,10 @@ private struct WorkoutControlsView: View {
                             Image(systemName: "xmark")
                         }
                         .tint(.red)
+                        .accessibilityLabel("Beenden")
+                        // Steht schon am Knopf.
                         Text("Beenden").font(.footnote)
+                            .accessibilityHidden(true)
                     }
                     VStack {
                         Button {
@@ -269,7 +274,9 @@ private struct WorkoutControlsView: View {
                             Image(systemName: workoutManager.phase == .paused ? "play.fill" : "pause.fill")
                         }
                         .tint(.yellow)
+                        .accessibilityLabel(Text(workoutManager.phase == .paused ? "Weiter" : "Pause"))
                         Text(workoutManager.phase == .paused ? "Weiter" : "Pause").font(.footnote)
+                            .accessibilityHidden(true)
                     }
                 }
                 Button {
@@ -371,8 +378,17 @@ private struct EffortRatingBlock: View {
                     .frame(maxWidth: .infinity)
                     .focusable()
                     .digitalCrownRotation($effort, from: 1, through: 10, by: 1, sensitivity: .low, isContinuous: false, isHapticFeedbackEnabled: true)
-                    .accessibilityElement(children: .combine)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Anstrengung")
                     .accessibilityValue("\(value) von 10, \(SessionFeedback.effortLabel(value))")
+                    // Mit VoiceOver nach oben oder unten wischen ändert den Wert wie die Crown.
+                    .accessibilityAdjustableAction { direction in
+                        switch direction {
+                        case .increment: effort = min(effort.rounded() + 1, 10)
+                        case .decrement: effort = max(effort.rounded() - 1, 1)
+                        @unknown default: break
+                        }
+                    }
                     Button {
                         effort = min(effort.rounded() + 1, 10)
                     } label: {
@@ -441,12 +457,14 @@ struct WatchCountdownView: View {
                     Image(systemName: "xmark")
                 }
                 .tint(.red)
+                .accessibilityLabel("Abbrechen")
                 Button {
                     workoutManager.skipCountdown()
                 } label: {
                     Image(systemName: "play.fill")
                 }
                 .tint(Theme.ember)
+                .accessibilityLabel("Jetzt starten")
             }
         }
     }

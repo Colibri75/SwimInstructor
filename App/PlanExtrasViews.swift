@@ -40,6 +40,7 @@ struct ExtraCardView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            .accessibilityElement(children: .combine)
             if !extra.focus.isEmpty {
                 Text(extra.focus)
                     .font(.subheadline)
@@ -124,6 +125,8 @@ struct SessionFeedbackSheet: View {
                             Text("Anstrengung \(Int(effort)) von 10")
                                 .font(.headline)
                             Slider(value: $effort, in: 1...10, step: 1)
+                                .accessibilityLabel("Anstrengung")
+                                .accessibilityValue("\(Int(effort)) von 10, \(SessionFeedback.effortLabel(Int(effort)))")
                             Text(effortHint)
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)

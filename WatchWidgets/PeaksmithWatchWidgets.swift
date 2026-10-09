@@ -38,6 +38,7 @@ struct NextSessionComplicationView: View {
                 .font(.title3)
                 .widgetAccentable()
                 .widgetLabel(text.first?.title ?? (text.isRestDay ? String(localized: "Ruhetag") : "Peaksmith"))
+                .accessibilityLabel(text.inline)
         default:
             PlanGlanceCircularView(entry: entry)
         }

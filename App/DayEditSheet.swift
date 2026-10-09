@@ -121,6 +121,7 @@ struct DayEditSheet: View {
                     Text("Dein Coach passt den Plan für heute an …")
                         .foregroundStyle(.secondary)
                 }
+                .accessibilityElement(children: .combine)
             }
         } else if let response = todayLoader.dayPlan(on: date) {
             let plan = response.plan

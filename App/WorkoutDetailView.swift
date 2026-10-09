@@ -81,6 +81,7 @@ struct WorkoutDetailView: View {
                             ForgeAnimation()
                             Text("Lese Pulswerte …").foregroundStyle(.secondary)
                         }
+                        .accessibilityElement(children: .combine)
                     }
                 }
             }

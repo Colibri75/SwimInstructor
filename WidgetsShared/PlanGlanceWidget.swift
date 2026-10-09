@@ -103,6 +103,7 @@ struct PlanGlanceRectangularView: View {
         }
         .font(.caption)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -118,6 +119,7 @@ struct PlanGlanceCircularView: View {
                 .font(.title3)
                 .widgetAccentable()
         }
+        .accessibilityElement(children: .ignore)
         .accessibilityLabel(text.inline)
     }
 }
