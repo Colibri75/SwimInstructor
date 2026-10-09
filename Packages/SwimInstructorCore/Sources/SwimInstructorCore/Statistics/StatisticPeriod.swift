@@ -31,19 +31,19 @@ public enum StatisticPeriod: String, Codable, CaseIterable, Sendable {
 
     public var displayName: String {
         switch self {
-        case .currentWeek: return "Diese Woche"
-        case .sevenDays: return "7 Tage"
-        case .fourWeeks: return "4 Wochen"
-        case .eightWeeks: return "8 Wochen"
+        case .currentWeek: return String(localized: "Diese Woche")
+        case .sevenDays: return String(localized: "7 Tage")
+        case .fourWeeks: return String(localized: "4 Wochen")
+        case .eightWeeks: return String(localized: "8 Wochen")
         }
     }
 
     /// Name des Vergleichszeitraums; `nil` ohne Vergleich (für 8 Wochen davor fehlen die Daten).
     public var comparisonName: String? {
         switch self {
-        case .currentWeek: return "Vorwoche"
-        case .sevenDays: return "7 Tage davor"
-        case .fourWeeks: return "4 Wochen davor"
+        case .currentWeek: return String(localized: "Vorwoche")
+        case .sevenDays: return String(localized: "7 Tage davor")
+        case .fourWeeks: return String(localized: "4 Wochen davor")
         case .eightWeeks: return nil
         }
     }

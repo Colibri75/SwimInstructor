@@ -11,9 +11,9 @@ public enum MacroReviewReason: String, Codable, Sendable, CaseIterable {
 
     public var title: String {
         switch self {
-        case .scheduled: return "Regelmäßige Fortschreibung"
-        case .pause: return "Nach gemeldeter Pause"
-        case .lowCompliance: return "Nach zwei schwachen Wochen"
+        case .scheduled: return String(localized: "Regelmäßige Fortschreibung")
+        case .pause: return String(localized: "Nach gemeldeter Pause")
+        case .lowCompliance: return String(localized: "Nach zwei schwachen Wochen")
         }
     }
 }
@@ -132,10 +132,10 @@ public struct PauseReport: Codable, Equatable, Sendable, Identifiable {
 
         public var title: String {
             switch self {
-            case .sick: return "Krank"
-            case .injury: return "Verletzt"
-            case .vacation: return "Urlaub"
-            case .other: return "Sonstiges"
+            case .sick: return String(localized: "Krank")
+            case .injury: return String(localized: "Verletzt")
+            case .vacation: return String(localized: "Urlaub")
+            case .other: return String(localized: "Sonstiges")
             }
         }
     }
@@ -172,7 +172,7 @@ public struct PauseReport: Codable, Equatable, Sendable, Identifiable {
     }
 
     public var problem: String? {
-        if let to, to < from { return "Das Ende liegt vor dem Anfang." }
+        if let to, to < from { return String(localized: "Das Ende liegt vor dem Anfang.") }
         return nil
     }
 }

@@ -20,7 +20,7 @@ public struct SwimModule: SportModule {
     public init() {}
 
     public let id = SportID.swim
-    public let displayName = "Schwimmen"
+    public let displayName = String(localized: "Schwimmen")
     public let symbolName = "figure.pool.swim"
     public let colorRGB: UInt32 = 0x4CC9F0
     public let measures: Set<StepMeasure> = [.distance, .duration]
@@ -36,7 +36,7 @@ public struct SwimModule: SportModule {
     public let planUnit = PlanUnit.meters
     /// 2:05 pro 100 m inklusive Pausen.
     public let typicalSpeedMetersPerSecond: Double = 0.8
-    public let openWater: OpenWaterVenue? = OpenWaterVenue(id: "open_water", displayName: "Freiwasser", locationID: RecordingLocation.openWater.id)
+    public let openWater: OpenWaterVenue? = OpenWaterVenue(id: "open_water", displayName: String(localized: "Freiwasser"), locationID: RecordingLocation.openWater.id)
 
     public let recording = SportRecording(
         locations: [.pool, .openWater],
@@ -53,7 +53,7 @@ public struct SwimModule: SportModule {
         .sessions,
         .averageHeartRate,
         StatisticDefinition(
-            metric: .strokesPerHundredMeters, displayName: "Züge pro 100 m", unit: "",
+            metric: .strokesPerHundredMeters, displayName: String(localized: "Züge pro 100 m", comment: "Schwimmzüge"), unit: "",
             measure: .perDistance(.strokes, meters: 100), format: .integer, higherIsBetter: false
         ),
         .longestDistanceMeters,
@@ -61,26 +61,26 @@ public struct SwimModule: SportModule {
     ]
 
     public let performanceMetrics: [PerformanceMetricDefinition] = [
-        PerformanceMetricDefinition(metric: .criticalSwimPace, displayName: "CSS-Pace", unit: "s/100m", plausibleRange: 50...300)
+        PerformanceMetricDefinition(metric: .criticalSwimPace, displayName: String(localized: "CSS-Pace"), unit: "s/100m", plausibleRange: 50...300)
     ]
     public let performanceTests: [PerformanceTest] = [
         // CSS = 200 m / (Zeit 400 m − Zeit 200 m), beide voll mit Pause dazwischen.
         PerformanceTest(
-            id: "css_400_200", displayName: "CSS-Test 400/200 m", produces: [.criticalSwimPace], maximalEffort: true, durationMinutes: 10,
+            id: "css_400_200", displayName: String(localized: "CSS-Test 400/200 m"), produces: [.criticalSwimPace], maximalEffort: true, durationMinutes: 10,
             inputs: [
-                TestInput(id: "time_400m", label: "Zeit 400 m", unit: "s", range: 180...1500),
-                TestInput(id: "time_200m", label: "Zeit 200 m", unit: "s", range: 80...750)
+                TestInput(id: "time_400m", label: String(localized: "Zeit 400 m"), unit: "s", range: 180...1500),
+                TestInput(id: "time_200m", label: String(localized: "Zeit 200 m"), unit: "s", range: 80...750)
             ],
             evaluation: .criticalSwimPace(longInput: "time_400m", longMeters: 400, shortInput: "time_200m", shortMeters: 200),
-            resultHint: "Trag die Zeiten der beiden Teststrecken ein. Die CSS-Pace ist die halbe Differenz pro 100 m.",
+            resultHint: String(localized: "Trag die Zeiten der beiden Teststrecken ein. Die CSS-Pace ist die halbe Differenz pro 100 m."),
             recorded: [.segmentTime(input: "time_400m", meters: 400), .segmentTime(input: "time_200m", meters: 200)]
         ),
         // Zeit durch 10 ergibt die Pace pro 100 m, etwas langsamer als die CSS.
         PerformanceTest(
-            id: "time_trial_1000m", displayName: "1000-m-Test", produces: [.criticalSwimPace], maximalEffort: true, durationMinutes: 20,
-            inputs: [TestInput(id: "time_1000m", label: "Zeit 1000 m", unit: "s", range: 600...3000)],
+            id: "time_trial_1000m", displayName: String(localized: "1000-m-Test"), produces: [.criticalSwimPace], maximalEffort: true, durationMinutes: 20,
+            inputs: [TestInput(id: "time_1000m", label: String(localized: "Zeit 1000 m"), unit: "s", range: 600...3000)],
             evaluation: .pacePerHundredMeters(input: "time_1000m", meters: 1000),
-            resultHint: "Trag die Zeit für die 1000 m ein.",
+            resultHint: String(localized: "Trag die Zeit für die 1000 m ein."),
             recorded: [.segmentTime(input: "time_1000m", meters: 1000)]
         )
     ]

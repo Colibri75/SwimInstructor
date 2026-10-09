@@ -28,13 +28,13 @@ public struct AthleteGoal: Codable, Equatable, Sendable {
     /// Was an dem Ziel nicht passt, auf Deutsch; `nil`, wenn es gültig ist.
     public var problem: String? {
         guard Self.distanceRange.contains(distanceMeters) else {
-            return "Die Distanz muss zwischen 100 m und 10 km liegen."
+            return String(localized: "Die Distanz muss zwischen 100 m und 10 km liegen.")
         }
         guard targetDurationSeconds >= 60, targetDurationSeconds <= Double(Self.durationMinutesRange.upperBound * 60) else {
-            return "Die Zielzeit muss zwischen 1 und 600 Minuten liegen."
+            return String(localized: "Die Zielzeit muss zwischen 1 und 600 Minuten liegen.")
         }
         guard Self.paceRange.contains(targetPaceSecondsPerHundredMeters) else {
-            return "Distanz und Zeit ergeben eine Zielpace außerhalb von 0:40 bis 10:00 pro 100 m."
+            return String(localized: "Distanz und Zeit ergeben eine Zielpace außerhalb von 0:40 bis 10:00 pro 100 m.")
         }
         return nil
     }

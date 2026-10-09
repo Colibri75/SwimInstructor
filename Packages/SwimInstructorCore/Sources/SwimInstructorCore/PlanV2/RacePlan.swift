@@ -102,7 +102,7 @@ public struct RacePlan: Codable, Equatable, Sendable {
 
         /// "60 g Kohlenhydrate, 600 ml, 500 mg Natrium pro Stunde".
         public var summary: String {
-            "\(carbsGPerHour) g Kohlenhydrate, \(fluidMlPerHour) ml, \(sodiumMgPerHour) mg Natrium pro Stunde"
+            String(localized: "\(carbsGPerHour) g Kohlenhydrate, \(fluidMlPerHour) ml, \(sodiumMgPerHour) mg Natrium pro Stunde")
         }
     }
 
@@ -157,7 +157,7 @@ public struct RaceWeather: Codable, Equatable, Sendable {
 
     /// "15 bis 27 °C, Regen 10 %, Wind bis 15 km/h".
     public var summary: String {
-        "\(Int(tempMinC.rounded())) bis \(Int(tempMaxC.rounded())) °C, Regen \(Int(precipitationProbability.rounded())) %, Wind bis \(Int(windMaxKmh.rounded())) km/h"
+        String(localized: "\(Int(tempMinC.rounded())) bis \(Int(tempMaxC.rounded())) °C, Regen \(Int(precipitationProbability.rounded())) %, Wind bis \(Int(windMaxKmh.rounded())) km/h")
     }
 }
 
@@ -311,7 +311,7 @@ public final class RacePlanLoader: ObservableObject {
     public nonisolated static func clock(minutesFromStart: Int, startTime: String?) -> String {
         let parts = startTime?.split(separator: ":").compactMap { Int($0) } ?? []
         guard parts.count == 2 else {
-            if minutesFromStart == 0 { return "Start" }
+            if minutesFromStart == 0 { return String(localized: "Start", comment: "Startzeit im Wettkampfablauf") }
             return minutesFromStart < 0 ? "\(minutesFromStart) min" : "+\(minutesFromStart) min"
         }
         let total = ((parts[0] * 60 + parts[1] + minutesFromStart) % 1440 + 1440) % 1440

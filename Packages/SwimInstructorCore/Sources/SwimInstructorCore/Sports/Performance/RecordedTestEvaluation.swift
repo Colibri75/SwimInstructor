@@ -31,7 +31,7 @@ public struct RecordedTestResult: Equatable, Sendable {
     public let entries: [String: Double]
     /// Die Leistungswerte daraus.
     public let values: [PerformanceMetric: Double]
-    /// Warum etwas fehlt oder verworfen ist, auf Deutsch.
+    /// Warum etwas fehlt oder verworfen ist, für die Anzeige.
     public let problems: [String]
 
     public init(entries: [String: Double], values: [PerformanceMetric: Double], problems: [String]) {
@@ -66,10 +66,10 @@ public extension PerformanceTest {
     /// Wertet die Aufzeichnung der Watch aus. Ein Test ohne Vollbelastung ändert das Profil nicht und liefert nichts.
     func evaluate(recording: WorkoutRecording, definitions: [PerformanceMetricDefinition]) -> RecordedTestResult {
         guard maximalEffort else {
-            return RecordedTestResult(entries: [:], values: [:], problems: [resultHint.isEmpty ? "Dieser Test ändert dein Profil nicht." : resultHint])
+            return RecordedTestResult(entries: [:], values: [:], problems: [resultHint.isEmpty ? String(localized: "Dieser Test ändert dein Profil nicht.") : resultHint])
         }
         guard !recorded.isEmpty else {
-            return RecordedTestResult(entries: [:], values: [:], problems: ["Diesen Test wertet die Watch nicht aus. Trag das Ergebnis auf dem iPhone ein."])
+            return RecordedTestResult(entries: [:], values: [:], problems: [String(localized: "Diesen Test wertet die Watch nicht aus. Trag das Ergebnis auf dem iPhone ein.")])
         }
         let inputs = resultInputs(definitions: definitions)
         var entries: [String: Double] = [:]
@@ -87,11 +87,12 @@ public extension PerformanceTest {
         }
         for input in inputs {
             guard let value = entries[input.id], !input.range.contains(value) else { continue }
-            problems.append("\(input.label) liegt mit \(PlanV2Formatting.performanceValue(value, unit: input.unit)) außerhalb des Plausiblen.")
+            let formatted = PlanV2Formatting.performanceValue(value, unit: input.unit)
+            problems.append(String(localized: "\(input.label) liegt mit \(formatted) außerhalb des Plausiblen."))
         }
         let values = evaluate(entries, definitions: definitions)
         if values.isEmpty, problems.isEmpty {
-            problems.append("Aus der Aufzeichnung ergibt sich kein gültiger Wert.")
+            problems.append(String(localized: "Aus der Aufzeichnung ergibt sich kein gültiger Wert."))
         }
         return RecordedTestResult(entries: entries, values: values, problems: problems)
     }
@@ -110,10 +111,12 @@ public extension PerformanceTest {
         case let .average(_, signal, lastSeconds):
             guard let segment = recording.segments.last(where: { $0.unit.step.isTestEffort && $0.unit.plannedSeconds != nil }),
                   let planned = segment.unit.plannedSeconds else {
-                return .problem("Der Testabschnitt fehlt in der Aufzeichnung: Die Einheit endete vorher.")
+                return .problem(String(localized: "Der Testabschnitt fehlt in der Aufzeichnung: Die Einheit endete vorher."))
             }
             guard segment.reachedTarget, segment.duration >= planned - Self.durationTolerance else {
-                return .problem("Test nach \(PlanFormatting.elapsed(segment.duration)) von \(PlanFormatting.elapsed(planned)) beendet.")
+                let done = PlanFormatting.elapsed(segment.duration)
+                let total = PlanFormatting.elapsed(planned)
+                return .problem(String(localized: "Test nach \(done) von \(total) beendet."))
             }
             let end = segment.endElapsed
             let start = lastSeconds.map { max(segment.startElapsed, end - $0) } ?? segment.startElapsed
@@ -123,10 +126,13 @@ public extension PerformanceTest {
 
     private func segmentTime(meters: Int, recording: WorkoutRecording) -> Measured {
         guard let segment = recording.segments.last(where: { $0.unit.step.isTestEffort && $0.unit.target == .meters(Double(meters)) }) else {
-            return .problem("Die \(PlanFormatting.meters(meters)) des Tests fehlen in der Aufzeichnung: Die Einheit endete vorher.")
+            let distance = PlanFormatting.meters(meters)
+            return .problem(String(localized: "Die \(distance) des Tests fehlen in der Aufzeichnung: Die Einheit endete vorher."))
         }
         guard segment.reachedTarget else {
-            return .problem("Test über \(PlanFormatting.meters(meters)) vorzeitig beendet (\(PlanFormatting.meters(Int(segment.meters))) geschafft).")
+            let distance = PlanFormatting.meters(meters)
+            let done = PlanFormatting.meters(Int(segment.meters))
+            return .problem(String(localized: "Test über \(distance) vorzeitig beendet (\(done) geschafft)."))
         }
         return .value((Self.lapTime(of: segment, meters: meters, recording: recording) ?? segment.duration).rounded())
     }
@@ -157,18 +163,19 @@ public extension PerformanceTest {
         case .heartRate, .power:
             let series = signal == .heartRate ? recording.heartRate : recording.power
             guard let mean = series.mean(from: start, to: end) else {
-                return isOptional && signal == .power ? .absent : .problem("\(label): nichts gemessen.")
+                return isOptional && signal == .power ? .absent : .problem(String(localized: "\(label): nichts gemessen."))
             }
             let gap = series.longestGap(from: start, to: end)
             guard gap <= Self.maximumGap else {
-                return .problem("\(label) verworfen: \(PlanFormatting.elapsed(gap)) ohne Messung.")
+                let duration = PlanFormatting.elapsed(gap)
+                return .problem(String(localized: "\(label) verworfen: \(duration) ohne Messung."))
             }
             return .value(mean.rounded())
         case .pacePerKilometer:
             guard let first = recording.distance.interpolated(at: start, tolerance: Self.maximumGap),
                   let last = recording.distance.interpolated(at: end, tolerance: Self.maximumGap),
                   last - first > 0 else {
-                return .problem("\(label) verworfen: keine Strecke gemessen.")
+                return .problem(String(localized: "\(label) verworfen: keine Strecke gemessen."))
             }
             return .value(((end - start) / ((last - first) / 1000)).rounded())
         }

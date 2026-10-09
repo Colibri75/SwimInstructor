@@ -187,7 +187,7 @@ public final class MultiSportTodayLoader: ObservableObject {
         if let target, target.sessions.isEmpty, (target.extras ?? []).isEmpty {
             var rest = DayPlanV2Response(
                 source: .cache, date: todayKey, generatedAt: now(), stale: false,
-                plan: DayPlanV2(rationale: "Heute ist laut Plan kein Training vorgesehen. Erhol dich gut.", sessions: [])
+                plan: DayPlanV2(rationale: String(localized: "Heute ist laut Plan kein Training vorgesehen. Erhol dich gut."), sessions: [])
             )
             rest.requestedTarget = target
             show(rest)

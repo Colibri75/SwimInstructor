@@ -10,6 +10,7 @@ import { amountToMeters, amountToMinutes, floorAmount, formatAmount, plannedSpor
 import { fixedSport, scheduleDay, trainingDaysPerWeek, weeklyMinutes } from "./schedule";
 import { chooseTest, TestPlan, TestRef, testRef } from "./tests";
 import { inOpenWaterBlock, openWaterAllowed, openWaterBlocked, raceInOpenWater } from "./openWater";
+import { Language, LANGUAGES, serverTexts } from "../language";
 
 /**
  * Sicherheitsschicht fuer den Wochenplan ueber mehrere Sportarten (die naechsten 7 oder 14 Tage, je Block von 7 Tagen). Reiner Code: korrigiert
@@ -23,6 +24,8 @@ import { inOpenWaterBlock, openWaterAllowed, openWaterBlocked, raceInOpenWater }
  */
 export interface WeekContextV2 {
   today: string;
+  /** Sprache der App, fuer die Texte, die der Server selbst schreibt (Ruhetag, Keine Zeit). Ohne Angabe Deutsch. */
+  language?: Language;
   /** Die geplanten Tage ab `from_date` (7 oder 14), aufsteigend; die Wochengrenzen gelten je Block von 7 Tagen. */
   dates: string[];
   unavailable: string[];
@@ -209,13 +212,25 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
   if (notes.length > MULTI_RULES.maxAdjustmentLines) adjustments.push(`… und ${notes.length - MULTI_RULES.maxAdjustmentLines} weitere Korrekturen`);
   return {
     plan: {
-      rationale: withNote(input.rationale, notes),
+      rationale: withNote(input.rationale, notes, context.language),
       total_minutes: result.reduce((sum, day) => sum + day.sessions.reduce((s, session) => s + session.minutes, 0), 0),
-      days: result
+      days: result.map((day) => inAppLanguage(day, context.language))
     },
     adjustments,
     blocked: null
   };
+}
+
+/**
+ * Die festen deutschen Schwerpunkte des Servers (Ruhetag, Keine Zeit, Locker statt Leistungstest) in der Sprache der App.
+ * Die Sicherheitsschicht rechnet durchgehend mit den deutschen, uebersetzt wird erst das Ergebnis.
+ */
+function inAppLanguage(day: WeekDayV2, language: Language | undefined): WeekDayV2 {
+  if (language === undefined || language === "de") return day;
+  const texts = serverTexts(language);
+  const translate = (focus: string): string =>
+    focus === "Keine Zeit" ? texts.noTime : focus === "Ruhetag" ? texts.restDay : focus.replaceAll(EASY_INSTEAD_OF_TEST, texts.easyInsteadOfTest);
+  return { ...day, focus: translate(day.focus), sessions: day.sessions.map((session) => ({ ...session, focus: translate(session.focus) })) };
 }
 
 /** Ein geplanter Tag als Training vor dem naechsten Block (fuer die 7-Tage-Spanne und "nie zwei harte Tage hintereinander"). */
@@ -912,14 +927,20 @@ function finalizeDay(day: DraftDay): WeekDayV2 {
       open_water: draft.openWater && draft.test === null
     })
   );
-  const focus = day.focus !== "" && (sessions.length > 0 || day.focus === "Keine Zeit") ? day.focus : sessions.length > 0 ? sessions.map((session) => session.focus).join(" + ").slice(0, MULTI_RULES.maxFocusLength) : "Ruhetag";
+  const focus = day.focus !== "" && (sessions.length > 0 || isNoTime(day.focus)) ? day.focus : sessions.length > 0 ? sessions.map((session) => session.focus).join(" + ").slice(0, MULTI_RULES.maxFocusLength) : "Ruhetag";
   return { date: day.date, focus, sessions, extras: day.extras };
 }
 
-export function withNote(rationale: string, notes: string[]): string {
+/** "Keine Zeit" in jeder Sprache: So nennt Claude einen Tag ohne Zeit (siehe `inLanguage`). */
+function isNoTime(focus: string): boolean {
+  return LANGUAGES.some((language) => serverTexts(language).noTime === focus);
+}
+
+export function withNote(rationale: string, notes: string[], language: Language = "de"): string {
   const text = rationale.trim().slice(0, MULTI_RULES.maxRationaleLength);
   if (notes.length === 0) return text;
-  const note = `Hinweis: Zur Sicherheit angepasst (${notes.slice(0, 3).join("; ")}${notes.length > 3 ? `; und ${notes.length - 3} weitere` : ""}).`;
+  // Die Korrekturen selbst sind deutsch; in anderen Sprachen nur der Hinweis, dass angepasst wurde.
+  const note = language !== "de" ? serverTexts(language).safetyNote : `Hinweis: Zur Sicherheit angepasst (${notes.slice(0, 3).join("; ")}${notes.length > 3 ? `; und ${notes.length - 3} weitere` : ""}).`;
   const room = Math.max(MULTI_RULES.maxRationaleLength - note.length - 1, 0);
   return `${text.slice(0, room).trimEnd()} ${note}`.trim().slice(0, MULTI_RULES.maxRationaleLength);
 }

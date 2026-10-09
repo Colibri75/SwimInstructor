@@ -7,6 +7,7 @@ import { isRealDate, weekdayIndex } from "../calendar";
 import { DayRequestV2Schema, MacroRequestV2Schema, MacroWeekTargetV2, ReviewRequestSchema, ReviseRequestSchema, WeekRequestV2Schema } from "./schemas";
 import { DayResultV2, MacroResultV2, MultiPlanService, RaceResult, ReviewResult, ReviseResult, WeekResultV2 } from "./service";
 import { raceBlockedReason, RaceRequestSchema } from "./race";
+import { Language, LANGUAGE_HEADER, languageFrom } from "../language";
 
 /**
  * Die Routen der Planung (Plan v2, siehe docs/multisport-planning.md): `POST /v1/plan/today`, `/plan/week`, `/plan/macro`
@@ -44,6 +45,11 @@ function userOf(res: Response): string {
   return currentUser(res.locals)?.id ?? OWNER_ID;
 }
 
+/** Die Sprache der App (Header `X-App-Language`), in der Claude die Texte schreibt. */
+function languageOf(req: Request): Language {
+  return languageFrom(req.get(LANGUAGE_HEADER));
+}
+
 async function answer<T>(res: Response, work: () => Promise<T>, toJson: (result: T) => unknown): Promise<void> {
   try {
     res.json(toJson(await work()));
@@ -73,6 +79,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
         () =>
           service.planDay({
             user: userOf(res),
+            language: languageOf(req),
             snapshot: data.snapshot,
             date: data.date,
             regenerate: data.regenerate === true,
@@ -111,6 +118,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
         () =>
           service.planWeek({
             user: userOf(res),
+            language: languageOf(req),
             snapshot: data.snapshot,
             fromDate: data.from_date,
             today: data.today,
@@ -138,7 +146,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
       const data = parsed.data;
       const problems = dateProblems([["today", data.today]]);
       if (problems.length > 0) return invalid(res, problems);
-      await answer(res, () => service.planMacro({ user: userOf(res), snapshot: data.snapshot, today: data.today, testSettings: data.test_settings }), macroResponse);
+      await answer(res, () => service.planMacro({ user: userOf(res), language: languageOf(req), snapshot: data.snapshot, today: data.today, testSettings: data.test_settings }), macroResponse);
     });
 
     router.post("/plan/race", async (req: Request, res: Response) => {
@@ -154,6 +162,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
         () =>
           service.planRace({
             user: userOf(res),
+            language: languageOf(req),
             snapshot: data.snapshot,
             today: data.today,
             startTime: data.start_time,
@@ -176,6 +185,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
         () =>
           service.reviseMacro({
             user: userOf(res),
+            language: languageOf(req),
             snapshot: data.snapshot,
             today: data.today,
             plan: data.plan,
@@ -203,6 +213,7 @@ export function multiRoutes(service: MultiPlanService): (router: Router) => void
         () =>
           service.reviewMacro({
             user: userOf(res),
+            language: languageOf(req),
             snapshot: data.snapshot,
             today: data.today,
             plan: data.plan,

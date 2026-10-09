@@ -60,14 +60,14 @@ public struct GoalTemplate: Identifiable, Equatable, Sendable {
     }
 
     public static let all: [GoalTemplate] = [
-        triathlon("triathlon_sprint", "Triathlon Sprint", swim: 750, bike: 20_000, run: 5_000),
-        triathlon("triathlon_olympic", "Triathlon Olympisch", swim: 1_500, bike: 40_000, run: 10_000),
-        triathlon("triathlon_half", "Triathlon Mitteldistanz (70.3)", swim: 1_900, bike: 90_000, run: 21_100),
-        triathlon("triathlon_full", "Triathlon Langdistanz", swim: 3_800, bike: 180_000, run: 42_195),
-        single("swim_long", "Schwimmen 3,8 km", sport: .swim, meters: 3_800),
-        single("run_10k", "Lauf 10 km", sport: .run, meters: 10_000),
-        single("run_half_marathon", "Halbmarathon", sport: .run, meters: 21_097.5),
-        single("run_marathon", "Marathon", sport: .run, meters: 42_195),
-        single("bike_century", "Radfahren 100 km", sport: .bike, meters: 100_000)
+        triathlon("triathlon_sprint", String(localized: "Triathlon Sprint"), swim: 750, bike: 20_000, run: 5_000),
+        triathlon("triathlon_olympic", String(localized: "Triathlon Olympisch"), swim: 1_500, bike: 40_000, run: 10_000),
+        triathlon("triathlon_half", String(localized: "Triathlon Mitteldistanz (70.3)"), swim: 1_900, bike: 90_000, run: 21_100),
+        triathlon("triathlon_full", String(localized: "Triathlon Langdistanz"), swim: 3_800, bike: 180_000, run: 42_195),
+        single("swim_long", String(localized: "Schwimmen 3,8 km"), sport: .swim, meters: 3_800),
+        single("run_10k", String(localized: "Lauf 10 km"), sport: .run, meters: 10_000),
+        single("run_half_marathon", String(localized: "Halbmarathon"), sport: .run, meters: 21_097.5),
+        single("run_marathon", String(localized: "Marathon"), sport: .run, meters: 42_195),
+        single("bike_century", String(localized: "Radfahren 100 km"), sport: .bike, meters: 100_000)
     ]
 }

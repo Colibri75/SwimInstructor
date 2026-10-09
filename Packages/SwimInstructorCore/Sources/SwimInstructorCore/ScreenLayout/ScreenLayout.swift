@@ -10,11 +10,11 @@ public enum LayoutScreen: String, CaseIterable, Codable, Sendable {
 
     public var displayName: String {
         switch self {
-        case .today: return "Aktuell"
-        case .week: return "Wochenplan"
-        case .macro: return "Gesamtplan"
-        case .dashboard: return "Dashboard"
-        case .history: return "Verlauf"
+        case .today: return String(localized: "Aktuell")
+        case .week: return String(localized: "Wochenplan")
+        case .macro: return String(localized: "Gesamtplan")
+        case .dashboard: return String(localized: "Dashboard")
+        case .history: return String(localized: "Verlauf")
         }
     }
 
@@ -23,68 +23,68 @@ public enum LayoutScreen: String, CaseIterable, Codable, Sendable {
         switch self {
         case .today:
             return [
-                LayoutSection(id: "watchResult", title: "Testergebnis von der Watch", symbol: "applewatch",
-                              summary: "Erscheint, wenn ein Test von der Watch auf Bestätigung wartet.", isRequired: true),
-                LayoutSection(id: "adaptation", title: "Hinweis auf Anpassungen", symbol: "arrow.triangle.2.circlepath",
-                              summary: "Warum der Plan außer der Reihe anders aussieht."),
-                LayoutSection(id: "feedback", title: "Rückmeldung", symbol: "text.bubble",
-                              summary: "Einheiten von gestern und heute ohne \"Wie war's?\"."),
-                LayoutSection(id: "done", title: "Heute erledigt", symbol: "checkmark.seal",
-                              summary: "Umschalter zwischen heute und morgen nach dem Training.", isRequired: true),
-                LayoutSection(id: "dayCard", title: "Tageskarte", symbol: "rectangle.portrait",
-                              summary: "Tag, Stand und Einheiten groß auf einen Blick."),
-                LayoutSection(id: "plan", title: "Tagesplan", symbol: "list.bullet.rectangle",
-                              summary: "Der Plan mit allen Schritten und Ergänzungen.", isRequired: true),
-                LayoutSection(id: "wish", title: "Dein Wunsch für heute", symbol: "text.cursor",
-                              summary: "Freitext und Plan neu erstellen.")
+                LayoutSection(id: "watchResult", title: String(localized: "Testergebnis von der Watch"), symbol: "applewatch",
+                              summary: String(localized: "Erscheint, wenn ein Test von der Watch auf Bestätigung wartet."), isRequired: true),
+                LayoutSection(id: "adaptation", title: String(localized: "Hinweis auf Anpassungen"), symbol: "arrow.triangle.2.circlepath",
+                              summary: String(localized: "Warum der Plan außer der Reihe anders aussieht.")),
+                LayoutSection(id: "feedback", title: String(localized: "Rückmeldung"), symbol: "text.bubble",
+                              summary: String(localized: "Einheiten von gestern und heute ohne \"Wie war's?\".")),
+                LayoutSection(id: "done", title: String(localized: "Heute erledigt"), symbol: "checkmark.seal",
+                              summary: String(localized: "Umschalter zwischen heute und morgen nach dem Training."), isRequired: true),
+                LayoutSection(id: "dayCard", title: String(localized: "Tageskarte"), symbol: "rectangle.portrait",
+                              summary: String(localized: "Tag, Stand und Einheiten groß auf einen Blick.")),
+                LayoutSection(id: "plan", title: String(localized: "Tagesplan"), symbol: "list.bullet.rectangle",
+                              summary: String(localized: "Der Plan mit allen Schritten und Ergänzungen."), isRequired: true),
+                LayoutSection(id: "wish", title: String(localized: "Dein Wunsch für heute"), symbol: "text.cursor",
+                              summary: String(localized: "Freitext und Plan neu erstellen."))
             ]
         case .week:
             return [
-                LayoutSection(id: "summary", title: "Geplant und trainiert", symbol: "sum",
-                              summary: "Minuten und Umfang je Sportart der Woche."),
-                LayoutSection(id: "macroTarget", title: "Vorgabe aus dem Gesamtplan", symbol: "mountain.2",
-                              summary: "Phase, Umfang je Sportart, Tests und Schwerpunkt."),
-                LayoutSection(id: "overview", title: "Überblick", symbol: "text.alignleft",
-                              summary: "Warum die Woche so geplant ist."),
-                LayoutSection(id: "days", title: "Tage", symbol: "calendar",
-                              summary: "Die Tage der Woche, antippen zum Anpassen.", isRequired: true),
-                LayoutSection(id: "planning", title: "Planen", symbol: "wand.and.stars",
-                              summary: "Wunsch für die nächsten Tage und neu planen.")
+                LayoutSection(id: "summary", title: String(localized: "Geplant und trainiert"), symbol: "sum",
+                              summary: String(localized: "Minuten und Umfang je Sportart der Woche.")),
+                LayoutSection(id: "macroTarget", title: String(localized: "Vorgabe aus dem Gesamtplan"), symbol: "mountain.2",
+                              summary: String(localized: "Phase, Umfang je Sportart, Tests und Schwerpunkt.")),
+                LayoutSection(id: "overview", title: String(localized: "Überblick"), symbol: "text.alignleft",
+                              summary: String(localized: "Warum die Woche so geplant ist.")),
+                LayoutSection(id: "days", title: String(localized: "Tage"), symbol: "calendar",
+                              summary: String(localized: "Die Tage der Woche, antippen zum Anpassen."), isRequired: true),
+                LayoutSection(id: "planning", title: String(localized: "Planen"), symbol: "wand.and.stars",
+                              summary: String(localized: "Wunsch für die nächsten Tage und neu planen."))
             ]
         case .macro:
             return [
-                LayoutSection(id: "racePlan", title: "Plan für den Zieltag", symbol: "flag.checkered",
-                              summary: "Ablauf, Tempo, Wechsel und Packliste."),
-                LayoutSection(id: "overview", title: "Gesamtplan bis zum Ziel", symbol: "mountain.2",
-                              summary: "Überblick und Gesamtplan erstellen.", isRequired: true),
-                LayoutSection(id: "weeks", title: "Wochen bis zum Ziel", symbol: "calendar",
-                              summary: "Alle Wochen, antippen öffnet sie im Wochenplan."),
-                LayoutSection(id: "profile", title: "Leistungsprofil", symbol: "gauge.with.dots.needle.67percent",
-                              summary: "Leistungswerte und Tests."),
-                LayoutSection(id: "review", title: "Fortschreibung", symbol: "arrow.forward.circle",
-                              summary: "Plan gegen Ist der letzten Wochen."),
-                LayoutSection(id: "feedback", title: "Feedback zum Gesamtplan", symbol: "text.bubble",
-                              summary: "Änderungswünsche an deinen Coach.")
+                LayoutSection(id: "racePlan", title: String(localized: "Plan für den Zieltag"), symbol: "flag.checkered",
+                              summary: String(localized: "Ablauf, Tempo, Wechsel und Packliste.")),
+                LayoutSection(id: "overview", title: String(localized: "Gesamtplan bis zum Ziel"), symbol: "mountain.2",
+                              summary: String(localized: "Überblick und Gesamtplan erstellen."), isRequired: true),
+                LayoutSection(id: "weeks", title: String(localized: "Wochen bis zum Ziel"), symbol: "calendar",
+                              summary: String(localized: "Alle Wochen, antippen öffnet sie im Wochenplan.")),
+                LayoutSection(id: "profile", title: String(localized: "Leistungsprofil"), symbol: "gauge.with.dots.needle.67percent",
+                              summary: String(localized: "Leistungswerte und Tests.")),
+                LayoutSection(id: "review", title: String(localized: "Fortschreibung"), symbol: "arrow.forward.circle",
+                              summary: String(localized: "Plan gegen Ist der letzten Wochen.")),
+                LayoutSection(id: "feedback", title: String(localized: "Feedback zum Gesamtplan"), symbol: "text.bubble",
+                              summary: String(localized: "Änderungswünsche an deinen Coach."))
             ]
         case .dashboard:
             return [
-                LayoutSection(id: "statistics", title: "Statistik", symbol: "chart.bar",
-                              summary: "Deine Kacheln mit Kennzahlen."),
-                LayoutSection(id: "week", title: "Diese Woche", symbol: "calendar",
-                              summary: "Stand der Woche und Erholung."),
-                LayoutSection(id: "goal", title: "Dein Ziel", symbol: "flag",
-                              summary: "Ziel, Abstand und Pace.")
+                LayoutSection(id: "statistics", title: String(localized: "Statistik"), symbol: "chart.bar",
+                              summary: String(localized: "Deine Kacheln mit Kennzahlen.")),
+                LayoutSection(id: "week", title: String(localized: "Diese Woche"), symbol: "calendar",
+                              summary: String(localized: "Stand der Woche und Erholung.")),
+                LayoutSection(id: "goal", title: String(localized: "Dein Ziel"), symbol: "flag",
+                              summary: String(localized: "Ziel, Abstand und Pace."))
             ]
         case .history:
             return [
-                LayoutSection(id: "workouts", title: "Letzte Einheiten", symbol: "figure.mixed.cardio",
-                              summary: "Die Einheiten aus Health, antippen öffnet sie."),
-                LayoutSection(id: "summary", title: "Die letzten 4 Wochen", symbol: "sum",
-                              summary: "Trainierte Einheiten und eingehaltene Ruhetage."),
-                LayoutSection(id: "chart", title: "Geplant und trainiert", symbol: "chart.bar.xaxis",
-                              summary: "Minuten der letzten 14 Tage."),
-                LayoutSection(id: "days", title: "Tage", symbol: "list.bullet",
-                              summary: "Jeder Tag mit Plan gegen Training.")
+                LayoutSection(id: "workouts", title: String(localized: "Letzte Einheiten"), symbol: "figure.mixed.cardio",
+                              summary: String(localized: "Die Einheiten aus Health, antippen öffnet sie.")),
+                LayoutSection(id: "summary", title: String(localized: "Die letzten 4 Wochen"), symbol: "sum",
+                              summary: String(localized: "Trainierte Einheiten und eingehaltene Ruhetage.")),
+                LayoutSection(id: "chart", title: String(localized: "Geplant und trainiert"), symbol: "chart.bar.xaxis",
+                              summary: String(localized: "Minuten der letzten 14 Tage.")),
+                LayoutSection(id: "days", title: String(localized: "Tage"), symbol: "list.bullet",
+                              summary: String(localized: "Jeder Tag mit Plan gegen Training."))
             ]
         }
     }

@@ -74,8 +74,8 @@ public enum BackendSettingsError: Error, Equatable, LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .invalidURL: return "Die Server-Adresse muss mit https:// beginnen."
-        case .missingToken: return "Bitte ein Token eingeben."
+        case .invalidURL: return String(localized: "Die Server-Adresse muss mit https:// beginnen.")
+        case .missingToken: return String(localized: "Bitte ein Token eingeben.")
         }
     }
 }

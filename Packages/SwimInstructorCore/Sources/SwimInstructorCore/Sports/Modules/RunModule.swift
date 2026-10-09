@@ -15,7 +15,7 @@ public struct RunModule: SportModule {
     public init() {}
 
     public let id = SportID.run
-    public let displayName = "Laufen"
+    public let displayName = String(localized: "Laufen")
     public let symbolName = "figure.run"
     public let colorRGB: UInt32 = 0xB794F6
     public let measures: Set<StepMeasure> = [.distance, .duration]
@@ -34,7 +34,7 @@ public struct RunModule: SportModule {
     /// Der Koppellauf direkt nach dem Rad (Wechsel 2).
     public let brickAfter: [SportID] = [.bike]
     public let weatherSensitive = true
-    public let indoorEquipment: IndoorEquipment? = IndoorEquipment(id: "treadmill", displayName: "Laufband")
+    public let indoorEquipment: IndoorEquipment? = IndoorEquipment(id: "treadmill", displayName: String(localized: "Laufband"))
 
     public let recording = SportRecording(
         locations: [.outdoor, .indoor],
@@ -50,14 +50,14 @@ public struct RunModule: SportModule {
 
     public let performanceMetrics: [PerformanceMetricDefinition] = [
         .thresholdHeartRate,
-        PerformanceMetricDefinition(metric: .thresholdPacePerKilometer, displayName: "Schwellentempo", unit: "s/km", plausibleRange: 150...900)
+        PerformanceMetricDefinition(metric: .thresholdPacePerKilometer, displayName: String(localized: "Schwellentempo"), unit: "s/km", plausibleRange: 150...900)
     ]
     public let performanceTests: [PerformanceTest] = [
         // Schwellenpuls und -tempo: Schnitt der letzten 20 Minuten. Nur, wenn 30 Minuten Laufen schon vertraut sind.
         PerformanceTest(
-            id: "threshold_30min", displayName: "30-Minuten-Test",
+            id: "threshold_30min", displayName: String(localized: "30-Minuten-Test"),
             produces: [.thresholdHeartRate, .thresholdPacePerKilometer], maximalEffort: true, durationMinutes: 30,
-            resultHint: "Schwellenpuls und Tempo: Schnitt der letzten 20 Minuten.",
+            resultHint: String(localized: "Schwellenpuls und Tempo: Schnitt der letzten 20 Minuten."),
             recorded: [
                 .average(input: PerformanceMetric.thresholdHeartRate.rawValue, signal: .heartRate, lastSeconds: 20 * 60),
                 .average(input: PerformanceMetric.thresholdPacePerKilometer.rawValue, signal: .pacePerKilometer, lastSeconds: 20 * 60)
@@ -65,9 +65,9 @@ public struct RunModule: SportModule {
         ),
         // Für Einsteiger: locker nach Gefühl, daraus ein geschätztes Schwellentempo.
         PerformanceTest(
-            id: "entry_easy_25min", displayName: "Einstiegstest locker",
+            id: "entry_easy_25min", displayName: String(localized: "Einstiegstest locker"),
             produces: [.thresholdPacePerKilometer], maximalEffort: false, durationMinutes: 25,
-            resultHint: "Das Tempo schätzt die App aus deinen Läufen; der Test selbst ändert dein Profil nicht."
+            resultHint: String(localized: "Das Tempo schätzt die App aus deinen Läufen; der Test selbst ändert dein Profil nicht.")
         )
     ]
     public let zoneSchemes: [ZoneScheme] = [

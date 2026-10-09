@@ -120,9 +120,8 @@ def main():
     print(f"Übersetzungen: {len(needed)} Texte im Code ({len(keys)} Schlüssel insgesamt)")
 
     if dump:
-        print("KEYS-JSON-BEGIN")
-        print(json.dumps({k: sorted(v) for k, v in sorted(needed.items())}, ensure_ascii=False))
-        print("KEYS-JSON-END")
+        for key, sources in sorted(needed.items()):
+            print("KEY " + json.dumps([key, sorted(sources)], ensure_ascii=False))
 
     languages = sorted(d[:-6] for d in os.listdir(LOCALIZATION) if d.endswith(".lproj"))
     errors = []
@@ -130,8 +129,10 @@ def main():
         path = os.path.join(LOCALIZATION, f"{language}.lproj", "Localizable.strings")
         table = parse_strings(path) if os.path.exists(path) else {}
         missing = sorted(k for k in needed if k not in table)
-        for key in missing:
+        for key in missing[:20]:
             errors.append(f"{language}: fehlt {key!r} ({', '.join(sorted(needed[key]))})")
+        if len(missing) > 20:
+            errors.append(f"{language}: und {len(missing) - 20} weitere fehlende Texte")
         for key, value in table.items():
             if specifiers(key) != specifiers(value):
                 errors.append(f"{language}: Platzhalter passen nicht: {key!r} -> {value!r}")
@@ -142,6 +143,7 @@ def main():
 
     if errors:
         print("\n".join(errors))
+        sys.stdout.flush()
         raise SystemExit(f"{len(errors)} Übersetzungsfehler, siehe oben (Anleitung: docs/uebersetzungen.md)")
     print("Alle Texte in allen Sprachen übersetzt.")
 

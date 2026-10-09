@@ -103,11 +103,14 @@ public final class PerformanceProfileLoader: ObservableObject {
     @discardableResult
     public func setManual(_ value: Double, metric: PerformanceMetric, sport: SportID?) -> Bool {
         guard let definition = registry.metricDefinition(metric, sport: sport) else {
-            error = "Diesen Wert kennt die App nicht."
+            error = String(localized: "Diesen Wert kennt die App nicht.")
             return false
         }
         guard value.isFinite, definition.plausibleRange.contains(value) else {
-            error = "\(definition.displayName) liegt außerhalb von \(PlanV2Formatting.performanceValue(definition.plausibleRange.lowerBound, unit: definition.unit)) bis \(PlanV2Formatting.performanceValue(definition.plausibleRange.upperBound, unit: definition.unit))."
+            let name = definition.displayName
+            let lower = PlanV2Formatting.performanceValue(definition.plausibleRange.lowerBound, unit: definition.unit)
+            let upper = PlanV2Formatting.performanceValue(definition.plausibleRange.upperBound, unit: definition.unit)
+            error = String(localized: "\(name) liegt außerhalb von \(lower) bis \(upper).")
             return false
         }
         return record([PerformanceValue(sport: sport, metric: metric, value: value, source: .manual, measuredAt: now())])
@@ -119,11 +122,12 @@ public final class PerformanceProfileLoader: ObservableObject {
     @discardableResult
     public func propose(testID: String, sport: SportID, entries: [String: Double], measuredAt: Date? = nil) -> Bool {
         guard let module = registry.module(for: sport), let test = module.performanceTests.first(where: { $0.id == testID }) else {
-            error = "Diesen Test kennt die App nicht."
+            error = String(localized: "Diesen Test kennt die App nicht.")
             return false
         }
         guard test.maximalEffort else {
-            error = "\(test.displayName) ist kein Test mit Vollbelastung. Das Tempo schätzt die App aus deinen Einheiten."
+            let name = test.displayName
+            error = String(localized: "\(name) ist kein Test mit Vollbelastung. Das Tempo schätzt die App aus deinen Einheiten.")
             return false
         }
         let values = test.evaluate(entries, definitions: module.performanceMetrics)
@@ -134,7 +138,7 @@ public final class PerformanceProfileLoader: ObservableObject {
             return Proposal(definition: definition, value: value, previous: current(metric, sport: sport))
         }
         guard !proposals.isEmpty else {
-            error = "Aus diesen Angaben ergibt sich kein Wert. Prüf die Eingaben."
+            error = String(localized: "Aus diesen Angaben ergibt sich kein Wert. Prüf die Eingaben.")
             return false
         }
         pending = PendingResult(sport: sport, testID: test.id, testName: test.displayName, measuredAt: measuredAt ?? now(), proposals: proposals)
@@ -173,7 +177,7 @@ public final class PerformanceProfileLoader: ObservableObject {
             stored = store.record(value) && stored
         }
         profile = store.profile()
-        error = stored ? nil : "Der Wert konnte nicht gespeichert werden."
+        error = stored ? nil : String(localized: "Der Wert konnte nicht gespeichert werden.")
         return stored
     }
 }

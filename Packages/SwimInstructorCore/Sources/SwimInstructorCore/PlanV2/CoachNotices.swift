@@ -24,7 +24,7 @@ public enum CoachNotices {
     /// "Dein Plan für heute steht" mit den Einheiten des Tags, `nil` an einem Tag ohne Einheiten und Blöcke.
     public static func morningPlan(_ plan: DayPlanV2Response, registry: SportRegistry = .standard) -> CoachNotice? {
         guard let summary = planSummary(plan.plan, registry: registry) else { return nil }
-        return CoachNotice(id: morningID(for: plan.date), title: "Dein Plan für heute steht", body: summary)
+        return CoachNotice(id: morningID(for: plan.date), title: String(localized: "Dein Plan für heute steht"), body: summary)
     }
 
     /// "Laufen · 40 min, Kraft", in der Reihenfolge des Plans; `nil` ohne Einheiten und Blöcke.
@@ -38,10 +38,11 @@ public enum CoachNotices {
     /// "Wie war's?" nach einer Einheit aus Health.
     public static func feedback(for workout: Workout, registry: SportRegistry = .standard) -> CoachNotice {
         let minutes = Int((workout.duration / 60).rounded())
+        let sportName: String = registry.displayName(for: workout.sport)
         return CoachNotice(
             id: feedbackID(for: workout.id),
-            title: "Wie war's?",
-            body: "\(registry.displayName(for: workout.sport)), \(minutes) min. Sag deinem Coach, wie anstrengend es war und ob etwas wehtut."
+            title: String(localized: "Wie war's?"),
+            body: String(localized: "\(sportName), \(minutes) min. Sag deinem Coach, wie anstrengend es war und ob etwas wehtut.")
         )
     }
 

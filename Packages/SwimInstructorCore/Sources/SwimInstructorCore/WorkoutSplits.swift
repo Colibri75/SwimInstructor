@@ -12,12 +12,12 @@ public enum SwimStrokeStyle: Int, Equatable, Sendable {
 
     public var displayName: String {
         switch self {
-        case .mixed: return "Lagen"
-        case .freestyle: return "Freistil"
-        case .backstroke: return "Rücken"
-        case .breaststroke: return "Brust"
-        case .butterfly: return "Schmetterling"
-        case .kickboard: return "Kickboard"
+        case .mixed: return String(localized: "Lagen", comment: "Schwimmstil")
+        case .freestyle: return String(localized: "Freistil", comment: "Schwimmstil")
+        case .backstroke: return String(localized: "Rücken", comment: "Schwimmstil")
+        case .breaststroke: return String(localized: "Brust", comment: "Schwimmstil")
+        case .butterfly: return String(localized: "Schmetterling", comment: "Schwimmstil")
+        case .kickboard: return String(localized: "Kickboard", comment: "Schwimmstil")
         }
     }
 }

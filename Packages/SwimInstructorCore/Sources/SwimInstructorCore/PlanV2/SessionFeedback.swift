@@ -10,20 +10,20 @@ public enum PainLevel: Int, Codable, Sendable, CaseIterable, Comparable {
 
     public var displayName: String {
         switch self {
-        case .none: return "Keine"
-        case .light: return "Leicht"
-        case .moderate: return "Deutlich"
-        case .strong: return "Stark"
+        case .none: return String(localized: "Keine", comment: "Beschwerden: keine")
+        case .light: return String(localized: "Leicht", comment: "Beschwerden: leicht")
+        case .moderate: return String(localized: "Deutlich", comment: "Beschwerden: deutlich")
+        case .strong: return String(localized: "Stark", comment: "Beschwerden: stark")
         }
     }
 
     /// Für "leichte Beschwerden", "deutliche Beschwerden".
     public var adjective: String {
         switch self {
-        case .none: return "keine"
-        case .light: return "leichte"
-        case .moderate: return "deutliche"
-        case .strong: return "starke"
+        case .none: return String(localized: "keine", comment: "Adjektiv vor Beschwerden")
+        case .light: return String(localized: "leichte", comment: "Adjektiv vor Beschwerden")
+        case .moderate: return String(localized: "deutliche", comment: "Adjektiv vor Beschwerden")
+        case .strong: return String(localized: "starke", comment: "Adjektiv vor Beschwerden")
         }
     }
 
@@ -38,14 +38,14 @@ public enum PainArea: String, Codable, Sendable, CaseIterable, Identifiable {
 
     public var displayName: String {
         switch self {
-        case .knee: return "Knie"
-        case .shin: return "Schienbein"
-        case .achilles: return "Achillessehne"
-        case .foot: return "Fuß"
-        case .hip: return "Hüfte"
-        case .back: return "Rücken"
-        case .shoulder: return "Schulter"
-        case .other: return "Anderswo"
+        case .knee: return String(localized: "Knie")
+        case .shin: return String(localized: "Schienbein")
+        case .achilles: return String(localized: "Achillessehne")
+        case .foot: return String(localized: "Fuß")
+        case .hip: return String(localized: "Hüfte")
+        case .back: return String(localized: "Rücken")
+        case .shoulder: return String(localized: "Schulter")
+        case .other: return String(localized: "Anderswo")
         }
     }
 }
@@ -69,10 +69,10 @@ public struct SessionFeedback: Codable, Equatable, Sendable, Identifiable {
     /// Kurz für die Uhr: "locker", "mittel", "hart", "sehr hart" (ab 8 plant die App danach erst etwas Lockeres).
     public static func effortLabel(_ effort: Int) -> String {
         switch effort {
-        case ...3: return "locker"
-        case 4...6: return "mittel"
-        case 7: return "hart"
-        default: return "sehr hart"
+        case ...3: return String(localized: "locker", comment: "Gefühlte Anstrengung")
+        case 4...6: return String(localized: "mittel", comment: "Gefühlte Anstrengung")
+        case 7: return String(localized: "hart", comment: "Gefühlte Anstrengung")
+        default: return String(localized: "sehr hart", comment: "Gefühlte Anstrengung")
         }
     }
 

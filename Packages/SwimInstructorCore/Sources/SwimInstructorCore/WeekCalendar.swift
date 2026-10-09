@@ -3,8 +3,24 @@ import Foundation
 /// Rechnen mit Kalendertagen im Format `yyyy-MM-dd` und Wochen von Montag bis Sonntag. Die Wochen
 /// laufen unabhängig von der Spracheinstellung des Geräts ab Montag.
 public struct WeekCalendar: Sendable {
-    private static let shortNames = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"]
-    private static let longNames = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"]
+    private static var shortNames: [String] {
+        [
+            String(localized: "So", comment: "Sonntag, kurz"),
+            String(localized: "Mo", comment: "Montag, kurz"),
+            String(localized: "Di", comment: "Dienstag, kurz"),
+            String(localized: "Mi", comment: "Mittwoch, kurz"),
+            String(localized: "Do", comment: "Donnerstag, kurz"),
+            String(localized: "Fr", comment: "Freitag, kurz"),
+            String(localized: "Sa", comment: "Samstag, kurz")
+        ]
+    }
+
+    /// Sonntag zuerst, in der Sprache der App.
+    static var longNames: [String] {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = AppLocale.current
+        return calendar.standaloneWeekdaySymbols
+    }
 
     private let calendar: Calendar
 
