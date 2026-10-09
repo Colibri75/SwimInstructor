@@ -1,3 +1,5 @@
+require "base64"
+
 require "fileutils"
 require "json"
 
@@ -100,8 +102,20 @@ platform :ios do
         "com.kellner.SwimInstructor.widgets",
         "com.kellner.SwimInstructor.watchkitapp.widgets"
       ],
-      git_basic_authorization: ENV["MATCH_GIT_WRITE_AUTHORIZATION"]
+      git_basic_authorization: match_write_authorization
     )
+  end
+
+  # Das Secret darf "Benutzer:Token" im Klartext oder base64 davon sein. Zeilenumbrüche (base64 bricht unter Linux nach
+  # 76 Zeichen um, echo hängt einen an) entfernen, sonst lehnt git den Header ab ("A libcurl function was given a bad argument").
+  def match_write_authorization
+    raw = ENV["MATCH_GIT_WRITE_AUTHORIZATION"].to_s.strip
+    UI.user_error!("Secret MATCH_GIT_WRITE_AUTHORIZATION fehlt") if raw.empty?
+    return Base64.strict_encode64(raw) if raw.include?(":")
+
+    encoded = raw.gsub(/\s/, "")
+    UI.user_error!("MATCH_GIT_WRITE_AUTHORIZATION ist kein base64 von \"Benutzer:Token\"") unless Base64.decode64(encoded).include?(":")
+    encoded
   end
 
   desc "Build, sign and upload a new build to TestFlight"
