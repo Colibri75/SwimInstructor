@@ -1,4 +1,4 @@
-/* Peaksmith – hi. Schlüssel = deutscher Text im Code, siehe docs/uebersetzungen.md */
+/* PeakSmith – hi. Schlüssel = deutscher Text im Code, siehe docs/uebersetzungen.md */
 "%@ %@ in %lld Einheiten" = "%1$@ %2$@, %3$lld सेशन में";
 "%@ %@ in 1 Einheit" = "%1$@ %2$@, 1 सेशन में";
 "%@ (optional)" = "%@ (वैकल्पिक)";
@@ -709,7 +709,7 @@
 "Wie sich dein Training auf die Sportarten verteilt. Ziehst du eine hoch, werden die anderen im Verhältnis kleiner; zusammen sind es immer 100 %." = "आपकी ट्रेनिंग स्पोर्ट में कैसे बँटी है। एक को बढ़ाने पर बाकी उसी अनुपात में घट जाते हैं; कुल हमेशा 100 % रहता है।";
 "Wie war's?" = "कैसा रहा?";
 "Wieder deinem Coach überlassen" = "फिर से अपने कोच पर छोड़ें";
-"Willkommen bei Peaksmith" = "Peaksmith में आपका स्वागत है";
+"Willkommen bei PeakSmith" = "PeakSmith में आपका स्वागत है";
 "Wird geholt …" = "लाया जा रहा है …";
 "Wo?" = "कहाँ?";
 "Woche" = "सप्ताह";
@@ -820,7 +820,7 @@
 "zu wenig Daten" = "बहुत कम डेटा";
 "Ändert Sportart, Kennzahl und Zeitraum." = "स्पोर्ट, आँकड़ा और अवधि बदलता है।";
 "Änderungswünsche an deinen Coach." = "आपके कोच के लिए बदलाव के अनुरोध।";
-"Öffne Peaksmith für deinen Plan" = "अपने प्लान के लिए Peaksmith खोलें";
+"Öffne PeakSmith für deinen Plan" = "अपने प्लान के लिए PeakSmith खोलें";
 "Öffne zuerst den Tab Aktuell, damit die App deinen Zustand aus Health kennt." = "पहले आज टैब खोलें, ताकि ऐप Health से आपकी स्थिति जान सके।";
 "Öffnet die Details." = "विवरण खोलता है।";
 "Ø %lld" = "औसत %lld";

@@ -111,7 +111,7 @@ Je eine Einheit, danach in der Fitness-App Strecke, Karte und Herzfrequenz prüf
 - [ ] Im Plan-Tab heute ändern: Das Widget folgt, sobald Aktuell den neuen Plan hat
 - [ ] Watch: Komplikation "Nächste Einheit" aufs Zifferblatt (rechteckig, rund, Ecke, Zeile): zeigt den Plan vom iPhone;
       Tippen öffnet die Watch-App
-- [ ] Am nächsten Morgen ohne Öffnen der App: Statt eines alten Plans steht "Öffne Peaksmith für deinen Plan" oder der
+- [ ] Am nächsten Morgen ohne Öffnen der App: Statt eines alten Plans steht "Öffne PeakSmith für deinen Plan" oder der
       vorab geholte Plan
 
 ## 5. Wetter (wenn es passt)
