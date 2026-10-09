@@ -51,9 +51,14 @@ platform :ios do
         "-scheme", "SwimInstructor",
         "-configuration", "Debug",
         "-destination", "generic/platform=iOS",
+        "-derivedDataPath", "build/DerivedData",
         "CODE_SIGNING_ALLOWED=NO",
+        # Legt je Swift-Datei die übersetzbaren Texte ab (.stringsdata), für die Prüfung darunter.
+        "SWIFT_EMIT_LOC_STRINGS=YES",
         "-quiet"
       )
+      # Jeder Text in jeder Sprache übersetzt, Platzhalter passend (docs/uebersetzungen.md).
+      sh("python3", "scripts/check_localizations.py", "--dump", "build/DerivedData")
     end
   end
 
