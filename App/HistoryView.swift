@@ -255,6 +255,7 @@ private struct HistoryDayView: View {
 /// Ein Tag mit Plan: Ausgang und je Sportart geplant gegen gemacht. Auch in der Statistik ("Plan erfüllt").
 struct HistoryRow: View {
     let entry: MultiSportAdherenceEntry
+    @AppStorage(Theme.greenWeakKey) private var greenWeak = false
 
     private let registry = SportRegistry.standard
 
@@ -266,7 +267,7 @@ struct HistoryRow: View {
                 Spacer()
                 Label(PlanV2Formatting.outcomeText(entry.outcome), systemImage: Self.symbol(entry.outcome))
                     .font(.caption)
-                    .foregroundStyle(Self.color(entry.outcome))
+                    .foregroundStyle(Self.color(entry.outcome, greenWeak: greenWeak))
             }
             if entry.plan.isRestDay {
                 Text("Geplant: Ruhetag")
@@ -310,11 +311,11 @@ struct HistoryRow: View {
         }
     }
 
-    private static func color(_ outcome: AdherenceOutcome) -> Color {
+    private static func color(_ outcome: AdherenceOutcome, greenWeak: Bool) -> Color {
         switch outcome {
-        case .followed, .restKept: return .green
-        case .shorter, .longer, .restBroken: return .orange
-        case .missed: return .red
+        case .followed, .restKept: return Theme.done(greenWeak: greenWeak)
+        case .shorter, .longer, .restBroken: return Theme.caution(greenWeak: greenWeak)
+        case .missed: return Theme.missed(greenWeak: greenWeak)
         case .pending: return .secondary
         }
     }

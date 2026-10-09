@@ -212,7 +212,7 @@ struct TodayView: View {
                 .environment(\.colorScheme, .dark)
                 .listRowBackground(
                     ZStack(alignment: .bottomTrailing) {
-                        Theme.night
+                        Theme.dayCard
                         PeakShape()
                             .stroke(.white.opacity(0.1), style: StrokeStyle(lineWidth: 16, lineCap: .round, lineJoin: .round))
                             .frame(width: 150, height: 86)
@@ -566,6 +566,7 @@ struct TestResultTarget: Identifiable {
 /// Eine geplante Einheit groß auf der Tageskarte: Symbol in der Farbe der Sportart, Sportart und Umfang, darunter Art
 /// und Intensität.
 private struct HeroSessionLine: View {
+    @AppStorage(Theme.greenWeakKey) private var greenWeak = false
     let session: WeekSession
 
     private let registry = SportRegistry.standard
@@ -574,9 +575,9 @@ private struct HeroSessionLine: View {
         HStack(spacing: 14) {
             Image(systemName: registry.symbolName(for: session.sport))
                 .font(.title2.weight(.semibold))
-                .foregroundStyle(Theme.sport(session.sport))
+                .foregroundStyle(Theme.sport(session.sport, greenWeak: greenWeak))
                 .frame(width: 52, height: 52)
-                .background(Theme.sport(session.sport).opacity(0.18), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background(Theme.sport(session.sport, greenWeak: greenWeak).opacity(0.18), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(PlanV2Formatting.sessionTitle(sport: session.sport, amount: session.amount, unit: session.unit, registry: registry))

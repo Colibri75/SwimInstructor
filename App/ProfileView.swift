@@ -164,6 +164,7 @@ private struct ProfileEntryRow: View {
 
 /// Ein Leistungswert im Detail: aktueller Wert, Verlauf und Eingabe von Hand.
 struct ProfileEntryDetailView: View {
+    @AppStorage(Theme.greenWeakKey) private var greenWeak = false
     let sport: SportID?
     let metric: PerformanceMetric
 
@@ -248,7 +249,7 @@ struct ProfileEntryDetailView: View {
             } else if saved {
                 Label("Gespeichert, gilt ab dem nächsten Plan.", systemImage: "checkmark.circle")
                     .font(.footnote)
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Theme.done(greenWeak: greenWeak))
             }
         } header: {
             Text("Von Hand eintragen")

@@ -33,6 +33,7 @@ struct SettingsView: View {
     private let planningStore = UserDefaultsPlanningPreferencesStore()
     @State private var indoorOwned: Set<String> = []
     @AppStorage(Appearance.storageKey) private var appearance = Appearance.system
+    @AppStorage(Theme.greenWeakKey) private var greenWeak = false
     private let indoorStore = UserDefaultsIndoorEquipmentStore()
 
     init(onSave: @escaping () -> Void = {}) {
@@ -65,7 +66,7 @@ struct SettingsView: View {
                         if let message {
                             Text(message)
                                 .font(.footnote)
-                                .foregroundStyle(messageIsError ? .red : .green)
+                                .foregroundStyle(messageIsError ? Color.red : Theme.done(greenWeak: greenWeak))
                         }
                     }
 
@@ -206,6 +207,7 @@ struct SettingsView: View {
 
     // MARK: - Erscheinungsbild
 
+    @ViewBuilder
     private var appearanceSection: some View {
         Section {
             Picker("Farbschema", selection: $appearance) {
@@ -218,6 +220,11 @@ struct SettingsView: View {
             Text("Erscheinungsbild")
         } footer: {
             Text("Hell ist der blaugraue Morgennebel, dunkel die Nacht aus dem Logo. Wie iPhone folgt der Einstellung des iPhones.")
+        }
+        Section {
+            Toggle("Farben für Grün-Schwäche", isOn: $greenWeak)
+        } footer: {
+            Text("Statt Grün und Rot: erfüllt Blau, abweichend Orange, verpasst Grau. Laufen wird Beere statt Violett, damit es sich von Schwimmen abhebt. Gilt hell und dunkel.")
         }
     }
 

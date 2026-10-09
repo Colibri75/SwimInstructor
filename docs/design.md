@@ -5,7 +5,7 @@ das Training. Entwürfe: Artifact "Peaksmith Design-Entwürfe". Im Code stehen d
 
 | Name | Wert | Rolle |
 |---|---|---|
-| Nacht | `#14213D` | Grund im Dunkeln (`#0D1629`), Karten, die Tageskarte auf Aktuell (auch hell) |
+| Nacht | `#22335C` | Logo, App-Icon, Widget-Grund, Karten und Tageskarte ("Dämmerung", vorher `#14213D`); Grund im Dunkeln `#18264A` |
 | Glut | `#FF9F43` | nur Aktionen: Hauptknöpfe, aktiver Tab, Fortschritt, aktueller Schritt auf der Watch |
 | Funke | `#FFD166` | nur Erfolge: erledigt, Bestwerte, Pausen auf der Watch, Fahne auf dem Gipfel |
 | Gipfel | `#FFFFFF` | Text und Linien auf Nacht |
@@ -22,3 +22,5 @@ das Training. Entwürfe: Artifact "Peaksmith Design-Entwürfe". Im Code stehen d
   leere Spur `#C9D2E0`. Kein reines Weiß, damit die App nicht grell wirkt.
 - Hell oder dunkel wählt man unter Einstellungen › Erscheinungsbild (Wie iPhone, Hell, Dunkel; `App/Appearance.swift`).
   Die Watch und die Widgets bleiben dabei, wie sie sind.
+- Darunter schaltet "Farben für Grün-Schwäche" (`Theme.greenWeakKey`) die Statusfarben von Grün/Orange/Rot auf
+  Nacht-Blau/Glut/Grau (`Theme.done/caution/missed(greenWeak:)`) und Laufen von Violett auf Beere. Nur iPhone-App.

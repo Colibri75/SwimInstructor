@@ -832,3 +832,5 @@
 "Übernehmen" = "적용";
 "Übernommen. Der Gesamtplan bleibt, die nächste Fortschreibung rechnet damit." = "적용됐어요. 전체 계획은 그대로이고, 다음 계획 업데이트에 반영돼요.";
 "Übernommen. Der neue Gesamtplan entsteht jetzt im Hintergrund." = "적용됐어요. 새 전체 계획을 백그라운드에서 만들고 있어요.";
+"Farben für Grün-Schwäche" = "녹색약용 색상";
+"Statt Grün und Rot: erfüllt Blau, abweichend Orange, verpasst Grau. Laufen wird Beere statt Violett, damit es sich von Schwimmen abhebt. Gilt hell und dunkel." = "초록과 빨강 대신 완료는 파랑, 차이는 주황, 놓침은 회색으로 표시합니다. 달리기는 보라 대신 베리색이 되어 수영과 구분됩니다. 라이트와 다크 모드 모두에 적용됩니다.";

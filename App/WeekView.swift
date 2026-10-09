@@ -368,6 +368,7 @@ private struct WeekDayPreviewRow: View {
 }
 
 private struct WeekDayRow: View {
+    @AppStorage(Theme.greenWeakKey) private var greenWeak = false
     let status: MultiSportDayStatus
     let isToday: Bool
 
@@ -416,7 +417,7 @@ private struct WeekDayRow: View {
             }
             Spacer(minLength: 8)
             Image(systemName: WeekStateStyle.symbol(status.state))
-                .foregroundStyle(WeekStateStyle.color(status.state))
+                .foregroundStyle(WeekStateStyle.color(status.state, greenWeak: greenWeak))
                 .accessibilityLabel(PlanV2Formatting.stateText(status.state))
         }
         .contentShape(Rectangle())
@@ -446,11 +447,11 @@ enum WeekStateStyle {
         }
     }
 
-    static func color(_ state: WeekDayState) -> Color {
+    static func color(_ state: WeekDayState, greenWeak: Bool) -> Color {
         switch state {
-        case .followed, .restKept: return .green
-        case .shorter, .longer, .restBroken: return .orange
-        case .missed: return .red
+        case .followed, .restKept: return Theme.done(greenWeak: greenWeak)
+        case .shorter, .longer, .restBroken: return Theme.caution(greenWeak: greenWeak)
+        case .missed: return Theme.missed(greenWeak: greenWeak)
         case .today: return Theme.accent
         case .upcoming, .skipped, .unplanned: return .secondary
         }

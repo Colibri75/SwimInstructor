@@ -31,6 +31,7 @@ struct StatisticTileRows: View {
 
 /// Eine Kachel über die ganze Breite: Sportart und Zeitraum, Kennzahl, Wert, Verlauf, Vergleich mit dem Zeitraum davor.
 struct StatisticTileView: View {
+    @AppStorage(Theme.greenWeakKey) private var greenWeak = false
     let result: StatisticResult
     /// Pfeil rechts: Antippen öffnet das Detail (nicht in der Vorschau beim Hinzufügen).
     var showsDisclosure = true
@@ -117,8 +118,8 @@ struct StatisticTileView: View {
 
     private var trendColor: Color {
         switch StatisticFormatting.assessment(result) {
-        case .better: return .green
-        case .worse: return .orange
+        case .better: return Theme.done(greenWeak: greenWeak)
+        case .worse: return Theme.caution(greenWeak: greenWeak)
         case .neutral: return .secondary
         }
     }
