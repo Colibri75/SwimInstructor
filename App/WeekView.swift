@@ -147,9 +147,9 @@ struct WeekView: View {
     }
 
     private var weekTitle: String {
-        if weekStart == weekLoader.currentWeekStart { return "Diese Woche, \(rangeText)" }
-        if weekStart == weekCalendar.addingDays(7, to: weekLoader.currentWeekStart) { return "Nächste Woche, \(rangeText)" }
-        return "Woche \(rangeText)"
+        if weekStart == weekLoader.currentWeekStart { return String(localized: "Diese Woche, \(rangeText)") }
+        if weekStart == weekCalendar.addingDays(7, to: weekLoader.currentWeekStart) { return String(localized: "Nächste Woche, \(rangeText)") }
+        return String(localized: "Woche \(rangeText)")
     }
 
     /// Geplant gegen trainiert; für eine Woche ganz in der Zukunft ohne Plan nur der Hinweis, wann sie geplant wird.
@@ -190,15 +190,17 @@ struct WeekView: View {
         let plannedFrom = weekCalendar.addingDays(-(MultiSportWeekLoader.windowDays - 1), to: weekStart) ?? weekStart
         let when = PlanFormatting.germanDate(plannedFrom)
         if macroWeek != nil {
-            return "Die einzelnen Einheiten plant die App immer für die nächsten 14 Tage, für diese Woche ab \(when). Bis dahin siehst du hier die Vorgabe aus dem Gesamtplan und deinen Wochenraster."
+            return String(localized: "Die einzelnen Einheiten plant die App immer für die nächsten 14 Tage, für diese Woche ab \(when). Bis dahin siehst du hier die Vorgabe aus dem Gesamtplan und deinen Wochenraster.")
         }
-        return "Die einzelnen Einheiten plant die App immer für die nächsten 14 Tage, für diese Woche ab \(when). Für diese Woche gibt es noch keine Vorgabe aus dem Gesamtplan."
+        return String(localized: "Die einzelnen Einheiten plant die App immer für die nächsten 14 Tage, für diese Woche ab \(when). Für diese Woche gibt es noch keine Vorgabe aus dem Gesamtplan.")
     }
 
     /// Was der Gesamtplan für die Woche vorgibt: Phase, Umfang je Sportart, Tests und Schwerpunkt.
     private func macroTargetSection(_ week: MacroWeekV2) -> some View {
         Section("Vorgabe aus dem Gesamtplan") {
-            Text("\(PlanFormatting.macroPhase(week.phase)), etwa \(PlanV2Formatting.duration(minutes: week.totalMinutes))\(week.deload ? " (Entlastung)" : "")")
+            Text(week.deload
+                 ? String(localized: "\(PlanFormatting.macroPhase(week.phase)), etwa \(PlanV2Formatting.duration(minutes: week.totalMinutes)) (Entlastung)")
+                 : String(localized: "\(PlanFormatting.macroPhase(week.phase)), etwa \(PlanV2Formatting.duration(minutes: week.totalMinutes))"))
                 .font(.subheadline.weight(.semibold))
             ForEach(week.sports, id: \.sport) { volume in
                 Label(PlanV2Formatting.macroVolume(volume, registry: registry), systemImage: registry.symbolName(for: volume.sport))
@@ -426,7 +428,7 @@ private struct WeekDayRow: View {
         let parts = status.comparisons.filter { $0.workoutCount > 0 }.map {
             "\(registry.displayName(for: $0.sport)) \(PlanV2Formatting.amount($0.actual, unit: $0.unit))"
         }
-        return "Gemacht: \(parts.joined(separator: ", "))"
+        return String(localized: "Gemacht: \(parts.joined(separator: ", "))")
     }
 }
 

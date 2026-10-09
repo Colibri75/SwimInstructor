@@ -240,7 +240,7 @@ private struct StatisticBreakdownSection: View {
                     Text(StatisticFormatting.text(day.value, definition: result.definition))
                         .monospacedDigit()
                 } label: {
-                    Text(day.date.formatted(.dateTime.weekday(.wide).day().month(.defaultDigits).locale(Locale(identifier: "de_DE"))))
+                    Text(day.date.formatted(.dateTime.weekday(.wide).day().month(.defaultDigits).locale(AppLocale.current)))
                 }
             }
             ForEach(breakdown.planDays) { entry in
@@ -261,8 +261,8 @@ private struct StatisticBreakdownSection: View {
 
     private var emptyText: String {
         let measure = result.definition.measure
-        if measure.usesWorkouts { return "Keine Einheit an diesen Tagen." }
-        if measure == .planAdherence { return "Kein gespeicherter Plan an diesen Tagen." }
-        return "Keine Messung an diesen Tagen."
+        if measure.usesWorkouts { return String(localized: "Keine Einheit an diesen Tagen.") }
+        if measure == .planAdherence { return String(localized: "Kein gespeicherter Plan an diesen Tagen.") }
+        return String(localized: "Keine Messung an diesen Tagen.")
     }
 }

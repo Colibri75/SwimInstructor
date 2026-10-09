@@ -306,9 +306,9 @@ private struct HeartRateChart: View {
     /// "Ø 142 · min 98 · max 171 bpm"
     private var summary: String {
         var parts: [String] = []
-        if let averageHeartRate { parts.append("Ø \(Int(averageHeartRate.rounded()))") }
-        if let minimum = curve.minimum { parts.append("min \(Int(minimum.rounded()))") }
-        if let maximum = curve.maximum { parts.append("max \(Int(maximum.rounded()))") }
-        return parts.isEmpty ? "" : parts.joined(separator: " · ") + " bpm"
+        if let averageHeartRate { parts.append(String(localized: "Ø \(Int(averageHeartRate.rounded()))")) }
+        if let minimum = curve.minimum { parts.append(String(localized: "min \(Int(minimum.rounded()))")) }
+        if let maximum = curve.maximum { parts.append(String(localized: "max \(Int(maximum.rounded()))")) }
+        return parts.isEmpty ? "" : String(localized: "\(parts.joined(separator: " · ")) bpm")
     }
 }

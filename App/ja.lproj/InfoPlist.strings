@@ -1,0 +1,5 @@
+/* Hinweise der Berechtigungsabfragen, deutsch in Info.plist (docs/uebersetzungen.md) */
+"NSHealthShareUsageDescription" = "Peaksmith は「ヘルスケア」からワークアウトとバイタルデータを読み取り、毎日最新のトレーニングプランを作成します。";
+"NSHealthUpdateUsageDescription" = "Peaksmith はワークアウトを「ヘルスケア」に保存します。";
+"NSLocationWhenInUseUsageDescription" = "Peaksmith はおおよその位置情報（約10 km の精度）を天気予報にのみ使用し、雷雨・強風・凍結の日はプランを屋内に切り替えます。";
+"NSCalendarsFullAccessUsageDescription" = "Peaksmith は予定の時間帯を読み取り、忙しい日はトレーニングを少なめにします。予定のタイトルや内容は iPhone から出ません。";

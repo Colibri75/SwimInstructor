@@ -95,7 +95,7 @@ struct WatchTodayView: View {
             NavigationLink {
                 WatchStartView(sport: session.sport, session: session)
             } label: {
-                Label(session.test.map { "Test starten: \($0.displayName)" } ?? "Starten", systemImage: registry.symbolName(for: session.sport))
+                Label(session.test.map { String(localized: "Test starten: \($0.displayName)") } ?? String(localized: "Starten"), systemImage: registry.symbolName(for: session.sport))
                     .font(.headline)
             }
             .tint(Theme.ember)

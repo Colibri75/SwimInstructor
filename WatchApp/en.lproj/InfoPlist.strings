@@ -1,0 +1,4 @@
+/* Hinweise der Berechtigungsabfragen, deutsch in Info.plist (docs/uebersetzungen.md) */
+"NSHealthShareUsageDescription" = "Peaksmith reads your workouts and vital data from Health to show your training plan right on your watch.";
+"NSHealthUpdateUsageDescription" = "Peaksmith saves your sessions to Health, with route, map, laps and heart rate.";
+"NSLocationWhenInUseUsageDescription" = "Peaksmith records your route outdoors via GPS, for pace, elevation and the map in Health.";

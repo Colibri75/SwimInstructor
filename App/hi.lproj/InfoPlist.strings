@@ -1,0 +1,5 @@
+/* Hinweise der Berechtigungsabfragen, deutsch in Info.plist (docs/uebersetzungen.md) */
+"NSHealthShareUsageDescription" = "Peaksmith आपके वर्कआउट और स्वास्थ्य डेटा को Health से पढ़ता है, ताकि हर दिन आपके लिए ताज़ा ट्रेनिंग प्लान बना सके।";
+"NSHealthUpdateUsageDescription" = "Peaksmith आपके वर्कआउट Health में सेव करता है।";
+"NSLocationWhenInUseUsageDescription" = "Peaksmith आपकी अनुमानित लोकेशन (लगभग 10 किमी तक सटीक) का उपयोग केवल मौसम पूर्वानुमान के लिए करता है, ताकि आंधी-तूफ़ान या बर्फ़ में आपका प्लान इनडोर हो जाए।";
+"NSCalendarsFullAccessUsageDescription" = "Peaksmith पढ़ता है कि आपकी मीटिंग कब हैं और व्यस्त दिनों में कम ट्रेनिंग रखता है। मीटिंग के शीर्षक और विवरण iPhone पर ही रहते हैं।";

@@ -40,7 +40,7 @@ struct PlanGlanceProvider: TimelineProvider {
                 PlanGlance.Item(
                     sport: sport,
                     title: PlanV2Formatting.sessionTitle(sport: sport, amount: 45, unit: .minutes, registry: registry),
-                    focus: "Locker",
+                    focus: String(localized: "Locker"),
                     symbolName: registry.symbolName(for: sport),
                     colorRGB: registry.colorRGB(for: sport)
                 )
@@ -61,12 +61,12 @@ struct PlanGlanceText {
     var first: PlanGlance.Item? { items.first }
 
     /// Ohne aktuellen Stand.
-    static let openApp = "Öffne Peaksmith für deinen Plan"
+    static var openApp: String { String(localized: "Öffne Peaksmith für deinen Plan") }
 
     /// Eine Zeile: "Heute: Laufen · 45 min", "Morgen: Ruhetag".
     var inline: String {
         guard let heading else { return Self.openApp }
-        if isRestDay { return "\(heading): Ruhetag" }
+        if isRestDay { return String(localized: "\(heading): Ruhetag") }
         let more = items.count > 1 ? " +\(items.count - 1)" : ""
         return "\(heading): \(first?.title ?? "")\(more)"
     }

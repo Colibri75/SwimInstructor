@@ -57,7 +57,7 @@ struct WeeklyScheduleView: View {
                     }
                 }
                 Stepper(value: binding(day.weekday, \.maxMinutes), in: WeeklySchedule.minutesRange, step: WeeklySchedule.minutesStep) {
-                    LabeledContent("Höchstens", value: "\(day.maxMinutes) min")
+                    LabeledContent("Höchstens", value: String(localized: "\(day.maxMinutes) min"))
                 }
                 Picker("Sportart", selection: binding(day.weekday, \.sport)) {
                     Text("Wie es passt").tag(SportID?.none)

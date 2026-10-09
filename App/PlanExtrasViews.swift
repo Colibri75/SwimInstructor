@@ -4,12 +4,14 @@ import SwimInstructorCore
 /// Hinweise zu einer Einheit: Koppeltraining und drinnen.
 struct SessionHintsView: View {
     let hints: [String]
+    /// Der erste Hinweis ist der zum Koppeltraining (die Texte sind übersetzt, ihr Anfang sagt das nicht mehr).
+    var startsWithBrick = false
 
     var body: some View {
         if !hints.isEmpty {
             VStack(alignment: .leading, spacing: 4) {
-                ForEach(hints, id: \.self) { hint in
-                    Label(hint, systemImage: hint.hasPrefix("Koppel") ? "link" : "house")
+                ForEach(Array(hints.enumerated()), id: \.offset) { index, hint in
+                    Label(hint, systemImage: startsWithBrick && index == 0 ? "link" : "house")
                         .font(.footnote.weight(.medium))
                         .foregroundStyle(.tint)
                         .fixedSize(horizontal: false, vertical: true)
@@ -178,19 +180,19 @@ struct SessionFeedbackSheet: View {
 
     private var effortHint: String {
         switch Int(effort) {
-        case ...3: return "Locker, du hättest dich gut unterhalten können."
-        case 4...6: return "Mittel, fordernd, aber im Griff."
-        case 7: return "Hart."
-        default: return "Sehr hart: Danach plant die App erst etwas Lockeres."
+        case ...3: return String(localized: "Locker, du hättest dich gut unterhalten können.")
+        case 4...6: return String(localized: "Mittel, fordernd, aber im Griff.")
+        case 7: return String(localized: "Hart.")
+        default: return String(localized: "Sehr hart: Danach plant die App erst etwas Lockeres.")
         }
     }
 
     private var painHint: String {
         switch pain {
-        case .none: return "Kein Problem: Der Plan bleibt, wie er ist."
-        case .light: return "Leicht: einen Tag keine harte Einheit in dieser Sportart."
-        case .moderate: return "Deutlich: zwei Tage nur locker und kürzer in dieser Sportart. Der Plan wird sofort angepasst."
-        case .strong: return "Stark: drei Tage Pause in dieser Sportart, andere Sportarten gehen weiter. Hält es an, lass es ärztlich abklären."
+        case .none: return String(localized: "Kein Problem: Der Plan bleibt, wie er ist.")
+        case .light: return String(localized: "Leicht: einen Tag keine harte Einheit in dieser Sportart.")
+        case .moderate: return String(localized: "Deutlich: zwei Tage nur locker und kürzer in dieser Sportart. Der Plan wird sofort angepasst.")
+        case .strong: return String(localized: "Stark: drei Tage Pause in dieser Sportart, andere Sportarten gehen weiter. Hält es an, lass es ärztlich abklären.")
         }
     }
 }

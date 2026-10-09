@@ -78,7 +78,7 @@ struct StartingLevelView: View {
         }
     }
 
-    private func amountField(_ title: String, value: Binding<Double>, unit: PlanUnit) -> some View {
+    private func amountField(_ title: LocalizedStringKey, value: Binding<Double>, unit: PlanUnit) -> some View {
         LabeledContent(title) {
             HStack(spacing: 4) {
                 TextField(title, value: value, format: .number)

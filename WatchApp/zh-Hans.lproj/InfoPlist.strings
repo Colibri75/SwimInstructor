@@ -1,0 +1,4 @@
+/* Hinweise der Berechtigungsabfragen, deutsch in Info.plist (docs/uebersetzungen.md) */
+"NSHealthShareUsageDescription" = "Peaksmith 会从“健康”读取你的训练和生命体征数据，直接在手表上显示训练计划。";
+"NSHealthUpdateUsageDescription" = "Peaksmith 会将你的训练连同路线、地图、趟数和心率存储到“健康”。";
+"NSLocationWhenInUseUsageDescription" = "Peaksmith 在户外通过 GPS 记录你的路线，用于配速、爬升和“健康”中的地图。";

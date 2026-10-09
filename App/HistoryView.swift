@@ -159,8 +159,8 @@ private struct ChartSection: View {
             .flatMap { entry -> [Bar] in
                 guard let date = weekCalendar.date(from: entry.date) else { return [] }
                 return [
-                    Bar(date: date, kind: "Geplant", minutes: entry.comparisons.reduce(0) { $0 + $1.plannedMinutes }),
-                    Bar(date: date, kind: "Trainiert", minutes: entry.comparisons.reduce(0) { $0 + $1.actualMinutes })
+                    Bar(date: date, kind: String(localized: "Geplant"), minutes: entry.comparisons.reduce(0) { $0 + $1.plannedMinutes }),
+                    Bar(date: date, kind: String(localized: "Trainiert"), minutes: entry.comparisons.reduce(0) { $0 + $1.actualMinutes })
                 ]
             }
     }
@@ -177,7 +177,7 @@ private struct ChartSection: View {
                     .foregroundStyle(by: .value("Art", bar.kind))
                     .position(by: .value("Art", bar.kind))
                 }
-                .chartForegroundStyleScale(["Geplant": Color.gray.opacity(0.5), "Trainiert": Color.blue])
+                .chartForegroundStyleScale([String(localized: "Geplant"): Color.gray.opacity(0.5), String(localized: "Trainiert"): Color.blue])
                 .frame(height: 180)
                 .accessibilityLabel("Geplante und trainierte Minuten der letzten Tage")
             } header: {
@@ -292,12 +292,12 @@ struct HistoryRow: View {
     private func line(_ comparison: SportComparison) -> String {
         let name = registry.displayName(for: comparison.sport)
         if !comparison.isPlanned {
-            return "\(name): \(PlanV2Formatting.amount(comparison.actual, unit: comparison.unit)), nicht geplant"
+            return String(localized: "\(name): \(PlanV2Formatting.amount(comparison.actual, unit: comparison.unit)), nicht geplant")
         }
         if comparison.workoutCount == 0 {
-            return "\(name): nicht gemacht (\(PlanV2Formatting.amount(comparison.planned, unit: comparison.unit)) geplant)"
+            return String(localized: "\(name): nicht gemacht (\(PlanV2Formatting.amount(comparison.planned, unit: comparison.unit)) geplant)")
         }
-        return "\(name): \(PlanV2Formatting.comparison(planned: comparison.planned, actual: comparison.actual, unit: comparison.unit))"
+        return String(localized: "\(name): \(PlanV2Formatting.comparison(planned: comparison.planned, actual: comparison.actual, unit: comparison.unit))")
     }
 
     private static func symbol(_ outcome: AdherenceOutcome) -> String {
