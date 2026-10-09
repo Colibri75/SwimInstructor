@@ -14,16 +14,16 @@ enum Theme {
     /// Schrift auf Glut- und Funke-Flächen.
     static let onBright = Color(rgb: 0x14213D)
 
-    /// Akzent für Knöpfe, Links und aktive Tabs: Glut im Dunkeln, hell ein dunkleres Orange (4,8:1 auf Weiß).
-    static let accent = Color.dynamic(light: 0xB35A0B, dark: 0xFF9F43)
-    /// Grund hinter Listen.
-    static let background = Color.dynamic(light: 0xF3F5F9, dark: 0x0D1629)
-    /// Karten und Listenzeilen.
-    static let card = Color.dynamic(light: 0xFFFFFF, dark: 0x14213D)
+    /// Akzent für Knöpfe, Links und aktive Tabs: Glut im Dunkeln, hell ein dunkleres Orange (5,1:1 auf den hellen Karten).
+    static let accent = Color.dynamic(light: 0xA8540A, dark: 0xFF9F43)
+    /// Grund hinter Listen: hell gedämpftes Blaugrau ("Morgennebel"), nicht grell.
+    static let background = Color.dynamic(light: 0xDCE2EC, dark: 0x0D1629)
+    /// Karten und Listenzeilen: hell nicht ganz weiß.
+    static let card = Color.dynamic(light: 0xEFF2F7, dark: 0x14213D)
     /// Karte für "heute" und "diese Woche": Karte mit einem Hauch Glut.
-    static let highlightedCard = Color.dynamic(light: 0xF6EBE2, dark: 0x30303E)
+    static let highlightedCard = Color.dynamic(light: 0xF2E0D0, dark: 0x30303E)
     /// Leere Spur von Balken und Ringen.
-    static let track = Color.dynamic(light: 0xE4E8F0, dark: 0x26375F)
+    static let track = Color.dynamic(light: 0xC9D2E0, dark: 0x26375F)
 
     /// Text und Linien auf der Nacht-Karte (immer dunkel, auch im hellen Modus).
     static let nightSecondary = Color(rgb: 0xA9B4CC)

@@ -1,13 +1,13 @@
 import SwiftUI
 
 extension View {
-    /// Liste auf dem Grund aus dem Logo: Nacht im Dunkeln, helles Blaugrau im Hellen (statt Systemgrau).
+    /// Liste auf dem Grund aus dem Logo: Nacht im Dunkeln, gedämpftes Blaugrau im Hellen (statt Systemgrau).
     func themedList() -> some View {
         scrollContentBackground(.hidden)
             .background(Theme.background)
     }
 
-    /// Zeilen als Karten: Nacht im Dunkeln, Weiß im Hellen. Auf Abschnitte oder eine Gruppe von Abschnitten anwenden.
+    /// Zeilen als Karten: Nacht im Dunkeln, fast Weiß im Hellen. Auf Abschnitte oder eine Gruppe von Abschnitten anwenden.
     func cardRows() -> some View {
         listRowBackground(Theme.card)
     }
