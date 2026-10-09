@@ -12,10 +12,12 @@ das Training. Entwürfe: Artifact "Peaksmith Design-Entwürfe". Im Code stehen d
 
 - Orange ist auf Weiß als Schrift nicht lesbar (etwa 2:1). Im hellen Modus ist der Akzent `#A8540A` (5,1:1), Glut
   erscheint nur als Fläche mit Navy-Schrift (`EmberButtonStyle`).
-- Sportarten haben eigene Farben aus ihrem Modul (`SportModule.colorRGB`), nie Orange: Schwimmen Himmelblau, Rad
-  Blaugrün, Laufen Rosaviolett (Okabe-Ito, farbschwäche-sicher); im hellen Modus auf 60 % abgedunkelt.
-- Status einheitlich und ohne Rot-Grün: `Theme.done` (Blau) für erfüllt und gespeichert, `Theme.caution` (Goldbraun)
-  für Abweichungen und Hinweise, `Theme.missed` (Grau) für verpasst; immer mit Symbol oder Text. Rot nur für Fehler und Puls.
+- Sportarten haben eigene Farben aus ihrem Modul (`SportModule.colorRGB`), nie Orange: Schwimmen Türkis, Rad Grün,
+  Laufen Beere; im hellen Modus auf 60 % abgedunkelt oder `colorRGBLight`. Sie unterscheiden sich auch in der
+  Helligkeit, damit sie bei Farbschwäche auseinanderzuhalten sind.
+- Status einheitlich aus den Logo-Farben, ohne Rot-Grün: `Theme.done` (Nacht-Blau) für erfüllt und gespeichert,
+  `Theme.caution` (Glut) für Abweichungen und Hinweise, `Theme.missed` (Grau) für verpasst; immer mit Symbol oder Text.
+  Rot nur für Fehler, Puls und harte Intensität.
 - Schrift: SF Rounded (`fontDesign(.rounded)`), Zahlen und Titel kräftig.
 - Motiv: der Gipfel-Winkel mit runden Enden (`PeakShape`, `SparkPeak`), der Gesamtplan als Berg
   (`MacroSummitProfile`: Höhe = bis dahin geplantes Training, Gipfel = Ziel).

@@ -17,7 +17,8 @@ public struct RunModule: SportModule {
     public let id = SportID.run
     public let displayName = "Laufen"
     public let symbolName = "figure.run"
-    public let colorRGB: UInt32 = 0xCC79A7
+    public let colorRGB: UInt32 = 0xF28AC0
+    public let colorRGBLight: UInt32? = 0xB5487F
     public let measures: Set<StepMeasure> = [.distance, .duration]
     public let targets: Set<StepTarget> = [.pacePerKilometer, .heartRateZone, .cadence, .perceivedEffort]
     public let health = SportHealthMapping(

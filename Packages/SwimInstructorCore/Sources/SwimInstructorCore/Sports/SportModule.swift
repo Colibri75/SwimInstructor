@@ -37,10 +37,12 @@ public protocol SportModule: Sendable {
     var displayName: String { get }
     /// SF-Symbol für Listen und Karten.
     var symbolName: String { get }
-    /// Farbe der Sportart in Symbolen, Balken und Diagrammen (RGB, z. B. 0x56B4E9), für dunklen Grund gewählt; hell
-    /// dunkelt die App sie ab. Bewusst nie Orange: Das ist die Farbe für Aktionen. Aus der farbschwäche-sicheren
-    /// Okabe-Ito-Palette wählen (Blau 0x0072B2, Himmelblau 0x56B4E9, Blaugrün 0x009E73, Rosaviolett 0xCC79A7, Gelb 0xF0E442).
+    /// Farbe der Sportart in Symbolen, Balken und Diagrammen (RGB, z. B. 0x4CC9F0), für dunklen Grund gewählt; hell
+    /// dunkelt die App sie ab. Bewusst nie Orange: Das ist die Farbe für Aktionen. Neue Farben auch bei Farbschwäche
+    /// prüfen: Sie sollen sich von den anderen Sportarten nicht nur im Farbton, sondern auch in der Helligkeit abheben.
     var colorRGB: UInt32 { get }
+    /// Eigene Farbe für hellen Grund, wenn das Abdunkeln von `colorRGB` nicht reicht; `nil` heißt abdunkeln.
+    var colorRGBLight: UInt32? { get }
     /// Maße, nach denen ein Schritt dieser Sportart geplant werden kann.
     var measures: Set<StepMeasure> { get }
     /// Ziele, nach denen sich die Intensität eines Schritts richten kann.
@@ -123,6 +125,7 @@ public extension SportModule {
 
     // Ohne eigene Farbe: neutrales Blaugrau.
     var colorRGB: UInt32 { SportRegistry.neutralColorRGB }
+    var colorRGBLight: UInt32? { nil }
 }
 
 /// Die angemeldeten Sportarten. Prüft beim Anlegen, dass jede Sportart vollständig beschrieben ist und keine
@@ -239,6 +242,11 @@ public struct SportRegistry: Sendable {
     /// Farbe einer Sportart, neutral für unbekannte Kennungen.
     public func colorRGB(for id: SportID) -> UInt32 {
         module(for: id)?.colorRGB ?? Self.neutralColorRGB
+    }
+
+    /// Eigene Farbe für hellen Grund, falls die Sportart eine hat.
+    public func colorRGBLight(for id: SportID) -> UInt32? {
+        module(for: id)?.colorRGBLight
     }
 
     /// Blaugrau für Sportarten ohne eigene Farbe.

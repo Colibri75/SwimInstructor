@@ -22,7 +22,7 @@ public struct SwimModule: SportModule {
     public let id = SportID.swim
     public let displayName = "Schwimmen"
     public let symbolName = "figure.pool.swim"
-    public let colorRGB: UInt32 = 0x56B4E9
+    public let colorRGB: UInt32 = 0x4CC9F0
     public let measures: Set<StepMeasure> = [.distance, .duration]
     public let targets: Set<StepTarget> = [.pacePerHundredMeters, .heartRateZone, .perceivedEffort]
     public let health = SportHealthMapping(
