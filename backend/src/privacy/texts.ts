@@ -9,17 +9,17 @@
 export const PRIVACY_POLICY_DATE = { de: "9. Oktober 2026", en: "9 October 2026" };
 
 export const POLICY_DE = `
-<h1>Datenschutzerklärung für die App Peaksmith</h1>
+<h1>Datenschutzerklärung für die App PeakSmith</h1>
 <p class="meta">Stand: {{STAND}}</p>
 
 <h2>1. Verantwortlicher</h2>
 <p>{{NAME}}<br>{{ANSCHRIFT}}<br>E-Mail: {{EMAIL}}</p>
-<p>Peaksmith wird von einer Privatperson entwickelt und betrieben. Ein Datenschutzbeauftragter ist nicht bestellt.
+<p>PeakSmith wird von einer Privatperson entwickelt und betrieben. Ein Datenschutzbeauftragter ist nicht bestellt.
 Bei Fragen zum Datenschutz und für alle Anträge zu deinen Rechten genügt eine E-Mail an die oben genannte Adresse.</p>
 
 <h2>2. Kurz gesagt</h2>
 <ul>
-  <li>Peaksmith erstellt Trainingspläne für Schwimmen, Radfahren und Laufen. Die meisten Daten bleiben auf deinem
+  <li>PeakSmith erstellt Trainingspläne für Schwimmen, Radfahren und Laufen. Die meisten Daten bleiben auf deinem
   iPhone und deiner Apple Watch.</li>
   <li>Für einen Plan schickt die App eine Zusammenfassung deines Trainings- und Erholungszustands an unseren Server.
   Der Server lässt den Plan vom KI-Modell Claude der Firma Anthropic PBC (USA) erstellen. Das passiert erst, nachdem
@@ -174,19 +174,19 @@ deine Einwilligung. Es gilt die jeweils hier veröffentlichte Fassung.</p>
 `;
 
 export const POLICY_EN = `
-<h1>Privacy Policy for the Peaksmith app</h1>
+<h1>Privacy Policy for the PeakSmith app</h1>
 <p class="meta">Last updated: {{STAND}}</p>
 <p class="meta">This is a translation. In case of doubt, the <a href="/datenschutz" hreflang="de">German version</a>
 prevails.</p>
 
 <h2>1. Controller</h2>
 <p>{{NAME}}<br>{{ANSCHRIFT}}<br>Email: {{EMAIL}}</p>
-<p>Peaksmith is developed and operated by a private individual in Germany. No data protection officer has been
+<p>PeakSmith is developed and operated by a private individual in Germany. No data protection officer has been
 appointed. For any privacy question and to exercise your rights, simply send an email to the address above.</p>
 
 <h2>2. In short</h2>
 <ul>
-  <li>Peaksmith creates training plans for swimming, cycling and running. Most data stays on your iPhone and Apple
+  <li>PeakSmith creates training plans for swimming, cycling and running. Most data stays on your iPhone and Apple
   Watch.</li>
   <li>To create a plan, the app sends a summary of your training and recovery status to our server. The server has
   the plan created by the AI model Claude from Anthropic PBC (USA). This only happens after you have explicitly agreed

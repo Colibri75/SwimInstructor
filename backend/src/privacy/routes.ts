@@ -9,7 +9,7 @@ import { POLICY_DE, POLICY_EN, PRIVACY_POLICY_DATE } from "./texts";
 export type PrivacyLanguage = "de" | "en";
 
 const MISSING: Record<PrivacyLanguage, string> = { de: "[wird ergänzt]", en: "[to be added]" };
-const TITLE: Record<PrivacyLanguage, string> = { de: "Datenschutzerklärung – Peaksmith", en: "Privacy Policy – Peaksmith" };
+const TITLE: Record<PrivacyLanguage, string> = { de: "Datenschutzerklärung – PeakSmith", en: "Privacy Policy – PeakSmith" };
 
 export function escapeHtml(value: string): string {
   return value

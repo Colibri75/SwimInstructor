@@ -24,7 +24,7 @@ describe("Datenschutzerklaerung", () => {
     expect(response.status).toBe(200);
     expect(response.headers["content-type"]).toBe("text/html; charset=utf-8");
     expect(response.text).toContain('<html lang="de">');
-    expect(response.text).toContain("Datenschutzerklärung für die App Peaksmith");
+    expect(response.text).toContain("Datenschutzerklärung für die App PeakSmith");
     expect(response.text).toContain("Anthropic PBC");
     expect(response.text).toContain("Art. 9 Abs. 2 lit. a DSGVO");
     expect(response.text).toContain("Art. 6 Abs. 1 lit. b DSGVO");
@@ -35,7 +35,7 @@ describe("Datenschutzerklaerung", () => {
 
     expect(response.status).toBe(200);
     expect(response.text).toContain('<html lang="en">');
-    expect(response.text).toContain("Privacy Policy for the Peaksmith app");
+    expect(response.text).toContain("Privacy Policy for the PeakSmith app");
     expect(response.text).toContain("Art. 9(2)(a) GDPR");
     expect(response.text).toContain("never sold");
   });
