@@ -32,6 +32,7 @@ struct SettingsView: View {
     @State private var planning = PlanningPreferences.standard
     private let planningStore = UserDefaultsPlanningPreferencesStore()
     @State private var indoorOwned: Set<String> = []
+    @AppStorage(Appearance.storageKey) private var appearance = Appearance.system
     private let indoorStore = UserDefaultsIndoorEquipmentStore()
 
     init(onSave: @escaping () -> Void = {}) {
@@ -96,6 +97,8 @@ struct SettingsView: View {
                     planningSection
 
                     notificationSection
+
+                    appearanceSection
 
                     Section {
                         ForEach(EquipmentItem.allCases) { item in
@@ -198,6 +201,23 @@ struct SettingsView: View {
             Text("Planung")
         } footer: {
             Text("Kraft und Mobilität kommen als kurze Blöcke in die Woche, mit Übungen am Tag. Mit Wetter weicht der Plan bei Gewitter, Sturm oder Glätte nach drinnen aus (dein Ort geht auf etwa 10 km gerundet zum Server). Mit Kalender plant er an vollen Tagen weniger: Es zählt der längste freie Block im Trainingsfenster, Termine selbst bleiben auf dem iPhone.")
+        }
+    }
+
+    // MARK: - Erscheinungsbild
+
+    private var appearanceSection: some View {
+        Section {
+            Picker("Farbschema", selection: $appearance) {
+                ForEach(Appearance.allCases) { option in
+                    Text(option.title).tag(option)
+                }
+            }
+            .pickerStyle(.segmented)
+        } header: {
+            Text("Erscheinungsbild")
+        } footer: {
+            Text("Hell ist der blaugraue Morgennebel, dunkel die Nacht aus dem Logo. Wie iPhone folgt der Einstellung des iPhones.")
         }
     }
 

@@ -20,3 +20,5 @@ das Training. Entwürfe: Artifact "Peaksmith Design-Entwürfe". Im Code stehen d
 - Listen: `themedList()` für den Grund, `cardRows()` für die Zeilen.
 - Heller Modus "Morgennebel": Grund `#DCE2EC` (gedämpftes Blaugrau), Karten `#EFF2F7`, heute/diese Woche `#F2E0D0`,
   leere Spur `#C9D2E0`. Kein reines Weiß, damit die App nicht grell wirkt.
+- Hell oder dunkel wählt man unter Einstellungen › Erscheinungsbild (Wie iPhone, Hell, Dunkel; `App/Appearance.swift`).
+  Die Watch und die Widgets bleiben dabei, wie sie sind.
