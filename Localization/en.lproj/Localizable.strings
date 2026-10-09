@@ -842,3 +842,20 @@
 "%@ starten" = "Start %@";
 "Geplant %@, trainiert %@" = "Planned %@, trained %@";
 "%lld Wochen, die umfangreichste mit %@" = "%lld weeks, the biggest with %@";
+
+
+/* Datenschutz und Einwilligung */
+"Kein neuer Plan: Dafür brauchst du deine Zustimmung zur Datenweitergabe (Einstellungen › Datenschutz)." = "No new plan: this needs your consent to share data (Settings › Privacy).";
+"Deine Daten und dein Coach" = "Your data and your coach";
+"Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic (USA): Umfang und Dauer deiner Einheiten, Abweichungen von Ruhepuls und HRV, Schlaf, Leistungswerte, Beschwerden, dein Ziel und deine Wünsche." = "Your coach creates plans with Claude from Anthropic. To do this, your training and health data is sent to our server and to Anthropic (USA): volume and duration of your sessions, deviations in resting heart rate and HRV, sleep, performance values, discomfort, your goal and your wishes.";
+"Einzelne Messwerte aus Health und Kalendertermine bleiben auf dem iPhone, und Anthropic erfährt weder deinen Namen noch deine E-Mail-Adresse. Die Daten dienen nur deinem Plan, nie der Werbung, und werden nicht verkauft." = "Individual readings from Health and calendar events stay on the iPhone, and Anthropic learns neither your name nor your email address. The data is used only for your plan, never for advertising, and is never sold.";
+"Du kannst deine Zustimmung jederzeit in den Einstellungen unter Datenschutz widerrufen. Ohne Zustimmung erstellt dein Coach keine neuen Pläne." = "You can withdraw your consent at any time in Settings under Privacy. Without consent, your coach won’t create new plans.";
+"Datenschutzerklärung" = "Privacy Policy";
+"Zustimmen" = "Agree";
+"Nicht jetzt" = "Not now";
+"Zugestimmt am" = "Agreed on";
+"Zustimmung widerrufen" = "Withdraw consent";
+"Ohne deine Zustimmung zur Datenweitergabe erstellt dein Coach keine neuen Pläne. Gespeicherte Pläne bleiben." = "Without your consent to share data, your coach won’t create new plans. Saved plans remain.";
+"Zustimmen …" = "Agree …";
+"Datenschutz" = "Privacy";
+"Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung." = "Your coach creates plans with Claude from Anthropic. To do this, your training and health data is sent to our server and to Anthropic. No tracking, no ads.";

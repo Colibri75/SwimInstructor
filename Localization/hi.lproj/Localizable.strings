@@ -842,3 +842,20 @@
 "%@ starten" = "%@ शुरू करें";
 "Geplant %@, trainiert %@" = "योजना %@, ट्रेनिंग %@";
 "%lld Wochen, die umfangreichste mit %@" = "%lld हफ़्ते, सबसे ज़्यादा वाला %@";
+
+
+/* Datenschutz und Einwilligung */
+"Kein neuer Plan: Dafür brauchst du deine Zustimmung zur Datenweitergabe (Einstellungen › Datenschutz)." = "कोई नया प्लान नहीं: इसके लिए डेटा साझा करने की आपकी सहमति ज़रूरी है (सेटिंग्स › गोपनीयता)।";
+"Deine Daten und dein Coach" = "आपका डेटा और आपका कोच";
+"Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic (USA): Umfang und Dauer deiner Einheiten, Abweichungen von Ruhepuls und HRV, Schlaf, Leistungswerte, Beschwerden, dein Ziel und deine Wünsche." = "आपका कोच Anthropic के Claude से प्लान बनाता है। इसके लिए आपका ट्रेनिंग और स्वास्थ्य डेटा हमारे सर्वर और Anthropic (अमेरिका) को भेजा जाता है: आपके सेशन की मात्रा और अवधि, आराम की हृदय गति और HRV में बदलाव, नींद, परफ़ॉर्मेंस मान, तकलीफ़ें, आपका लक्ष्य और आपकी इच्छाएँ।";
+"Einzelne Messwerte aus Health und Kalendertermine bleiben auf dem iPhone, und Anthropic erfährt weder deinen Namen noch deine E-Mail-Adresse. Die Daten dienen nur deinem Plan, nie der Werbung, und werden nicht verkauft." = "Health के अलग-अलग माप और कैलेंडर के अपॉइंटमेंट iPhone पर ही रहते हैं, और Anthropic को न आपका नाम पता चलता है न आपका ईमेल पता। डेटा सिर्फ़ आपके प्लान के लिए है, कभी विज्ञापन के लिए नहीं, और कभी बेचा नहीं जाता।";
+"Du kannst deine Zustimmung jederzeit in den Einstellungen unter Datenschutz widerrufen. Ohne Zustimmung erstellt dein Coach keine neuen Pläne." = "आप अपनी सहमति कभी भी सेटिंग्स में गोपनीयता के अंतर्गत वापस ले सकते हैं। सहमति के बिना आपका कोच नए प्लान नहीं बनाता।";
+"Datenschutzerklärung" = "गोपनीयता नीति";
+"Zustimmen" = "सहमत हूँ";
+"Nicht jetzt" = "अभी नहीं";
+"Zugestimmt am" = "सहमति की तारीख";
+"Zustimmung widerrufen" = "सहमति वापस लें";
+"Ohne deine Zustimmung zur Datenweitergabe erstellt dein Coach keine neuen Pläne. Gespeicherte Pläne bleiben." = "डेटा साझा करने की आपकी सहमति के बिना आपका कोच नए प्लान नहीं बनाता। सहेजे गए प्लान बने रहते हैं।";
+"Zustimmen …" = "सहमत हूँ …";
+"Datenschutz" = "गोपनीयता";
+"Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung." = "आपका कोच Anthropic के Claude से प्लान बनाता है। इसके लिए आपका ट्रेनिंग और स्वास्थ्य डेटा हमारे सर्वर और Anthropic को भेजा जाता है। कोई ट्रैकिंग नहीं, कोई विज्ञापन नहीं।";

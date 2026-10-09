@@ -842,3 +842,20 @@
 "%@ starten" = "开始%@";
 "Geplant %@, trainiert %@" = "计划 %@，已训练 %@";
 "%lld Wochen, die umfangreichste mit %@" = "共 %lld 周，训练量最大的一周 %@";
+
+
+/* Datenschutz und Einwilligung */
+"Kein neuer Plan: Dafür brauchst du deine Zustimmung zur Datenweitergabe (Einstellungen › Datenschutz)." = "没有新计划：需要你同意共享数据（设置 › 隐私）。";
+"Deine Daten und dein Coach" = "你的数据与你的教练";
+"Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic (USA): Umfang und Dauer deiner Einheiten, Abweichungen von Ruhepuls und HRV, Schlaf, Leistungswerte, Beschwerden, dein Ziel und deine Wünsche." = "你的教练使用 Anthropic 的 Claude 制定计划。为此，你的训练和健康数据会发送到我们的服务器和 Anthropic（美国）：训练课的训练量和时长、静息心率和 HRV 的偏差、睡眠、能力数值、不适情况、你的目标和愿望。";
+"Einzelne Messwerte aus Health und Kalendertermine bleiben auf dem iPhone, und Anthropic erfährt weder deinen Namen noch deine E-Mail-Adresse. Die Daten dienen nur deinem Plan, nie der Werbung, und werden nicht verkauft." = "“健康”中的单项测量值和日历日程会留在 iPhone 上，Anthropic 也不会得知你的姓名或电子邮件地址。这些数据只用于你的计划，绝不用于广告，也绝不出售。";
+"Du kannst deine Zustimmung jederzeit in den Einstellungen unter Datenschutz widerrufen. Ohne Zustimmung erstellt dein Coach keine neuen Pläne." = "你可以随时在“设置”的“隐私”中撤回同意。未经同意，你的教练不会制定新计划。";
+"Datenschutzerklärung" = "隐私政策";
+"Zustimmen" = "同意";
+"Nicht jetzt" = "以后再说";
+"Zugestimmt am" = "同意日期";
+"Zustimmung widerrufen" = "撤回同意";
+"Ohne deine Zustimmung zur Datenweitergabe erstellt dein Coach keine neuen Pläne. Gespeicherte Pläne bleiben." = "未经你同意共享数据，你的教练不会制定新计划。已保存的计划会保留。";
+"Zustimmen …" = "同意…";
+"Datenschutz" = "隐私";
+"Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung." = "你的教练使用 Anthropic 的 Claude 制定计划。为此，你的训练和健康数据会发送到我们的服务器和 Anthropic。无跟踪，无广告。";

@@ -30,6 +30,8 @@ public enum PlanAPIError: Error, Equatable, LocalizedError {
     /// Der Server kennt die Planung für mehrere Sportarten (Plan v2) noch nicht: Er wurde seit dem App-Update nicht
     /// aktualisiert.
     case serverOutdated
+    /// Ohne Einwilligung in die Weitergabe der Trainings- und Gesundheitsdaten geht keine Plananfrage hinaus.
+    case consentRequired
 
     public var errorDescription: String? {
         switch self {
@@ -50,6 +52,8 @@ public enum PlanAPIError: Error, Equatable, LocalizedError {
             return String(localized: "Die Antwort des Servers war unverständlich.")
         case .serverOutdated:
             return String(localized: "Der Server kennt die Planung für mehrere Sportarten noch nicht. Er muss aktualisiert werden (deploy.sh).")
+        case .consentRequired:
+            return String(localized: "Kein neuer Plan: Dafür brauchst du deine Zustimmung zur Datenweitergabe (Einstellungen › Datenschutz).")
         }
     }
 }
@@ -81,10 +85,14 @@ public struct PlanAPIClient: Sendable {
 
     public let configuration: BackendConfiguration
     private let transport: HTTPTransport
+    private let consentGate: PlanConsentGate
 
-    public init(configuration: BackendConfiguration, transport: HTTPTransport = URLSession.shared) {
+    /// - Parameter consentGate: wird vor jeder Plananfrage gefragt (Einwilligung in die Datenweitergabe). Die App
+    ///   übergibt `AIDataConsent.gate` (über `BackendSettings.planClient(consent:)`); ohne Angabe ohne Prüfung.
+    public init(configuration: BackendConfiguration, transport: HTTPTransport = URLSession.shared, consentGate: PlanConsentGate = .always) {
         self.configuration = configuration
         self.transport = transport
+        self.consentGate = consentGate
     }
 
     /// Prüft Erreichbarkeit und Token, ohne Claude aufzurufen (kostet nichts).
@@ -97,7 +105,10 @@ public struct PlanAPIClient: Sendable {
 
     // MARK: - Intern
 
+    /// Alle Plananfragen (und damit alle Trainings- und Gesundheitsdaten) laufen hier durch: Ohne Einwilligung geht
+    /// nichts hinaus.
     func post(path: String, body: Data, timeout: TimeInterval = PlanAPIClient.planTimeout) async throws -> (Data, HTTPURLResponse) {
+        guard await consentGate.allows() else { throw PlanAPIError.consentRequired }
         var request = makeRequest(path: path, timeout: timeout)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")

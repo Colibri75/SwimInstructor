@@ -9,6 +9,7 @@ struct RootView: View {
     }
 
     @EnvironmentObject private var loader: MultiSportTodayLoader
+    @EnvironmentObject private var consent: AIDataConsent
 
     private let onboardingStore: OnboardingStoring
     @State private var selection = Tab.today
@@ -56,6 +57,15 @@ struct RootView: View {
             HistoryView()
                 .tabItem { Label("Verlauf", systemImage: "clock.arrow.circlepath") }
                 .tag(Tab.history)
+        }
+        // Vor der ersten Plananfrage ohne Einwilligung (auch nach dem Update): einmal je Start fragen.
+        .sheet(isPresented: $consent.isPromptPresented, onDismiss: {
+            if !consent.isGranted { consent.decline() }
+        }) {
+            AIConsentSheet {
+                // Die gesperrte Planung nachholen.
+                Task { await loader.refreshIfNeeded() }
+            }
         }
     }
 }
