@@ -832,3 +832,5 @@
 "Übernehmen" = "Apply";
 "Übernommen. Der Gesamtplan bleibt, die nächste Fortschreibung rechnet damit." = "Applied. The overall plan stays; the next plan update will take it into account.";
 "Übernommen. Der neue Gesamtplan entsteht jetzt im Hintergrund." = "Applied. The new overall plan is now being created in the background.";
+"Farben für Grün-Schwäche" = "Colors for green weakness";
+"Statt Grün und Rot: erfüllt Blau, abweichend Orange, verpasst Grau. Laufen wird Beere statt Violett, damit es sich von Schwimmen abhebt. Gilt hell und dunkel." = "Instead of green and red: done is blue, off-plan is orange, missed is gray. Running turns berry instead of violet so it stands apart from swimming. Applies to light and dark.";

@@ -605,6 +605,7 @@ private struct SummitFlag: View {
 private struct MacroChart: View {
     let plan: MacroPlanV2
     let currentWeekStart: String
+    @AppStorage(Theme.greenWeakKey) private var greenWeak = false
 
     private struct Bar: Identifiable {
         let date: Date
@@ -636,7 +637,7 @@ private struct MacroChart: View {
                 .foregroundStyle(by: .value("Sportart", bar.sport))
                 .opacity(bar.isCurrent ? 1 : 0.75)
             }
-            .chartForegroundStyleScale(domain: plan.sports.map { SportRegistry.standard.displayName(for: $0) }, range: plan.sports.map { Theme.sport($0) })
+            .chartForegroundStyleScale(domain: plan.sports.map { SportRegistry.standard.displayName(for: $0) }, range: plan.sports.map { Theme.sport($0, greenWeak: greenWeak) })
             .chartYAxisLabel("Stunden")
             .frame(height: 160)
             .accessibilityLabel("Wochenstunden je Sportart bis zum Ziel")

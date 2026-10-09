@@ -9,6 +9,7 @@ import SwimInstructorCore
 /// Ansicht zeigt, was mit dem Gesamtplan passiert, und erst "Übernehmen" ändert das Ziel. Ein neues Ziel geht höchstens
 /// alle 7 Tage; in der Sperre lässt es sich vormerken und wird an ihrem Ende übernommen.
 struct GoalAssistantView: View {
+    @AppStorage(Theme.greenWeakKey) private var greenWeak = false
     enum Mode {
         case onboarding, settings
     }
@@ -383,7 +384,7 @@ struct GoalAssistantView: View {
             }
             if let message {
                 Text(message)
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Theme.done(greenWeak: greenWeak))
             }
         } header: {
             Text("Übernehmen")

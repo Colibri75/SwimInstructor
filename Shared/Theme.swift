@@ -25,11 +25,35 @@ enum Theme {
     /// Leere Spur von Balken und Ringen.
     static let track = Color.dynamic(light: 0xC9D2E0, dark: 0x26375F)
 
+    // MARK: Grün-Schwäche
+
+    /// Schlüssel in den UserDefaults: Farben für Grün-Schwäche (Einstellungen › Erscheinungsbild).
+    static let greenWeakKey = "greenWeakColors"
+
+    /// Status erfüllt: Grün, bei Grün-Schwäche Nacht-Blau (Blau gegen Orange trennen fast alle Farbschwächen).
+    static func done(greenWeak: Bool) -> Color {
+        greenWeak ? .dynamic(light: 0x2E4372, dark: 0x6FA8FF) : .green
+    }
+
+    /// Status abweichend und Hinweise: Orange, bei Grün-Schwäche Glut.
+    static func caution(greenWeak: Bool) -> Color {
+        greenWeak ? accent : .orange
+    }
+
+    /// Status verpasst: Rot, bei Grün-Schwäche Grau (Rot und Grün sähen gleich aus).
+    static func missed(greenWeak: Bool) -> Color {
+        greenWeak ? .dynamic(light: 0x868E9F, dark: 0x8C95A8) : .red
+    }
+
     /// Text und Linien auf der Nacht-Karte (immer dunkel, auch im hellen Modus).
     static let nightSecondary = Color(rgb: 0xA9B4CC)
 
     /// Die Farbe einer Sportart: so, wie das Modul sie nennt, im hellen Modus dunkler, damit Symbole auf Weiß lesbar bleiben.
-    static func sport(_ id: SportID, registry: SportRegistry = .standard) -> Color {
+    /// Bei Grün-Schwäche wird Laufen Beere statt Violett, sonst sähe es aus wie Schwimmen.
+    static func sport(_ id: SportID, greenWeak: Bool = false, registry: SportRegistry = .standard) -> Color {
+        if greenWeak, id == .run {
+            return .dynamic(light: 0xB5487F, dark: 0xF28AC0)
+        }
         let rgb = registry.colorRGB(for: id)
         return .dynamic(light: darkened(rgb), dark: rgb)
     }

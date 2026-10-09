@@ -199,11 +199,12 @@ struct AdjustmentsDisclosure: View {
 
 struct IntensityBadge: View {
     let intensity: PlanIntensity
+    @AppStorage(Theme.greenWeakKey) private var greenWeak = false
 
     private var color: Color {
         switch intensity {
-        case .rest, .easy: return .green
-        case .moderate: return .orange
+        case .rest, .easy: return Theme.done(greenWeak: greenWeak)
+        case .moderate: return Theme.caution(greenWeak: greenWeak)
         case .hard: return .red
         case .unknown: return .gray
         }

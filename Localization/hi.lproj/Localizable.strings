@@ -832,3 +832,5 @@
 "Übernehmen" = "लागू करें";
 "Übernommen. Der Gesamtplan bleibt, die nächste Fortschreibung rechnet damit." = "लागू हो गया। पूरा प्लान वैसा ही रहता है, अगला प्लान अपडेट इसे ध्यान में रखेगा।";
 "Übernommen. Der neue Gesamtplan entsteht jetzt im Hintergrund." = "लागू हो गया। नया पूरा प्लान अब बैकग्राउंड में बन रहा है।";
+"Farben für Grün-Schwäche" = "हरे रंग की कमज़ोरी के लिए रंग";
+"Statt Grün und Rot: erfüllt Blau, abweichend Orange, verpasst Grau. Laufen wird Beere statt Violett, damit es sich von Schwimmen abhebt. Gilt hell und dunkel." = "हरे और लाल की जगह: पूरा नीला, योजना से अलग नारंगी, छूटा हुआ धूसर। दौड़ बैंगनी की जगह बेरी रंग की हो जाती है ताकि तैराकी से अलग दिखे। लाइट और डार्क दोनों पर लागू।";

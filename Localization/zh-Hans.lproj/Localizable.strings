@@ -832,3 +832,5 @@
 "Übernehmen" = "采用";
 "Übernommen. Der Gesamtplan bleibt, die nächste Fortschreibung rechnet damit." = "已采用。总体计划保持不变，下一次计划更新会将其纳入。";
 "Übernommen. Der neue Gesamtplan entsteht jetzt im Hintergrund." = "已采用。新的总体计划正在后台生成。";
+"Farben für Grün-Schwäche" = "绿色弱配色";
+"Statt Grün und Rot: erfüllt Blau, abweichend Orange, verpasst Grau. Laufen wird Beere statt Violett, damit es sich von Schwimmen abhebt. Gilt hell und dunkel." = "不再使用绿色和红色：已完成为蓝色，有偏差为橙色，未完成为灰色。跑步由紫色改为莓红色，以便与游泳区分。适用于浅色和深色模式。";

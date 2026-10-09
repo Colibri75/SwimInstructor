@@ -832,3 +832,5 @@
 "Übernehmen" = "Aplicar";
 "Übernommen. Der Gesamtplan bleibt, die nächste Fortschreibung rechnet damit." = "Aplicado. O plano geral continua; a próxima atualização do plano leva isso em conta.";
 "Übernommen. Der neue Gesamtplan entsteht jetzt im Hintergrund." = "Aplicado. O novo plano geral está sendo criado em segundo plano.";
+"Farben für Grün-Schwäche" = "Cores para deficiência no verde";
+"Statt Grün und Rot: erfüllt Blau, abweichend Orange, verpasst Grau. Laufen wird Beere statt Violett, damit es sich von Schwimmen abhebt. Gilt hell und dunkel." = "Em vez de verde e vermelho: cumprido em azul, desvio em laranja, perdido em cinza. A corrida passa de violeta para framboesa para se diferenciar da natação. Vale para claro e escuro.";

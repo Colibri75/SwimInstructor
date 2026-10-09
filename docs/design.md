@@ -22,3 +22,5 @@ das Training. Entwürfe: Artifact "Peaksmith Design-Entwürfe". Im Code stehen d
   leere Spur `#C9D2E0`. Kein reines Weiß, damit die App nicht grell wirkt.
 - Hell oder dunkel wählt man unter Einstellungen › Erscheinungsbild (Wie iPhone, Hell, Dunkel; `App/Appearance.swift`).
   Die Watch und die Widgets bleiben dabei, wie sie sind.
+- Darunter schaltet "Farben für Grün-Schwäche" (`Theme.greenWeakKey`) die Statusfarben von Grün/Orange/Rot auf
+  Nacht-Blau/Glut/Grau (`Theme.done/caution/missed(greenWeak:)`) und Laufen von Violett auf Beere. Nur iPhone-App.

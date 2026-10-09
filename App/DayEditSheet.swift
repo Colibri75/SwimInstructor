@@ -6,6 +6,7 @@ import SwimInstructorCore
 /// Einheit dazunehmen, Ruhetag, "keine Zeit", mit einem anderen Tag tauschen. Vergangene Tage lassen sich auf einen
 /// freien Ruhetag nachholen.
 struct DayEditSheet: View {
+    @AppStorage(Theme.greenWeakKey) private var greenWeak = false
     let date: String
 
     @EnvironmentObject private var weekLoader: MultiSportWeekLoader
@@ -105,7 +106,7 @@ struct DayEditSheet: View {
             }
             Label(PlanV2Formatting.stateText(status.state), systemImage: WeekStateStyle.symbol(status.state))
                 .font(.footnote)
-                .foregroundStyle(WeekStateStyle.color(status.state))
+                .foregroundStyle(WeekStateStyle.color(status.state, greenWeak: greenWeak))
         }
     }
 

@@ -30,6 +30,7 @@ struct CustomizeSectionsRow: View {
 /// Die Bereiche eines Bildschirms: angezeigte ziehen zum Umsortieren, entfernen blendet aus (Pflichtbereiche bleiben),
 /// ausgeblendete mit Plus wieder hinzufügen. Jede Änderung gilt sofort und bleibt auf dem Gerät gespeichert.
 struct ArrangeSectionsSheet: View {
+    @AppStorage(Theme.greenWeakKey) private var greenWeak = false
     let screen: LayoutScreen
     /// Im Dashboard: Mit Daten gibt es zusätzlich die Kacheln der Statistik zum Hinzufügen, Ändern, Entfernen und Sortieren.
     var statisticInput: StatisticInput?
@@ -163,7 +164,7 @@ struct ArrangeSectionsSheet: View {
                     HStack(spacing: 12) {
                         Image(systemName: "plus.circle.fill")
                             .font(.title3)
-                            .foregroundStyle(.green)
+                            .foregroundStyle(Theme.done(greenWeak: greenWeak))
                             .accessibilityHidden(true)
                         SectionLine(section: section)
                     }
