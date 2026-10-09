@@ -58,7 +58,7 @@ struct TestResultSheet: View {
                     if let error = profileLoader.error {
                         Label(error, systemImage: "exclamationmark.triangle")
                             .font(.footnote)
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Theme.caution)
                     }
                 }
                 .cardRows()
@@ -228,7 +228,7 @@ private struct ProposalRow: View {
             if proposal.needsReview {
                 Label("bitte prüfen", systemImage: "exclamationmark.triangle.fill")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.caution)
             }
         }
         .padding(.vertical, 2)

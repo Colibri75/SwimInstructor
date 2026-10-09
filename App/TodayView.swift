@@ -280,7 +280,7 @@ struct TodayView: View {
                             systemImage: "arrow.triangle.2.circlepath"
                         )
                             .font(.footnote)
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Theme.caution)
                         Button("Jetzt anpassen") {
                             Task { await loader.syncWithTodayTarget() }
                         }
@@ -293,7 +293,7 @@ struct TodayView: View {
             if let error = loader.planError {
                 Label(error, systemImage: "exclamationmark.triangle")
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.caution)
             }
         } header: {
             Text("Dein Plan, \(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))")
@@ -377,7 +377,7 @@ struct TodayView: View {
             if let error = loader.previewError, error.date == date {
                 Label(error.message, systemImage: "exclamationmark.triangle")
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.caution)
             }
         } header: {
             Text("Dein Plan, \(weekCalendar.weekdayName(date)), \(PlanFormatting.shortGermanDate(date))")

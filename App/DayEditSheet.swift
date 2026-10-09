@@ -180,7 +180,7 @@ struct DayEditSheet: View {
                 if let error = todayLoader.previewError, error.date == date {
                     Label(error.message, systemImage: "exclamationmark.triangle")
                         .font(.footnote)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Theme.caution)
                 }
             } header: {
                 Text("Trainingsplan")

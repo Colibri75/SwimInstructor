@@ -49,7 +49,7 @@ struct WatchTodayView: View {
                 Section {
                     Text(notice)
                         .font(.footnote)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Theme.caution)
                 }
             }
             if plan.isRestDay {

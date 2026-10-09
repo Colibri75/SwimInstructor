@@ -13,7 +13,7 @@ public struct BikeModule: SportModule {
     public let id = SportID.bike
     public let displayName = "Radfahren"
     public let symbolName = "figure.outdoor.cycle"
-    public let colorRGB: UInt32 = 0x7BD389
+    public let colorRGB: UInt32 = 0x009E73
     public let measures: Set<StepMeasure> = [.duration, .distance]
     public let targets: Set<StepTarget> = [.power, .heartRateZone, .speed, .cadence, .perceivedEffort]
     public let health = SportHealthMapping(

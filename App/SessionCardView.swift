@@ -11,7 +11,7 @@ struct DayPlanHeaderView: View {
             if let notice = PlanV2Formatting.sourceNotice(response) {
                 Label(notice, systemImage: "clock.arrow.circlepath")
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.caution)
                     .fixedSize(horizontal: false, vertical: true)
             }
             if response.plan.isRestDay {
@@ -202,8 +202,8 @@ struct IntensityBadge: View {
 
     private var color: Color {
         switch intensity {
-        case .rest, .easy: return .green
-        case .moderate: return .orange
+        case .rest, .easy: return Theme.done
+        case .moderate: return Theme.caution
         case .hard: return .red
         case .unknown: return .gray
         }

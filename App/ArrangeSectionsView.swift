@@ -163,7 +163,7 @@ struct ArrangeSectionsSheet: View {
                     HStack(spacing: 12) {
                         Image(systemName: "plus.circle.fill")
                             .font(.title3)
-                            .foregroundStyle(.green)
+                            .foregroundStyle(Theme.done)
                             .accessibilityHidden(true)
                         SectionLine(section: section)
                     }

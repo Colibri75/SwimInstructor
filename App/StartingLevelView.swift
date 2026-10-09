@@ -55,7 +55,7 @@ struct StartingLevelView: View {
                 amountField("Längste Einheit", value: binding(level, \.longestSession, range: StartingLevel.longestRange(for: unit)), unit: unit)
                 Text(StartingLevelFormatting.validity(level, now: Date()))
                     .font(.footnote)
-                    .foregroundStyle(level.isValid(now: Date()) ? Color.secondary : Color.orange)
+                    .foregroundStyle(level.isValid(now: Date()) ? Color.secondary : Theme.caution)
                 Button("Angabe entfernen", role: .destructive) {
                     store.removeLevel(for: sport)
                     levels = store.levels()

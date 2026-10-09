@@ -117,8 +117,8 @@ struct StatisticTileView: View {
 
     private var trendColor: Color {
         switch StatisticFormatting.assessment(result) {
-        case .better: return .green
-        case .worse: return .orange
+        case .better: return Theme.done
+        case .worse: return Theme.caution
         case .neutral: return .secondary
         }
     }

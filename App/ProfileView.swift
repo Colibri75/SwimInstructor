@@ -244,11 +244,11 @@ struct ProfileEntryDetailView: View {
             if let error = profileLoader.error {
                 Label(error, systemImage: "exclamationmark.triangle")
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.caution)
             } else if saved {
                 Label("Gespeichert, gilt ab dem nächsten Plan.", systemImage: "checkmark.circle")
                     .font(.footnote)
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Theme.done)
             }
         } header: {
             Text("Von Hand eintragen")

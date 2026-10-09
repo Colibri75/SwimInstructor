@@ -290,12 +290,12 @@ struct WeekView: View {
             if !settings.hasToken || weekLoader.needsConfiguration {
                 Text("Noch kein Server-Token hinterlegt. Trage es im Tab Aktuell unter dem Zahnrad ein.")
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.caution)
             }
             if let error = weekLoader.error {
                 Label(error, systemImage: "exclamationmark.triangle")
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.caution)
             }
         } header: {
             Text("Planen")
@@ -446,9 +446,9 @@ enum WeekStateStyle {
 
     static func color(_ state: WeekDayState) -> Color {
         switch state {
-        case .followed, .restKept: return .green
-        case .shorter, .longer, .restBroken: return .orange
-        case .missed: return .red
+        case .followed, .restKept: return Theme.done
+        case .shorter, .longer, .restBroken: return Theme.caution
+        case .missed: return Theme.missed
         case .today: return Theme.accent
         case .upcoming, .skipped, .unplanned: return .secondary
         }

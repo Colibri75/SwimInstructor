@@ -383,7 +383,7 @@ struct GoalAssistantView: View {
             }
             if let message {
                 Text(message)
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Theme.done)
             }
         } header: {
             Text("Übernehmen")

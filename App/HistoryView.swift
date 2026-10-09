@@ -312,9 +312,9 @@ struct HistoryRow: View {
 
     private static func color(_ outcome: AdherenceOutcome) -> Color {
         switch outcome {
-        case .followed, .restKept: return .green
-        case .shorter, .longer, .restBroken: return .orange
-        case .missed: return .red
+        case .followed, .restKept: return Theme.done
+        case .shorter, .longer, .restBroken: return Theme.caution
+        case .missed: return Theme.missed
         case .pending: return .secondary
         }
     }

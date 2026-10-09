@@ -147,7 +147,7 @@ private struct ActualWeekRow: View {
         let isWeak = (percent ?? 100) < MacroActualCalculator.lowCompliancePercent
         return Text("\(registry.displayName(for: volume.sport)): \(PlanV2Formatting.amount(done, unit: volume.unit)) von \(PlanV2Formatting.amount(volume.amount, unit: volume.unit))\(suffix)")
             .font(.caption2)
-            .foregroundStyle(isWeak ? Color.orange : Color.secondary)
+            .foregroundStyle(isWeak ? Theme.caution : Color.secondary)
     }
 }
 
@@ -165,7 +165,7 @@ private struct ActualWeekRow: View {
                 if !macroLoader.isCurrent {
                     Label("Das Ziel hat sich geändert oder der Plan ist abgelaufen. Berechne ihn neu.", systemImage: "exclamationmark.triangle")
                         .font(.footnote)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Theme.caution)
                 }
             } else {
                 Text("Noch kein Gesamtplan. Er legt die Wochen bis zu deinem Ziel für alle Sportarten fest, die nächsten 14 Tage richten sich danach.")
@@ -199,7 +199,7 @@ private struct ActualWeekRow: View {
             if let error = macroLoader.error, !errorFromFeedback {
                 Label(error, systemImage: "exclamationmark.triangle")
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.caution)
             }
         } header: {
             Text("Gesamtplan bis zum Ziel")
@@ -275,7 +275,7 @@ private struct ActualWeekRow: View {
                 systemImage: "chart.line.downtrend.xyaxis"
             )
             .font(.footnote)
-            .foregroundStyle(.orange)
+            .foregroundStyle(Theme.caution)
             .fixedSize(horizontal: false, vertical: true)
             Button("Jetzt fortschreiben") {
                 guard let reading = todayLoader.reading else { return }
@@ -334,7 +334,7 @@ private struct ActualWeekRow: View {
             if let error = macroLoader.error, errorFromFeedback {
                 Label(error, systemImage: "exclamationmark.triangle")
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.caution)
             }
             if let latest = plan.feedbackRounds.last {
                 FeedbackRoundView(round: latest, title: "Zuletzt geändert")

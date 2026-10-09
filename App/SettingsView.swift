@@ -65,7 +65,7 @@ struct SettingsView: View {
                         if let message {
                             Text(message)
                                 .font(.footnote)
-                                .foregroundStyle(messageIsError ? .red : .green)
+                                .foregroundStyle(messageIsError ? Color.red : Theme.done)
                         }
                     }
 
@@ -175,7 +175,7 @@ struct SettingsView: View {
             if planning.usesWeather, locationProvider.isDenied {
                 Text("Ohne Ortsfreigabe gibt es kein Wetter. Erlaube sie in den Einstellungen des iPhones unter Datenschutz > Ortungsdienste.")
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.caution)
             }
             Toggle("Kalender berücksichtigen", isOn: Binding(
                 get: { planning.usesCalendar },
@@ -188,7 +188,7 @@ struct SettingsView: View {
                 if calendarProvider.isDenied {
                     Text("Ohne Kalenderzugriff zählt die freie Zeit nicht. Erlaube ihn in den Einstellungen des iPhones unter Datenschutz > Kalender.")
                         .font(.footnote)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Theme.caution)
                 }
                 Stepper(value: planningBinding(\.calendarStartHour), in: 0...(planning.calendarEndHour - 1)) {
                     LabeledContent("Training ab", value: "\(planning.calendarStartHour) Uhr")

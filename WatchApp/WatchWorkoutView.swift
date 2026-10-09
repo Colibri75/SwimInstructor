@@ -139,14 +139,14 @@ private struct ControlStatusLine: View {
         VStack(alignment: .leading, spacing: 1) {
             if workoutManager.crownProgress > 0 {
                 ProgressView(value: workoutManager.crownProgress)
-                    .tint(workoutManager.crownStep == .previous ? Color.orange : Color.yellow)
+                    .tint(workoutManager.crownStep == .previous ? Theme.done : Theme.ember)
             }
             Label(
                 workoutManager.lastGestureNote,
                 systemImage: workoutManager.usesWaterLock ? (workoutManager.isWaterLocked ? "lock.fill" : "lock.open.fill") : "digitalcrown.horizontal.arrow.clockwise"
             )
             .font(.system(size: 11))
-            .foregroundStyle(workoutManager.usesWaterLock && !workoutManager.isWaterLocked ? Color.yellow : Color.secondary)
+            .foregroundStyle(workoutManager.usesWaterLock && !workoutManager.isWaterLocked ? Theme.caution : Color.secondary)
             .lineLimit(1)
             .minimumScaleFactor(0.6)
         }
@@ -167,7 +167,7 @@ private struct WorkoutMetricsView: View {
                 // Zeit, Puls und Tempo liest man unterwegs: groß, der Plan darunter kleiner.
                 Text(PlanFormatting.elapsed(workoutManager.elapsedTime(at: context.date)))
                     .font(.system(size: 40, weight: .semibold, design: .rounded).monospacedDigit())
-                    .foregroundStyle(workoutManager.phase == .paused ? Color.orange : Color.yellow)
+                    .foregroundStyle(workoutManager.phase == .paused ? Theme.spark : Color.primary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
@@ -268,7 +268,7 @@ private struct WorkoutControlsView: View {
                         } label: {
                             Image(systemName: workoutManager.phase == .paused ? "play.fill" : "pause.fill")
                         }
-                        .tint(.yellow)
+                        .tint(Theme.spark)
                         Text(workoutManager.phase == .paused ? "Weiter" : "Pause").font(.footnote)
                     }
                 }
@@ -348,7 +348,7 @@ private struct EffortRatingBlock: View {
             if let saved = workoutManager.savedEffort {
                 Label("Anstrengung \(saved) von 10 gespeichert", systemImage: "checkmark.circle.fill")
                     .font(.footnote)
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Theme.done)
             } else {
                 Text("Wie anstrengend?")
                     .font(.headline)
@@ -400,14 +400,14 @@ private struct TestResultBlock: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(result.isValid ? "Testergebnis" : "Test nicht gewertet")
                 .font(.headline)
-                .foregroundStyle(result.isValid ? Color.green : Color.orange)
+                .foregroundStyle(result.isValid ? Theme.done : Theme.caution)
             ForEach(definitions.filter { result.values[$0.metric] != nil }, id: \.metric) { definition in
                 LabeledContent(definition.displayName, value: PlanV2Formatting.performanceValue(result.values[definition.metric] ?? 0, unit: definition.unit))
             }
             ForEach(result.problems, id: \.self) { problem in
                 Text(problem)
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.caution)
                     .fixedSize(horizontal: false, vertical: true)
             }
             if result.isValid {

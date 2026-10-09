@@ -37,8 +37,9 @@ public protocol SportModule: Sendable {
     var displayName: String { get }
     /// SF-Symbol für Listen und Karten.
     var symbolName: String { get }
-    /// Farbe der Sportart in Symbolen, Balken und Diagrammen (RGB, z. B. 0x4CC9F0), für dunklen Grund gewählt; hell
-    /// dunkelt die App sie ab. Bewusst nie Orange: Das ist die Farbe für Aktionen.
+    /// Farbe der Sportart in Symbolen, Balken und Diagrammen (RGB, z. B. 0x56B4E9), für dunklen Grund gewählt; hell
+    /// dunkelt die App sie ab. Bewusst nie Orange: Das ist die Farbe für Aktionen. Aus der farbschwäche-sicheren
+    /// Okabe-Ito-Palette wählen (Blau 0x0072B2, Himmelblau 0x56B4E9, Blaugrün 0x009E73, Rosaviolett 0xCC79A7, Gelb 0xF0E442).
     var colorRGB: UInt32 { get }
     /// Maße, nach denen ein Schritt dieser Sportart geplant werden kann.
     var measures: Set<StepMeasure> { get }

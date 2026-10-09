@@ -25,6 +25,12 @@ enum Theme {
     /// Leere Spur von Balken und Ringen.
     static let track = Color.dynamic(light: 0xC9D2E0, dark: 0x26375F)
 
+    /// Status, einheitlich und auch bei Farbschwäche unterscheidbar (Okabe-Ito, kein Rot-Grün): erfüllt und gespeichert Blau,
+    /// abweichend und Hinweise Goldbraun, verpasst Grau. Immer zusammen mit Symbol oder Text, nie Farbe allein.
+    static let done = Color.dynamic(light: 0x0072B2, dark: 0x56B4E9)
+    static let caution = Color.dynamic(light: 0x8F6200, dark: 0xE69F00)
+    static let missed = Color.dynamic(light: 0x5F6779, dark: 0xA9B4CC)
+
     /// Text und Linien auf der Nacht-Karte (immer dunkel, auch im hellen Modus).
     static let nightSecondary = Color(rgb: 0xA9B4CC)
 

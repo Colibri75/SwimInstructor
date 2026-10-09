@@ -46,7 +46,7 @@ struct RacePlanView: View {
                         Section {
                             Label("Dieser Plan gehört zu einem früheren Ziel (\(PlanFormatting.shortGermanDate(response.raceDay))). Erstell ihn neu.", systemImage: "exclamationmark.triangle")
                                 .font(.footnote)
-                                .foregroundStyle(.orange)
+                                .foregroundStyle(Theme.caution)
                         }
                     }
                     overviewSection(response)
@@ -114,7 +114,7 @@ struct RacePlanView: View {
             if let error = raceLoader.error {
                 Label(error, systemImage: "exclamationmark.triangle")
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.caution)
             }
         } footer: {
             Text("Das Wetter fließt ein, wenn \"Wetter berücksichtigen\" an ist und der Tag höchstens 14 Tage entfernt ist.")
