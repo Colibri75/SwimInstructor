@@ -1,0 +1,5 @@
+/* Hinweise der Berechtigungsabfragen, deutsch in Info.plist (docs/uebersetzungen.md) */
+"NSHealthShareUsageDescription" = "Peaksmith reads your workouts and vital data from Health to create an up-to-date training plan for you every day.";
+"NSHealthUpdateUsageDescription" = "Peaksmith saves your workouts to Health.";
+"NSLocationWhenInUseUsageDescription" = "Peaksmith uses your approximate location (accurate to about 10 km) only for the weather forecast, so your plan moves indoors during thunderstorms, storms or ice.";
+"NSCalendarsFullAccessUsageDescription" = "Peaksmith reads when your appointments are and plans less on busy days. Titles and contents of your appointments stay on your iPhone.";

@@ -169,7 +169,7 @@ public final class MultiSportWeekLoader: ObservableObject {
     public func planNextDays(wishes: String? = nil, reason: ReplanReason = .manual) async -> Bool {
         guard !isLoading else { return false }
         guard let context = contextProvider() else {
-            error = "Die Health-Daten sind noch nicht geladen. Öffne zuerst den Tab Aktuell."
+            error = String(localized: "Die Health-Daten sind noch nicht geladen. Öffne zuerst den Tab Aktuell.")
             return false
         }
         guard let provider = planProvider() else {
@@ -359,7 +359,7 @@ public final class MultiSportWeekLoader: ObservableObject {
         var day = changed.days[index]
         guard day.sessions != sessions || day.extras != extras else { return todayTarget }
         if sessions.isEmpty != day.sessions.isEmpty {
-            day.focus = sessions.isEmpty ? "Ruhetag" : sessions.map(\.focus).joined(separator: " + ")
+            day.focus = sessions.isEmpty ? String(localized: "Ruhetag") : sessions.map(\.focus).joined(separator: " + ")
         }
         day.sessions = sessions
         day.extras = extras

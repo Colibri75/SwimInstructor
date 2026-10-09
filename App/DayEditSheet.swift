@@ -125,7 +125,7 @@ struct DayEditSheet: View {
             let plan = response.plan
             if plan.isRestDay {
                 Section("Trainingsplan") {
-                    Text(plan.rationale.isEmpty ? "Ruhetag" : plan.rationale)
+                    Text(plan.rationale.isEmpty ? String(localized: "Ruhetag") : plan.rationale)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             } else {
@@ -197,10 +197,10 @@ struct DayEditSheet: View {
 
     private func trainingPlanFooter(_ response: DayPlanV2Response) -> String {
         if date > weekLoader.todayKey {
-            return "Vorschau. Am Tag selbst stimmt dein Coach den Plan noch einmal auf deinen Zustand ab; nach einer Änderung an diesem Tag lässt sich die Vorschau neu holen."
+            return String(localized: "Vorschau. Am Tag selbst stimmt dein Coach den Plan noch einmal auf deinen Zustand ab; nach einer Änderung an diesem Tag lässt sich die Vorschau neu holen.")
         }
-        if date < weekLoader.todayKey { return "So war der Tag geplant." }
-        return "Der Plan von heute, wie im Tab Aktuell."
+        if date < weekLoader.todayKey { return String(localized: "So war der Tag geplant.") }
+        return String(localized: "Der Plan von heute, wie im Tab Aktuell.")
     }
 
     private func doneSection(_ status: MultiSportDayStatus) -> some View {
@@ -231,8 +231,8 @@ struct DayEditSheet: View {
                 Text("Umfang: \(PlanV2Formatting.amount(session.amount, unit: session.unit))")
             }
             LabeledContent("Art") {
-                Text(session.test.map { "Test: \($0.displayName)" }
-                     ?? "\(PlanFormatting.sessionType(session.sessionType)), \(PlanFormatting.intensity(session.intensity))")
+                Text(session.test.map { String(localized: "Test: \($0.displayName)") }
+                     ?? String(localized: "\(PlanFormatting.sessionType(session.sessionType)), \(PlanFormatting.intensity(session.intensity))"))
             }
             if session.unit == .meters {
                 LabeledContent("Dauer") { Text("ca. \(PlanV2Formatting.duration(minutes: session.minutes))") }
@@ -253,7 +253,7 @@ struct DayEditSheet: View {
                 weekLoader.removeSession(date, session: index)
             }
         } header: {
-            Text(count > 1 ? "Einheit \(index + 1): \(registry.displayName(for: session.sport))" : registry.displayName(for: session.sport))
+            Text(count > 1 ? String(localized: "Einheit \(index + 1): \(registry.displayName(for: session.sport))") : registry.displayName(for: session.sport))
         } footer: {
             if !session.focus.isEmpty {
                 Text(session.focus)

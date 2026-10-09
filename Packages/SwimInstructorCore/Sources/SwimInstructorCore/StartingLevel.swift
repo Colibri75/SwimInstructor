@@ -12,10 +12,10 @@ public enum TrainingStatus: String, Codable, Sendable, CaseIterable, Identifiabl
 
     public var title: String {
         switch self {
-        case .regular: return "Trainiere regelmäßig"
-        case .shortBreak: return "Pause von 2 bis 8 Wochen"
-        case .longBreak: return "Pause über 8 Wochen"
-        case .beginner: return "Einsteiger"
+        case .regular: return String(localized: "Trainiere regelmäßig")
+        case .shortBreak: return String(localized: "Pause von 2 bis 8 Wochen")
+        case .longBreak: return String(localized: "Pause über 8 Wochen")
+        case .beginner: return String(localized: "Einsteiger")
         }
     }
 }
@@ -137,30 +137,32 @@ public struct UserDefaultsStartingLevelStore: StartingLevelStoring {
 public enum StartingLevelFormatting {
     /// Was Health in den letzten 4 Wochen gezeigt hat, in der Einheit der Sportart.
     public static func healthSummary(_ state: AthleteStateSnapshot.SportStateSummary?, unit: PlanUnit) -> String {
-        guard let state, state.sessionsLastFourWeeks > 0 else { return "Health: keine Einheiten in den letzten 4 Wochen." }
+        guard let state, state.sessionsLastFourWeeks > 0 else { return String(localized: "Health: keine Einheiten in den letzten 4 Wochen.") }
         let (average, longest) = amounts(state, unit: unit)
-        return "Health (letzte 4 Wochen): im Schnitt \(PlanV2Formatting.amount(average, unit: unit)) pro Woche, " +
-            "längste Einheit \(PlanV2Formatting.amount(longest, unit: unit))."
+        let averageText = PlanV2Formatting.amount(average, unit: unit)
+        let longestText = PlanV2Formatting.amount(longest, unit: unit)
+        return String(localized: "Health (letzte 4 Wochen): im Schnitt \(averageText) pro Woche, längste Einheit \(longestText).")
     }
 
     /// Bis wann die Angabe gilt, oder dass sie abgelaufen ist.
     public static func validity(_ level: StartingLevel, now: Date, calendar: Calendar = .current) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "dd.MM.yyyy"
+        formatter.locale = AppLocale.current
+        formatter.setLocalizedDateFormatFromTemplate("ddMMyyyy")
         formatter.timeZone = calendar.timeZone
         let day = formatter.string(from: level.validUntil)
         return level.isValid(now: now)
-            ? "Gilt bis \(day). Danach zählt nur noch, was Health aufzeichnet; eine Änderung verlängert sie."
-            : "Abgelaufen am \(day), der Plan rechnet wieder nur mit Health. Eine Änderung erneuert sie."
+            ? String(localized: "Gilt bis \(day). Danach zählt nur noch, was Health aufzeichnet; eine Änderung verlängert sie.")
+            : String(localized: "Abgelaufen am \(day), der Plan rechnet wieder nur mit Health. Eine Änderung erneuert sie.")
     }
 
     /// Kurzfassung für die Einstellungen: wie viele Sportarten eine gültige Angabe haben.
     public static func summary(_ levels: [StartingLevel], now: Date) -> String {
         let valid = levels.filter { $0.isValid(now: now) }.count
         switch valid {
-        case 0: return levels.isEmpty ? "Nicht angegeben" : "Abgelaufen"
-        case 1: return "1 Sportart"
-        default: return "\(valid) Sportarten"
+        case 0: return levels.isEmpty ? String(localized: "Nicht angegeben") : String(localized: "Abgelaufen")
+        case 1: return String(localized: "1 Sportart")
+        default: return String(localized: "\(valid) Sportarten")
         }
     }
 

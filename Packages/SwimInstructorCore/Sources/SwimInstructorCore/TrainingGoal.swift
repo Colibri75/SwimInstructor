@@ -15,19 +15,19 @@ public enum GoalKind: String, Codable, Sendable, CaseIterable, Identifiable {
 
     public var title: String {
         switch self {
-        case .race: return "Wettkampf"
-        case .time: return "Zeit über eine Strecke"
-        case .distance: return "Strecke schaffen"
-        case .fitness: return "Fit werden und bleiben"
+        case .race: return String(localized: "Wettkampf")
+        case .time: return String(localized: "Zeit über eine Strecke")
+        case .distance: return String(localized: "Strecke schaffen")
+        case .fitness: return String(localized: "Fit werden und bleiben")
         }
     }
 
     public var explanation: String {
         switch self {
-        case .race: return "Ein Wettkampf an einem festen Tag, je Disziplin mit Zielzeit oder nur ankommen."
-        case .time: return "Eine Zeit über eine Strecke ohne Wettkampf, z. B. 1500 m Kraul unter 30 Minuten. Am Zieltag steht ein eigener Versuch."
-        case .distance: return "Eine Strecke am Stück schaffen, z. B. 3000 m schwimmen oder 10 km laufen, ohne Wettkampf."
-        case .fitness: return "Ohne Zieltag: Der Plan steigert bis zu deiner Zeit im Wochenraster und hält sie dann."
+        case .race: return String(localized: "Ein Wettkampf an einem festen Tag, je Disziplin mit Zielzeit oder nur ankommen.")
+        case .time: return String(localized: "Eine Zeit über eine Strecke ohne Wettkampf, z. B. 1500 m Kraul unter 30 Minuten. Am Zieltag steht ein eigener Versuch.")
+        case .distance: return String(localized: "Eine Strecke am Stück schaffen, z. B. 3000 m schwimmen oder 10 km laufen, ohne Wettkampf.")
+        case .fitness: return String(localized: "Ohne Zieltag: Der Plan steigert bis zu deiner Zeit im Wochenraster und hält sie dann.")
         }
     }
 
@@ -161,39 +161,44 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
     /// bleibt gültig, wenn sein Tag vorbei ist (der Plan sagt dann, dass ein neues fällig ist).
     public func problem(registry: SportRegistry = .standard) -> String? {
         if kind.hasDisciplines {
-            guard !disciplines.isEmpty else { return "Das Ziel braucht mindestens eine Disziplin." }
+            guard !disciplines.isEmpty else { return String(localized: "Das Ziel braucht mindestens eine Disziplin.") }
             if kind == .time, disciplines.contains(where: { $0.targetDurationSeconds == nil }) {
-                return "Bei einer Zeit über eine Strecke braucht jede Disziplin eine Zielzeit."
+                return String(localized: "Bei einer Zeit über eine Strecke braucht jede Disziplin eine Zielzeit.")
             }
         } else {
-            guard disciplines.isEmpty else { return "Ein Fitnessziel hat keine Disziplinen." }
+            guard disciplines.isEmpty else { return String(localized: "Ein Fitnessziel hat keine Disziplinen.") }
         }
-        guard disciplines.count <= Self.maximumDisciplines else { return "Höchstens \(Self.maximumDisciplines) Disziplinen." }
-        guard Set(disciplines.map(\.sport)).count == disciplines.count else { return "Jede Sportart darf nur einmal im Ziel stehen." }
+        guard disciplines.count <= Self.maximumDisciplines else { return String(localized: "Höchstens \(Self.maximumDisciplines) Disziplinen.") }
+        guard Set(disciplines.map(\.sport)).count == disciplines.count else { return String(localized: "Jede Sportart darf nur einmal im Ziel stehen.") }
         for discipline in disciplines {
-            guard let module = registry.module(for: discipline.sport) else { return "Unbekannte Sportart \(discipline.sport)." }
+            guard let module = registry.module(for: discipline.sport) else {
+                let sport = discipline.sport.rawValue
+                return String(localized: "Unbekannte Sportart \(sport).")
+            }
+            let name = module.displayName
             guard Self.distanceRange.contains(discipline.distanceMeters) else {
-                return "\(module.displayName): Die Strecke muss zwischen 100 m und 500 km liegen."
+                return String(localized: "\(name): Die Strecke muss zwischen 100 m und 500 km liegen.")
             }
             if let duration = discipline.targetDurationSeconds,
                !registry.isPlausibleGoal(sport: discipline.sport, distanceMeters: discipline.distanceMeters, durationSeconds: duration) {
-                return "\(module.displayName): Strecke und Zielzeit ergeben ein unrealistisches Tempo."
+                return String(localized: "\(name): Strecke und Zielzeit ergeben ein unrealistisches Tempo.")
             }
             if discipline.openWater, module.openWater == nil {
-                return "\(module.displayName) gibt es nicht im Freiwasser."
+                return String(localized: "\(name) gibt es nicht im Freiwasser.")
             }
         }
-        guard Self.trainingDaysRange.contains(trainingDaysPerWeek) else { return "Trainingstage: 1 bis 7 pro Woche." }
-        guard Self.weeklyHoursRange.contains(weeklyHours) else { return "Trainingszeit: 1 bis 30 Stunden pro Woche." }
+        guard Self.trainingDaysRange.contains(trainingDaysPerWeek) else { return String(localized: "Trainingstage: 1 bis 7 pro Woche.") }
+        guard Self.weeklyHoursRange.contains(weeklyHours) else { return String(localized: "Trainingszeit: 1 bis 30 Stunden pro Woche.") }
         guard !emphasis.isEmpty, Set(emphasis.map(\.sport)).count == emphasis.count else {
-            return "Jede Sportart braucht genau einen Schwerpunkt."
+            return String(localized: "Jede Sportart braucht genau einen Schwerpunkt.")
         }
         guard emphasis.allSatisfy({ registry.module(for: $0.sport) != nil && (0...100).contains($0.percent) }) else {
-            return "Schwerpunkte gehen von 0 bis 100 % und nur für bekannte Sportarten."
+            return String(localized: "Schwerpunkte gehen von 0 bis 100 % und nur für bekannte Sportarten.")
         }
-        guard emphasis.reduce(0, { $0 + $1.percent }) == 100 else { return "Die Schwerpunkte müssen zusammen 100 % ergeben." }
+        guard emphasis.reduce(0, { $0 + $1.percent }) == 100 else { return String(localized: "Die Schwerpunkte müssen zusammen 100 % ergeben.") }
         for discipline in disciplines where percent(for: discipline.sport) == 0 {
-            return "\(registry.displayName(for: discipline.sport)) gehört zum Ziel und braucht einen Schwerpunkt über 0 %."
+            let name = registry.displayName(for: discipline.sport)
+            return String(localized: "\(name) gehört zum Ziel und braucht einen Schwerpunkt über 0 %.")
         }
         return nil
     }
@@ -202,7 +207,7 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
     public func problem(now: Date, calendar: Calendar = .current, registry: SportRegistry = .standard) -> String? {
         if let problem = problem(registry: registry) { return problem }
         guard calendar.startOfDay(for: targetDate) > calendar.startOfDay(for: now) else {
-            return "Der Zieltag muss in der Zukunft liegen."
+            return String(localized: "Der Zieltag muss in der Zukunft liegen.")
         }
         return nil
     }

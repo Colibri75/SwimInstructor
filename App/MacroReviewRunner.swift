@@ -54,7 +54,7 @@ final class MacroReviewRunner: ObservableObject {
 
     private func notify(_ review: MacroReview) {
         let content = UNMutableNotificationContent()
-        content.title = "Gesamtplan fortgeschrieben"
+        content.title = String(localized: "Gesamtplan fortgeschrieben")
         content.body = review.summary.isEmpty ? review.reason.title : review.summary
         content.sound = .default
         let request = UNNotificationRequest(identifier: "macro-review-\(review.weekStart)", content: content, trigger: nil)

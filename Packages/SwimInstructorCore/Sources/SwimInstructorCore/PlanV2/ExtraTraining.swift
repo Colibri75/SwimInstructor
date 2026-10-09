@@ -18,9 +18,9 @@ public enum ExtraKind: String, Codable, Sendable, CaseIterable {
 
     public var displayName: String {
         switch self {
-        case .strength: return "Kraft"
-        case .mobility: return "Mobilität"
-        case .unknown: return "Ergänzung"
+        case .strength: return String(localized: "Kraft")
+        case .mobility: return String(localized: "Mobilität")
+        case .unknown: return String(localized: "Ergänzung")
         }
     }
 

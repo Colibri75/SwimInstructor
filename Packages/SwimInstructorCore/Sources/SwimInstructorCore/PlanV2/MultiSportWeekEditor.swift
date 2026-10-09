@@ -30,7 +30,7 @@ public enum MultiSportWeekEditor {
         update(plan, date) { day in
             guard !day.isUnavailable else { return }
             day.contentBeforeUnavailable = day.isRestDay ? nil : day.content
-            day.content = .rest(focus: "Keine Zeit")
+            day.content = .rest(focus: String(localized: "Keine Zeit"))
             day.isUnavailable = true
             day.isEdited = true
         }
@@ -83,7 +83,7 @@ public enum MultiSportWeekEditor {
             day.isEdited = true
         }
         return update(placed, source) { day in
-            day.content = .rest(focus: "Verschoben")
+            day.content = .rest(focus: String(localized: "Verschoben"))
             day.isEdited = true
         }
     }
@@ -100,7 +100,7 @@ public enum MultiSportWeekEditor {
             guard clamped != session.amount else { return }
             if clamped == 0 {
                 day.sessions.remove(at: index)
-                if day.sessions.isEmpty { day.focus = "Ruhetag" }
+                if day.sessions.isEmpty { day.focus = String(localized: "Ruhetag") }
             } else {
                 day.sessions[index] = resized(session, to: clamped, registry: registry)
             }
@@ -115,7 +115,7 @@ public enum MultiSportWeekEditor {
             day.sessions.remove(at: index)
             // Ohne die Einheit davor ist die übrige kein Koppeltraining mehr.
             if !day.sessions.isEmpty { day.sessions[0].brick = false }
-            if day.sessions.isEmpty { day.focus = "Ruhetag" }
+            if day.sessions.isEmpty { day.focus = String(localized: "Ruhetag") }
             day.isEdited = true
         }
     }
@@ -129,9 +129,9 @@ public enum MultiSportWeekEditor {
             let converted = convert(amount, unit: module.planUnit, speed: module.typicalSpeedMetersPerSecond)
             day.sessions.append(WeekSession(
                 sport: sport, sessionType: .endurance, intensity: .easy, amount: amount, unit: module.planUnit,
-                minutes: converted.minutes, distanceMeters: converted.meters, focus: "Locker"
+                minutes: converted.minutes, distanceMeters: converted.meters, focus: String(localized: "Locker")
             ))
-            if day.sessions.count == 1 { day.focus = "\(module.displayName) locker" }
+            if day.sessions.count == 1 { day.focus = String(localized: "\(module.displayName) locker") }
             day.isEdited = true
         }
     }
@@ -161,7 +161,7 @@ public enum MultiSportWeekEditor {
                 session.test = nil
                 session.sessionType = .endurance
                 session.intensity = .easy
-                session.focus = "Locker statt Leistungstest"
+                session.focus = String(localized: "Locker statt Leistungstest")
             }
             day.sessions[index] = session
             day.isEdited = true

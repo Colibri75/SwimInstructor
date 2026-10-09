@@ -11,6 +11,7 @@ import { checkTarget, normalizeStep, stepsAmount, trimSteps } from "./steps";
 import { chooseTest, stepsTotals, TestRef, testRef } from "./tests";
 import { indoorAllowed, withNote } from "./weekSanity";
 import { openWaterAllowed, openWaterBlocked } from "./openWater";
+import { Language, serverTexts } from "../language";
 
 /**
  * Sicherheitsschicht fuer den Tagesplan ueber mehrere Sportarten. Reiner Code: korrigiert Claudes Plan
@@ -25,6 +26,8 @@ import { openWaterAllowed, openWaterBlocked } from "./openWater";
 export interface DayOptionsV2 {
   /** Heute (Kalendertag des Athleten). */
   date: string;
+  /** Sprache der App, fuer die Texte, die der Server selbst schreibt. Ohne Angabe Deutsch. */
+  language?: Language;
   /** Das Equipment des Athleten; fehlt die Angabe, ist jedes erlaubt. */
   equipment?: readonly string[];
   recent?: readonly RecentTraining[];
@@ -111,7 +114,9 @@ export function sanitizeDayV2(input: MultiDayPlanRaw, snapshot: SnapshotV2, opti
 
   if (today.restReason !== null) {
     if (input.sessions.length > 0) notes.push(`Ruhetag erzwungen: ${today.restReason}`);
-    return done(`Heute ist Ruhe angesagt: ${today.restReason}.`, [], extras, coachNotes, notes, true);
+    // Der Grund ist deutsch; in anderen Sprachen erklaert Claudes Begruendung den Ruhetag (die Nutzernachricht schreibt ihn vor).
+    const restRationale = (options.language ?? "de") === "de" ? `Heute ist Ruhe angesagt: ${today.restReason}.` : input.rationale;
+    return done(restRationale, [], extras, coachNotes, notes, true, options.language);
   }
 
   // 1. Sportarten des Plans, Formalien der Schritte.
@@ -151,7 +156,7 @@ export function sanitizeDayV2(input: MultiDayPlanRaw, snapshot: SnapshotV2, opti
         : { plan: null, reason: blocked };
     if (chosen.plan === null) {
       notes.push(`Kein Leistungstest ${draft.sport.displayName} heute (${chosen.reason ?? "passt nicht"}), lockere Einheit statt dessen`);
-      const easy = soften({ ...draft, test: null, focus: "Locker statt Leistungstest" }, "easy");
+      const easy = soften({ ...draft, test: null, focus: serverTexts(options.language).easyInsteadOfTest }, "easy");
       return easy.steps.length > 0 ? [easy] : [];
     }
     testDone = true;
@@ -232,7 +237,7 @@ export function sanitizeDayV2(input: MultiDayPlanRaw, snapshot: SnapshotV2, opti
 
   const rest = drafts.length === 0;
   const rationale = rest && input.sessions.length > 0 ? "Heute ist Ruhe angesagt: Die geplanten Einheiten passen heute nicht in die Grenzen." : input.rationale;
-  return done(rationale, drafts, extras, coachNotes, notes, false);
+  return done(rationale, drafts, extras, coachNotes, notes, false, options.language);
 }
 
 /** Drinnen nur mit Hilfsmittel; bei Unwetter nach drinnen, wenn das geht (wie im Wochenplan). */
@@ -367,7 +372,7 @@ function applySportLimits(draft: Draft, today: DayLimitsV2, notes: string[]): Dr
   return [result];
 }
 
-function done(rationale: string, drafts: Draft[], extras: DayExtra[], coachNotes: string[], notes: string[], forcedRest: boolean): DaySanityResultV2 {
+function done(rationale: string, drafts: Draft[], extras: DayExtra[], coachNotes: string[], notes: string[], forcedRest: boolean, language?: Language): DaySanityResultV2 {
   const sessions = drafts.map((draft): DaySessionV2 => {
     const totals = stepsTotals(draft.sport, draft.steps, draft.limits.speed);
     return {
@@ -389,7 +394,7 @@ function done(rationale: string, drafts: Draft[], extras: DayExtra[], coachNotes
   const substantive = notes.filter((note) => !note.startsWith(FORMAL_PREFIX));
   const adjustments = notes.map((note) => (note.startsWith(FORMAL_PREFIX) ? note.slice(FORMAL_PREFIX.length).trim() : note));
   return {
-    plan: { rationale: forcedRest ? rationale : withNote(rationale, substantive), sessions, extras, coach_notes: coachNotes },
+    plan: { rationale: forcedRest ? rationale : withNote(rationale, substantive, language), sessions, extras, coach_notes: coachNotes },
     adjustments,
     blocked: null
   };

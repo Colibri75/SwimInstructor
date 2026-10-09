@@ -160,10 +160,10 @@ struct SettingsView: View {
     private var planningSection: some View {
         Section {
             Stepper(value: planningBinding(\.supplements.strengthPerWeek), in: Supplements.strengthRange) {
-                LabeledContent("Kraft", value: planning.supplements.strengthPerWeek == 0 ? "aus" : "\(planning.supplements.strengthPerWeek)× pro Woche")
+                LabeledContent("Kraft", value: planning.supplements.strengthPerWeek == 0 ? String(localized: "aus") : String(localized: "\(planning.supplements.strengthPerWeek)× pro Woche"))
             }
             Stepper(value: planningBinding(\.supplements.mobilityPerWeek), in: Supplements.mobilityRange) {
-                LabeledContent("Mobilität", value: planning.supplements.mobilityPerWeek == 0 ? "aus" : "\(planning.supplements.mobilityPerWeek)× pro Woche")
+                LabeledContent("Mobilität", value: planning.supplements.mobilityPerWeek == 0 ? String(localized: "aus") : String(localized: "\(planning.supplements.mobilityPerWeek)× pro Woche"))
             }
             Toggle("Wetter berücksichtigen", isOn: Binding(
                 get: { planning.usesWeather },
@@ -191,10 +191,10 @@ struct SettingsView: View {
                         .foregroundStyle(.orange)
                 }
                 Stepper(value: planningBinding(\.calendarStartHour), in: 0...(planning.calendarEndHour - 1)) {
-                    LabeledContent("Training ab", value: "\(planning.calendarStartHour) Uhr")
+                    LabeledContent("Training ab", value: String(localized: "\(planning.calendarStartHour) Uhr"))
                 }
                 Stepper(value: planningBinding(\.calendarEndHour), in: (planning.calendarStartHour + 1)...24) {
-                    LabeledContent("Training bis", value: "\(planning.calendarEndHour) Uhr")
+                    LabeledContent("Training bis", value: String(localized: "\(planning.calendarEndHour) Uhr"))
                 }
             }
         } header: {
@@ -400,7 +400,7 @@ struct SettingsView: View {
         defer { isChecking = false }
         do {
             try await PlanAPIClient(configuration: configuration).checkConnection()
-            show("Verbindung ok, Token gültig.", isError: false)
+            show(String(localized: "Verbindung ok, Token gültig."), isError: false)
         } catch {
             show(error.localizedDescription, isError: true)
         }

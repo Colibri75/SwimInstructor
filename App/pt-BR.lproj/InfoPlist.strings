@@ -1,0 +1,5 @@
+/* Hinweise der Berechtigungsabfragen, deutsch in Info.plist (docs/uebersetzungen.md) */
+"NSHealthShareUsageDescription" = "O Peaksmith lê seus treinos e dados vitais do Saúde para criar todo dia um plano de treino atualizado para você.";
+"NSHealthUpdateUsageDescription" = "O Peaksmith salva seus treinos no Saúde.";
+"NSLocationWhenInUseUsageDescription" = "O Peaksmith usa sua localização aproximada (precisão de cerca de 10 km) apenas para a previsão do tempo, para que seu plano passe para ambientes internos em caso de trovoada, tempestade ou gelo.";
+"NSCalendarsFullAccessUsageDescription" = "O Peaksmith lê quando você tem compromissos e planeja menos nos dias cheios. Títulos e conteúdos dos compromissos ficam no iPhone.";

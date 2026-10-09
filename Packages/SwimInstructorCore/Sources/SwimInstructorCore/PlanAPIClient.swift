@@ -34,20 +34,22 @@ public enum PlanAPIError: Error, Equatable, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .unauthorized:
-            return "Der Server hat das Token abgelehnt. Prüfe es in den Einstellungen."
+            return String(localized: "Der Server hat das Token abgelehnt. Prüfe es in den Einstellungen.")
         case .invalidRequest(let details):
-            let suffix = details.isEmpty ? "" : " (\(details.joined(separator: ", ")))"
-            return "Der Server hat die Trainingsdaten abgelehnt\(suffix)."
+            guard !details.isEmpty else { return String(localized: "Der Server hat die Trainingsdaten abgelehnt.") }
+            let fields = details.joined(separator: ", ")
+            return String(localized: "Der Server hat die Trainingsdaten abgelehnt (\(fields)).")
         case .planUnavailable(let reason):
-            return "Kein neuer Plan: \(PlanFormatting.fallbackReason(reason))"
+            let text = PlanFormatting.fallbackReason(reason)
+            return String(localized: "Kein neuer Plan: \(text)")
         case .server(let status):
-            return "Der Server hat mit Status \(status) geantwortet."
+            return String(localized: "Der Server hat mit Status \(status) geantwortet.")
         case .network(let message):
-            return "Keine Verbindung zum Server: \(message)"
+            return String(localized: "Keine Verbindung zum Server: \(message)")
         case .invalidResponse:
-            return "Die Antwort des Servers war unverständlich."
+            return String(localized: "Die Antwort des Servers war unverständlich.")
         case .serverOutdated:
-            return "Der Server kennt die Planung für mehrere Sportarten noch nicht. Er muss aktualisiert werden (deploy.sh)."
+            return String(localized: "Der Server kennt die Planung für mehrere Sportarten noch nicht. Er muss aktualisiert werden (deploy.sh).")
         }
     }
 }
@@ -124,6 +126,8 @@ public struct PlanAPIClient: Sendable {
         request.timeoutInterval = timeout
         request.setValue("Bearer \(configuration.token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        // Der Server schreibt Pläne und Coach-Texte in der Sprache der App (docs/uebersetzungen.md).
+        request.setValue(AppLocale.languageCode, forHTTPHeaderField: "X-App-Language")
         return request
     }
 
@@ -142,15 +146,15 @@ public struct PlanAPIClient: Sendable {
         guard let urlError = error as? URLError else { return error.localizedDescription }
         switch urlError.code {
         case .cannotFindHost, .dnsLookupFailed:
-            return "Der Servername lässt sich nicht auflösen (DNS). Probiere WLAN statt Mobilfunk oder umgekehrt und prüfe die Server-Adresse in den Einstellungen."
+            return String(localized: "Der Servername lässt sich nicht auflösen (DNS). Probiere WLAN statt Mobilfunk oder umgekehrt und prüfe die Server-Adresse in den Einstellungen.")
         case .notConnectedToInternet, .dataNotAllowed, .internationalRoamingOff:
-            return "Das iPhone hat gerade keine Internetverbindung."
+            return String(localized: "Das iPhone hat gerade keine Internetverbindung.")
         case .timedOut:
-            return "Der Server hat nicht rechtzeitig geantwortet."
+            return String(localized: "Der Server hat nicht rechtzeitig geantwortet.")
         case .cannotConnectToHost, .networkConnectionLost:
-            return "Der Server ist nicht erreichbar."
+            return String(localized: "Der Server ist nicht erreichbar.")
         case .secureConnectionFailed, .serverCertificateUntrusted, .serverCertificateHasBadDate, .serverCertificateHasUnknownRoot, .serverCertificateNotYetValid:
-            return "Die gesicherte Verbindung zum Server ist fehlgeschlagen (Zertifikat)."
+            return String(localized: "Die gesicherte Verbindung zum Server ist fehlgeschlagen (Zertifikat).")
         default:
             return error.localizedDescription
         }

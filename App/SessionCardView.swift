@@ -68,7 +68,7 @@ struct SessionCardView: View {
             header
             SessionHintsView(hints: PlanV2Formatting.sessionHints(
                 brick: session.brick, indoor: session.indoor, openWater: session.openWater, sport: session.sport, previous: previousSport, registry: registry
-            ))
+            ), startsWithBrick: session.brick && previousSport != nil)
             if !session.focus.isEmpty {
                 Text(session.focus)
                     .font(.subheadline)
@@ -112,7 +112,7 @@ struct SessionCardView: View {
         var parts = [PlanFormatting.sessionType(session.sessionType), PlanV2Formatting.amount(session.amount, unit: session.unit)]
         // Bei Minuten steht die Dauer schon im Umfang.
         if session.unit == .meters, session.durationMinutes > 0 {
-            parts.append("ca. \(PlanV2Formatting.duration(minutes: session.durationMinutes))")
+            parts.append(String(localized: "ca. \(PlanV2Formatting.duration(minutes: session.durationMinutes))"))
         }
         return parts.joined(separator: " · ")
     }
@@ -178,7 +178,7 @@ struct PlanStepRow: View {
 /// Die Korrekturen der Sicherheitsschicht, eingeklappt.
 struct AdjustmentsDisclosure: View {
     let adjustments: [String]
-    var title = "Zur Sicherheit angepasst"
+    var title = String(localized: "Zur Sicherheit angepasst")
 
     var body: some View {
         if !adjustments.isEmpty {

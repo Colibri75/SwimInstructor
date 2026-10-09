@@ -105,11 +105,11 @@ public enum LiveFieldFormatting {
         case .speed: return "km/h"
         case .distanceMeters: return "m"
         case .distanceKilometers: return "km"
-        case .laps: return "Bahnen"
-        case .strokes: return "Züge"
+        case .laps: return String(localized: "Bahnen")
+        case .strokes: return String(localized: "Züge")
         case .power: return "W"
-        case .cadence: return "U/min"
-        case .elevationGain: return "Hm"
+        case .cadence: return String(localized: "U/min")
+        case .elevationGain: return String(localized: "Hm", comment: "Höhenmeter")
         }
     }
 
@@ -147,7 +147,7 @@ public enum LiveFieldFormatting {
     }
 
     private static func decimal(_ value: Double, digits: Int) -> String {
-        String(format: "%.\(digits)f", value).replacingOccurrences(of: ".", with: ",")
+        String(format: "%.\(digits)f", locale: AppLocale.current, value)
     }
 }
 

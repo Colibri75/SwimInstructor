@@ -76,14 +76,15 @@ struct PauseReportView: View {
     private var footer: String {
         let days = draft.days()
         if draft.triggersReview() {
-            return "Ab \(PauseReport.reviewDays) Tagen schreibt die App den Gesamtplan gleich fort. Das dauert ein bis drei Minuten, danach kommt eine Mitteilung."
+            return String(localized: "Ab \(PauseReport.reviewDays) Tagen schreibt die App den Gesamtplan gleich fort. Das dauert ein bis drei Minuten, danach kommt eine Mitteilung.")
         }
-        return "\(days) Tage: Kürzere Pausen fängt der Plan der nächsten 14 Tage auf. Ab \(PauseReport.reviewDays) Tagen schreibt die App den Gesamtplan fort."
+        return String(localized: "\(days) Tage: Kürzere Pausen fängt der Plan der nächsten 14 Tage auf. Ab \(PauseReport.reviewDays) Tagen schreibt die App den Gesamtplan fort.")
     }
 
     private func period(_ report: PauseReport) -> String {
-        if let to = report.to { return "\(report.from) bis \(to)" }
-        return "seit \(report.from)"
+        let from = PlanFormatting.germanDate(report.from)
+        if let to = report.to { return String(localized: "\(from) bis \(PlanFormatting.germanDate(to))") }
+        return String(localized: "seit \(from)")
     }
 
     private func save() {

@@ -47,7 +47,7 @@ struct TestResultSheet: View {
                             inputSections(test, module: module)
                         } else {
                             Section {
-                                Text(test.resultHint.isEmpty ? "Dieser Test ändert dein Profil nicht." : test.resultHint)
+                                Text(test.resultHint.isEmpty ? String(localized: "Dieser Test ändert dein Profil nicht.") : test.resultHint)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                         }
@@ -64,7 +64,7 @@ struct TestResultSheet: View {
                 .cardRows()
             }
             .themedList()
-            .navigationTitle(test?.displayName ?? "Testergebnis")
+            .navigationTitle(test?.displayName ?? String(localized: "Testergebnis"))
             .swipeClosesKeyboard()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -107,7 +107,7 @@ struct TestResultSheet: View {
         let inputs = test.resultInputs(definitions: module.performanceMetrics)
         Section {
             ForEach(inputs) { input in
-                LabeledContent(input.isOptional ? "\(input.label) (optional)" : input.label) {
+                LabeledContent(input.isOptional ? String(localized: "\(input.label) (optional)") : input.label) {
                     TextField(placeholder(for: input), text: binding(for: input.id))
                         .keyboardType(PlanV2Formatting.isTimeUnit(input.unit) ? .numbersAndPunctuation : .decimalPad)
                         .multilineTextAlignment(.trailing)

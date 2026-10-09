@@ -100,7 +100,7 @@ private struct ReviewView: View {
                 Text(review.reason.title)
                     .font(.subheadline.weight(.semibold))
                 Spacer()
-                Text(review.reviewedAt.formatted(date: .abbreviated, time: .omitted))
+                Text(review.reviewedAt.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(AppLocale.current)))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -143,7 +143,7 @@ private struct ActualWeekRow: View {
     private func line(_ volume: MacroSportVolume) -> some View {
         let done = actual.amount(of: volume.sport)
         let percent = MacroActualCalculator.percent(planned: volume.amount, actual: done)
-        let suffix = percent.map { " (\($0) %)" } ?? ""
+        let suffix = percent.map { " (\((Double($0) / 100).formatted(.percent.locale(AppLocale.current))))" } ?? ""
         let isWeak = (percent ?? 100) < MacroActualCalculator.lowCompliancePercent
         return Text("\(registry.displayName(for: volume.sport)): \(PlanV2Formatting.amount(done, unit: volume.unit)) von \(PlanV2Formatting.amount(volume.amount, unit: volume.unit))\(suffix)")
             .font(.caption2)
@@ -241,7 +241,7 @@ private struct ActualWeekRow: View {
                 ReviewView(review: review)
             }
             if let next = macroLoader.nextReviewWeekStart {
-                LabeledContent("Nächste Fortschreibung", value: "Montag, \(PlanFormatting.germanDate(next))")
+                LabeledContent("Nächste Fortschreibung", value: String(localized: "Montag, \(PlanFormatting.germanDate(next))"))
                     .font(.footnote)
             }
             if !weak.isEmpty, !reviewedThisWeek, macroLoader.isCurrent {
@@ -337,7 +337,7 @@ private struct ActualWeekRow: View {
                     .foregroundStyle(.orange)
             }
             if let latest = plan.feedbackRounds.last {
-                FeedbackRoundView(round: latest, title: "Zuletzt geändert")
+                FeedbackRoundView(round: latest, title: String(localized: "Zuletzt geändert"))
             }
             if plan.feedbackRounds.count > 1 {
                 DisclosureGroup("Frühere Runden (\(plan.feedbackRounds.count - 1))") {
@@ -371,7 +371,7 @@ private struct FeedbackRoundView: View {
                         .font(.subheadline.weight(.semibold))
                 }
                 Spacer()
-                Text(round.revisedAt.formatted(date: .abbreviated, time: .shortened))
+                Text(round.revisedAt.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened).locale(AppLocale.current)))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -418,7 +418,7 @@ private struct MacroOverview: View {
             Text("Ziel am \(PlanFormatting.germanDate(plan.goalDay)), noch \(weeksLeft) Wochen")
                 .font(.headline)
             if let currentWeek {
-                Text("Diese Woche: \(PlanFormatting.macroPhase(currentWeek.phase)), etwa \(PlanV2Formatting.duration(minutes: currentWeek.totalMinutes))\(currentWeek.deload ? " (Entlastung)" : "")")
+                Text(thisWeekText(currentWeek))
                     .font(.subheadline)
                 ForEach(currentWeek.sports, id: \.sport) { volume in
                     Label(PlanV2Formatting.macroVolume(volume, registry: registry), systemImage: registry.symbolName(for: volume.sport))
@@ -465,6 +465,14 @@ private struct MacroOverview: View {
         AdjustmentsDisclosure(adjustments: plan.adjustments)
     }
 
+    private func thisWeekText(_ week: MacroWeekV2) -> String {
+        let phase = PlanFormatting.macroPhase(week.phase)
+        let duration = PlanV2Formatting.duration(minutes: week.totalMinutes)
+        return week.deload
+            ? String(localized: "Diese Woche: \(phase), etwa \(duration) (Entlastung)")
+            : String(localized: "Diese Woche: \(phase), etwa \(duration)")
+    }
+
     private func unit(of sport: SportID) -> PlanUnit {
         plan.weeks.lazy.compactMap { $0.volume(of: sport)?.unit }.first ?? registry.module(for: sport)?.planUnit ?? .minutes
     }
@@ -497,8 +505,8 @@ private struct MacroSummitView: View {
     }
 
     private var accessibilityText: String {
-        guard let index = profile.currentIndex else { return "Weg zum Ziel über \(weeks) Wochen" }
-        return "Weg zum Ziel: Woche \(index + 1) von \(weeks)"
+        guard let index = profile.currentIndex else { return String(localized: "Weg zum Ziel über \(weeks) Wochen") }
+        return String(localized: "Weg zum Ziel: Woche \(index + 1) von \(weeks)")
     }
 
     var body: some View {
@@ -645,7 +653,7 @@ private struct MacroWeekRow: View {
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
-                Text("\(isCurrent ? "Diese Woche" : "Ab \(PlanFormatting.shortGermanDate(week.weekStart))") · \(PlanFormatting.macroPhase(week.phase))\(week.deload ? " · Entlastung" : "")")
+                Text("\(isCurrent ? String(localized: "Diese Woche") : String(localized: "Ab \(PlanFormatting.shortGermanDate(week.weekStart))")) · \(PlanFormatting.macroPhase(week.phase))\(week.deload ? " · \(String(localized: "Entlastung"))" : "")")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(isCurrent ? Theme.accent : Color.primary)
                 Text("Etwa \(PlanV2Formatting.duration(minutes: week.totalMinutes))")

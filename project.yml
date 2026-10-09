@@ -5,6 +5,9 @@ options:
     iOS: "17.0"
     watchOS: "10.0"
   createIntermediateGroups: true
+  # Texte im Code sind deutsch (zugleich die Schlüssel), Englisch ist die Rückfallsprache für iPhones in anderen
+  # Sprachen. Übersetzungen: Localization/<Sprache>.lproj, siehe docs/uebersetzungen.md.
+  developmentLanguage: en
 
 settings:
   base:
@@ -23,6 +26,7 @@ targets:
     sources:
       - path: App
       - path: Shared
+      - path: Localization
     dependencies:
       - package: SwimInstructorCore
       - target: SwimInstructorWatch
@@ -62,6 +66,7 @@ targets:
     sources:
       - path: WatchApp
       - path: Shared
+      - path: Localization
     dependencies:
       - package: SwimInstructorCore
       - target: SwimInstructorWatchWidgets
@@ -98,6 +103,7 @@ targets:
       - path: Widgets
       - path: WidgetsShared
       - path: Shared/Theme.swift
+      - path: Localization
     dependencies:
       - package: SwimInstructorCore
       - sdk: WidgetKit.framework
@@ -127,6 +133,7 @@ targets:
       - path: WatchWidgets
       - path: WidgetsShared
       - path: Shared/Theme.swift
+      - path: Localization
     dependencies:
       - package: SwimInstructorCore
       - sdk: WidgetKit.framework

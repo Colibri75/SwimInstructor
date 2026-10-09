@@ -14,9 +14,9 @@ public struct WeeklySchedule: Codable, Equatable, Sendable {
 
         public var title: String {
             switch self {
-            case .morning: return "Morgens"
-            case .midday: return "Mittags"
-            case .evening: return "Abends"
+            case .morning: return String(localized: "Morgens")
+            case .midday: return String(localized: "Mittags")
+            case .evening: return String(localized: "Abends")
             }
         }
     }
@@ -44,7 +44,11 @@ public struct WeeklySchedule: Codable, Equatable, Sendable {
         public var name: String { WeeklySchedule.weekdayNames[weekday - 1] }
     }
 
-    public static let weekdayNames = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
+    /// Montag zuerst, in der Sprache der App.
+    public static var weekdayNames: [String] {
+        let names = WeekCalendar.longNames
+        return Array(names.dropFirst()) + names.prefix(1)
+    }
     /// Minuten an einem Trainingstag; Gegenstück: `ScheduleDaySchema` im Server (15 bis 600).
     public static let minutesRange = 15...600
     public static let minutesStep = 15
@@ -103,11 +107,12 @@ public struct WeeklySchedule: Codable, Equatable, Sendable {
 
     /// Was nicht passt, auf Deutsch; `nil`, wenn der Wochenraster gültig ist.
     public func problem(registry: SportRegistry = .standard) -> String? {
-        guard days.map(\.weekday) == Array(1...7) else { return "Der Wochenraster braucht jeden Wochentag genau einmal." }
-        guard trainingDays > 0 else { return "Mindestens ein Tag mit Training." }
+        guard days.map(\.weekday) == Array(1...7) else { return String(localized: "Der Wochenraster braucht jeden Wochentag genau einmal.") }
+        guard trainingDays > 0 else { return String(localized: "Mindestens ein Tag mit Training.") }
         for day in days where day.trains {
-            guard Self.minutesRange.contains(day.maxMinutes) else { return "\(day.name): 15 bis 600 Minuten." }
-            if let sport = day.sport, registry.module(for: sport) == nil { return "\(day.name): unbekannte Sportart." }
+            let name = day.name
+            guard Self.minutesRange.contains(day.maxMinutes) else { return String(localized: "\(name): 15 bis 600 Minuten.") }
+            if let sport = day.sport, registry.module(for: sport) == nil { return String(localized: "\(name): unbekannte Sportart.") }
         }
         return nil
     }
@@ -127,7 +132,7 @@ public struct WeeklySchedule: Codable, Equatable, Sendable {
         let hours = totalMinutes / 60
         let minutes = totalMinutes % 60
         let time = minutes == 0 ? "\(hours) h" : hours == 0 ? "\(minutes) min" : "\(hours) h \(minutes) min"
-        return "\(trainingDays) \(trainingDays == 1 ? "Tag" : "Tage"), \(time)"
+        return trainingDays == 1 ? String(localized: "1 Tag, \(time)") : String(localized: "\(trainingDays) Tage, \(time)")
     }
 }
 

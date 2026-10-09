@@ -68,9 +68,9 @@ public struct PlanGlance: Codable, Equatable, Sendable {
     /// Überschrift im Widget: "Heute", "Morgen" oder, wenn der Stand veraltet ist, `nil` (dann "Öffne die App").
     public func heading(now: Date, calendar: Calendar = .current) -> String? {
         let today = PlanFormatting.isoDay(now, calendar: calendar)
-        if date == today { return "Heute" }
+        if date == today { return String(localized: "Heute") }
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: now).map { PlanFormatting.isoDay($0, calendar: calendar) }
-        return date == tomorrow ? "Morgen" : nil
+        return date == tomorrow ? String(localized: "Morgen") : nil
     }
 }
 

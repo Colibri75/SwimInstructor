@@ -9,6 +9,7 @@ import { CallOptions, GeneratedPlan, StructuredGenerator } from "../generator";
 import { daysBetween, localDate, macroWeekStarts, windowDates } from "../calendar";
 import { buildRaceUserMessage, RACE_SYSTEM_PROMPT, RacePlan, RacePlanSchema, sanitizeRace } from "./race";
 import { SnapshotV2 } from "../snapshot";
+import { inLanguage, Language } from "../language";
 import { DayOptionsV2, DayPlanV2, sanitizeDayV2 } from "./daySanity";
 import { DayWeather, roundLocation, WeatherProvider } from "../weather";
 import { goalDayOf, MULTI_RULES } from "./limits";
@@ -79,6 +80,8 @@ export interface DayInputV2 {
   /** Kennung des Nutzers (Token), Standard der Besitzer. */
   user?: string;
   snapshot: SnapshotV2;
+  /** Sprache der App; Claude schreibt die Texte darin. Ohne Angabe Deutsch. */
+  language?: Language;
   /** Vorschau fuer einen kommenden Tag (1 bis `PREVIEW_DAYS` nach heute); ohne Angabe heute. */
   date?: string;
   regenerate?: boolean;
@@ -108,6 +111,8 @@ export interface WeekInputV2 {
   /** Kennung des Nutzers (Token), Standard der Besitzer. */
   user?: string;
   snapshot: SnapshotV2;
+  /** Sprache der App; Claude schreibt die Texte darin. Ohne Angabe Deutsch. */
+  language?: Language;
   fromDate: string;
   today: string;
   /** So viele Tage ab `fromDate` (7 oder 14); ohne Angabe 7. */
@@ -149,6 +154,8 @@ export interface ReviseInput {
   snapshot: SnapshotV2;
   today: string;
   plan: { rationale?: string; weeks: MacroWeekTargetV2[] };
+  /** Sprache der App; Claude schreibt die Texte darin. Ohne Angabe Deutsch. */
+  language?: Language;
   feedback: string;
   history: FeedbackRound[];
   testSettings?: TestSettings;
@@ -166,6 +173,8 @@ export interface ReviewInput {
   snapshot: SnapshotV2;
   today: string;
   plan: { rationale?: string; weeks: MacroWeekTargetV2[] };
+  /** Sprache der App; Claude schreibt die Texte darin. Ohne Angabe Deutsch. */
+  language?: Language;
   actual: ActualWeek[];
   reason: ReviewReason;
   pause?: PauseReport;
@@ -188,6 +197,8 @@ export interface MacroInputV2 {
   today: string;
   testSettings?: TestSettings;
   user?: string;
+  /** Sprache der App; Claude schreibt die Texte darin. Ohne Angabe Deutsch. */
+  language?: Language;
 }
 
 /** Was ein Claude-Aufruf verbraucht hat, auch wenn er danach scheiterte (fuer die Nutzung). */
@@ -204,6 +215,8 @@ export interface RaceInput {
   location?: GeoLocation;
   bodyWeightKg?: number;
   notes?: string;
+  /** Sprache der App; Claude schreibt die Texte darin. Ohne Angabe Deutsch. */
+  language?: Language;
 }
 
 export interface RaceResult {
@@ -242,6 +255,7 @@ export class MultiPlanService {
     const weather = input.location !== undefined ? (await this.weatherFor(input.location, [today]))[0] : undefined;
     const options: DayOptionsV2 = {
       date: today,
+      language: input.language,
       equipment: input.equipment,
       recent: input.recent ?? [],
       testSettings: input.testSettings,
@@ -261,7 +275,7 @@ export class MultiPlanService {
     try {
       generated = await this.generate(
         "day",
-        MULTI_DAY_SYSTEM_PROMPT,
+        inLanguage(MULTI_DAY_SYSTEM_PROMPT, input.language),
         buildDayUserMessageV2({
           snapshot: input.snapshot,
           date: today,
@@ -312,6 +326,7 @@ export class MultiPlanService {
     const options: DayOptionsV2 = {
       date,
       preview: true,
+      language: input.language,
       equipment: input.equipment,
       recent: input.recent ?? [],
       testSettings: input.testSettings,
@@ -322,7 +337,7 @@ export class MultiPlanService {
     };
     const generated = await this.generate(
       "day",
-      MULTI_DAY_SYSTEM_PROMPT,
+      inLanguage(MULTI_DAY_SYSTEM_PROMPT, input.language),
       buildDayUserMessageV2({
         snapshot: input.snapshot,
         date,
@@ -358,6 +373,7 @@ export class MultiPlanService {
     const context: WeekContextV2 = {
       today: input.today,
       dates,
+      language: input.language,
       ...(input.equipment !== undefined ? { equipment: input.equipment } : {}),
       ...(input.availability !== undefined && input.availability.length > 0 ? { availability: input.availability } : {}),
       ...(weather.length > 0 ? { weather } : {}),
@@ -373,7 +389,7 @@ export class MultiPlanService {
     };
     const generated = await this.generate(
       "week",
-      MULTI_WEEK_SYSTEM_PROMPT,
+      inLanguage(MULTI_WEEK_SYSTEM_PROMPT, input.language),
       buildWeekUserMessageV2({ snapshot: input.snapshot, context, wishes, equipment: input.equipment }),
       MultiWeekPlanSchema,
       user,
@@ -394,7 +410,7 @@ export class MultiPlanService {
 
   private async macroPlan(input: MacroInputV2, user: string, attempt: Attempt): Promise<MacroResultV2> {
     const context = macroContext(input.snapshot, input.today, input.testSettings);
-    const generated = await this.generate("macro", MULTI_MACRO_SYSTEM_PROMPT, buildMacroUserMessageV2(input.snapshot, context), MultiMacroPlanSchema, user, attempt, { macro: true });
+    const generated = await this.generate("macro", inLanguage(MULTI_MACRO_SYSTEM_PROMPT, input.language), buildMacroUserMessageV2(input.snapshot, context), MultiMacroPlanSchema, user, attempt, { macro: true });
     const weeks = expandMacroBlocks(generated.data.blocks, context.weeks);
     const sanitized = sanitizeMacroV2({ rationale: generated.data.rationale, weeks }, input.snapshot, context);
     if (sanitized.blocked !== null) throw this.blocked("macro", sanitized.blocked);
@@ -412,7 +428,7 @@ export class MultiPlanService {
     const feedback = input.feedback.trim();
     const generated = await this.generate(
       "revise",
-      MULTI_REVISE_SYSTEM_PROMPT,
+      inLanguage(MULTI_REVISE_SYSTEM_PROMPT, input.language),
       buildReviseUserMessage({ snapshot: input.snapshot, context, plan: input.plan, feedback, history: input.history }),
       MacroRevisionSchema,
       user,
@@ -444,7 +460,7 @@ export class MultiPlanService {
     const feedback = input.feedback?.trim() || undefined;
     const generated = await this.generate(
       "review",
-      MULTI_REVIEW_SYSTEM_PROMPT,
+      inLanguage(MULTI_REVIEW_SYSTEM_PROMPT, input.language),
       buildReviewUserMessage({ snapshot: input.snapshot, context, plan: input.plan, actual: input.actual, reason: input.reason, pause: input.pause, feedback, performanceChanges: input.performanceChanges }),
       MacroReviewSchema,
       user,
@@ -486,7 +502,7 @@ export class MultiPlanService {
     const notes = input.notes?.trim() || undefined;
     const generated = await this.generate(
       "race",
-      RACE_SYSTEM_PROMPT,
+      inLanguage(RACE_SYSTEM_PROMPT, input.language),
       buildRaceUserMessage({
         snapshot: input.snapshot,
         today: input.today,
@@ -669,7 +685,9 @@ export function dayHash(input: DayInputV2, wishes?: string): string {
     ...(input.testSettings ? { test_settings: input.testSettings } : {}),
     ...(input.supplements ? { supplements: input.supplements } : {}),
     ...(input.availableMinutes !== undefined ? { available_minutes: input.availableMinutes } : {}),
-    ...(input.location ? { location: roundLocation(input.location) } : {})
+    ...(input.location ? { location: roundLocation(input.location) } : {}),
+    // Ohne Sprache (Deutsch) bleibt der Fingerabdruck wie bisher, sonst kommt ein deutscher Plan aus dem Cache.
+    ...(input.language !== undefined && input.language !== "de" ? { language: input.language } : {})
   };
   return createHash("sha256").update(JSON.stringify(material)).digest("hex");
 }

@@ -32,11 +32,11 @@ final class WatchPlanStore: NSObject, ObservableObject {
     /// "Vom iPhone holen": Das iPhone antwortet sofort mit seinem Plan; einen neueren schickt es nach, sobald er da ist.
     func requestPlan() {
         guard let session, session.activationState == .activated else {
-            message = "Verbindung zum iPhone wird noch aufgebaut."
+            message = String(localized: "Verbindung zum iPhone wird noch aufgebaut.")
             return
         }
         guard session.isReachable else {
-            message = "iPhone nicht erreichbar. Der Plan kommt, sobald die iPhone-App ihn geladen hat."
+            message = String(localized: "iPhone nicht erreichbar. Der Plan kommt, sobald die iPhone-App ihn geladen hat.")
             return
         }
         isRequesting = true
@@ -48,7 +48,7 @@ final class WatchPlanStore: NSObject, ObservableObject {
                 if let response {
                     self.apply(response)
                 } else {
-                    self.message = "Auf dem iPhone ist noch kein Plan. Öffne dort die App."
+                    self.message = String(localized: "Auf dem iPhone ist noch kein Plan. Öffne dort die App.")
                 }
             }
         }, errorHandler: { error in

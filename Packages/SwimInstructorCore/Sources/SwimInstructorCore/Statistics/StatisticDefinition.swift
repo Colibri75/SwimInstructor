@@ -152,42 +152,42 @@ public struct StatisticDefinition: Sendable, Equatable, Identifiable {
 // MARK: - Bausteine für die Kataloge der Module
 
 public extension StatisticDefinition {
-    static let distanceMeters = StatisticDefinition(metric: .distance, displayName: "Umfang", unit: "m", measure: .distance, format: .meters)
-    static let distanceKilometers = StatisticDefinition(metric: .distance, displayName: "Umfang", unit: "km", measure: .distance, format: .kilometers)
-    static let duration = StatisticDefinition(metric: .duration, displayName: "Zeit", unit: "h", measure: .duration, format: .hours)
-    static let sessions = StatisticDefinition(metric: .sessions, displayName: "Einheiten", unit: "", measure: .sessions, format: .integer)
+    static let distanceMeters = StatisticDefinition(metric: .distance, displayName: String(localized: "Umfang"), unit: "m", measure: .distance, format: .meters)
+    static let distanceKilometers = StatisticDefinition(metric: .distance, displayName: String(localized: "Umfang"), unit: "km", measure: .distance, format: .kilometers)
+    static let duration = StatisticDefinition(metric: .duration, displayName: String(localized: "Zeit"), unit: "h", measure: .duration, format: .hours)
+    static let sessions = StatisticDefinition(metric: .sessions, displayName: String(localized: "Einheiten", comment: "Anzahl der Trainingseinheiten"), unit: "", measure: .sessions, format: .integer)
     static let longestDistanceMeters = StatisticDefinition(
-        metric: .longestDistance, displayName: "Längste Einheit", unit: "m", measure: .longestDistance, format: .meters, higherIsBetter: true
+        metric: .longestDistance, displayName: String(localized: "Längste Einheit"), unit: "m", measure: .longestDistance, format: .meters, higherIsBetter: true
     )
     static let longestDistanceKilometers = StatisticDefinition(
-        metric: .longestDistance, displayName: "Längste Einheit", unit: "km", measure: .longestDistance, format: .kilometers, higherIsBetter: true
+        metric: .longestDistance, displayName: String(localized: "Längste Einheit"), unit: "km", measure: .longestDistance, format: .kilometers, higherIsBetter: true
     )
     static let longestDuration = StatisticDefinition(
-        metric: .longestDuration, displayName: "Längste Einheit", unit: "h", measure: .longestDuration, format: .hours, higherIsBetter: true
+        metric: .longestDuration, displayName: String(localized: "Längste Einheit"), unit: "h", measure: .longestDuration, format: .hours, higherIsBetter: true
     )
     static let pacePerHundredMeters = StatisticDefinition(
-        metric: .pacePerHundredMeters, displayName: "Pace pro 100 m", unit: "/100 m", measure: .pace(meters: 100), format: .pace, higherIsBetter: false
+        metric: .pacePerHundredMeters, displayName: String(localized: "Pace pro 100 m"), unit: "/100 m", measure: .pace(meters: 100), format: .pace, higherIsBetter: false
     )
     static let pacePerKilometer = StatisticDefinition(
-        metric: .pacePerKilometer, displayName: "Pace pro km", unit: "/km", measure: .pace(meters: 1000), format: .pace, higherIsBetter: false
+        metric: .pacePerKilometer, displayName: String(localized: "Pace pro km"), unit: "/km", measure: .pace(meters: 1000), format: .pace, higherIsBetter: false
     )
     static let speed = StatisticDefinition(
-        metric: .speed, displayName: "Tempo", unit: "km/h", measure: .speed, format: .kilometersPerHour, higherIsBetter: true
+        metric: .speed, displayName: String(localized: "Tempo"), unit: "km/h", measure: .speed, format: .kilometersPerHour, higherIsBetter: true
     )
     static let averageHeartRate = StatisticDefinition(
-        metric: .averageHeartRate, displayName: "Ø Puls", unit: "bpm", measure: .averageHeartRate, format: .integer
+        metric: .averageHeartRate, displayName: String(localized: "Ø Puls"), unit: "bpm", measure: .averageHeartRate, format: .integer
     )
     static let averagePower = StatisticDefinition(
-        metric: .averagePower, displayName: "Ø Leistung", unit: "W", measure: .average(.averagePower), format: .integer, higherIsBetter: true
+        metric: .averagePower, displayName: String(localized: "Ø Leistung"), unit: "W", measure: .average(.averagePower), format: .integer, higherIsBetter: true
     )
     static let averageCadence = StatisticDefinition(
-        metric: .averageCadence, displayName: "Ø Trittfrequenz", unit: "U/min", measure: .average(.averageCadence), format: .integer
+        metric: .averageCadence, displayName: String(localized: "Ø Trittfrequenz"), unit: String(localized: "U/min", comment: "Umdrehungen pro Minute (Trittfrequenz)"), measure: .average(.averageCadence), format: .integer
     )
     static let elevationGain = StatisticDefinition(
-        metric: .elevationGain, displayName: "Höhenmeter", unit: "Hm", measure: .total(.elevationGain), format: .integer
+        metric: .elevationGain, displayName: String(localized: "Höhenmeter"), unit: String(localized: "Hm", comment: "Höhenmeter"), measure: .total(.elevationGain), format: .integer
     )
     static let trainingLoad = StatisticDefinition(
-        metric: .trainingLoad, displayName: "Trainingslast", unit: "Punkte", measure: .trainingLoad, format: .integer
+        metric: .trainingLoad, displayName: String(localized: "Trainingslast"), unit: String(localized: "Punkte", comment: "Einheit der Trainingslast"), measure: .trainingLoad, format: .integer
     )
 
     /// Für einen Zusatzwert aus Health die passende Kennzahl; `nil` für Werte ohne eigene Kennzahl (etwa Bahnen).
@@ -200,19 +200,19 @@ public extension StatisticDefinition {
 
 public extension StatisticDefinition {
     static let hoursBySport = StatisticDefinition(
-        metric: .duration, displayName: "Stunden je Sportart", unit: "h", measure: .duration, format: .hours
+        metric: .duration, displayName: String(localized: "Stunden je Sportart"), unit: "h", measure: .duration, format: .hours
     )
     static let restingHeartRate = StatisticDefinition(
-        metric: .restingHeartRate, displayName: "Ruhepuls", unit: "bpm", measure: .restingHeartRate, format: .integer, higherIsBetter: false
+        metric: .restingHeartRate, displayName: String(localized: "Ruhepuls"), unit: "bpm", measure: .restingHeartRate, format: .integer, higherIsBetter: false
     )
     static let heartRateVariability = StatisticDefinition(
-        metric: .heartRateVariability, displayName: "HRV", unit: "ms", measure: .heartRateVariability, format: .integer, higherIsBetter: true
+        metric: .heartRateVariability, displayName: String(localized: "HRV"), unit: "ms", measure: .heartRateVariability, format: .integer, higherIsBetter: true
     )
     static let sleep = StatisticDefinition(
-        metric: .sleep, displayName: "Schlaf", unit: "h", measure: .sleep, format: .hours, higherIsBetter: true
+        metric: .sleep, displayName: String(localized: "Schlaf"), unit: "h", measure: .sleep, format: .hours, higherIsBetter: true
     )
     static let planAdherence = StatisticDefinition(
-        metric: .planAdherence, displayName: "Plan erfüllt", unit: "%", measure: .planAdherence, format: .percent, higherIsBetter: true
+        metric: .planAdherence, displayName: String(localized: "Plan erfüllt"), unit: "%", measure: .planAdherence, format: .percent, higherIsBetter: true
     )
 
     /// Die Kennzahlen über alle Sportarten; die erste ist der Standard, wenn eine gespeicherte Kennzahl wegfällt.

@@ -15,7 +15,7 @@ public enum StatisticAssessment: Equatable, Sendable {
     case neutral
 }
 
-/// Texte der Kacheln. Im Package, damit sie per Unit-Test prüfbar sind; Zahlen immer mit deutschen Trennzeichen.
+/// Texte der Kacheln. Im Package, damit sie per Unit-Test prüfbar sind; Zahlen mit den Trennzeichen von `AppLocale.current`.
 public enum StatisticFormatting {
     /// Platzhalter ohne Wert.
     public static let missing = "–"
@@ -49,7 +49,7 @@ public enum StatisticFormatting {
     }
 
     public static func sportName(_ sport: SportID?, registry: SportRegistry = .standard) -> String {
-        sport.map { registry.displayName(for: $0) } ?? "Alle Sportarten"
+        sport.map { registry.displayName(for: $0) } ?? String(localized: "Alle Sportarten")
     }
 
     public static func symbolName(_ sport: SportID?, registry: SportRegistry = .standard) -> String {
@@ -71,7 +71,8 @@ public enum StatisticFormatting {
     /// "Vorwoche: 5:20 /km"; `nil` für einen Zeitraum ohne Vergleich.
     public static func comparison(_ result: StatisticResult) -> String? {
         guard let name = result.tile.period.comparisonName else { return nil }
-        return "\(name): \(text(result.previous, definition: result.definition))"
+        let previous = text(result.previous, definition: result.definition)
+        return String(localized: "\(name): \(previous)")
     }
 
     /// Die Zeile unter dem Wert: Anteile je Sportart, worauf der Wert beruht, oder warum es keinen gibt.
@@ -84,11 +85,11 @@ public enum StatisticFormatting {
         guard result.value != nil else { return emptyReason(result.definition.measure) }
         switch result.basis {
         case .workouts(let count)?:
-            return count == 1 ? "aus 1 Einheit" : "aus \(count) Einheiten"
+            return count == 1 ? String(localized: "aus 1 Einheit") : String(localized: "aus \(count) Einheiten")
         case .days(let count)?:
-            return count == 1 ? "an 1 Tag gemessen" : "an \(count) Tagen gemessen"
+            return count == 1 ? String(localized: "an 1 Tag gemessen") : String(localized: "an \(count) Tagen gemessen")
         case .planDays(let trained, let planned)?:
-            return "\(trained) von \(planned) Trainingstagen"
+            return String(localized: "\(trained) von \(planned) Trainingstagen")
         case nil:
             return nil
         }
@@ -109,31 +110,31 @@ public enum StatisticFormatting {
         isSingleDay(point, calendar: calendar)
             // Ohne Punkt: "Mi" statt "Mi.", das passt besser unter einen Balken.
             ? format(point.start, "EEEEEE", calendar: calendar).replacingOccurrences(of: ".", with: "")
-            : format(point.start, "d.M.", calendar: calendar)
+            : format(point.start, template: "dM", calendar: calendar)
     }
 
     /// Überschrift eines Abschnitts: "Montag, 28.9." oder "22.9. – 28.9.".
     public static func pointTitle(_ point: StatisticPoint, calendar: Calendar = .current) -> String {
         if isSingleDay(point, calendar: calendar) {
-            return format(point.start, "EEEE, d.M.", calendar: calendar)
+            return format(point.start, template: "EEEEdM", calendar: calendar)
         }
         let last = calendar.date(byAdding: .day, value: -1, to: point.end) ?? point.end
-        return "\(format(point.start, "d.M.", calendar: calendar)) – \(format(last, "d.M.", calendar: calendar))"
+        return "\(format(point.start, template: "dM", calendar: calendar)) – \(format(last, template: "dM", calendar: calendar))"
     }
 
     /// Name eines Werts im Detail einer Einheit: Für eine einzelne Einheit heißt der Umfang "Strecke" und die Zeit
     /// "Dauer".
     public static func workoutValueName(_ definition: StatisticDefinition) -> String {
         switch definition.metric {
-        case .distance: return "Strecke"
-        case .duration: return "Dauer"
+        case .distance: return String(localized: "Strecke")
+        case .duration: return String(localized: "Dauer")
         default: return definition.displayName
         }
     }
 
     /// "Sonntag, 4.10.2026, 07:12 – 08:03"
     public static func workoutTime(_ workout: Workout, calendar: Calendar = .current) -> String {
-        "\(format(workout.startDate, "EEEE, d.M.yyyy, HH:mm", calendar: calendar)) – \(format(workout.endDate, "HH:mm", calendar: calendar))"
+        "\(format(workout.startDate, template: "EEEEdMyyyy", calendar: calendar)), \(format(workout.startDate, template: "jmm", calendar: calendar)) – \(format(workout.endDate, template: "jmm", calendar: calendar))"
     }
 
     private static func isSingleDay(_ point: StatisticPoint, calendar: Calendar) -> Bool {
@@ -141,25 +142,37 @@ public enum StatisticFormatting {
     }
 
     private static func format(_ date: Date, _ pattern: String, calendar: Calendar) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "de_DE")
-        formatter.calendar = calendar
-        formatter.timeZone = calendar.timeZone
+        let formatter = dateFormatter(calendar: calendar)
         formatter.dateFormat = pattern
         return formatter.string(from: date)
     }
 
+    /// Reihenfolge und Trennzeichen nach der Sprache, auf Deutsch "dM" → "30.9.", "EEEEdM" → "Mittwoch, 30.9.".
+    private static func format(_ date: Date, template: String, calendar: Calendar) -> String {
+        let formatter = dateFormatter(calendar: calendar)
+        formatter.setLocalizedDateFormatFromTemplate(template)
+        return formatter.string(from: date)
+    }
+
+    private static func dateFormatter(calendar: Calendar) -> DateFormatter {
+        let formatter = DateFormatter()
+        formatter.locale = AppLocale.current
+        formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
+        return formatter
+    }
+
     private static func emptyReason(_ measure: StatisticMeasure) -> String {
         switch measure {
-        case .restingHeartRate, .heartRateVariability, .sleep: return "keine Messung im Zeitraum"
-        case .planAdherence: return "kein Plan im Zeitraum"
-        default: return "keine passende Einheit im Zeitraum"
+        case .restingHeartRate, .heartRateVariability, .sleep: return String(localized: "keine Messung im Zeitraum")
+        case .planAdherence: return String(localized: "kein Plan im Zeitraum")
+        default: return String(localized: "keine passende Einheit im Zeitraum")
         }
     }
 
     private static func decimal(_ value: Double, digits: Int) -> String {
         let formatter = NumberFormatter()
-        formatter.locale = Locale(identifier: "de_DE")
+        formatter.locale = AppLocale.current
         formatter.numberStyle = .decimal
         formatter.usesGroupingSeparator = true
         formatter.minimumFractionDigits = digits

@@ -234,7 +234,7 @@ struct TodayView: View {
     // MARK: - Tagesplan
 
     /// Groß und mittig: Das Planen dauert bis zu einer Minute, die Schmiede zeigt, dass gearbeitet wird.
-    private func forgeRow(_ text: String) -> some View {
+    private func forgeRow(_ text: LocalizedStringKey) -> some View {
         VStack(spacing: 10) {
             ForgeAnimation(size: 72)
             Text(text)
@@ -296,7 +296,7 @@ struct TodayView: View {
                     .foregroundStyle(.orange)
             }
         } header: {
-            Text("Dein Plan, \(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))")
+            Text("Dein Plan, \(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(AppLocale.current)))")
         }
         // Eine Karte je Einheit, damit Schwimmen und Laufen am selben Tag getrennt lesbar bleiben.
         if let response = shownResponse {
@@ -320,9 +320,9 @@ struct TodayView: View {
     @ViewBuilder
     private func statusBadge(_ entry: PlannedDay) -> some View {
         if showsTomorrow {
-            badge("morgen", fill: Theme.nightSecondary.opacity(0.25), foreground: .white)
+            badge(String(localized: "morgen"), fill: Theme.nightSecondary.opacity(0.25), foreground: .white)
         } else if todayDone {
-            badge("erledigt", fill: Theme.spark, foreground: Theme.onBright)
+            badge(String(localized: "erledigt"), fill: Theme.spark, foreground: Theme.onBright)
         } else if !entry.isRestDay, !entry.isUnavailable, let state = todayStatus?.state {
             badge(PlanV2Formatting.stateText(state), fill: Theme.ember, foreground: Theme.onBright)
         }
@@ -446,7 +446,7 @@ struct TodayView: View {
                                 .accessibilityHidden(true)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(SportRegistry.standard.displayName(for: workout.sport))
-                                Text(workout.startDate.formatted(.dateTime.weekday(.wide).hour().minute()))
+                                Text(workout.startDate.formatted(.dateTime.weekday(.wide).hour().minute().locale(AppLocale.current)))
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -474,7 +474,7 @@ struct TodayView: View {
                 Button {
                     resultTest = TestResultTarget(sport: result.sport, testID: result.testID, watchResult: result)
                 } label: {
-                    Label("\(test?.displayName ?? "Test") vom \(result.measuredAt.formatted(date: .abbreviated, time: .omitted)) ansehen", systemImage: "applewatch")
+                    Label("\(test?.displayName ?? String(localized: "Test")) vom \(result.measuredAt.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(AppLocale.current))) ansehen", systemImage: "applewatch")
                 }
             } header: {
                 Text("Testergebnis von der Watch")
@@ -592,10 +592,10 @@ private struct HeroSessionLine: View {
     }
 
     private var subtitle: String {
-        var parts = [session.test.map { "Test: \($0.displayName)" } ?? "\(PlanFormatting.sessionType(session.sessionType)), \(PlanFormatting.intensity(session.intensity))"]
-        if session.brick { parts.append("Koppeltraining") }
-        if session.indoor { parts.append("drinnen") }
-        if session.openWater { parts.append("Freiwasser") }
+        var parts = [session.test.map { String(localized: "Test: \($0.displayName)") } ?? "\(PlanFormatting.sessionType(session.sessionType)), \(PlanFormatting.intensity(session.intensity))"]
+        if session.brick { parts.append(String(localized: "Koppeltraining")) }
+        if session.indoor { parts.append(String(localized: "drinnen")) }
+        if session.openWater { parts.append(String(localized: "Freiwasser")) }
         return parts.joined(separator: " · ")
     }
 }
@@ -614,7 +614,7 @@ struct PlannedSessionLine: View {
                 .accessibilityHidden(true)
             Text(PlanV2Formatting.sessionTitle(sport: session.sport, amount: session.amount, unit: session.unit, registry: registry))
                 .font(.subheadline.weight(.semibold))
-            Text(session.test.map { "Test: \($0.displayName)" } ?? "\(PlanFormatting.sessionType(session.sessionType)), \(PlanFormatting.intensity(session.intensity))")
+            Text(session.test.map { String(localized: "Test: \($0.displayName)") } ?? "\(PlanFormatting.sessionType(session.sessionType)), \(PlanFormatting.intensity(session.intensity))")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)

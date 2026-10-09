@@ -11,7 +11,7 @@ struct WeekStatsRows: View {
     var body: some View {
         LabeledContent("Diese Woche") {
             Text(hasPlan
-                 ? "\(PlanV2Formatting.duration(minutes: summary.actualMinutes)) von \(PlanV2Formatting.duration(minutes: summary.plannedMinutes))"
+                 ? String(localized: "\(PlanV2Formatting.duration(minutes: summary.actualMinutes)) von \(PlanV2Formatting.duration(minutes: summary.plannedMinutes))")
                  : PlanV2Formatting.duration(minutes: summary.actualMinutes))
         }
         ForEach(summary.sports) { total in
@@ -41,12 +41,12 @@ struct RecoveryRow: View {
     }
 
     private var recoveryText: String {
-        guard reading.vitalsAvailable else { return "keine Daten" }
+        guard reading.vitalsAvailable else { return String(localized: "keine Daten") }
         switch reading.snapshot.recovery.status {
-        case .good: return "gut"
-        case .moderate: return "mäßig"
-        case .poor: return "schlecht"
-        case .unknown: return "zu wenig Daten"
+        case .good: return String(localized: "gut")
+        case .moderate: return String(localized: "mäßig")
+        case .poor: return String(localized: "schlecht")
+        case .unknown: return String(localized: "zu wenig Daten")
         }
     }
 }
@@ -74,7 +74,7 @@ struct WorkoutRow: View {
                     if let distance = workout.distanceMeters, distance > 0 {
                         Text(PlanFormatting.distance(distance))
                     }
-                    Text(Duration.seconds(workout.duration).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated)))
+                    Text(Duration.seconds(workout.duration).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated).locale(AppLocale.current)))
                     if let heartRate = workout.averageHeartRate {
                         Text("\(Int(heartRate.rounded())) bpm")
                     }

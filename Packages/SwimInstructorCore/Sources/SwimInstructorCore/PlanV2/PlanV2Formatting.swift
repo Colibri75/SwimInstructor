@@ -65,12 +65,12 @@ public enum PlanV2Formatting {
         switch type {
         case .pacePerHundredMeters: return "\(PlanFormatting.pace(value)) /100 m"
         case .pacePerKilometer: return "\(PlanFormatting.pace(value)) /km"
-        case .heartRateZone: return "Zone \(Int(value.rounded()))"
+        case .heartRateZone: return String(localized: "Zone \(Int(value.rounded()))")
         case .power: return "\(Int(value.rounded())) W"
         case .speed: return "\(Int(value.rounded())) km/h"
         case .cadence: return "\(Int(value.rounded())) /min"
-        case .strokeRate: return "\(Int(value.rounded())) Züge/min"
-        case .perceivedEffort: return "Anstrengung \(Int(value.rounded())) von 10"
+        case .strokeRate: return String(localized: "\(Int(value.rounded())) Züge/min")
+        case .perceivedEffort: return String(localized: "Anstrengung \(Int(value.rounded())) von 10")
         }
     }
 
@@ -81,7 +81,8 @@ public enum PlanV2Formatting {
             parts.append(target)
         }
         if step.restSeconds > 0 {
-            parts.append("\(PlanFormatting.rest(step.restSeconds)) Pause")
+            let rest = PlanFormatting.rest(step.restSeconds)
+            parts.append(String(localized: "\(rest) Pause"))
         }
         return parts.joined(separator: " · ")
     }
@@ -120,18 +121,18 @@ public enum PlanV2Formatting {
     /// Woher ein Leistungswert stammt, für die Profil-Ansicht.
     public static func origin(_ origin: PerformanceOrigin) -> String {
         switch origin {
-        case .tested: return "Test"
-        case .manual: return "von dir eingetragen"
-        case .estimated: return "geschätzt"
-        case .formula: return "Faustformel"
+        case .tested: return String(localized: "Test", comment: "Herkunft eines Leistungswerts")
+        case .manual: return String(localized: "von dir eingetragen")
+        case .estimated: return String(localized: "geschätzt")
+        case .formula: return String(localized: "Faustformel")
         }
     }
 
     /// Wie ein Tag der Woche im Vergleich zum Plan steht, ohne Sportart im Text ("nicht trainiert").
     public static func stateText(_ state: WeekDayState) -> String {
         switch state {
-        case .missed: return "nicht trainiert"
-        case .restBroken: return "trotz Ruhetag trainiert"
+        case .missed: return String(localized: "nicht trainiert")
+        case .restBroken: return String(localized: "trotz Ruhetag trainiert")
         default: return PlanFormatting.stateText(state)
         }
     }
@@ -139,34 +140,38 @@ public enum PlanV2Formatting {
     /// Wie ein Tag im Verlauf ausging, ohne Sportart im Text.
     public static func outcomeText(_ outcome: AdherenceOutcome) -> String {
         switch outcome {
-        case .followed: return "umgesetzt"
-        case .shorter: return "kürzer"
-        case .longer: return "länger"
-        case .missed: return "nicht trainiert"
-        case .restKept: return "Ruhetag eingehalten"
-        case .restBroken: return "trotz Ruhetag trainiert"
-        case .pending: return "offen"
+        case .followed: return String(localized: "umgesetzt")
+        case .shorter: return String(localized: "kürzer")
+        case .longer: return String(localized: "länger")
+        case .missed: return String(localized: "nicht trainiert")
+        case .restKept: return String(localized: "Ruhetag eingehalten")
+        case .restBroken: return String(localized: "trotz Ruhetag trainiert")
+        case .pending: return String(localized: "offen", comment: "Tag noch nicht abgeschlossen")
         }
     }
 
     /// Gemacht gegen geplant in der Einheit der Sportart: "1.200 m von 1.500 m"; ohne Plan nur das Gemachte.
     public static func comparison(planned: Double, actual: Double, unit: PlanUnit) -> String {
         guard planned > 0 else { return amount(actual, unit: unit) }
-        return "\(amount(actual, unit: unit)) von \(amount(planned, unit: unit))"
+        let done = amount(actual, unit: unit)
+        let goal = amount(planned, unit: unit)
+        return String(localized: "\(done) von \(goal)")
     }
 
     /// Kurzfassung eines geplanten Tages: "Schwimmen · 2.000 m, Laufen · 40 min", "Ruhetag", "keine Zeit".
     public static func daySummary(_ day: PlannedDay?, registry: SportRegistry = .standard) -> String {
-        guard let day else { return "nicht geplant" }
-        if day.isUnavailable { return "keine Zeit" }
-        if day.isRestDay { return "Ruhetag" }
+        guard let day else { return String(localized: "nicht geplant") }
+        if day.isUnavailable { return String(localized: "keine Zeit") }
+        if day.isRestDay { return String(localized: "Ruhetag") }
         return day.sessions.map { sessionTitle(sport: $0.sport, amount: $0.amount, unit: $0.unit, registry: registry) }.joined(separator: ", ")
     }
 
     /// Ein Wochenumfang des Gesamtplans: "Schwimmen 6.000 m in 3 Einheiten".
     public static func macroVolume(_ volume: MacroSportVolume, registry: SportRegistry = .standard) -> String {
-        let sessions = volume.sessions == 1 ? "1 Einheit" : "\(volume.sessions) Einheiten"
-        return "\(registry.displayName(for: volume.sport)) \(amount(volume.amount, unit: volume.unit)) in \(sessions)"
+        let name = registry.displayName(for: volume.sport)
+        let total = amount(volume.amount, unit: volume.unit)
+        if volume.sessions == 1 { return String(localized: "\(name) \(total) in 1 Einheit") }
+        return String(localized: "\(name) \(total) in \(volume.sessions) Einheiten")
     }
 
     /// Änderung in Prozent mit Vorzeichen: "+4 %", "−12 %", "±0 %".
@@ -180,7 +185,8 @@ public enum PlanV2Formatting {
     /// Hinweis auf der Watch, wenn der gezeigte Plan nicht von heute ist, sonst `nil`.
     public static func dayNotice(_ response: DayPlanV2Response, now: Date, calendar: Calendar = .current) -> String? {
         guard response.date != PlanFormatting.isoDay(now, calendar: calendar) else { return nil }
-        return "Plan vom \(PlanFormatting.germanDate(response.date)). Öffne die iPhone-App für den Plan von heute."
+        let date = PlanFormatting.germanDate(response.date)
+        return String(localized: "Plan vom \(date). Öffne die iPhone-App für den Plan von heute.")
     }
 
     /// Hinweis, wenn der Tagesplan nicht frisch von Claude kommt, sonst `nil`.
@@ -188,9 +194,10 @@ public enum PlanV2Formatting {
         guard response.source == .fallback else { return nil }
         let reason = PlanFormatting.fallbackReason(response.fallbackReason)
         if response.stale {
-            return "Letzter gültiger Plan vom \(PlanFormatting.germanDate(response.date)). \(reason)"
+            let date = PlanFormatting.germanDate(response.date)
+            return String(localized: "Letzter gültiger Plan vom \(date). \(reason)")
         }
-        return "Früherer Plan von heute. \(reason)"
+        return String(localized: "Früherer Plan von heute. \(reason)")
     }
 }
 
@@ -201,18 +208,20 @@ public extension PlanV2Formatting {
     static func sessionHints(brick: Bool, indoor: Bool, openWater: Bool = false, sport: SportID, previous: SportID?, registry: SportRegistry = .standard) -> [String] {
         var hints: [String] = []
         if brick, let previous {
-            hints.append("Koppeltraining: direkt nach \(registry.displayName(for: previous))")
+            let previousName = registry.displayName(for: previous)
+            hints.append(String(localized: "Koppeltraining: direkt nach \(previousName)"))
         }
         if indoor {
             if let equipment = registry.module(for: sport)?.indoorEquipment {
-                hints.append("Drinnen (\(equipment.displayName))")
+                let equipmentName = equipment.displayName
+                hints.append(String(localized: "Drinnen (\(equipmentName))"))
             } else {
-                hints.append("Drinnen")
+                hints.append(String(localized: "Drinnen"))
             }
         }
         if openWater {
-            let name = registry.module(for: sport)?.openWater?.displayName ?? "Freiwasser"
-            hints.append("\(name): nie allein, mit Boje")
+            let name = registry.module(for: sport)?.openWater?.displayName ?? String(localized: "Freiwasser")
+            hints.append(String(localized: "\(name): nie allein, mit Boje"))
         }
         return hints
     }
@@ -225,9 +234,9 @@ public extension PlanV2Formatting {
     /// Was nach einer Anpassung außer der Reihe über dem Plan steht.
     static func adaptationNotice(_ reason: ReplanReason) -> String? {
         switch reason {
-        case .pain: return "Dein Plan wurde angepasst, weil du Beschwerden gemeldet hast: Die betroffene Sportart ist ein paar Tage gebremst."
-        case .effort: return "Dein Plan wurde angepasst, weil eine Einheit deutlich anstrengender war als geplant: Jetzt kommt erst etwas Lockeres."
-        case .missed: return "Dein Plan wurde angepasst, weil gestern eine geplante Einheit ausgefallen ist. Sie wird nicht nachgeholt, wichtige Inhalte wandern in die nächsten Tage."
+        case .pain: return String(localized: "Dein Plan wurde angepasst, weil du Beschwerden gemeldet hast: Die betroffene Sportart ist ein paar Tage gebremst.")
+        case .effort: return String(localized: "Dein Plan wurde angepasst, weil eine Einheit deutlich anstrengender war als geplant: Jetzt kommt erst etwas Lockeres.")
+        case .missed: return String(localized: "Dein Plan wurde angepasst, weil gestern eine geplante Einheit ausgefallen ist. Sie wird nicht nachgeholt, wichtige Inhalte wandern in die nächsten Tage.")
         case .daily, .manual: return nil
         }
     }
@@ -235,12 +244,19 @@ public extension PlanV2Formatting {
     /// "Anstrengung 7 von 10, leichte Beschwerden (Knie)".
     static func feedbackSummary(_ feedback: SessionFeedback) -> String {
         var parts: [String] = []
-        if let effort = feedback.effort { parts.append("Anstrengung \(effort) von 10") }
-        if feedback.pain != .none {
-            let area = feedback.painArea.map { " (\($0.displayName))" } ?? ""
-            parts.append("\(feedback.pain.adjective) Beschwerden\(area)")
+        if let effort = feedback.effort { parts.append(String(localized: "Anstrengung \(effort) von 10")) }
+        let pain: String
+        switch feedback.pain {
+        case .none: pain = String(localized: "keine Beschwerden")
+        case .light: pain = String(localized: "leichte Beschwerden")
+        case .moderate: pain = String(localized: "deutliche Beschwerden")
+        case .strong: pain = String(localized: "starke Beschwerden")
+        }
+        if feedback.pain != .none, let area = feedback.painArea {
+            let areaName = area.displayName
+            parts.append(String(localized: "\(pain) (\(areaName))", comment: "Beschwerden mit Körperstelle"))
         } else {
-            parts.append("keine Beschwerden")
+            parts.append(pain)
         }
         return parts.joined(separator: ", ")
     }

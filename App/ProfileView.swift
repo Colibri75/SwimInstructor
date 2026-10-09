@@ -218,7 +218,7 @@ struct ProfileEntryDetailView: View {
             .cardRows()
         }
         .themedList()
-        .navigationTitle(entry?.definition.displayName ?? "Leistungswert")
+        .navigationTitle(entry?.definition.displayName ?? String(localized: "Leistungswert"))
         .swipeClosesKeyboard()
         .navigationBarTitleDisplayMode(.inline)
     }

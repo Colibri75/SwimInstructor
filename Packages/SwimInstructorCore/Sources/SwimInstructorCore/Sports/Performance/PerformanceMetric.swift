@@ -71,16 +71,16 @@ public struct PerformanceMetricDefinition: Sendable, Equatable {
 
 public extension PerformanceMetricDefinition {
     static let maxHeartRate = PerformanceMetricDefinition(
-        metric: .maxHeartRate, displayName: "Maximalpuls", unit: "bpm", plausibleRange: 120...230, observedHigherWins: true
+        metric: .maxHeartRate, displayName: String(localized: "Maximalpuls"), unit: "bpm", plausibleRange: 120...230, observedHigherWins: true
     )
     static let restingHeartRate = PerformanceMetricDefinition(
-        metric: .restingHeartRate, displayName: "Ruhepuls", unit: "bpm", plausibleRange: 30...110
+        metric: .restingHeartRate, displayName: String(localized: "Ruhepuls"), unit: "bpm", plausibleRange: 30...110
     )
     static let thresholdHeartRate = PerformanceMetricDefinition(
-        metric: .thresholdHeartRate, displayName: "Schwellenpuls", unit: "bpm", plausibleRange: 100...215
+        metric: .thresholdHeartRate, displayName: String(localized: "Schwellenpuls"), unit: "bpm", plausibleRange: 100...215
     )
     static let thresholdPower = PerformanceMetricDefinition(
-        metric: .thresholdPower, displayName: "Schwellenleistung (FTP)", unit: "W", plausibleRange: 50...600
+        metric: .thresholdPower, displayName: String(localized: "Schwellenleistung (FTP)"), unit: "W", plausibleRange: 50...600
     )
 
     /// Die Werte, die für alle Sportarten gelten (ohne Sportart im Profil).

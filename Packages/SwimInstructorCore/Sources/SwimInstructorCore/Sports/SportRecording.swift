@@ -43,18 +43,18 @@ public struct RecordingLocation: Sendable, Equatable, Identifiable {
 public extension RecordingLocation {
     /// Im Becken: Bahnen zählen, Wassersperre. Ob drinnen oder draußen, lässt die Uhr offen (wie bisher).
     static let pool = RecordingLocation(
-        id: "pool", displayName: "Becken", symbolName: "figure.pool.swim", isIndoor: nil,
+        id: "pool", displayName: String(localized: "Becken", comment: "Schwimmbecken"), symbolName: "figure.pool.swim", isIndoor: nil,
         swimmingLocationRawValue: HKWorkoutSwimmingLocationType.pool.rawValue, usesLapLength: true, usesWaterLock: true
     )
     /// Im Freiwasser: Strecke und Karte per GPS, Wassersperre.
     static let openWater = RecordingLocation(
-        id: "open_water", displayName: "Freiwasser", symbolName: "water.waves", isIndoor: false,
+        id: "open_water", displayName: String(localized: "Freiwasser"), symbolName: "water.waves", isIndoor: false,
         swimmingLocationRawValue: HKWorkoutSwimmingLocationType.openWater.rawValue, recordsRoute: true, usesWaterLock: true
     )
     /// Draußen: Strecke und Karte per GPS.
-    static let outdoor = RecordingLocation(id: "outdoor", displayName: "Draußen", symbolName: "sun.max", isIndoor: false, recordsRoute: true)
+    static let outdoor = RecordingLocation(id: "outdoor", displayName: String(localized: "Draußen"), symbolName: "sun.max", isIndoor: false, recordsRoute: true)
     /// Drinnen (Laufband, Rolle): ohne GPS.
-    static let indoor = RecordingLocation(id: "indoor", displayName: "Drinnen", symbolName: "house", isIndoor: true)
+    static let indoor = RecordingLocation(id: "indoor", displayName: String(localized: "Drinnen"), symbolName: "house", isIndoor: true)
 }
 
 /// Wie die Uhr die aktuelle Geschwindigkeit glättet (siehe `SpeedTracker`).

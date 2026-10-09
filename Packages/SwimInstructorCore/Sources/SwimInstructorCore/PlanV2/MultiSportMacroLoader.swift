@@ -166,16 +166,16 @@ public final class MultiSportMacroLoader: ObservableObject {
     public func revise(feedback: String, snapshot: AthleteStateSnapshot) async -> Bool {
         let trimmed = feedback.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
-            error = "Schreib zuerst, was sich am Plan ändern soll."
+            error = String(localized: "Schreib zuerst, was sich am Plan ändern soll.")
             return false
         }
         guard let current = plan else {
-            error = "Es gibt noch keinen Gesamtplan."
+            error = String(localized: "Es gibt noch keinen Gesamtplan.")
             return false
         }
         guard !isLoading, !isRevising, !isReviewing else { return false }
         guard current.canGiveFeedback else {
-            error = "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung."
+            error = String(localized: "Feedback gibt es einmal nach einem neuen Plan und einmal zu jeder Fortschreibung.")
             return false
         }
         guard let provider = planProvider() else {
@@ -268,7 +268,7 @@ public final class MultiSportMacroLoader: ObservableObject {
         feedback: String? = nil
     ) async -> MacroReview? {
         guard let current = plan else {
-            error = "Es gibt noch keinen Gesamtplan."
+            error = String(localized: "Es gibt noch keinen Gesamtplan.")
             return nil
         }
         guard !isLoading, !isRevising, !isReviewing else { return nil }

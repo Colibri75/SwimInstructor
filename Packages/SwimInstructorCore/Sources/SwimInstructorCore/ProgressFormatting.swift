@@ -9,7 +9,7 @@ public enum ProgressFormatting {
 
     /// "3 von 6"; `nil` bei einem Schritt mit einer Wiederholung.
     public static func repetition(_ unit: ProgressUnit) -> String? {
-        unit.step.repetitions > 1 ? "\(unit.repetition) von \(unit.step.repetitions)" : nil
+        unit.step.repetitions > 1 ? String(localized: "\(unit.repetition) von \(unit.step.repetitions)") : nil
     }
 
     /// Umfang einer Wiederholung: "200 m", "3:00 min" bzw. "von Hand" ohne Strecke und Zeit.
@@ -17,7 +17,7 @@ public enum ProgressFormatting {
         switch unit.target {
         case let .meters(meters)?: return PlanFormatting.meters(Int(meters.rounded()))
         case let .seconds(seconds)?: return "\(PlanFormatting.elapsed(seconds)) min"
-        case nil: return "von Hand"
+        case nil: return String(localized: "von Hand")
         }
     }
 
@@ -25,17 +25,20 @@ public enum ProgressFormatting {
     public static func remaining(_ status: ProgressStatus) -> String {
         switch status {
         case .noUnits:
-            return "Freies Training"
+            return String(localized: "Freies Training")
         case .completed:
-            return "Plan geschafft"
+            return String(localized: "Plan geschafft")
         case let .rest(_, _, seconds):
-            return "Pause \(PlanFormatting.elapsed(TimeInterval(seconds)))"
+            let time = PlanFormatting.elapsed(TimeInterval(seconds))
+            return String(localized: "Pause \(time)")
         case let .work(unit, done, remaining):
             switch (unit.target, remaining) {
             case (.meters?, let remaining?):
-                return "noch \(PlanFormatting.meters(Int(remaining.rounded(.up))))"
+                let meters = PlanFormatting.meters(Int(remaining.rounded(.up)))
+                return String(localized: "noch \(meters)")
             case (.seconds?, let remaining?):
-                return "noch \(PlanFormatting.elapsed(remaining.rounded(.up)))"
+                let time = PlanFormatting.elapsed(remaining.rounded(.up))
+                return String(localized: "noch \(time)")
             default:
                 return PlanFormatting.elapsed(done)
             }
@@ -67,22 +70,26 @@ public enum ProgressFormatting {
             let name = repetition(unit).map { "\(unit.step.name), \($0)" } ?? unit.step.name
             return "\(name). \(cue(unit))."
         case let .restStarted(unit):
-            return "Pause, \(spokenDuration(TimeInterval(unit.restSeconds)))."
+            let duration = spokenDuration(TimeInterval(unit.restSeconds))
+            return String(localized: "Pause, \(duration).")
         case let .workEnded(segment):
             guard segment.unit.step.isTestEffort, segment.reachedTarget else { return nil }
-            return "Geschafft. Zeit \(spokenDuration(segment.duration))."
+            let duration = spokenDuration(segment.duration)
+            return String(localized: "Geschafft. Zeit \(duration).")
         case .completed:
-            return "Plan geschafft."
+            return String(localized: "Plan geschafft.")
         }
     }
 
     /// Zum Vorlesen: "45 Sekunden", "1 Minute", "6 Minuten 12".
     public static func spokenDuration(_ seconds: TimeInterval) -> String {
         let total = max(Int(seconds.rounded()), 0)
-        guard total >= 60 else { return "\(total) Sekunden" }
+        guard total >= 60 else { return String(localized: "\(total) Sekunden") }
         let minutes = total / 60
         let rest = total % 60
-        let minuteText = minutes == 1 ? "1 Minute" : "\(minutes) Minuten"
-        return rest == 0 ? minuteText : "\(minuteText) \(rest)"
+        if minutes == 1 {
+            return rest == 0 ? String(localized: "1 Minute") : String(localized: "1 Minute \(rest)")
+        }
+        return rest == 0 ? String(localized: "\(minutes) Minuten") : String(localized: "\(minutes) Minuten \(rest)")
     }
 }

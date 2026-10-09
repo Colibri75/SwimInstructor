@@ -37,7 +37,7 @@ struct NextSessionComplicationView: View {
             Image(systemName: text.first?.symbolName ?? (text.isRestDay ? "moon.zzz" : "figure.mixed.cardio"))
                 .font(.title3)
                 .widgetAccentable()
-                .widgetLabel(text.first?.title ?? (text.isRestDay ? "Ruhetag" : "Peaksmith"))
+                .widgetLabel(text.first?.title ?? (text.isRestDay ? String(localized: "Ruhetag") : "Peaksmith"))
         default:
             PlanGlanceCircularView(entry: entry)
         }

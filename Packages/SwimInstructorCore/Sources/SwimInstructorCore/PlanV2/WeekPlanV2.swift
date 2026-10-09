@@ -159,7 +159,7 @@ public struct PlannedDayContent: Codable, Equatable, Sendable {
         self.sessions = sessions
     }
 
-    public static func rest(focus: String = "Ruhetag") -> PlannedDayContent {
+    public static func rest(focus: String = String(localized: "Ruhetag")) -> PlannedDayContent {
         PlannedDayContent(focus: focus, sessions: [])
     }
 

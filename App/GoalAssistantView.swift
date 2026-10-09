@@ -307,10 +307,10 @@ struct GoalAssistantView: View {
 
     private var dateTitle: String {
         switch goal.kind {
-        case .race: return "Wettkampftag"
-        case .time: return "Tag des Versuchs"
-        case .distance: return "Zieltag"
-        case .fitness: return "Planen bis"
+        case .race: return String(localized: "Wettkampftag")
+        case .time: return String(localized: "Tag des Versuchs")
+        case .distance: return String(localized: "Zieltag")
+        case .fitness: return String(localized: "Planen bis")
         }
     }
 
@@ -361,7 +361,7 @@ struct GoalAssistantView: View {
                         Button("Vormerken bis \(Self.day(lockedUntil))") {
                             store.setPendingGoal(goal)
                             pending = goal
-                            message = "Vorgemerkt. Am \(Self.day(lockedUntil)) wird es übernommen und der neue Gesamtplan erstellt."
+                            message = String(localized: "Vorgemerkt. Am \(Self.day(lockedUntil)) wird es übernommen und der neue Gesamtplan erstellt.")
                         }
                     } else {
                         Text("Neues Ziel: Die App erstellt einen neuen Gesamtplan vom aktuellen Stand aus; die laufende Woche bleibt. Danach ist 7 Tage lang kein weiteres neues Ziel möglich.")
@@ -396,20 +396,20 @@ struct GoalAssistantView: View {
         case .unchanged:
             message = nil
         case .fineTuned:
-            message = "Übernommen. Der Gesamtplan bleibt, die nächste Fortschreibung rechnet damit."
+            message = String(localized: "Übernommen. Der Gesamtplan bleibt, die nächste Fortschreibung rechnet damit.")
             pending = store.pendingGoal()
         case .newGoal:
-            message = "Übernommen. Der neue Gesamtplan entsteht jetzt im Hintergrund."
+            message = String(localized: "Übernommen. Der neue Gesamtplan entsteht jetzt im Hintergrund.")
             pending = store.pendingGoal()
             Task { await todayLoader.refreshIfNeeded() }
         case .locked(let until):
-            message = "Gesperrt bis \(Self.day(until))."
+            message = String(localized: "Gesperrt bis \(Self.day(until)).")
         case .invalid(let problem):
             message = problem
         }
     }
 
     private static func day(_ date: Date) -> String {
-        date.formatted(.dateTime.day().month(.wide))
+        date.formatted(.dateTime.day().month(.wide).locale(AppLocale.current))
     }
 }

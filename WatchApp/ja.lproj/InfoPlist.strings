@@ -1,0 +1,4 @@
+/* Hinweise der Berechtigungsabfragen, deutsch in Info.plist (docs/uebersetzungen.md) */
+"NSHealthShareUsageDescription" = "Peaksmith は「ヘルスケア」からワークアウトとバイタルデータを読み取り、ウォッチにトレーニングプランを表示します。";
+"NSHealthUpdateUsageDescription" = "Peaksmith はルート、マップ、往復数、心拍数とともにセッションを「ヘルスケア」に保存します。";
+"NSLocationWhenInUseUsageDescription" = "Peaksmith は屋外で GPS によりルートを記録し、ペース、獲得標高、「ヘルスケア」のマップに使用します。";

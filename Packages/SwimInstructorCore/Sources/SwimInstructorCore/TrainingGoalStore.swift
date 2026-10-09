@@ -85,7 +85,7 @@ public struct UserDefaultsTrainingGoalStore: TrainingGoalStoring {
         if let problem = goal.problem(now: now, calendar: calendar) { return .invalid(problem) }
         let change = self.goal().change(to: goal, calendar: calendar)
         if change == .newGoal, let until = lockedUntil(now: now) { return .locked(until: until) }
-        guard let data = try? JSONEncoder().encode(goal) else { return .invalid("Das Ziel lässt sich nicht speichern.") }
+        guard let data = try? JSONEncoder().encode(goal) else { return .invalid(String(localized: "Das Ziel lässt sich nicht speichern.")) }
         defaults.set(data, forKey: Self.storageKey)
         defaults.removeObject(forKey: Self.pendingKey)
         switch change {

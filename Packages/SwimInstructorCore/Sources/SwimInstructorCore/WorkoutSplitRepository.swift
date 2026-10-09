@@ -144,36 +144,41 @@ public enum WorkoutSplitFormatting {
         }
         if let speed = speed(split.speed, field: field) { parts.append(speed) }
         if let style = split.strokeStyle { parts.append(style.displayName) }
-        if let strokes = split.strokes, strokes > 0 { parts.append("\(Int(strokes.rounded())) Züge") }
+        if let strokes = split.strokes, strokes > 0 {
+            let count = Int(strokes.rounded())
+            parts.append(String(localized: "\(count) Züge"))
+        }
         if let heartRate = split.averageHeartRate { parts.append("\(Int(heartRate.rounded())) bpm") }
         return parts.joined(separator: " · ")
     }
 
     public static func setsTitle(field: LiveField) -> String {
-        field == .pacePerHundredMeters ? "Sets" : "Abschnitte"
+        field == .pacePerHundredMeters ? String(localized: "Sets") : String(localized: "Abschnitte")
     }
 
     public static func setTitle(_ number: Int, field: LiveField) -> String {
-        field == .pacePerHundredMeters ? "Set \(number)" : "Abschnitt \(number)"
+        field == .pacePerHundredMeters ? String(localized: "Set \(number)") : String(localized: "Abschnitt \(number)")
     }
 
     public static func lapsTitle(field: LiveField) -> String {
-        field == .pacePerHundredMeters ? "Bahnen" : "Runden"
+        field == .pacePerHundredMeters ? String(localized: "Bahnen") : String(localized: "Runden")
     }
 
     public static func lapTitle(_ number: Int, field: LiveField) -> String {
-        field == .pacePerHundredMeters ? "Bahn \(number)" : "Runde \(number)"
+        field == .pacePerHundredMeters ? String(localized: "Bahn \(number)") : String(localized: "Runde \(number)")
     }
 
     /// "Kilometer" oder "Teilstrecken je 5 km".
     public static func splitsTitle(length: Double) -> String {
-        length == 1000 ? "Kilometer" : "Teilstrecken je \(decimal(length / 1000, digits: 0)) km"
+        guard length != 1000 else { return String(localized: "Kilometer") }
+        let kilometers = decimal(length / 1000, digits: 0)
+        return String(localized: "Teilstrecken je \(kilometers) km")
     }
 
     /// "Kilometer 3" oder "km 10–15"; der Rest am Ende mit seiner echten Länge ("km 85–87,3").
     public static func splitTitle(_ split: WorkoutSplit, length: Double) -> String {
         if length == 1000, split.distanceMeters.map({ abs($0 - length) < 0.5 }) ?? true {
-            return "Kilometer \(split.number)"
+            return String(localized: "Kilometer \(split.number)")
         }
         let from = Double(split.number - 1) * length / 1000
         let to = from + (split.distanceMeters ?? length) / 1000
@@ -183,12 +188,13 @@ public enum WorkoutSplitFormatting {
 
     /// "Pause 0:30".
     public static func rest(_ seconds: TimeInterval) -> String {
-        "Pause \(duration(seconds))"
+        let time = duration(seconds)
+        return String(localized: "Pause \(time)")
     }
 
     private static func decimal(_ value: Double, digits: Int) -> String {
         let formatter = NumberFormatter()
-        formatter.locale = Locale(identifier: "de_DE")
+        formatter.locale = AppLocale.current
         formatter.numberStyle = .decimal
         formatter.usesGroupingSeparator = true
         formatter.minimumFractionDigits = digits

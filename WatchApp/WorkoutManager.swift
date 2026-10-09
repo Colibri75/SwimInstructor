@@ -59,7 +59,7 @@ final class WorkoutManager: NSObject, ObservableObject {
     /// Richtung der laufenden Crown-Drehung (hoch = weiter, runter = zurück), `nil` ohne Drehung.
     @Published private(set) var crownStep: CrownStep?
     /// Letztes Ereignis (Wechsel, Pause von der Uhr), als Kontrolle auf der Uhr.
-    @Published private(set) var lastGestureNote = "noch nichts"
+    @Published private(set) var lastGestureNote = String(localized: "noch nichts")
     /// Auswertung des Leistungstests nach dem Ende, `nil` ohne Test.
     @Published private(set) var testResult: RecordedTestResult?
     /// Die Anstrengung (1 bis 10), die der Athlet nach dem Ende in Health gespeichert hat; `nil`, solange keine.
@@ -188,7 +188,7 @@ final class WorkoutManager: NSObject, ObservableObject {
         guard phase == .countdown else { return }
         countdownRemaining = nil
         guard let start, let module, let location else {
-            errorMessage = "Diese Sportart kennt die Uhr nicht."
+            errorMessage = String(localized: "Diese Sportart kennt die Uhr nicht.")
             phase = .idle
             return
         }
@@ -201,7 +201,7 @@ final class WorkoutManager: NSObject, ObservableObject {
         crown = CrownRotationTracker()
         sectionGesture.reset()
         pausedByButtonOnScreen = false
-        lastGestureNote = "noch nichts"
+        lastGestureNote = String(localized: "noch nichts")
         lastWarning = nil
         testResult = nil
         errorMessage = nil
@@ -243,7 +243,7 @@ final class WorkoutManager: NSObject, ObservableObject {
                 announce(.workStarted(unit))
             }
         } catch {
-            errorMessage = "Training konnte nicht starten: \(error.localizedDescription)"
+            errorMessage = String(localized: "Training konnte nicht starten: \(error.localizedDescription)")
             session?.end()
             session = nil
             builder = nil
@@ -319,13 +319,13 @@ final class WorkoutManager: NSObject, ObservableObject {
                 try await healthStore.save(sample)
                 savedEffort = value
             } catch {
-                errorMessage = "Anstrengung nicht gespeichert: \(error.localizedDescription)"
+                errorMessage = String(localized: "Anstrengung nicht gespeichert: \(error.localizedDescription)")
             }
         }
     }
 
     /// Nächster Schritt von Hand.
-    func advanceSection(source: String = "Taste") {
+    func advanceSection(source: String = String(localized: "Taste")) {
         moveSection(.next, source: source)
     }
 
@@ -333,20 +333,20 @@ final class WorkoutManager: NSObject, ObservableObject {
     /// Funktioniert auch ohne Strecke aus Health und bei pausierter Einheit.
     func moveSection(_ direction: SectionDirection, source: String) {
         guard phase == .running || phase == .paused else {
-            lastGestureNote = "\(source): Einheit läuft nicht"
+            lastGestureNote = String(localized: "\(source): Einheit läuft nicht")
             return
         }
         guard !progress.units.isEmpty else {
-            lastGestureNote = "\(source): kein Plan"
+            lastGestureNote = String(localized: "\(source): kein Plan")
             return
         }
         guard progress.canMove(direction) else {
-            lastGestureNote = direction == .next ? "\(source): Plan schon geschafft" : "\(source): schon im ersten Schritt"
+            lastGestureNote = direction == .next ? String(localized: "\(source): Plan schon geschafft") : String(localized: "\(source): schon im ersten Schritt")
             return
         }
         let events = progress.move(direction, meters: progressMeters, elapsed: elapsedTime(at: Date()))
         handle(events, manual: direction)
-        lastGestureNote = "\(source): \(direction == .next ? "weiter" : "zurück")"
+        lastGestureNote = direction == .next ? String(localized: "\(source): weiter") : String(localized: "\(source): zurück")
         if phase == .running, usesWaterLock { lockWater() }
     }
 
@@ -466,7 +466,7 @@ final class WorkoutManager: NSObject, ObservableObject {
         let reached = crown.moved(to: value, isLocked: locked, at: now)
         publishCrown(isLocked: locked)
         if let reached {
-            moveSection(reached.direction, source: "Krone")
+            moveSection(reached.direction, source: String(localized: "Krone"))
         }
         let needsReset = reached != nil || abs(value) > 30
         if needsReset { crown.rebase() }
@@ -484,13 +484,13 @@ final class WorkoutManager: NSObject, ObservableObject {
             if usesWaterLock { lockWater() }
             // Zweimal kurz Crown + Seitentaste (Pause und gleich Weiter): nächster Schritt.
             if sectionGesture.didResume(at: date) {
-                advanceSection(source: "Tasten")
+                advanceSection(source: String(localized: "Tasten"))
             } else if case .paused = previousPhase {
-                lastGestureNote = "Weiter (Pause zu lang oder per Tippen)"
+                lastGestureNote = String(localized: "Weiter (Pause zu lang oder per Tippen)")
             }
         case .paused:
             phase = .paused
-            lastGestureNote = pausedByButtonOnScreen ? "Pause per Tippen" : "Pause von der Uhr (Tasten)"
+            lastGestureNote = pausedByButtonOnScreen ? String(localized: "Pause per Tippen") : String(localized: "Pause von der Uhr (Tasten)")
             sectionGesture.didPause(at: date, byButtonOnScreen: pausedByButtonOnScreen)
             pausedByButtonOnScreen = false
         case .ended:
@@ -524,7 +524,7 @@ final class WorkoutManager: NSObject, ObservableObject {
                 await routeRecorder?.finish(with: workout)
             }
         } catch {
-            errorMessage = "Nicht in Health gespeichert: \(error.localizedDescription)"
+            errorMessage = String(localized: "Nicht in Health gespeichert: \(error.localizedDescription)")
         }
         metrics.elapsed = elapsed
         session = nil
@@ -628,7 +628,7 @@ extension WorkoutManager: HKWorkoutSessionDelegate {
 
     nonisolated func workoutSession(_ workoutSession: HKWorkoutSession, didFailWithError error: Error) {
         let text = error.localizedDescription
-        Task { @MainActor in self.errorMessage = "Aufzeichnung gestört: \(text)" }
+        Task { @MainActor in self.errorMessage = String(localized: "Aufzeichnung gestört: \(text)") }
     }
 }
 

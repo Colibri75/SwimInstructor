@@ -216,7 +216,7 @@ private struct WorkoutPlanView: View {
                 StepBlock(status: workoutManager.status(at: context.date), compact: false)
                 Spacer(minLength: 0)
                 HStack(spacing: 6) {
-                    capsuleButton("Zurück") { workoutManager.moveSection(.previous, source: "Taste") }
+                    capsuleButton("Zurück") { workoutManager.moveSection(.previous, source: String(localized: "Taste")) }
                     capsuleButton("Weiter") { workoutManager.advanceSection() }
                 }
                 ControlStatusLine()
@@ -226,7 +226,7 @@ private struct WorkoutPlanView: View {
         .modifier(CrownSectionControl(isActive: isCurrentPage))
     }
 
-    private func capsuleButton(_ title: String, action: @escaping () -> Void) -> some View {
+    private func capsuleButton(_ title: LocalizedStringKey, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
                 .font(.caption2.weight(.semibold))
@@ -322,7 +322,7 @@ struct WatchSummaryView: View {
                     EffortRatingBlock()
                         .padding(.top, 4)
                 }
-                Text(saved ? "In Health gespeichert. Das iPhone berücksichtigt die Einheit beim nächsten Plan." : (workoutManager.errorMessage ?? "Nicht in Health gespeichert."))
+                Text(saved ? String(localized: "In Health gespeichert. Das iPhone berücksichtigt die Einheit beim nächsten Plan.") : (workoutManager.errorMessage ?? String(localized: "Nicht in Health gespeichert.")))
                     .font(.footnote)
                     .foregroundStyle(saved ? Color.secondary : Color.red)
                     .padding(.top, 4)

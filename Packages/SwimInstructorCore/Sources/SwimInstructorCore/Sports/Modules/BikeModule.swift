@@ -11,7 +11,7 @@ public struct BikeModule: SportModule {
     public init() {}
 
     public let id = SportID.bike
-    public let displayName = "Radfahren"
+    public let displayName = String(localized: "Radfahren")
     public let symbolName = "figure.outdoor.cycle"
     public let colorRGB: UInt32 = 0x7BD389
     public let measures: Set<StepMeasure> = [.duration, .distance]
@@ -35,7 +35,7 @@ public struct BikeModule: SportModule {
     /// Koppeltraining Schwimmen und direkt danach Rad (Wechsel 1).
     public let brickAfter: [SportID] = [.swim]
     public let weatherSensitive = true
-    public let indoorEquipment: IndoorEquipment? = IndoorEquipment(id: "indoor_trainer", displayName: "Rolle")
+    public let indoorEquipment: IndoorEquipment? = IndoorEquipment(id: "indoor_trainer", displayName: String(localized: "Rolle", comment: "Rollentrainer fürs Rad, drinnen"))
 
     public let recording = SportRecording(
         locations: [.outdoor, .indoor],
@@ -53,9 +53,9 @@ public struct BikeModule: SportModule {
     public let performanceTests: [PerformanceTest] = [
         // Schwellenpuls: Schnitt der letzten 20 Minuten; FTP: Schnitt der 30 Minuten, nur mit Leistungsmesser.
         PerformanceTest(
-            id: "threshold_30min", displayName: "30-Minuten-Test",
+            id: "threshold_30min", displayName: String(localized: "30-Minuten-Test"),
             produces: [.thresholdHeartRate, .thresholdPower], maximalEffort: true, durationMinutes: 30,
-            resultHint: "Schwellenpuls: Schnitt der letzten 20 Minuten. Leistung: Schnitt der ganzen 30 Minuten, nur mit Leistungsmesser.",
+            resultHint: String(localized: "Schwellenpuls: Schnitt der letzten 20 Minuten. Leistung: Schnitt der ganzen 30 Minuten, nur mit Leistungsmesser."),
             recorded: [
                 .average(input: PerformanceMetric.thresholdHeartRate.rawValue, signal: .heartRate, lastSeconds: 20 * 60),
                 .average(input: PerformanceMetric.thresholdPower.rawValue, signal: .power, lastSeconds: nil)
