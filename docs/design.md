@@ -10,7 +10,7 @@ das Training. Entwürfe: Artifact "Peaksmith Design-Entwürfe". Im Code stehen d
 | Funke | `#FFD166` | nur Erfolge: erledigt, Bestwerte, Pausen auf der Watch, Fahne auf dem Gipfel |
 | Gipfel | `#FFFFFF` | Text und Linien auf Nacht |
 
-- Orange ist auf Weiß als Schrift nicht lesbar (etwa 2:1). Im hellen Modus ist der Akzent `#B35A0B` (4,8:1), Glut
+- Orange ist auf Weiß als Schrift nicht lesbar (etwa 2:1). Im hellen Modus ist der Akzent `#A8540A` (5,1:1), Glut
   erscheint nur als Fläche mit Navy-Schrift (`EmberButtonStyle`).
 - Sportarten haben eigene Farben aus ihrem Modul (`SportModule.colorRGB`), nie Orange: Schwimmen Türkis, Rad Grün,
   Laufen Violett; im hellen Modus auf 60 % abgedunkelt.
@@ -18,3 +18,5 @@ das Training. Entwürfe: Artifact "Peaksmith Design-Entwürfe". Im Code stehen d
 - Motiv: der Gipfel-Winkel mit runden Enden (`PeakShape`, `SparkPeak`), der Gesamtplan als Berg
   (`MacroSummitProfile`: Höhe = bis dahin geplantes Training, Gipfel = Ziel).
 - Listen: `themedList()` für den Grund, `cardRows()` für die Zeilen.
+- Heller Modus "Morgennebel": Grund `#DCE2EC` (gedämpftes Blaugrau), Karten `#EFF2F7`, heute/diese Woche `#F2E0D0`,
+  leere Spur `#C9D2E0`. Kein reines Weiß, damit die App nicht grell wirkt.
