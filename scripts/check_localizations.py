@@ -133,16 +133,20 @@ def main():
         path = os.path.join(LOCALIZATION, f"{language}.lproj", "Localizable.strings")
         table = parse_strings(path) if os.path.exists(path) else {}
         missing = sorted(k for k in needed if k not in table)
-        for key in missing[:3]:
+        shown = missing if language == "en" else missing[:3]
+        for key in shown:
             errors.append(f"{language}: fehlt {key!r} ({', '.join(sorted(needed[key]))})")
-        if len(missing) > 3:
-            errors.append(f"{language}: und {len(missing) - 3} weitere fehlende Texte")
+        if len(missing) > len(shown):
+            errors.append(f"{language}: und {len(missing) - len(shown)} weitere fehlende Texte")
         for key, value in table.items():
             if specifiers(key) != specifiers(value):
                 errors.append(f"{language}: Platzhalter passen nicht: {key!r} -> {value!r}")
         unused = sorted(k for k in table if k not in keys)
-        if unused:
-            print(f"Hinweis {language}: {len(unused)} Übersetzungen ohne Text im Code, z. B. {unused[:3]}")
+        if unused and language == "en":
+            for key in unused:
+                print(f"Hinweis en: ohne Text im Code: {key!r}")
+        elif unused:
+            print(f"Hinweis {language}: {len(unused)} Übersetzungen ohne Text im Code")
         print(f"{language}: {len(needed) - len(missing)}/{len(needed)} übersetzt")
 
     if errors:

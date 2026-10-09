@@ -58,7 +58,7 @@ platform :ios do
         "-quiet"
       )
       # Jeder Text in jeder Sprache übersetzt, Platzhalter passend (docs/uebersetzungen.md).
-      sh("python3", "scripts/check_localizations.py", "--dump", "build/DerivedData")
+      sh("python3", "scripts/check_localizations.py", "build/DerivedData")
     end
   end
 
