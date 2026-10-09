@@ -12,6 +12,8 @@ brauchen keine Übersetzung.
 
 Mit --dump schreibt das Skript zusätzlich alle Schlüssel des Codes als JSON nach stdout (für neue Sprachen).
 """
+import base64
+import gzip
 import json
 import os
 import re
@@ -120,8 +122,10 @@ def main():
     print(f"Übersetzungen: {len(needed)} Texte im Code ({len(keys)} Schlüssel insgesamt)")
 
     if dump:
-        for key, sources in sorted(needed.items()):
-            print("KEY " + json.dumps([key, sorted(sources)], ensure_ascii=False))
+        # Kompakt (gzip + base64), damit die Liste in ein CI-Log passt.
+        packed = base64.b64encode(gzip.compress(json.dumps({k: sorted(v) for k, v in sorted(needed.items())}, ensure_ascii=False).encode())).decode()
+        for start in range(0, len(packed), 2000):
+            print("KEYS-GZ " + packed[start:start + 2000])
 
     languages = sorted(d[:-6] for d in os.listdir(LOCALIZATION) if d.endswith(".lproj"))
     errors = []
@@ -129,10 +133,10 @@ def main():
         path = os.path.join(LOCALIZATION, f"{language}.lproj", "Localizable.strings")
         table = parse_strings(path) if os.path.exists(path) else {}
         missing = sorted(k for k in needed if k not in table)
-        for key in missing[:20]:
+        for key in missing[:3]:
             errors.append(f"{language}: fehlt {key!r} ({', '.join(sorted(needed[key]))})")
-        if len(missing) > 20:
-            errors.append(f"{language}: und {len(missing) - 20} weitere fehlende Texte")
+        if len(missing) > 3:
+            errors.append(f"{language}: und {len(missing) - 3} weitere fehlende Texte")
         for key, value in table.items():
             if specifiers(key) != specifiers(value):
                 errors.append(f"{language}: Platzhalter passen nicht: {key!r} -> {value!r}")
