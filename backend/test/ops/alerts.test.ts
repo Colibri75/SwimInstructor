@@ -26,7 +26,7 @@ describe("Alarme", () => {
     expect(sent).toHaveLength(0);
     observe({ costUsd: 0.6 });
     observe({ costUsd: 0.6 });
-    expect(sent.map((s) => s.title)).toEqual(["Peaksmith: Tageskosten"]);
+    expect(sent.map((s) => s.title)).toEqual(["PeakSmith: Tageskosten"]);
     expect(sent[0].message).toContain("$1.20");
 
     advance(24 * 60 * MINUTE);
@@ -53,7 +53,7 @@ describe("Alarme", () => {
     observe({ outcome: "fallback", reason: "timeout" });
     expect(sent).toHaveLength(0);
     observe({ outcome: "failed", reason: "upstream_error" });
-    expect(sent.map((s) => s.title)).toEqual(["Peaksmith: Pläne fallen aus"]);
+    expect(sent.map((s) => s.title)).toEqual(["PeakSmith: Pläne fallen aus"]);
     expect(sent[0].message).toContain("3 von 4");
     expect(sent[0].message).toContain("timeout 2×");
 
@@ -83,7 +83,7 @@ describe("Alarme", () => {
     observe({ outcome: "failed", reason: "budget_exceeded", user: "anna", kind: "macro" });
     observe({ outcome: "fallback", reason: "budget_exceeded", user: "anna" });
 
-    expect(sent.map((s) => s.title)).toEqual(["Peaksmith: Konfigurationsfehler", "Peaksmith: Budget erschöpft"]);
+    expect(sent.map((s) => s.title)).toEqual(["PeakSmith: Konfigurationsfehler", "PeakSmith: Budget erschöpft"]);
     expect(sent[1].message).toContain('"anna"');
   });
 });
@@ -98,15 +98,15 @@ describe("Alarme: Webhook", () => {
       "ntfy",
       (init: RequestInit) => {
         expect(init.body).toBe("Text");
-        expect((init.headers as Record<string, string>).Title).toBe("Peaksmith: Budget erschoepft");
+        expect((init.headers as Record<string, string>).Title).toBe("PeakSmith: Budget erschoepft");
       }
     ],
-    ["slack", (init: RequestInit) => expect(JSON.parse(String(init.body))).toEqual({ text: "*Peaksmith: Budget erschöpft*\nText" })],
-    ["discord", (init: RequestInit) => expect(JSON.parse(String(init.body))).toEqual({ content: "**Peaksmith: Budget erschöpft**\nText" })],
-    ["json", (init: RequestInit) => expect(JSON.parse(String(init.body))).toEqual({ title: "Peaksmith: Budget erschöpft", message: "Text" })]
+    ["slack", (init: RequestInit) => expect(JSON.parse(String(init.body))).toEqual({ text: "*PeakSmith: Budget erschöpft*\nText" })],
+    ["discord", (init: RequestInit) => expect(JSON.parse(String(init.body))).toEqual({ content: "**PeakSmith: Budget erschöpft**\nText" })],
+    ["json", (init: RequestInit) => expect(JSON.parse(String(init.body))).toEqual({ title: "PeakSmith: Budget erschöpft", message: "Text" })]
   ] as const)("schickt im Format %s", async (format, check) => {
     const fetchImpl = fakeFetch();
-    await webhookNotifier("https://example.test/hook", format, fetchImpl as unknown as typeof fetch)("Peaksmith: Budget erschöpft", "Text");
+    await webhookNotifier("https://example.test/hook", format, fetchImpl as unknown as typeof fetch)("PeakSmith: Budget erschöpft", "Text");
 
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit];

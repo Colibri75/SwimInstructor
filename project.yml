@@ -13,7 +13,7 @@ settings:
   base:
     # Name unter dem Symbol auf iPhone und Watch und in den Health-Hinweisen (beide Info.plist). Bundle-IDs, Targets und
     # das Repo heißen weiter SwimInstructor, damit TestFlight, Health-Freigaben und gespeicherte Daten bleiben.
-    APP_DISPLAY_NAME: Peaksmith
+    APP_DISPLAY_NAME: PeakSmith
 
 packages:
   SwimInstructorCore:

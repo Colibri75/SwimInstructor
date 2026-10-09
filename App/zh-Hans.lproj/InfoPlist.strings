@@ -1,5 +1,5 @@
 /* Hinweise der Berechtigungsabfragen, deutsch in Info.plist (docs/uebersetzungen.md) */
-"NSHealthShareUsageDescription" = "Peaksmith 会从“健康”读取你的训练和生命体征数据，每天为你制定最新的训练计划。";
-"NSHealthUpdateUsageDescription" = "Peaksmith 会将你的训练存储到“健康”。";
-"NSLocationWhenInUseUsageDescription" = "Peaksmith 仅将你的大致位置（精确到约 10 公里）用于天气预报，以便在雷雨、大风或结冰时将计划改为室内训练。";
-"NSCalendarsFullAccessUsageDescription" = "Peaksmith 会读取你的日程时间，在繁忙的日子少安排训练。日程的标题和内容只保留在 iPhone 上。";
+"NSHealthShareUsageDescription" = "PeakSmith 会从“健康”读取你的训练和生命体征数据，每天为你制定最新的训练计划。";
+"NSHealthUpdateUsageDescription" = "PeakSmith 会将你的训练存储到“健康”。";
+"NSLocationWhenInUseUsageDescription" = "PeakSmith 仅将你的大致位置（精确到约 10 公里）用于天气预报，以便在雷雨、大风或结冰时将计划改为室内训练。";
+"NSCalendarsFullAccessUsageDescription" = "PeakSmith 会读取你的日程时间，在繁忙的日子少安排训练。日程的标题和内容只保留在 iPhone 上。";

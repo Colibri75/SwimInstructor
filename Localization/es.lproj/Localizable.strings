@@ -1,4 +1,4 @@
-/* Peaksmith – es. Schlüssel = deutscher Text im Code, siehe docs/uebersetzungen.md */
+/* PeakSmith – es. Schlüssel = deutscher Text im Code, siehe docs/uebersetzungen.md */
 "%@ %@ in %lld Einheiten" = "%@ %@ en %lld sesiones";
 "%@ %@ in 1 Einheit" = "%@ %@ en 1 sesión";
 "%@ (optional)" = "%@ (opcional)";
@@ -709,7 +709,7 @@
 "Wie sich dein Training auf die Sportarten verteilt. Ziehst du eine hoch, werden die anderen im Verhältnis kleiner; zusammen sind es immer 100 %." = "Cómo se reparte tu entrenamiento entre los deportes. Si subes uno, los demás bajan en proporción; en total siempre suman 100 %.";
 "Wie war's?" = "¿Qué tal fue?";
 "Wieder deinem Coach überlassen" = "Dejarlo de nuevo en manos de tu coach";
-"Willkommen bei Peaksmith" = "Bienvenido a Peaksmith";
+"Willkommen bei PeakSmith" = "Bienvenido a PeakSmith";
 "Wird geholt …" = "Obteniendo…";
 "Wo?" = "¿Dónde?";
 "Woche" = "Semana";
@@ -820,7 +820,7 @@
 "zu wenig Daten" = "pocos datos";
 "Ändert Sportart, Kennzahl und Zeitraum." = "Cambia el deporte, la métrica y el periodo.";
 "Änderungswünsche an deinen Coach." = "Cambios que quieres pedir a tu coach.";
-"Öffne Peaksmith für deinen Plan" = "Abre Peaksmith para ver tu plan";
+"Öffne PeakSmith für deinen Plan" = "Abre PeakSmith para ver tu plan";
 "Öffne zuerst den Tab Aktuell, damit die App deinen Zustand aus Health kennt." = "Abre primero la pestaña Hoy para que la app conozca tu estado a partir de Salud.";
 "Öffnet die Details." = "Abre los detalles.";
 "Ø %lld" = "Ø %lld";

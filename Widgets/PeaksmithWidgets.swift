@@ -51,7 +51,7 @@ private struct HomeScreenView: View {
     var body: some View {
         let text = PlanGlanceText(entry: entry)
         VStack(alignment: .leading, spacing: 6) {
-            Text(text.heading ?? "Peaksmith")
+            Text(text.heading ?? "PeakSmith")
                 .font(.headline.weight(.heavy))
                 .foregroundStyle(Theme.ember)
             if text.heading == nil {

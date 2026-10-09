@@ -1,4 +1,4 @@
-/* Peaksmith – zh-Hans. Schlüssel = deutscher Text im Code, siehe docs/uebersetzungen.md */
+/* PeakSmith – zh-Hans. Schlüssel = deutscher Text im Code, siehe docs/uebersetzungen.md */
 "%@ %@ in %lld Einheiten" = "%@ %@，分 %lld 次训练";
 "%@ %@ in 1 Einheit" = "%@ %@，1 次训练";
 "%@ (optional)" = "%@（可选）";
@@ -709,7 +709,7 @@
 "Wie sich dein Training auf die Sportarten verteilt. Ziehst du eine hoch, werden die anderen im Verhältnis kleiner; zusammen sind es immer 100 %." = "你的训练在各运动项目之间如何分配。调高其中一项，其他项会按比例减少；合计始终为 100 %。";
 "Wie war's?" = "感觉如何？";
 "Wieder deinem Coach überlassen" = "重新交给你的教练";
-"Willkommen bei Peaksmith" = "欢迎使用 Peaksmith";
+"Willkommen bei PeakSmith" = "欢迎使用 PeakSmith";
 "Wird geholt …" = "正在获取…";
 "Wo?" = "哪里？";
 "Woche" = "周";
@@ -820,7 +820,7 @@
 "zu wenig Daten" = "数据不足";
 "Ändert Sportart, Kennzahl und Zeitraum." = "更改运动项目、指标和时间范围。";
 "Änderungswünsche an deinen Coach." = "向你的教练提出修改意愿。";
-"Öffne Peaksmith für deinen Plan" = "打开 Peaksmith 查看你的计划";
+"Öffne PeakSmith für deinen Plan" = "打开 PeakSmith 查看你的计划";
 "Öffne zuerst den Tab Aktuell, damit die App deinen Zustand aus Health kennt." = "请先打开“今日”标签页，让 App 从“健康”中了解你的状态。";
 "Öffnet die Details." = "打开详情。";
 "Ø %lld" = "平均 %lld";
