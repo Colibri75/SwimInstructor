@@ -859,3 +859,5 @@
 "Zustimmen …" = "同意…";
 "Datenschutz" = "隐私";
 "Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung." = "你的教练使用 Anthropic 的 Claude 制定计划。为此，你的训练和健康数据会发送到我们的服务器和 Anthropic。无跟踪，无广告。";
+"Auf anderen Tag legen" = "移到其他日期";
+"Ergänzung entfernen" = "删除补充训练";

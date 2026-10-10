@@ -93,6 +93,36 @@ public enum MultiSportWeekEditor {
         }
     }
 
+    // MARK: - Kraft und Mobilität
+
+    /// Einen Kraft- oder Mobilitätsblock streichen. An Tagen ohne Zeit passiert nichts.
+    public static func removeExtra(_ plan: WeekPlanV2, date: String, extra index: Int) -> WeekPlanV2 {
+        guard let day = plan.day(on: date), !day.isUnavailable, day.extras.indices.contains(index) else { return plan }
+        return update(plan, date) { day in
+            day.extras.remove(at: index)
+            day.isEdited = true
+        }
+    }
+
+    /// Einen Kraft- oder Mobilitätsblock auf einen anderen Tag legen. Hat der Zieltag schon einen Block derselben Art,
+    /// ersetzt ihn der verschobene. Tage ohne Zeit bleiben, wie sie sind.
+    public static func moveExtra(_ plan: WeekPlanV2, from source: String, extra index: Int, to target: String) -> WeekPlanV2 {
+        guard source != target,
+              let from = plan.day(on: source), !from.isUnavailable, from.extras.indices.contains(index),
+              plan.day(on: target)?.isUnavailable != true
+        else { return plan }
+        let extra = from.extras[index]
+        let placed = update(plan, target) { day in
+            day.extras.removeAll { $0.kind == extra.kind }
+            day.extras.append(extra)
+            day.isEdited = true
+        }
+        return update(placed, source) { day in
+            day.extras.remove(at: index)
+            day.isEdited = true
+        }
+    }
+
     // MARK: - Einheiten
 
     /// Umfang einer Einheit in ihrer Einheit (Meter oder Minuten). 0 streicht die Einheit; Dauer und Strecke ändern sich
