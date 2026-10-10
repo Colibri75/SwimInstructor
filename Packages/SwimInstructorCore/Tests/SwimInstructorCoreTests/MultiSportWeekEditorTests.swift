@@ -276,7 +276,7 @@ final class MultiSportWeekEditorTests: XCTestCase {
         let target = try XCTUnwrap(plan.day(on: "2026-10-04"))
         XCTAssertTrue(source.isRestDay)
         XCTAssertEqual(source.extras, [])
-        XCTAssertEqual(source.target.extras, [])
+        XCTAssertNil(source.target.extras)
         XCTAssertEqual(target.sessions, [Self.swimSession()])
         XCTAssertEqual(target.extras, [strength, mobility])
     }
