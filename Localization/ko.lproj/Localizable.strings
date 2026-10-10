@@ -859,3 +859,28 @@
 "Zustimmen …" = "동의…";
 "Datenschutz" = "개인정보 보호";
 "Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung." = "코치는 Anthropic의 Claude로 플랜을 만듭니다. 이를 위해 훈련 및 건강 데이터가 당사 서버와 Anthropic으로 전송됩니다. 추적 없음, 광고 없음.";
+
+
+/* Mit Apple anmelden, Konto */
+"Anmelden" = "로그인";
+"Anmeldung läuft …" = "로그인 중…";
+"Angemeldet als %@" = "%@(으)로 로그인됨";
+"Mit Server-Token verbunden" = "서버 토큰으로 연결됨";
+"Abmelden" = "로그아웃";
+"Konto" = "계정";
+"Konto löschen" = "계정 삭제";
+"Konto löschen?" = "계정을 삭제할까요?";
+"Konto wird gelöscht …" = "계정 삭제 중…";
+"Konto und Pläne löschen" = "계정 및 플랜 삭제";
+"Dein Konto und deine Pläne auf dem Server werden endgültig gelöscht. Deine Daten in Apple Health und deine Einstellungen auf diesem iPhone bleiben." = "서버에 있는 계정과 플랜이 영구적으로 삭제됩니다. Apple 건강 앱의 데이터와 이 iPhone의 설정은 유지됩니다.";
+"Melde dich an, damit dein Coach Pläne erstellen kann." = "로그인하면 코치가 플랜을 만들 수 있어요.";
+"Mit deiner Apple-ID meldest du dich beim Server deines Coaches an. Gespeichert werden dort eine Kennung von Apple und, falls du sie teilst, dein Name und deine E-Mail-Adresse." = "Apple 계정으로 코치의 서버에 로그인합니다. 서버에는 Apple 식별자와, 공유한 경우 이름과 이메일 주소가 저장됩니다.";
+"Erweitert" = "고급";
+"Nur für eigene Server: Server-Adresse und ein Token vom Server (beim Besitzer der Wert von API_TOKEN). Der Token wird nur im Schlüsselbund dieses iPhones gespeichert. Mit Apple angemeldet brauchst du hier nichts." = "자체 서버 전용: 서버 주소와 서버에서 받은 토큰(소유자는 API_TOKEN 값). 토큰은 이 iPhone의 키체인에만 저장됩니다. Apple로 로그인했다면 여기서는 아무것도 필요 없습니다.";
+"Dein Konto ist noch nicht freigeschaltet. Versuche es später noch einmal." = "계정이 아직 활성화되지 않았습니다. 나중에 다시 시도하세요.";
+"Die Anmeldung mit Apple hat nicht geklappt. Versuche es noch einmal." = "Apple로 로그인하지 못했습니다. 다시 시도하세요.";
+"Zu viele Anmeldeversuche. Warte eine Minute und versuche es dann noch einmal." = "로그인 시도가 너무 많습니다. 1분 후에 다시 시도하세요.";
+"Der Zugang des Server-Besitzers lässt sich in der App nicht löschen." = "서버 소유자의 접근 권한은 앱에서 삭제할 수 없습니다.";
+"Deine Anmeldung gilt nicht mehr. Melde dich neu an und lösche das Konto dann." = "로그인이 더 이상 유효하지 않습니다. 다시 로그인한 후 계정을 삭제하세요.";
+"Apple ist gerade nicht erreichbar. Versuche es später noch einmal." = "지금은 Apple에 연결할 수 없습니다. 나중에 다시 시도하세요.";
+"Der Server hat die Anmeldung abgelehnt. Melde dich in den Einstellungen neu an." = "서버가 로그인을 거부했습니다. 설정에서 다시 로그인하세요.";

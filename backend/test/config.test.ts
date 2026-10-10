@@ -177,4 +177,17 @@ describe("loadConfig: Nutzer-Budget und Alarme", () => {
     expect(() => loadConfig({ API_TOKEN: validToken, ALERT_WEBHOOK_URL: "https://example.test", ALERT_FAILURE_RATE: "2" })).toThrow("ALERT_FAILURE_RATE");
     expect(() => loadConfig({ API_TOKEN: validToken, PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR: "0" })).toThrow("PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR");
   });
+
+  it("liest Bundle-IDs und Anmelderegel fuer Mit Apple anmelden", () => {
+    const defaults = loadConfig({ API_TOKEN: validToken });
+    expect(defaults.appleBundleIds).toEqual(["com.kellner.SwimInstructor"]);
+    expect(defaults.appleSignup).toBe("open");
+
+    const set = loadConfig({ API_TOKEN: validToken, APPLE_BUNDLE_IDS: " com.a.b , com.c.d ", APPLE_SIGNUP: "Closed" });
+    expect(set.appleBundleIds).toEqual(["com.a.b", "com.c.d"]);
+    expect(set.appleSignup).toBe("closed");
+
+    expect(() => loadConfig({ API_TOKEN: validToken, APPLE_SIGNUP: "vielleicht" })).toThrow("APPLE_SIGNUP");
+    expect(() => loadConfig({ API_TOKEN: validToken, APPLE_BUNDLE_IDS: "com.a/b" })).toThrow("APPLE_BUNDLE_IDS");
+  });
 });

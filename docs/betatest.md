@@ -151,7 +151,18 @@ Je eine Einheit, danach in der Fitness-App Strecke, Karte und Herzfrequenz prüf
 
 - [ ] Auf dem Server `docker exec swiminstructor-backend node dist/cli/users.js add <name>`, Token auf einem zweiten
       iPhone eintragen: Beide bekommen ihre eigenen Pläne; `GET /v1/admin/usage` zeigt beide getrennt
-- [ ] `users.js disable <name>`: Das zweite iPhone meldet "Der Server hat das Token abgelehnt"
+- [ ] `users.js disable <name>`: Das zweite iPhone meldet "Der Server hat die Anmeldung abgelehnt"
+
+## 10. Mit Apple anmelden
+
+- [ ] Frisch installiert: Die Einrichtung bietet "Mit Apple anmelden"; danach entstehen Gesamtplan und 14 Tage ohne Token
+      von Hand. `users.js list` zeigt einen Nutzer `a-…` (Apple)
+- [ ] Einstellungen, Konto: "Angemeldet als …"; "Abmelden" zeigt danach auf Aktuell "Melde dich an, damit dein Coach
+      Pläne erstellen kann." und den Apple-Knopf; erneut anmelden ergibt denselben Nutzer (dieselben Pläne)
+- [ ] `APPLE_SIGNUP=closed`: neue Apple-ID meldet "noch nicht freigeschaltet"; nach `users.js enable <kennung>` klappt es
+- [ ] "Konto löschen" mit Bestätigung: Der Ordner `/data/users/<kennung>/` und der Eintrag in `users.json` sind weg, die
+      App ist abgemeldet
+- [ ] Besitzer-Token unter Einstellungen, Erweitert funktioniert weiter
 
 ## Danach
 

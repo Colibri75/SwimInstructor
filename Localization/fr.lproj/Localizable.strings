@@ -859,3 +859,28 @@
 "Zustimmen …" = "Accepter …";
 "Datenschutz" = "Confidentialité";
 "Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung." = "Ton coach crée tes plans avec Claude d’Anthropic. Pour cela, tes données d’entraînement et de santé sont envoyées à notre serveur et à Anthropic. Aucun suivi, aucune publicité.";
+
+
+/* Mit Apple anmelden, Konto */
+"Anmelden" = "Connexion";
+"Anmeldung läuft …" = "Connexion en cours …";
+"Angemeldet als %@" = "Connecté en tant que %@";
+"Mit Server-Token verbunden" = "Connecté avec un jeton serveur";
+"Abmelden" = "Se déconnecter";
+"Konto" = "Compte";
+"Konto löschen" = "Supprimer le compte";
+"Konto löschen?" = "Supprimer le compte ?";
+"Konto wird gelöscht …" = "Suppression du compte …";
+"Konto und Pläne löschen" = "Supprimer le compte et les plans";
+"Dein Konto und deine Pläne auf dem Server werden endgültig gelöscht. Deine Daten in Apple Health und deine Einstellungen auf diesem iPhone bleiben." = "Ton compte et tes plans sur le serveur seront définitivement supprimés. Tes données dans Apple Santé et tes réglages sur cet iPhone sont conservés.";
+"Melde dich an, damit dein Coach Pläne erstellen kann." = "Connecte-toi pour que ton coach puisse créer des plans.";
+"Mit deiner Apple-ID meldest du dich beim Server deines Coaches an. Gespeichert werden dort eine Kennung von Apple und, falls du sie teilst, dein Name und deine E-Mail-Adresse." = "Tu te connectes au serveur de ton coach avec ton identifiant Apple. Il enregistre un identifiant fourni par Apple et, si tu les partages, ton nom et ton adresse e-mail.";
+"Erweitert" = "Avancé";
+"Nur für eigene Server: Server-Adresse und ein Token vom Server (beim Besitzer der Wert von API_TOKEN). Der Token wird nur im Schlüsselbund dieses iPhones gespeichert. Mit Apple angemeldet brauchst du hier nichts." = "Uniquement pour ton propre serveur : adresse du serveur et un jeton du serveur (pour le propriétaire, la valeur de API_TOKEN). Le jeton est enregistré uniquement dans le trousseau de cet iPhone. Connecté avec Apple, tu n'as rien à faire ici.";
+"Dein Konto ist noch nicht freigeschaltet. Versuche es später noch einmal." = "Ton compte n'est pas encore activé. Réessaie plus tard.";
+"Die Anmeldung mit Apple hat nicht geklappt. Versuche es noch einmal." = "La connexion avec Apple a échoué. Réessaie.";
+"Zu viele Anmeldeversuche. Warte eine Minute und versuche es dann noch einmal." = "Trop de tentatives de connexion. Attends une minute, puis réessaie.";
+"Der Zugang des Server-Besitzers lässt sich in der App nicht löschen." = "L'accès du propriétaire du serveur ne peut pas être supprimé dans l'app.";
+"Deine Anmeldung gilt nicht mehr. Melde dich neu an und lösche das Konto dann." = "Ta connexion n'est plus valide. Reconnecte-toi, puis supprime le compte.";
+"Apple ist gerade nicht erreichbar. Versuche es später noch einmal." = "Apple est injoignable pour le moment. Réessaie plus tard.";
+"Der Server hat die Anmeldung abgelehnt. Melde dich in den Einstellungen neu an." = "Le serveur a refusé ta connexion. Reconnecte-toi dans les réglages.";

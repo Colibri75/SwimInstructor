@@ -859,3 +859,28 @@
 "Zustimmen …" = "同意する…";
 "Datenschutz" = "プライバシー";
 "Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung." = "コーチは Anthropic の Claude を使ってプランを作成します。そのため、トレーニングと健康のデータが当社のサーバーと Anthropic に送信されます。トラッキングも広告もありません。";
+
+
+/* Mit Apple anmelden, Konto */
+"Anmelden" = "サインイン";
+"Anmeldung läuft …" = "サインイン中…";
+"Angemeldet als %@" = "%@ としてサインイン中";
+"Mit Server-Token verbunden" = "サーバートークンで接続中";
+"Abmelden" = "サインアウト";
+"Konto" = "アカウント";
+"Konto löschen" = "アカウントを削除";
+"Konto löschen?" = "アカウントを削除しますか？";
+"Konto wird gelöscht …" = "アカウントを削除中…";
+"Konto und Pläne löschen" = "アカウントとプランを削除";
+"Dein Konto und deine Pläne auf dem Server werden endgültig gelöscht. Deine Daten in Apple Health und deine Einstellungen auf diesem iPhone bleiben." = "サーバー上のアカウントとプランは完全に削除されます。Apple ヘルスケアのデータとこの iPhone の設定は残ります。";
+"Melde dich an, damit dein Coach Pläne erstellen kann." = "サインインすると、コーチがプランを作成できます。";
+"Mit deiner Apple-ID meldest du dich beim Server deines Coaches an. Gespeichert werden dort eine Kennung von Apple und, falls du sie teilst, dein Name und deine E-Mail-Adresse." = "Apple アカウントでコーチのサーバーにサインインします。サーバーには Apple の識別子と、共有した場合は名前とメールアドレスが保存されます。";
+"Erweitert" = "詳細";
+"Nur für eigene Server: Server-Adresse und ein Token vom Server (beim Besitzer der Wert von API_TOKEN). Der Token wird nur im Schlüsselbund dieses iPhones gespeichert. Mit Apple angemeldet brauchst du hier nichts." = "独自サーバー用のみ：サーバーのアドレスとサーバーのトークン（所有者は API_TOKEN の値）。トークンはこの iPhone のキーチェーンにのみ保存されます。Apple でサインインしている場合、ここは不要です。";
+"Dein Konto ist noch nicht freigeschaltet. Versuche es später noch einmal." = "アカウントはまだ有効になっていません。後でもう一度お試しください。";
+"Die Anmeldung mit Apple hat nicht geklappt. Versuche es noch einmal." = "Apple でのサインインに失敗しました。もう一度お試しください。";
+"Zu viele Anmeldeversuche. Warte eine Minute und versuche es dann noch einmal." = "サインインの試行回数が多すぎます。1分待ってからもう一度お試しください。";
+"Der Zugang des Server-Besitzers lässt sich in der App nicht löschen." = "サーバー所有者のアクセスはアプリでは削除できません。";
+"Deine Anmeldung gilt nicht mehr. Melde dich neu an und lösche das Konto dann." = "サインインが無効になっています。もう一度サインインしてからアカウントを削除してください。";
+"Apple ist gerade nicht erreichbar. Versuche es später noch einmal." = "現在 Apple に接続できません。後でもう一度お試しください。";
+"Der Server hat die Anmeldung abgelehnt. Melde dich in den Einstellungen neu an." = "サーバーがサインインを拒否しました。設定でもう一度サインインしてください。";

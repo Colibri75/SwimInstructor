@@ -4,6 +4,9 @@ export type Effort = "low" | "medium" | "high" | "xhigh" | "max";
 
 export type AlertFormat = "ntfy" | "slack" | "discord" | "json";
 
+/** Neue Konten ueber "Mit Apple anmelden": sofort frei (`open`) oder erst nach Freigabe durch den Besitzer (`closed`). */
+export type AppleSignup = "open" | "closed";
+
 export interface AlertConfig {
   webhookUrl: string;
   format: AlertFormat;
@@ -60,6 +63,9 @@ export interface Config {
   /** Alarme per Webhook; `undefined` ohne `ALERT_WEBHOOK_URL`. */
   alerts: AlertConfig | undefined;
   privacy: PrivacyContact;
+  /** Bundle-IDs, fuer die Apple-Identitaetstoken gelten (`aud`). */
+  appleBundleIds: string[];
+  appleSignup: AppleSignup;
 }
 
 const MIN_PRODUCTION_TOKEN_LENGTH = 32;
@@ -102,8 +108,30 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       address: env.PRIVACY_CONTACT_ADDRESS?.trim() || PRIVACY_DEFAULTS.address,
       email: env.PRIVACY_CONTACT_EMAIL?.trim() || PRIVACY_DEFAULTS.email,
       hoster: env.PRIVACY_HOSTER?.trim() || undefined
-    }
+    },
+    appleBundleIds: parseBundleIds(env.APPLE_BUNDLE_IDS),
+    appleSignup: parseAppleSignup(env.APPLE_SIGNUP)
   };
+}
+
+export const DEFAULT_APPLE_BUNDLE_ID = "com.kellner.SwimInstructor";
+
+function parseBundleIds(value: string | undefined): string[] {
+  const ids = (value ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter((id) => id !== "");
+  if (ids.length === 0) return [DEFAULT_APPLE_BUNDLE_ID];
+  for (const id of ids) {
+    if (!/^[A-Za-z0-9.-]+$/.test(id)) throw new Error(`APPLE_BUNDLE_IDS ungueltig: "${id}" (Bundle-IDs mit Komma getrennt)`);
+  }
+  return ids;
+}
+
+function parseAppleSignup(value: string | undefined): AppleSignup {
+  const signup = value?.trim().toLowerCase() || "open";
+  if (signup === "open" || signup === "closed") return signup;
+  throw new Error(`APPLE_SIGNUP ungueltig: "${value}" (erlaubt: open, closed)`);
 }
 
 function parseAlerts(env: NodeJS.ProcessEnv): AlertConfig | undefined {

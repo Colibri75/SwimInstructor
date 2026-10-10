@@ -113,7 +113,8 @@ TestFlight-App – kein manuelles Signieren, kein eigener Mac im Alltag.
 2. **App-IDs registrieren** (developer.apple.com/account → Certificates,
    Identifiers & Profiles → Identifiers → +), explizit (keine Wildcards), mit
    aktivierter HealthKit-Capability:
-   - `com.kellner.SwimInstructor`
+   - `com.kellner.SwimInstructor` (zusätzlich *Sign In with Apple* für die Anmeldung in der App, danach Workflow
+     "Profile erneuern")
    - `com.kellner.SwimInstructor.watchkitapp`
 3. **App Store Connect:** neuen App-Eintrag anlegen – Bundle-ID
    `com.kellner.SwimInstructor` (muss exakt zu `project.yml` passen),

@@ -859,3 +859,28 @@
 "Zustimmen …" = "同意…";
 "Datenschutz" = "隐私";
 "Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung." = "你的教练使用 Anthropic 的 Claude 制定计划。为此，你的训练和健康数据会发送到我们的服务器和 Anthropic。无跟踪，无广告。";
+
+
+/* Mit Apple anmelden, Konto */
+"Anmelden" = "登录";
+"Anmeldung läuft …" = "正在登录…";
+"Angemeldet als %@" = "已登录为 %@";
+"Mit Server-Token verbunden" = "已通过服务器令牌连接";
+"Abmelden" = "退出登录";
+"Konto" = "账户";
+"Konto löschen" = "删除账户";
+"Konto löschen?" = "删除账户？";
+"Konto wird gelöscht …" = "正在删除账户…";
+"Konto und Pläne löschen" = "删除账户和计划";
+"Dein Konto und deine Pläne auf dem Server werden endgültig gelöscht. Deine Daten in Apple Health und deine Einstellungen auf diesem iPhone bleiben." = "你在服务器上的账户和计划将被永久删除。你在 Apple 健康中的数据以及此 iPhone 上的设置会保留。";
+"Melde dich an, damit dein Coach Pläne erstellen kann." = "登录后，你的教练才能制定计划。";
+"Mit deiner Apple-ID meldest du dich beim Server deines Coaches an. Gespeichert werden dort eine Kennung von Apple und, falls du sie teilst, dein Name und deine E-Mail-Adresse." = "你使用 Apple 账户登录教练的服务器。服务器会保存来自 Apple 的标识符，以及你选择共享的姓名和电子邮件地址。";
+"Erweitert" = "高级";
+"Nur für eigene Server: Server-Adresse und ein Token vom Server (beim Besitzer der Wert von API_TOKEN). Der Token wird nur im Schlüsselbund dieses iPhones gespeichert. Mit Apple angemeldet brauchst du hier nichts." = "仅用于自己的服务器：服务器地址和来自服务器的令牌（服务器所有者使用 API_TOKEN 的值）。令牌只保存在此 iPhone 的钥匙串中。已通过 Apple 登录则无需填写。";
+"Dein Konto ist noch nicht freigeschaltet. Versuche es später noch einmal." = "你的账户尚未开通。请稍后再试。";
+"Die Anmeldung mit Apple hat nicht geklappt. Versuche es noch einmal." = "通过 Apple 登录未成功。请重试。";
+"Zu viele Anmeldeversuche. Warte eine Minute und versuche es dann noch einmal." = "登录尝试次数过多。请等待一分钟后再试。";
+"Der Zugang des Server-Besitzers lässt sich in der App nicht löschen." = "服务器所有者的访问权限无法在 App 中删除。";
+"Deine Anmeldung gilt nicht mehr. Melde dich neu an und lösche das Konto dann." = "你的登录已失效。请重新登录，然后删除账户。";
+"Apple ist gerade nicht erreichbar. Versuche es später noch einmal." = "目前无法连接 Apple。请稍后再试。";
+"Der Server hat die Anmeldung abgelehnt. Melde dich in den Einstellungen neu an." = "服务器拒绝了你的登录。请在设置中重新登录。";

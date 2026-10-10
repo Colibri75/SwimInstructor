@@ -859,3 +859,28 @@
 "Zustimmen …" = "Zustimmen …";
 "Datenschutz" = "Datenschutz";
 "Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung." = "Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung.";
+
+
+/* Mit Apple anmelden, Konto */
+"Anmelden" = "Anmelden";
+"Anmeldung läuft …" = "Anmeldung läuft …";
+"Angemeldet als %@" = "Angemeldet als %@";
+"Mit Server-Token verbunden" = "Mit Server-Token verbunden";
+"Abmelden" = "Abmelden";
+"Konto" = "Konto";
+"Konto löschen" = "Konto löschen";
+"Konto löschen?" = "Konto löschen?";
+"Konto wird gelöscht …" = "Konto wird gelöscht …";
+"Konto und Pläne löschen" = "Konto und Pläne löschen";
+"Dein Konto und deine Pläne auf dem Server werden endgültig gelöscht. Deine Daten in Apple Health und deine Einstellungen auf diesem iPhone bleiben." = "Dein Konto und deine Pläne auf dem Server werden endgültig gelöscht. Deine Daten in Apple Health und deine Einstellungen auf diesem iPhone bleiben.";
+"Melde dich an, damit dein Coach Pläne erstellen kann." = "Melde dich an, damit dein Coach Pläne erstellen kann.";
+"Mit deiner Apple-ID meldest du dich beim Server deines Coaches an. Gespeichert werden dort eine Kennung von Apple und, falls du sie teilst, dein Name und deine E-Mail-Adresse." = "Mit deiner Apple-ID meldest du dich beim Server deines Coaches an. Gespeichert werden dort eine Kennung von Apple und, falls du sie teilst, dein Name und deine E-Mail-Adresse.";
+"Erweitert" = "Erweitert";
+"Nur für eigene Server: Server-Adresse und ein Token vom Server (beim Besitzer der Wert von API_TOKEN). Der Token wird nur im Schlüsselbund dieses iPhones gespeichert. Mit Apple angemeldet brauchst du hier nichts." = "Nur für eigene Server: Server-Adresse und ein Token vom Server (beim Besitzer der Wert von API_TOKEN). Der Token wird nur im Schlüsselbund dieses iPhones gespeichert. Mit Apple angemeldet brauchst du hier nichts.";
+"Dein Konto ist noch nicht freigeschaltet. Versuche es später noch einmal." = "Dein Konto ist noch nicht freigeschaltet. Versuche es später noch einmal.";
+"Die Anmeldung mit Apple hat nicht geklappt. Versuche es noch einmal." = "Die Anmeldung mit Apple hat nicht geklappt. Versuche es noch einmal.";
+"Zu viele Anmeldeversuche. Warte eine Minute und versuche es dann noch einmal." = "Zu viele Anmeldeversuche. Warte eine Minute und versuche es dann noch einmal.";
+"Der Zugang des Server-Besitzers lässt sich in der App nicht löschen." = "Der Zugang des Server-Besitzers lässt sich in der App nicht löschen.";
+"Deine Anmeldung gilt nicht mehr. Melde dich neu an und lösche das Konto dann." = "Deine Anmeldung gilt nicht mehr. Melde dich neu an und lösche das Konto dann.";
+"Apple ist gerade nicht erreichbar. Versuche es später noch einmal." = "Apple ist gerade nicht erreichbar. Versuche es später noch einmal.";
+"Der Server hat die Anmeldung abgelehnt. Melde dich in den Einstellungen neu an." = "Der Server hat die Anmeldung abgelehnt. Melde dich in den Einstellungen neu an.";
