@@ -56,23 +56,26 @@ public enum MultiSportWeekEditor {
         }
     }
 
-    /// Zwei Tage tauschen ihren Inhalt. Tage ohne Zeit bleiben, wie sie sind.
+    /// Zwei Tage tauschen ihren Inhalt samt Kraft und Mobilität. Tage ohne Zeit bleiben, wie sie sind.
     public static func swap(_ plan: WeekPlanV2, _ first: String, _ second: String) -> WeekPlanV2 {
         guard first != second else { return plan }
         let base = ensureDay(ensureDay(plan, first), second)
         guard let a = base.day(on: first), let b = base.day(on: second), !a.isUnavailable, !b.isUnavailable else { return plan }
         let swapped = update(base, first) { day in
             day.content = b.content
+            day.extras = b.extras
             day.isEdited = true
         }
         return update(swapped, second) { day in
             day.content = a.content
+            day.extras = a.extras
             day.isEdited = true
         }
     }
 
-    /// Verpasstes auf einen Ruhetag verschieben: Der Zieltag übernimmt die Einheiten, der Ursprungstag wird Ruhetag
-    /// "Verschoben". Der Zieltag muss ein Ruhetag sein, damit nichts verloren geht.
+    /// Verpasstes auf einen Ruhetag verschieben: Der Zieltag übernimmt die Einheiten und die Kraft- und Mobilitätsblöcke
+    /// des Tages, der Ursprungstag wird Ruhetag "Verschoben" ohne Ergänzung. Blöcke, die schon auf dem Zieltag liegen,
+    /// bleiben; eine Art kommt dort höchstens einmal vor. Der Zieltag muss ein Ruhetag sein, damit nichts verloren geht.
     public static func moveToRestDay(_ plan: WeekPlanV2, from source: String, to target: String) -> WeekPlanV2 {
         guard source != target,
               let from = plan.day(on: source), !from.isRestDay,
@@ -80,10 +83,12 @@ public enum MultiSportWeekEditor {
         else { return plan }
         let placed = update(plan, target) { day in
             day.content = from.content
+            day.extras = from.extras + destination.extras.filter { own in !from.extras.contains { $0.kind == own.kind } }
             day.isEdited = true
         }
         return update(placed, source) { day in
             day.content = .rest(focus: String(localized: "Verschoben"))
+            day.extras = []
             day.isEdited = true
         }
     }
