@@ -305,6 +305,59 @@ final class MultiSportWeekEditorTests: XCTestCase {
         XCTAssertEqual(plan.day(on: "2026-10-02")?.extras, [strength])
     }
 
+    func testMovingAStrengthBlockToAnotherDay() throws {
+        // Der Fall aus dem Betatest: Schwimmen schon getauscht, die Kraft liegt noch auf dem Ruhetag.
+        let strength = WeekExtra(kind: .strength, minutes: 30, focus: "Rumpf")
+        var saturday = Self.restDay("2026-10-03")
+        saturday.extras = [strength]
+        var sunday = Self.day("2026-10-04", "Schwimmen Ausdauer", [Self.swimSession()])
+        sunday.extras = [WeekExtra(kind: .strength, minutes: 20, focus: "Beine"), WeekExtra(kind: .mobility, minutes: 15, focus: "Hüfte")]
+        let plan = MultiSportWeekEditor.moveExtra(Self.plan([saturday, sunday]), from: "2026-10-03", extra: 0, to: "2026-10-04")
+
+        let source = try XCTUnwrap(plan.day(on: "2026-10-03"))
+        let target = try XCTUnwrap(plan.day(on: "2026-10-04"))
+        XCTAssertEqual(source.extras, [])
+        XCTAssertNil(source.target.extras)
+        XCTAssertTrue(source.isEdited)
+        // Derselbe Art ersetzt, die Mobilität bleibt, die Einheit auch.
+        XCTAssertEqual(target.extras, [WeekExtra(kind: .mobility, minutes: 15, focus: "Hüfte"), strength])
+        XCTAssertEqual(target.sessions, [Self.swimSession()])
+        XCTAssertTrue(target.isEdited)
+    }
+
+    func testMovingAStrengthBlockOntoAnUnplannedDayCreatesIt() {
+        var wednesday = Self.day("2026-09-30", "Schwimmen Ausdauer", [Self.swimSession()])
+        wednesday.extras = [WeekExtra(kind: .strength, minutes: 30, focus: "Rumpf")]
+        let plan = MultiSportWeekEditor.moveExtra(Self.plan([wednesday]), from: "2026-09-30", extra: 0, to: "2026-09-29")
+
+        XCTAssertEqual(plan.day(on: "2026-09-29")?.extras.map(\.kind), [.strength])
+        XCTAssertEqual(plan.day(on: "2026-09-29")?.isRestDay, true)
+        XCTAssertEqual(plan.day(on: "2026-09-30")?.extras, [])
+    }
+
+    func testMovingAStrengthBlockToTheSameDayADayWithoutTimeOrAWrongIndexChangesNothing() {
+        var wednesday = Self.day("2026-09-30", "Schwimmen Ausdauer", [Self.swimSession()])
+        wednesday.extras = [WeekExtra(kind: .strength, minutes: 30, focus: "Rumpf")]
+        let base = Self.plan([wednesday, Self.restDay("2026-10-01")])
+
+        XCTAssertEqual(MultiSportWeekEditor.moveExtra(base, from: "2026-09-30", extra: 0, to: "2026-09-30"), base)
+        XCTAssertEqual(MultiSportWeekEditor.moveExtra(base, from: "2026-09-30", extra: 1, to: "2026-10-01"), base)
+        let marked = MultiSportWeekEditor.markUnavailable(base, date: "2026-10-01")
+        XCTAssertEqual(MultiSportWeekEditor.moveExtra(marked, from: "2026-09-30", extra: 0, to: "2026-10-01"), marked)
+    }
+
+    func testRemovingAStrengthBlock() {
+        var saturday = Self.restDay("2026-10-03")
+        saturday.extras = [WeekExtra(kind: .strength, minutes: 30, focus: "Rumpf")]
+        let base = Self.plan([saturday])
+        let plan = MultiSportWeekEditor.removeExtra(base, date: "2026-10-03", extra: 0)
+
+        XCTAssertEqual(plan.day(on: "2026-10-03")?.extras, [])
+        XCTAssertEqual(plan.day(on: "2026-10-03")?.isEdited, true)
+        XCTAssertEqual(MultiSportWeekEditor.removeExtra(base, date: "2026-10-03", extra: 1), base)
+        XCTAssertEqual(MultiSportWeekEditor.removeExtra(base, date: "2026-10-04", extra: 0), base)
+    }
+
     func testMovingOntoARestDayWithoutTimeChangesNothing() {
         let marked = MultiSportWeekEditor.markUnavailable(base, date: "2026-10-04")
 

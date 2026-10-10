@@ -859,3 +859,5 @@
 "Zustimmen …" = "同意する…";
 "Datenschutz" = "プライバシー";
 "Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung." = "コーチは Anthropic の Claude を使ってプランを作成します。そのため、トレーニングと健康のデータが当社のサーバーと Anthropic に送信されます。トラッキングも広告もありません。";
+"Auf anderen Tag legen" = "別の日に移す";
+"Ergänzung entfernen" = "補強を削除";
