@@ -60,6 +60,8 @@ public struct SnapshotBuilder: SnapshotBuilding {
     private let weeklyScheduleProvider: () -> WeeklySchedule?
     /// Nur v2: die Angaben unter "Über mich", bei jedem Durchlauf neu (`athlete_profile`).
     private let athleteProfileProvider: () -> AthleteProfile
+    /// Nur v2: die zuletzt gemeldete Pause; sie geht mit, solange sie wirkt (`reported_pause`).
+    private let pauseReportProvider: () -> PauseReport?
     private let calendar: Calendar
 
     public init(
@@ -78,6 +80,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.startingLevelsProvider = { [] }
         self.weeklyScheduleProvider = { nil }
         self.athleteProfileProvider = { .empty }
+        self.pauseReportProvider = { nil }
         self.calendar = calendar
     }
 
@@ -98,6 +101,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.startingLevelsProvider = { [] }
         self.weeklyScheduleProvider = { nil }
         self.athleteProfileProvider = { .empty }
+        self.pauseReportProvider = { nil }
         self.calendar = calendar
     }
 
@@ -118,6 +122,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.startingLevelsProvider = { [] }
         self.weeklyScheduleProvider = { nil }
         self.athleteProfileProvider = { .empty }
+        self.pauseReportProvider = { nil }
         self.calendar = calendar
     }
 
@@ -130,7 +135,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
     /// `startingLevelsProvider` liefert das selbst angegebene Startniveau (bei jedem Durchlauf neu); gültige Angaben
     /// für Sportarten im Snapshot gehen mit. `weeklyScheduleProvider` liefert den Wochenraster; er geht mit und
     /// bestimmt Trainingstage und Stunden des Ziels. `athleteProfileProvider` liefert die Angaben unter "Über mich"; das
-    /// Alter kommt dabei aus Health, sonst aus dem Geburtsjahr.
+    /// Alter kommt dabei aus Health, sonst aus dem Geburtsjahr. `pauseReportProvider` liefert die gemeldete Pause.
     public init(
         repository: WorkoutRepository,
         vitalsRepository: DailyVitalsRepository,
@@ -140,6 +145,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         startingLevelsProvider: @escaping () -> [StartingLevel] = { [] },
         weeklyScheduleProvider: @escaping () -> WeeklySchedule? = { nil },
         athleteProfileProvider: @escaping () -> AthleteProfile = { .empty },
+        pauseReportProvider: @escaping () -> PauseReport? = { nil },
         calendar: Calendar = .current
     ) {
         self.fetchWorkouts = { try await repository.fetchWorkouts(from: $0) }
@@ -152,6 +158,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.startingLevelsProvider = startingLevelsProvider
         self.weeklyScheduleProvider = weeklyScheduleProvider
         self.athleteProfileProvider = athleteProfileProvider
+        self.pauseReportProvider = pauseReportProvider
         self.calendar = calendar
     }
 
@@ -195,6 +202,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
             let profile = athleteProfileProvider()
             let age = profile.age(healthAge: performanceRepository?.age(now: now), now: now, calendar: calendar)
             snapshot = snapshot.withAthleteProfile(profile.snapshotProfile(age: age, sports: snapshot.sports?.map(\.sport) ?? []))
+            snapshot = snapshot.withReportedPause(pauseReportProvider()?.snapshotSummary(today: PlanFormatting.isoDay(now, calendar: calendar), calendar: calendar))
         }
         let cleaned = SwimWorkoutDeduplicator.deduplicate(workouts)
             .filter { $0.startDate <= now }

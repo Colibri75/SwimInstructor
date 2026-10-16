@@ -1,7 +1,7 @@
 import { SportDefinition, SportStateValues, TrainingStatus } from "../../sports/types";
 import { daysBetween, MacroPhase, mondayOf } from "../calendar";
 import { Intensity } from "../vocabulary";
-import { SnapshotV2 } from "../snapshot";
+import { PauseKind, SnapshotV2 } from "../snapshot";
 import { addDays } from "../calendar";
 import { PainArea, RecentTraining } from "./schemas";
 import { fixedSport, isFitnessGoal, scheduleDay, weeklyMinutes } from "./schedule";
@@ -79,7 +79,13 @@ export const MULTI_RULES = {
    * Beschwerden zu aerztlichem Rat.
    */
   painDays: [0, 1, 2, 3] as readonly number[],
-  painModerateAmountFactor: 0.5
+  painModerateAmountFactor: 0.5,
+  /**
+   * Nach einer gemeldeten Krankheit oder Verletzung sind die ersten Tage nur locker und ohne Leistungstest: so viele
+   * Tage, wie die Pause dauerte, hoechstens diese Zahl. Vorsichtige Trainerpraxis; den Umfang bremsen danach ohnehin
+   * die Grenzen aus dem echten Training.
+   */
+  afterPauseEasyMaxDays: 7
 };
 
 export const RANK: Record<Intensity, number> = { rest: 0, easy: 1, moderate: 2, hard: 3 };
@@ -310,6 +316,35 @@ export function painRestriction(recent: readonly RecentTraining[], sportId: stri
   return { blocked: false, maxIntensity: "moderate", amountFactor: 1, reason, until };
 }
 
+/** Die gemeldete Pause in der Sprache der App, z. B. "gemeldete Pause (krank)". */
+function pauseText(kind: PauseKind): Text {
+  return new Text((language) => CATALOGS[language].reportedPause(CATALOGS[language].pauseKinds[kind] ?? kind));
+}
+
+/** Liegt `date` in der gemeldeten Pause? Dann ist der Tag Ruhetag; der Grund, sonst `null`. */
+export function reportedPauseReason(snapshot: SnapshotV2, date: string): Text | null {
+  const pause = snapshot.reported_pause;
+  if (pause === undefined || date < pause.from || (pause.to !== undefined && date > pause.to)) return null;
+  return pauseText(pause.kind);
+}
+
+/** Nach einer gemeldeten Krankheit oder Verletzung: bis wann nur locker und welcher Grund, sonst `null`. */
+export interface AfterPauseRestriction {
+  until: string;
+  reason: Text;
+}
+
+export function afterPauseRestriction(snapshot: SnapshotV2, date: string): AfterPauseRestriction | null {
+  const pause = snapshot.reported_pause;
+  if (pause === undefined || pause.to === undefined || (pause.kind !== "sick" && pause.kind !== "injury")) return null;
+  const days = Math.min(daysBetween(pause.from, pause.to) + 1, MULTI_RULES.afterPauseEasyMaxDays);
+  const until = addDays(pause.to, days);
+  if (date <= pause.to || date > until) return null;
+  const kind = pause.kind;
+  const reason = new Text((language) => CATALOGS[language].afterReportedPause(CATALOGS[language].pauseKinds[kind] ?? kind, CATALOGS[language].date(until)));
+  return { until, reason };
+}
+
 /** Umfang einer Einheit aus dem Verlauf in der Einheit der Sportart (Meter oder Minuten). */
 export function recentAmount(sport: SportDefinition, entry: RecentTraining): number {
   return sport.planning.limitUnit === "meters" ? entry.meters : entry.minutes;
@@ -329,11 +364,11 @@ export function recentBefore(sport: SportDefinition, recent: readonly RecentTrai
  * Vorschau (`preview`) die Einheiten aus `recent` in den sechs Tagen davor.
  */
 export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly RecentTraining[] = [], preview = false): DayLimitsV2 {
-  const restReason = snapshot.flags.includes("overreaching_risk")
+  const restReason = reportedPauseReason(snapshot, today) ?? (snapshot.flags.includes("overreaching_risk")
     ? say("overreaching")
     : scheduleDay(snapshot, today)?.trains === false
       ? say("scheduleRest")
-      : null;
+      : null);
   const fixed = fixedSport(snapshot, today);
   const poor = snapshot.flags.includes("recovery_poor") || snapshot.recovery.status === "poor";
 
@@ -343,6 +378,8 @@ export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly 
     maxIntensity = lower(maxIntensity, limit);
     intensityReasons.push(reason);
   };
+  const afterPause = afterPauseRestriction(snapshot, today);
+  if (afterPause !== null) cap("easy", afterPause.reason);
   if (poor) cap("easy", say("recoveryPoor"));
   else if (snapshot.recovery.status === "moderate") cap("moderate", say("recoveryModerate"));
   const hardDaysAgo = snapshot.load.days_since_last_hard_session;
@@ -395,7 +432,7 @@ export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly 
   }
 
   const maxMinutes = Math.round(dayMinutesCap(snapshot, today) * (poor ? MULTI_RULES.recoveryPoorFactor : 1));
-  const testBlockedReason = restReason ?? testBlackoutReason(snapshot, today);
+  const testBlockedReason = restReason ?? afterPause?.reason ?? testBlackoutReason(snapshot, today);
   return { restReason, maxIntensity, intensityReasons, maxMinutes, sports, testBlockedReason };
 }
 

@@ -172,6 +172,17 @@ Wochen danach. Jede Fortschreibung hängt als `MacroReview` am Plan; danach geht
 (`canGiveFeedback`). Ein Fehlschlag lässt den Plan stehen; versucht wird höchstens einmal am Tag je Anlass. Nach einer
 Fortschreibung stimmt die App die 14 Tage neu ab und meldet sich mit einer Mitteilung.
 
+**Gemeldete Pause in den Tagen:** Unabhängig von ihrer Länge geht die zuletzt gemeldete Pause als `reported_pause`
+(Art, erster und letzter Tag, `to` fehlt bei einer laufenden) im Snapshot mit, solange sie kommt, läuft oder höchstens 7
+Tage vorbei ist. In der App werden ihre Tage zu Tagen ohne Zeit ("Gemeldete Pause", `PlannedDay.isPause`); endet die
+Pause früher oder wird sie gelöscht, kommt das Training zurück (`MultiSportWeekLoader.syncPause`). Pausentage zählen nicht
+als Ausfall. Der Server macht sie unabhängig davon zu Ruhetagen und plant nach Krankheit oder Verletzung so viele Tage nur
+locker und ohne Leistungstest, wie die Pause dauerte, höchstens 7 (`MULTI_RULES.afterPauseEasyMaxDays`).
+
+**Ausfall gestern:** Plant die App die 14 Tage wegen eines Ausfalls neu, bleibt heute nur fest, wenn schon trainiert
+wurde. Ein schon geholter Plan für heute (Vorschau, im Hintergrund) darf sich dann noch ändern; ändert sich die Vorgabe,
+holt Heute den Tagesplan neu.
+
 Neue bestätigte Leistungswerte seit dem letzten Stand (Test oder Eingabe, `PerformanceProfile.changes(since:)`) gehen
 als `performance_changes` mit dem Wert davor mit ("CSS-Pace 1:50 → 1:44 pro 100 m"). Die Zonen der Tagespläne richten
 sich schon ab dem Übernehmen danach; Umfänge ändert Claude nur, wenn ein Wert deutlich vom Bisherigen abweicht.

@@ -231,6 +231,21 @@ final class ContractTests: XCTestCase {
         XCTAssertEqual(plain.withStartingLevels(snapshot.startingLevels!), snapshot)
     }
 
+    func testSnapshotV2WithReportedPauseRoundTripsWithoutLosingFields() throws {
+        let data = try RepoPaths.contractData("wire/snapshot-v2-reported-pause.json")
+        let snapshot = try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: data)
+        let reencoded = try AthleteStateSnapshot.jsonEncoder().encode(snapshot)
+
+        XCTAssertEqual(try JSONKeyPaths.of(reencoded), try JSONKeyPaths.of(data))
+        // Wie die App sie aus der gespeicherten Meldung anlegt: krank vom 25. bis 28.09., zwei Tage vor dem Snapshot vorbei.
+        let report = PauseReport(kind: .sick, from: "2026-09-25", to: "2026-09-28", reportedAt: TestFixtures.now)
+        XCTAssertEqual(snapshot.reportedPause, report.snapshotSummary(today: "2026-09-30", calendar: TestFixtures.utc))
+        // Ohne Pause ist es genau der Snapshot v2.
+        let plain = try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: RepoPaths.contractData("wire/snapshot-v2.json"))
+        XCTAssertEqual(snapshot.withReportedPause(nil), plain)
+        XCTAssertEqual(plain.withReportedPause(snapshot.reportedPause), snapshot)
+    }
+
     // MARK: - Was die App heute auf dem Gerät speichert
 
     func testStoredTrainingGoalLoads() throws {

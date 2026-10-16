@@ -98,7 +98,7 @@ function metricOf(metric: any) {
 }
 
 describe("contracts/wire, Snapshot", () => {
-  it.each(["wire/snapshot-v2.json", "wire/snapshot-v2-profile.json", "wire/snapshot-v2-starting-levels.json", "wire/snapshot-v2-athlete-profile.json"])("nimmt %s der App vollstaendig an (kein Feld wird verworfen)", (file) => {
+  it.each(["wire/snapshot-v2.json", "wire/snapshot-v2-profile.json", "wire/snapshot-v2-starting-levels.json", "wire/snapshot-v2-athlete-profile.json", "wire/snapshot-v2-reported-pause.json"])("nimmt %s der App vollstaendig an (kein Feld wird verworfen)", (file) => {
     const snapshot = contract(file);
     const parsed = SnapshotSchema.safeParse(snapshot);
     expect(parsed.success).toBe(true);

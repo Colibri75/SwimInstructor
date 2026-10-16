@@ -2,7 +2,7 @@ import { LimitUnit, SportDefinition } from "../../sports/types";
 import { Intensity, SessionType } from "../vocabulary";
 import { SnapshotV2 } from "../snapshot";
 import { addDays } from "../calendar";
-import { dayLimits, DayLimitsV2, dayMinutesCap, hardOn, lower, MULTI_RULES, painRestriction, RANK, recentBefore, sportLimits, SportLimitsNow, testBlackoutReason } from "./limits";
+import { afterPauseRestriction, dayLimits, DayLimitsV2, dayMinutesCap, hardOn, lower, MULTI_RULES, painRestriction, RANK, recentBefore, reportedPauseReason, sportLimits, SportLimitsNow, testBlackoutReason } from "./limits";
 import { Availability, FixedDay, MacroWeekTargetV2, MissedSession, MultiWeekPlanRaw, RecentTraining, ReplanReason, Supplements, TestSettings, WeekSessionRaw } from "./schemas";
 import { DayWeather, severeWeather } from "../weather";
 import { EXERCISE_RULES, normalizeWeekExtras, perWeek, strengthBlackout, WeekExtra } from "./extras";
@@ -264,7 +264,13 @@ function sanitizeBlock(input: MultiWeekPlanRaw, snapshot: SnapshotV2, context: W
     const extras = normalizeWeekExtras(raw?.extras, context.supplements);
     // Ein fester Tag ist fuer die Pruefung leer; seine Einheiten kommen am Ende zurueck.
     if (pinned.has(date)) return { date, focus: "", sessions: [], extras: [] };
-    // 2. Keine Zeit (auch laut Kalender) oder Ruhetag laut Wochenraster: Ruhetag. An einem Tag mit fester Sportart nur diese.
+    // 2. Gemeldete Pause, keine Zeit (auch laut Kalender) oder Ruhetag laut Wochenraster: Ruhetag. An einem Tag mit
+    // fester Sportart nur diese.
+    const paused = reportedPauseReason(snapshot, date);
+    if (paused !== null) {
+      if (sessions.length > 0 || extras.length > 0) notes.push(onDay(date, say("forcedRest", paused)));
+      return { date, focus: "Ruhetag", sessions: [], extras: [] };
+    }
     if (context.unavailable.includes(date)) {
       if (sessions.length > 0) notes.push(onDay(date, say("noTimeRest")));
       return { date, focus: "Keine Zeit", sessions: [], extras: [] };
@@ -300,6 +306,7 @@ function sanitizeBlock(input: MultiWeekPlanRaw, snapshot: SnapshotV2, context: W
     sessions: fixBricks(
       day.sessions
         .flatMap((draft) => applyPain(draft, day.date, reports, notes))
+        .map((draft) => applyAfterPause(draft, day.date, snapshot, notes))
         .flatMap((draft) => limitSession(draft, day.date, notes))
         .map((draft) => placeIndoor(draft, day.date, context, notes))
         .map((draft) => placeOpenWater(draft, day.date, context, notes))
@@ -456,6 +463,14 @@ function applyPain(draft: Draft, date: string, reports: readonly RecentTraining[
     }
   }
   return [result];
+}
+
+/** Die ersten Tage nach einer gemeldeten Krankheit oder Verletzung nur locker (Tests regelt `placeTests`). */
+function applyAfterPause(draft: Draft, date: string, snapshot: SnapshotV2, notes: Text[]): Draft {
+  const after = afterPauseRestriction(snapshot, date);
+  if (after === null || draft.session_type === "test" || RANK[draft.intensity] <= RANK.easy) return draft;
+  notes.push(onDay(date, say("lowered", sportText(draft.sport.id), intensityText("easy"), after.reason)));
+  return soften(draft, "easy");
 }
 
 /**
@@ -780,6 +795,7 @@ function placeTests(days: DraftDay[], snapshot: SnapshotV2, context: WeekContext
       const blocked =
         (context.testSettings?.offer === false ? say("testsOff") : null) ??
         testBlackoutReason(snapshot, day.date) ??
+        (afterPauseRestriction(snapshot, day.date)?.reason ?? null) ??
         (isToday ? (week.today?.testBlockedReason ?? null) : null) ??
         (testToday ? say("oneTestPerDay") : null) ??
         (testedSports.has(draft.sport.id) ? say("oneTestPerSport") : null) ??

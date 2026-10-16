@@ -175,6 +175,25 @@ public struct PauseReport: Codable, Equatable, Sendable, Identifiable {
         if let to, to < from { return String(localized: "Das Ende liegt vor dem Anfang.") }
         return nil
     }
+
+    /// So viele Tage nach einer Krankheit oder Verletzung plant der Server höchstens noch locker
+    /// (`MULTI_RULES.afterPauseEasyMaxDays`); so lange geht die Pause im Snapshot mit.
+    public static let afterPauseDays = 7
+
+    /// Liegt `date` (`yyyy-MM-dd`) in der Pause? Eine laufende Pause reicht bis auf Weiteres.
+    public func contains(_ date: String) -> Bool {
+        date >= from && (to.map { date <= $0 } ?? true)
+    }
+
+    /// Die Pause für den Snapshot (`reported_pause`), solange sie wirkt: kommend, laufend oder höchstens
+    /// `afterPauseDays` Tage vorbei. Sonst `nil`.
+    public func snapshotSummary(today: String, calendar: Calendar = .current) -> AthleteStateSnapshot.ReportedPauseSummary? {
+        guard problem == nil else { return nil }
+        if let to {
+            guard let lastEffect = WeekCalendar(calendar: calendar).addingDays(Self.afterPauseDays, to: to), lastEffect >= today else { return nil }
+        }
+        return AthleteStateSnapshot.ReportedPauseSummary(kind: kind.rawValue, from: from, to: to)
+    }
 }
 
 /// Speichert die zuletzt gemeldete Pause und ob sie schon zu einer Fortschreibung geführt hat.

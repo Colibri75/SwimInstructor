@@ -134,6 +134,9 @@ Je eine Einheit, danach in der Fitness-App Strecke, Karte und Herzfrequenz prüf
 - [ ] Feedback zum Gesamtplan ("weniger Laufen im Winter"): Änderungen werden aufgelistet
 - [ ] Ziel ändern (Feinjustierung sofort, neues Ziel höchstens alle 7 Tage): neuer Gesamtplan
 - [ ] Pause melden (krank, 7 Tage): Fortschreibung, danach behutsamer Wiedereinstieg
+- [ ] Pause melden (Urlaub nächste Woche): Die Tage stehen im Plan als "Gemeldete Pause"; Meldung löschen bringt das
+      Training zurück. Nach "krank" mit Ende sind die ersten Tage danach nur locker
+- [ ] Eine Einheit ausfallen lassen: Am nächsten Morgen darf sich auch ein schon geholter Plan für heute noch ändern
 - [ ] Dashboard, "Bereiche anpassen": Kachel hinzufügen, eine antippen und ändern, eine mit Minus entfernen, Kacheln
       umsortieren; nach einem Neustart ist alles noch so
 - [ ] Jeder Tab, "Bereiche anpassen": Bereiche umsortieren, ausblenden, wieder hinzufügen, Standard wiederherstellen

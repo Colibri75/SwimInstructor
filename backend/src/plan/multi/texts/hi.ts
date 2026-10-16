@@ -113,6 +113,9 @@ export const hi: SafetyCatalog = {
   pain: (level, area, sport, date) => `${date} को ${sport} के बाद ${area !== "" ? `${area} में ` : ""}${PAIN[level] ?? PAIN[3]} तकलीफ़`,
   painAreas: { knee: "घुटने", shin: "पिंडली", achilles: "एकिलीज़ टेंडन", foot: "पैर के पंजे", hip: "कूल्हे", back: "पीठ", shoulder: "कंधे", other: "किसी और जगह" },
   testBlackout: (days) => `लक्ष्य से पहले के आख़िरी ${days} दिनों में टेस्ट नहीं`,
+  reportedPause: (kind) => `बताया गया ब्रेक (${kind})`,
+  afterReportedPause: (kind, until) => `बताए गए ब्रेक (${kind}) के बाद ${until} तक सिर्फ़ हल्का`,
+  pauseKinds: { sick: "बीमार", injury: "चोट", vacation: "छुट्टी", other: "अन्य" },
 
   thunderstorm: () => "आँधी-तूफ़ान का पूर्वानुमान",
   storm: (kmh) => `तेज़ हवा का पूर्वानुमान (${kmh} km/h तक)`,

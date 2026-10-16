@@ -3,7 +3,9 @@ import { SPORTS } from "../../sports/registry";
 import { STEP_TARGETS } from "../../sports/vocabulary";
 import { MACRO_PHASES } from "../calendar";
 import { INTENSITIES, SESSION_TYPES } from "../vocabulary";
-import { PAIN_AREAS, SnapshotSchema } from "../snapshot";
+import { PAIN_AREAS, PAUSE_KINDS, SnapshotSchema } from "../snapshot";
+
+export { PAUSE_KINDS };
 import { DATE_PATTERN } from "../calendar";
 
 /**
@@ -349,7 +351,6 @@ export const ReviseRequestSchema = z
 
 /** Anlass der Fortschreibung: alle 2 Wochen, nach einer gemeldeten Pause oder nach zwei schwachen Wochen. */
 export const REVIEW_REASONS = ["scheduled", "pause", "low_compliance"] as const;
-export const PAUSE_KINDS = ["sick", "injury", "vacation", "other"] as const;
 
 /** Was in einer vergangenen Woche tatsaechlich trainiert wurde, je Sportart in ihrer Planeinheit. */
 const ActualWeekSchema = z.object({

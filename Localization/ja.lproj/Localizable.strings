@@ -390,6 +390,7 @@
 "Keine Messung an diesen Tagen." = "この期間に計測データはありません。";
 "Keine Pulswerte für diese Einheit in Health." = "ヘルスケアにこのセッションの心拍数データがありません。";
 "Keine Verbindung zum Server: %@" = "サーバーに接続できません：%@";
+"Gemeldete Pause" = "報告した休止";
 "Keine Zeit" = "時間なし";
 "Keine Zeit an diesem Tag" = "この日は時間なし";
 "Keine Änderung am Plan." = "プランに変更はありません。";

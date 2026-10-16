@@ -113,6 +113,9 @@ export const ja: SafetyCatalog = {
   pain: (level, area, sport, date) => `${date}の${sport}の後に${area !== "" ? `${area}の` : ""}${PAIN[level] ?? PAIN[3]}痛み`,
   painAreas: { knee: "膝", shin: "すね", achilles: "アキレス腱", foot: "足", hip: "股関節", back: "背中", shoulder: "肩", other: "その他の部位" },
   testBlackout: (days) => `目標前の最後の${days}日間はテストなし`,
+  reportedPause: (kind) => `報告された休止（${kind}）`,
+  afterReportedPause: (kind, until) => `報告された休止（${kind}）の後、${until}まで軽めのみ`,
+  pauseKinds: { sick: "体調不良", injury: "けが", vacation: "休暇", other: "その他" },
 
   thunderstorm: () => "雷雨の予報",
   storm: (kmh) => `暴風の予報（最大${kmh} km/h）`,

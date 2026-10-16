@@ -51,6 +51,11 @@ public final class MultiSportWeekLoader: ObservableObject {
     /// Ob heute feststeht (es gibt schon einen Tagesplan oder eine Vorschau, oder es wurde schon trainiert): Dann bleibt
     /// heute beim Neu-Abstimmen, wie es ist.
     public var todayLockedProvider: @MainActor () -> Bool = { false }
+    /// Ob heute schon trainiert wurde. Nach einem Ausfall gestern hält nur das heute fest: Ein schon geholter Plan für
+    /// heute (Vorschau, im Hintergrund) darf sich dann noch ändern, damit Wichtiges aus dem Ausfall heute Platz findet.
+    public var todayTrainedProvider: @MainActor () -> Bool = { false }
+    /// Die zuletzt gemeldete Pause (Einstellungen); ihre Tage werden zu Tagen ohne Zeit (`syncPause`).
+    public var pauseProvider: @MainActor () -> PauseReport? = { nil }
 
     private let store: WeekPlanV2Storing
     private let dailyMarker: DailyRefreshMarking
@@ -178,11 +183,13 @@ public final class MultiSportWeekLoader: ObservableObject {
         }
         needsConfiguration = false
 
+        syncPause(notify: false)
+        let pause = pauseProvider()
         let fromDate = todayKey
         let dates = weekCalendar.dates(from: fromDate, count: Self.windowDays)
         let through = dates.last ?? fromDate
-        let unavailable = Set(dates.filter { day(on: $0)?.isUnavailable == true })
-        let fixed = fixedDates(in: dates)
+        let unavailable = Set(dates.filter { day(on: $0)?.isUnavailable == true || pause?.contains($0) == true })
+        let fixed = fixedDates(in: dates, reason: reason)
         let request = WeekPlanV2Request(
             snapshot: context.snapshot,
             fromDate: fromDate,
@@ -212,6 +219,8 @@ public final class MultiSportWeekLoader: ObservableObject {
         do {
             let response = try await provider.fetchWeekPlanV2(request)
             apply(response, fromDate: fromDate, through: through, keep: Set(fixed))
+            // Neu geplante Tage einer gemeldeten Pause bekommen gleich ihre Markierung.
+            syncPause(notify: false)
             error = nil
             return true
         } catch {
@@ -227,6 +236,8 @@ public final class MultiSportWeekLoader: ObservableObject {
     /// gestern eine geplante Einheit ausgefallen, plant die App sofort neu (jeder Anlass einmal).
     public func refreshDaily(wishes: String? = nil, stamp: String = "") async {
         let marker = "\(todayKey)|\(stamp)"
+        // Erst die gemeldete Pause eintragen: Ihre Tage zählen nicht als Ausfall. Heute zieht danach das Laden nach.
+        syncPause(notify: false)
         let signal = pendingAdaptation()
         guard dailyMarker.lastDay() != marker || signal != nil else { return }
         if await planNextDays(wishes: wishes, reason: signal?.reason ?? .daily) {
@@ -238,18 +249,18 @@ public final class MultiSportWeekLoader: ObservableObject {
         }
     }
 
-    /// Verteilt die Tage der Antwort auf ihre Kalenderwochen und führt sie mit den gespeicherten zusammen.
-    /// Tage, die beim Neu-Abstimmen bleiben: von Hand geänderte und heute, wenn es feststeht. Tage ohne Zeit gehen
-    /// getrennt mit.
-    public func fixedDates(in dates: [String]) -> [String] {
+    /// Tage, die beim Neu-Abstimmen bleiben: von Hand geänderte und heute, wenn es feststeht. Nach einem Ausfall
+    /// (`reason` `.missed`) steht heute nur fest, wenn schon trainiert wurde. Tage ohne Zeit gehen getrennt mit.
+    public func fixedDates(in dates: [String], reason: ReplanReason = .daily) -> [String] {
         let today = todayKey
-        let todayLocked = todayLockedProvider()
+        let todayLocked = reason == .missed ? todayTrainedProvider() : todayLockedProvider()
         return dates.filter { date in
             guard let day = day(on: date), !day.isUnavailable else { return false }
             return day.isEdited || (date == today && todayLocked)
         }
     }
 
+    /// Verteilt die Tage der Antwort auf ihre Kalenderwochen und führt sie mit den gespeicherten zusammen.
     private func apply(_ response: WeekPlanV2Response, fromDate: String, through: String, keep: Set<String> = []) {
         var byWeek: [String: [PlannedDay]] = [:]
         for day in response.plan.days {
@@ -272,6 +283,18 @@ public final class MultiSportWeekLoader: ObservableObject {
             updated = updated.filter { $0.weekStart != weekStart } + [merged]
         }
         save(updated)
+    }
+
+    // MARK: - Gemeldete Pause
+
+    /// Trägt die gemeldete Pause in die Tage ein: Ihre Tage werden zu Tagen ohne Zeit ("Gemeldete Pause"), Tage einer
+    /// beendeten oder gelöschten Pause bekommen ihr Training zurück. Mit `notify` ziehen Heute und die Watch nach.
+    public func syncPause(notify: Bool = true) {
+        let pause = pauseProvider()
+        let updated = weeks.map { week in MultiSportWeekEditor.applyPause(week, inPause: { date in pause?.contains(date) == true }) }
+        guard updated != weeks else { return }
+        save(updated)
+        if notify { onEdit() }
     }
 
     // MARK: - Ändern

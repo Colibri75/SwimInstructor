@@ -114,6 +114,9 @@ export const ptBR: SafetyCatalog = {
   pain: (level, area, sport, date) => `desconforto ${PAIN[level] ?? PAIN[3]}${area !== "" ? ` (${area})` : ""} após ${sport.toLowerCase()} em ${date}`,
   painAreas: { knee: "joelho", shin: "canela", achilles: "tendão de Aquiles", foot: "pé", hip: "quadril", back: "costas", shoulder: "ombro", other: "outro" },
   testBlackout: (days) => `sem teste nos últimos ${days} dias antes do objetivo`,
+  reportedPause: (kind) => `pausa informada (${kind})`,
+  afterReportedPause: (kind, until) => `só leve até ${until} após a pausa informada (${kind})`,
+  pauseKinds: { sick: "doença", injury: "lesão", vacation: "férias", other: "outra" },
 
   thunderstorm: () => "previsão de tempestade com raios",
   storm: (kmh) => `previsão de vendaval (até ${kmh} km/h)`,
