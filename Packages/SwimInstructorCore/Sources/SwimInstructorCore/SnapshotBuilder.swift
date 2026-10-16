@@ -58,6 +58,8 @@ public struct SnapshotBuilder: SnapshotBuilding {
     private let startingLevelsProvider: () -> [StartingLevel]
     /// Der Wochenraster (P2), bei jedem Durchlauf neu; `nil` ohne Wochenraster.
     private let weeklyScheduleProvider: () -> WeeklySchedule?
+    /// Nur v2: die Angaben unter "Über mich", bei jedem Durchlauf neu (`athlete_profile`).
+    private let athleteProfileProvider: () -> AthleteProfile
     private let calendar: Calendar
 
     public init(
@@ -75,6 +77,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.profileProvider = { .empty }
         self.startingLevelsProvider = { [] }
         self.weeklyScheduleProvider = { nil }
+        self.athleteProfileProvider = { .empty }
         self.calendar = calendar
     }
 
@@ -94,6 +97,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.profileProvider = { .empty }
         self.startingLevelsProvider = { [] }
         self.weeklyScheduleProvider = { nil }
+        self.athleteProfileProvider = { .empty }
         self.calendar = calendar
     }
 
@@ -113,6 +117,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.profileProvider = { .empty }
         self.startingLevelsProvider = { [] }
         self.weeklyScheduleProvider = { nil }
+        self.athleteProfileProvider = { .empty }
         self.calendar = calendar
     }
 
@@ -124,7 +129,8 @@ public struct SnapshotBuilder: SnapshotBuilding {
     ///
     /// `startingLevelsProvider` liefert das selbst angegebene Startniveau (bei jedem Durchlauf neu); gültige Angaben
     /// für Sportarten im Snapshot gehen mit. `weeklyScheduleProvider` liefert den Wochenraster; er geht mit und
-    /// bestimmt Trainingstage und Stunden des Ziels.
+    /// bestimmt Trainingstage und Stunden des Ziels. `athleteProfileProvider` liefert die Angaben unter "Über mich"; das
+    /// Alter kommt dabei aus Health, sonst aus dem Geburtsjahr.
     public init(
         repository: WorkoutRepository,
         vitalsRepository: DailyVitalsRepository,
@@ -133,6 +139,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         profileProvider: @escaping () -> PerformanceProfile = { .empty },
         startingLevelsProvider: @escaping () -> [StartingLevel] = { [] },
         weeklyScheduleProvider: @escaping () -> WeeklySchedule? = { nil },
+        athleteProfileProvider: @escaping () -> AthleteProfile = { .empty },
         calendar: Calendar = .current
     ) {
         self.fetchWorkouts = { try await repository.fetchWorkouts(from: $0) }
@@ -144,6 +151,7 @@ public struct SnapshotBuilder: SnapshotBuilding {
         self.profileProvider = profileProvider
         self.startingLevelsProvider = startingLevelsProvider
         self.weeklyScheduleProvider = weeklyScheduleProvider
+        self.athleteProfileProvider = athleteProfileProvider
         self.calendar = calendar
     }
 
@@ -184,6 +192,9 @@ public struct SnapshotBuilder: SnapshotBuilding {
             let sports = Set(snapshot.sports?.map(\.sport) ?? [])
             let levels = startingLevelsProvider().filter { sports.contains($0.sport) && $0.isValid(now: now) }
             snapshot = snapshot.withStartingLevels(levels)
+            let profile = athleteProfileProvider()
+            let age = profile.age(healthAge: performanceRepository?.age(now: now), now: now, calendar: calendar)
+            snapshot = snapshot.withAthleteProfile(profile.snapshotProfile(age: age, sports: snapshot.sports?.map(\.sport) ?? []))
         }
         let cleaned = SwimWorkoutDeduplicator.deduplicate(workouts)
             .filter { $0.startDate <= now }
@@ -211,7 +222,8 @@ public struct SnapshotBuilder: SnapshotBuilding {
             workouts: WorkoutDeduplicator.deduplicate(workouts).filter { $0.startDate <= now },
             vitals: vitals,
             dailyMaximumHeartRates: observed,
-            age: performanceRepository.age(now: now)
+            // Ohne Geburtsdatum in Health zählt das Geburtsjahr unter "Über mich" (Faustformel des Maximalpulses).
+            age: athleteProfileProvider().age(healthAge: performanceRepository.age(now: now), now: now, calendar: calendar)
         )
         return PerformanceEstimator().resolve(profile: profileProvider(), input: input)
     }

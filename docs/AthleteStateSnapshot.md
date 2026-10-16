@@ -190,6 +190,23 @@ Feld plant der Server wie bisher nur mit Health.
 - Wie der Server es nutzt (Anteil je Trainingsstand, wie lange es gilt, Rückkehr nach der Pause):
   [`multisport-planning.md`](multisport-planning.md#selbst-angegebenes-startniveau).
 
+### Über mich (optional)
+
+`athlete_profile` sind die Angaben unter Einstellungen › Über mich (auch im Onboarding), alle freiwillig und nur als
+Zahlen und feste Begriffe. Vollständiges Beispiel:
+[`contracts/wire/snapshot-v2-athlete-profile.json`](../contracts/wire/snapshot-v2-athlete-profile.json). Ohne das
+Feld plant der Server wie bisher.
+
+- `age` (aus Health, sonst aus dem Geburtsjahr, 10 bis 100), `training_years` (Jahre Ausdauersport, 0 = weniger als eins).
+- `injuries`: je Körperstelle (`knee`, `shin`, `achilles`, `foot`, `hip`, `back`, `shoulder`, `other`) ein `status`:
+  `current`, `recurring` oder `past`.
+- `sports`: je Sportart `skills` (Kennungen aus `skills` in `contracts/sports.json`, beim Schwimmen Lagen und
+  Rollwende), `long_session_weekday` (1 = Montag), bei Sportarten mit `pool` dazu `lap_length_meters` (eine der
+  `lap_lengths`) und `pool_weekdays` (Tage mit Zugang zur Bahn; fehlt: jeden Tag).
+- `life_stress` (`low`, `normal`, `high`), `shift_work` (nur `true`), `intensity_preference` (`easy`, `balanced`,
+  `intense`).
+- Wie der Server es nutzt: [`multisport-planning.md`](multisport-planning.md#über-mich).
+
 Der v1-Teil (`goal` usw.) bleibt bis T3 das Schwimmziel: die Schwimm-Disziplin des Gesamtziels (ohne Zielzeit mit
 2:00 pro 100 m), ohne Schwimm-Disziplin ein Platzhalter (1500 m in 45 Minuten), den der Server dann nur als Ausgleich
 nimmt.

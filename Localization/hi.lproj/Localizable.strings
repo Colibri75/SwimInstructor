@@ -368,7 +368,6 @@
 "Hüfte" = "कूल्हा";
 "Im %@" = "%@ में";
 "In Health gespeichert. Das iPhone berücksichtigt die Einheit beim nächsten Plan." = "Health में सेव हुआ। iPhone अगले प्लान में इस सेशन को ध्यान में रखेगा।";
-"In drei Schritten zu deinem Plan: Ziel festlegen, deine Trainingstage eintragen und angeben, wo du gerade stehst. Danach rechnet die App den Gesamtplan bis zu deinem Ziel." = "तीन स्टेप में आपका प्लान: लक्ष्य तय करें, अपने ट्रेनिंग वाले दिन डालें और बताएँ कि आप अभी कहाँ हैं। उसके बाद ऐप आपके लक्ष्य तक पूरा प्लान तैयार करता है।";
 "Intervalle" = "इंटरवल";
 "Ist dein Training erledigt, holt dein Coach im Hintergrund schon den Plan für morgen. Er kommt dann morgens zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Nach einer Einheit fragt er, wie es war. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt." = "आपकी ट्रेनिंग पूरी होते ही आपका कोच बैकग्राउंड में कल का प्लान तैयार कर लेता है। यह सुबह चुने गए समय पर आता है और आज टैब इसे तुरंत दिखाता है। सेशन के बाद वह पूछता है कि कैसा रहा। ऐप बैकग्राउंड में कब काम कर सकता है, यह iOS तय करता है; अगर यह न हो पाए, तो आज टैब खोलने पर हमेशा की तरह प्लान बनाता है।";
 "Jede Sportart braucht genau einen Schwerpunkt." = "हर स्पोर्ट का ठीक एक फ़ोकस होना चाहिए।";
@@ -735,7 +734,6 @@
 "Ziel" = "लक्ष्य";
 "Ziel am %@, noch %lld Wochen" = "लक्ष्य %1$@ को, %2$lld सप्ताह बाकी";
 "Ziel, Abstand und Pace." = "लक्ष्य, अंतर और पेस।";
-"Ziel, Wochenraster und Startniveau kannst du jederzeit in den Einstellungen ändern." = "लक्ष्य, साप्ताहिक शेड्यूल और शुरुआती स्तर आप कभी भी सेटिंग्स में बदल सकते हैं।";
 "Zielart" = "लक्ष्य का प्रकार";
 "Zielpace %@ erreicht." = "लक्ष्य पेस %@ हासिल हुई।";
 "Zielpace %@: noch %lld s pro 100 m zu langsam." = "लक्ष्य पेस %@: अभी प्रति 100 m %lld s धीमे।";
@@ -848,7 +846,7 @@
 /* Datenschutz und Einwilligung */
 "Kein neuer Plan: Dafür brauchst du deine Zustimmung zur Datenweitergabe (Einstellungen › Datenschutz)." = "कोई नया प्लान नहीं: इसके लिए डेटा साझा करने की आपकी सहमति ज़रूरी है (सेटिंग्स › गोपनीयता)।";
 "Deine Daten und dein Coach" = "आपका डेटा और आपका कोच";
-"Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic (USA): Umfang und Dauer deiner Einheiten, Abweichungen von Ruhepuls und HRV, Schlaf, Leistungswerte, Beschwerden, dein Ziel und deine Wünsche." = "आपका कोच Anthropic के Claude से प्लान बनाता है। इसके लिए आपका ट्रेनिंग और स्वास्थ्य डेटा हमारे सर्वर और Anthropic (अमेरिका) को भेजा जाता है: आपके सेशन की मात्रा और अवधि, आराम की हृदय गति और HRV में बदलाव, नींद, परफ़ॉर्मेंस मान, तकलीफ़ें, आपका लक्ष्य और आपकी इच्छाएँ।";
+"Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic (USA): Umfang und Dauer deiner Einheiten, Abweichungen von Ruhepuls und HRV, Schlaf, Leistungswerte, Beschwerden, dein Ziel, deine Wünsche und deine Angaben unter „Über mich“ wie Alter und Verletzungen." = "आपका कोच Anthropic के Claude से प्लान बनाता है। इसके लिए आपका ट्रेनिंग और स्वास्थ्य डेटा हमारे सर्वर और Anthropic (अमेरिका) को भेजा जाता है: आपके सेशन की मात्रा और अवधि, आराम की हृदय गति और HRV में बदलाव, नींद, परफ़ॉर्मेंस मान, तकलीफ़ें, आपका लक्ष्य, आपकी इच्छाएँ और “मेरे बारे में” में दी गई जानकारी, जैसे उम्र और चोटें।";
 "Einzelne Messwerte aus Health und Kalendertermine bleiben auf dem iPhone, und Anthropic erfährt weder deinen Namen noch deine E-Mail-Adresse. Die Daten dienen nur deinem Plan, nie der Werbung, und werden nicht verkauft." = "Health के अलग-अलग माप और कैलेंडर के अपॉइंटमेंट iPhone पर ही रहते हैं, और Anthropic को न आपका नाम पता चलता है न आपका ईमेल पता। डेटा सिर्फ़ आपके प्लान के लिए है, कभी विज्ञापन के लिए नहीं, और कभी बेचा नहीं जाता।";
 "Du kannst deine Zustimmung jederzeit in den Einstellungen unter Datenschutz widerrufen. Ohne Zustimmung erstellt dein Coach keine neuen Pläne." = "आप अपनी सहमति कभी भी सेटिंग्स में गोपनीयता के अंतर्गत वापस ले सकते हैं। सहमति के बिना आपका कोच नए प्लान नहीं बनाता।";
 "Datenschutzerklärung" = "गोपनीयता नीति";
@@ -888,3 +886,42 @@
 
 "Auf anderen Tag legen" = "दूसरे दिन पर रखें";
 "Ergänzung entfernen" = "अतिरिक्त ट्रेनिंग हटाएँ";
+"Gerade aktuell" = "अभी है";
+"Kommt immer wieder" = "बार-बार होती है";
+"Früher, ausgeheilt" = "पहले थी, ठीक हो गई";
+"Wenig" = "कम";
+"Normal" = "सामान्य";
+"Hoch" = "ज़्यादा";
+"Lieber locker" = "हल्का पसंद";
+"Ausgewogen" = "संतुलित";
+"Lieber knackig" = "तेज़ पसंद";
+"Kraul" = "फ्रीस्टाइल";
+"Rückenkraul" = "बैकस्ट्रोक";
+"Rollwende" = "फ्लिप टर्न";
+"Über mich" = "मेरे बारे में";
+"Alter" = "उम्र";
+"%lld Jahre" = "%lld साल";
+"Geburtsjahr" = "जन्म का साल";
+"Keine Angabe" = "नहीं बताया";
+"Ausdauersport seit" = "एंड्योरेंस खेल कब से";
+"Erfahrung" = "अनुभव";
+"Das Alter kommt aus Apple Health. Mit Alter und Erfahrung steigert dein Coach behutsamer oder plant mehr Erholung." = "उम्र Apple Health से आती है। उम्र और अनुभव के हिसाब से आपका कोच लोड धीरे-धीरे बढ़ाता है या ज़्यादा रिकवरी प्लान करता है।";
+"Mit Alter und Erfahrung steigert dein Coach behutsamer oder plant mehr Erholung. Das Geburtsjahr fragt die App nur, wenn Apple Health kein Geburtsdatum kennt." = "उम्र और अनुभव के हिसाब से आपका कोच लोड धीरे-धीरे बढ़ाता है या ज़्यादा रिकवरी प्लान करता है। जन्म का साल ऐप तभी पूछता है जब Apple Health में जन्मतिथि न हो।";
+"Weniger als 1 Jahr" = "1 साल से कम";
+"1 Jahr" = "1 साल";
+"%lld Jahren" = "%lld साल";
+"Verletzungen" = "चोटें";
+"Eine aktuelle Verletzung schont dein Coach, bei einer wiederkehrenden steigert er vorsichtiger und stärkt die Stelle mit Kraft und Mobilität. Keine Diagnose: Bei anhaltenden Beschwerden geh zum Arzt." = "अभी की चोट को आपका कोच बचाकर रखता है; बार-बार होने वाली चोट में वह सावधानी से बढ़ाता है और स्ट्रेंथ व मोबिलिटी से उस हिस्से को मज़बूत करता है। यह कोई निदान नहीं है: दर्द बना रहे तो डॉक्टर को दिखाएँ।";
+"Lange Einheit am" = "लंबा सेशन किस दिन";
+"Kreuz an, was du sicher kannst. Dein Coach plant nur damit; ohne Kreuz gilt keine Angabe." = "जो आप भरोसे से कर सकते हैं, उस पर टिक करें। आपका कोच सिर्फ़ उन्हीं से प्लान करता है; कोई टिक न हो तो इसे नहीं बताया माना जाता है।";
+"Bahnlänge" = "पूल की लंबाई";
+"Unterschiedlich" = "अलग-अलग";
+"An welchen Tagen du hinkommst. An den anderen Tagen plant dein Coach dort nichts, im Freiwasser geht es trotzdem." = "जिन दिनों आप वहाँ जा सकते हैं। बाकी दिनों में आपका कोच वहाँ कुछ प्लान नहीं करता; ओपन वॉटर फिर भी चलता है।";
+"Belastung durch Beruf und Familie" = "काम और परिवार का दबाव";
+"Schichtarbeit" = "शिफ्ट में काम";
+"Intensität" = "तीव्रता";
+"Alltag" = "रोज़मर्रा";
+"Bei viel Stress oder Schichtarbeit plant dein Coach höchstens einen harten Tag pro Woche. Die Intensität verschiebt, wie viel vom erlaubten harten Anteil er nutzt; rund 80 Prozent bleiben immer locker." = "ज़्यादा तनाव या शिफ्ट में काम होने पर आपका कोच हफ़्ते में ज़्यादा से ज़्यादा एक कठिन दिन रखता है। तीव्रता से तय होता है कि वह अनुमत कठिन हिस्से का कितना इस्तेमाल करे; लगभग 80 प्रतिशत हमेशा हल्का रहता है।";
+"Erfahrung, Verletzungen, was du kannst, wann du ins Becken kommst, Alltag und Intensität. Alles freiwillig; dein Coach plant damit ab dem nächsten Plan genauer." = "अनुभव, चोटें, आप क्या कर सकते हैं, पूल कब जा सकते हैं, रोज़मर्रा और तीव्रता। सब वैकल्पिक है; अगले प्लान से आपका कोच इससे ज़्यादा सटीक प्लान करता है।";
+"In vier Schritten zu deinem Plan: Ziel festlegen, deine Trainingstage eintragen, angeben, wo du gerade stehst, und ein paar freiwillige Fragen zu dir. Danach rechnet die App den Gesamtplan bis zu deinem Ziel." = "चार कदमों में आपका प्लान: लक्ष्य तय करें, ट्रेनिंग के दिन दर्ज करें, बताएँ कि आप अभी कहाँ हैं, और अपने बारे में कुछ वैकल्पिक सवालों के जवाब दें। फिर ऐप आपके लक्ष्य तक का पूरा प्लान बनाता है।";
+"Ziel, Wochenraster, Startniveau und die Angaben über dich kannst du jederzeit in den Einstellungen ändern." = "लक्ष्य, साप्ताहिक शेड्यूल, शुरुआती स्तर और अपने बारे में जानकारी आप कभी भी सेटिंग्स में बदल सकते हैं।";

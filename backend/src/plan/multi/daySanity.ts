@@ -8,6 +8,7 @@ import { DayWeather, severeWeather } from "../weather";
 import { DayExtra, EXERCISE_RULES, EXTRA_RULES, normalizeDayExtras, perWeek, strengthBlackout } from "./extras";
 import { formatAmount, planningContext, sportName } from "./sports";
 import { checkTarget, normalizeStep, stepsAmount, trimSteps } from "./steps";
+import { lapGrid, poolClosed } from "./profile";
 import { chooseTest, stepsTotals, TestRef, testRef } from "./tests";
 import { indoorAllowed, withNote } from "./weekSanity";
 import { openWaterAllowed, openWaterBlocked } from "./openWater";
@@ -131,6 +132,12 @@ export function sanitizeDayV2(input: MultiDayPlanRaw, snapshot: SnapshotV2, opti
     drafts = drafts.filter((draft) => keep.includes(draft));
   }
   drafts = drafts.map((draft) => placeOpenWater(placeIndoor(draft, options, notes), options, notes));
+  // Die Bahn nur an den Tagen, an denen der Athlet hinkommt (Freiwasser geht immer).
+  drafts = drafts.filter((draft) => {
+    if (draft.openWater || !poolClosed(snapshot, draft.sport, options.date)) return true;
+    notes.push(`${draft.sport.displayName} gestrichen (heute kein ${draft.sport.planning.pool?.displayName ?? ""} laut deinen Angaben)`);
+    return false;
+  });
 
   // 2. Leistungstests: Schritte aus dem Modul oder eine lockere Einheit.
   let testDone = false;
@@ -304,7 +311,7 @@ function toDraft(
   const limits = sportLimits(snapshot, sport);
   const steps: SessionStep[] = [];
   for (const rawStep of raw.steps) {
-    const normalized = normalizeStep(rawStep, sport, limits.speed, available);
+    const normalized = normalizeStep(rawStep, sport, limits.speed, available, lapGrid(snapshot, sport, raw.open_water === true));
     normalized.removedEquipment.forEach((item) => removedEquipment.add(sport.planning.equipment[item] ?? item));
     if (normalized.step !== null) steps.push(normalized.step);
   }

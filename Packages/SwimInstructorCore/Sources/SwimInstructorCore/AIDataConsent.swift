@@ -31,7 +31,8 @@ public extension AIDataConsentStoring {
 public struct UserDefaultsAIDataConsentStore: AIDataConsentStoring {
     /// Fassung des Einwilligungstexts und der Datenschutzerklärung. Erhöhen, wenn sich ändert, was an Server oder
     /// Anthropic geht (backend/src/privacy/texts.ts).
-    public static let currentVersion = 1
+    /// 2 (16.10.2026): Angaben unter "Über mich" (Alter, Verletzungen, …) gehen mit.
+    public static let currentVersion = 2
     static let versionKey = "privacy.aiConsent.version"
     static let dateKey = "privacy.aiConsent.grantedAt"
 

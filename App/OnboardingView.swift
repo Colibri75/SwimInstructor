@@ -1,11 +1,12 @@
 import SwiftUI
 import SwimInstructorCore
 
-/// Einrichtung beim ersten Start: Ziel, Wochenraster, Startniveau, Anmeldung. Erst danach gibt es einen Gesamtplan,
-/// damit er nicht mit dem Standardziel entsteht. Jeder Schritt speichert sofort; `onFinish` kommt nach dem letzten.
+/// Einrichtung beim ersten Start: Ziel, Wochenraster, Startniveau, Über mich (freiwillig), Anmeldung. Erst danach gibt
+/// es einen Gesamtplan, damit er nicht mit dem Standardziel entsteht. Jeder Schritt speichert sofort; `onFinish` kommt
+/// nach dem letzten.
 struct OnboardingView: View {
     private enum Step: Int, CaseIterable {
-        case welcome, goal, schedule, startingLevel, consent, account, done
+        case welcome, goal, schedule, startingLevel, aboutMe, consent, account, done
     }
 
     @EnvironmentObject private var loader: MultiSportTodayLoader
@@ -48,6 +49,8 @@ struct OnboardingView: View {
             WeeklyScheduleView()
         case .startingLevel:
             StartingLevelView()
+        case .aboutMe:
+            AthleteProfileView()
         case .consent:
             AIConsentContent(
                 onAgree: {
@@ -71,7 +74,7 @@ struct OnboardingView: View {
             SparkPeak(size: 72, peakColor: .primary)
             Text("Willkommen bei PeakSmith")
                 .font(.largeTitle.bold())
-            Text("In drei Schritten zu deinem Plan: Ziel festlegen, deine Trainingstage eintragen und angeben, wo du gerade stehst. Danach rechnet die App den Gesamtplan bis zu deinem Ziel.")
+            Text("In vier Schritten zu deinem Plan: Ziel festlegen, deine Trainingstage eintragen, angeben, wo du gerade stehst, und ein paar freiwillige Fragen zu dir. Danach rechnet die App den Gesamtplan bis zu deinem Ziel.")
             Text("Zuerst fragt die App nach Apple Health. Daraus liest sie dein bisheriges Training, damit der Plan dort anfängt, wo du stehst.")
                 .foregroundStyle(.secondary)
             Spacer()
@@ -121,7 +124,7 @@ struct OnboardingView: View {
             Text("Fertig eingerichtet")
                 .font(.largeTitle.bold())
             Text("Die App rechnet jetzt deinen Gesamtplan und die nächsten 14 Tage. Das dauert ein paar Minuten.")
-            Text("Ziel, Wochenraster und Startniveau kannst du jederzeit in den Einstellungen ändern.")
+            Text("Ziel, Wochenraster, Startniveau und die Angaben über dich kannst du jederzeit in den Einstellungen ändern.")
                 .foregroundStyle(.secondary)
             Spacer()
             Button {

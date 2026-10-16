@@ -368,7 +368,6 @@
 "Hüfte" = "Hüfte";
 "Im %@" = "Im %@";
 "In Health gespeichert. Das iPhone berücksichtigt die Einheit beim nächsten Plan." = "In Health gespeichert. Das iPhone berücksichtigt die Einheit beim nächsten Plan.";
-"In drei Schritten zu deinem Plan: Ziel festlegen, deine Trainingstage eintragen und angeben, wo du gerade stehst. Danach rechnet die App den Gesamtplan bis zu deinem Ziel." = "In drei Schritten zu deinem Plan: Ziel festlegen, deine Trainingstage eintragen und angeben, wo du gerade stehst. Danach rechnet die App den Gesamtplan bis zu deinem Ziel.";
 "Intervalle" = "Intervalle";
 "Ist dein Training erledigt, holt dein Coach im Hintergrund schon den Plan für morgen. Er kommt dann morgens zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Nach einer Einheit fragt er, wie es war. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt." = "Ist dein Training erledigt, holt dein Coach im Hintergrund schon den Plan für morgen. Er kommt dann morgens zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Nach einer Einheit fragt er, wie es war. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt.";
 "Jede Sportart braucht genau einen Schwerpunkt." = "Jede Sportart braucht genau einen Schwerpunkt.";
@@ -735,7 +734,6 @@
 "Ziel" = "Ziel";
 "Ziel am %@, noch %lld Wochen" = "Ziel am %@, noch %lld Wochen";
 "Ziel, Abstand und Pace." = "Ziel, Abstand und Pace.";
-"Ziel, Wochenraster und Startniveau kannst du jederzeit in den Einstellungen ändern." = "Ziel, Wochenraster und Startniveau kannst du jederzeit in den Einstellungen ändern.";
 "Zielart" = "Zielart";
 "Zielpace %@ erreicht." = "Zielpace %@ erreicht.";
 "Zielpace %@: noch %lld s pro 100 m zu langsam." = "Zielpace %@: noch %lld s pro 100 m zu langsam.";
@@ -848,7 +846,7 @@
 /* Datenschutz und Einwilligung */
 "Kein neuer Plan: Dafür brauchst du deine Zustimmung zur Datenweitergabe (Einstellungen › Datenschutz)." = "Kein neuer Plan: Dafür brauchst du deine Zustimmung zur Datenweitergabe (Einstellungen › Datenschutz).";
 "Deine Daten und dein Coach" = "Deine Daten und dein Coach";
-"Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic (USA): Umfang und Dauer deiner Einheiten, Abweichungen von Ruhepuls und HRV, Schlaf, Leistungswerte, Beschwerden, dein Ziel und deine Wünsche." = "Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic (USA): Umfang und Dauer deiner Einheiten, Abweichungen von Ruhepuls und HRV, Schlaf, Leistungswerte, Beschwerden, dein Ziel und deine Wünsche.";
+"Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic (USA): Umfang und Dauer deiner Einheiten, Abweichungen von Ruhepuls und HRV, Schlaf, Leistungswerte, Beschwerden, dein Ziel, deine Wünsche und deine Angaben unter „Über mich“ wie Alter und Verletzungen." = "Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic (USA): Umfang und Dauer deiner Einheiten, Abweichungen von Ruhepuls und HRV, Schlaf, Leistungswerte, Beschwerden, dein Ziel, deine Wünsche und deine Angaben unter „Über mich“ wie Alter und Verletzungen.";
 "Einzelne Messwerte aus Health und Kalendertermine bleiben auf dem iPhone, und Anthropic erfährt weder deinen Namen noch deine E-Mail-Adresse. Die Daten dienen nur deinem Plan, nie der Werbung, und werden nicht verkauft." = "Einzelne Messwerte aus Health und Kalendertermine bleiben auf dem iPhone, und Anthropic erfährt weder deinen Namen noch deine E-Mail-Adresse. Die Daten dienen nur deinem Plan, nie der Werbung, und werden nicht verkauft.";
 "Du kannst deine Zustimmung jederzeit in den Einstellungen unter Datenschutz widerrufen. Ohne Zustimmung erstellt dein Coach keine neuen Pläne." = "Du kannst deine Zustimmung jederzeit in den Einstellungen unter Datenschutz widerrufen. Ohne Zustimmung erstellt dein Coach keine neuen Pläne.";
 "Datenschutzerklärung" = "Datenschutzerklärung";
@@ -888,3 +886,42 @@
 
 "Auf anderen Tag legen" = "Auf anderen Tag legen";
 "Ergänzung entfernen" = "Ergänzung entfernen";
+"Gerade aktuell" = "Gerade aktuell";
+"Kommt immer wieder" = "Kommt immer wieder";
+"Früher, ausgeheilt" = "Früher, ausgeheilt";
+"Wenig" = "Wenig";
+"Normal" = "Normal";
+"Hoch" = "Hoch";
+"Lieber locker" = "Lieber locker";
+"Ausgewogen" = "Ausgewogen";
+"Lieber knackig" = "Lieber knackig";
+"Kraul" = "Kraul";
+"Rückenkraul" = "Rückenkraul";
+"Rollwende" = "Rollwende";
+"Über mich" = "Über mich";
+"Alter" = "Alter";
+"%lld Jahre" = "%lld Jahre";
+"Geburtsjahr" = "Geburtsjahr";
+"Keine Angabe" = "Keine Angabe";
+"Ausdauersport seit" = "Ausdauersport seit";
+"Erfahrung" = "Erfahrung";
+"Das Alter kommt aus Apple Health. Mit Alter und Erfahrung steigert dein Coach behutsamer oder plant mehr Erholung." = "Das Alter kommt aus Apple Health. Mit Alter und Erfahrung steigert dein Coach behutsamer oder plant mehr Erholung.";
+"Mit Alter und Erfahrung steigert dein Coach behutsamer oder plant mehr Erholung. Das Geburtsjahr fragt die App nur, wenn Apple Health kein Geburtsdatum kennt." = "Mit Alter und Erfahrung steigert dein Coach behutsamer oder plant mehr Erholung. Das Geburtsjahr fragt die App nur, wenn Apple Health kein Geburtsdatum kennt.";
+"Weniger als 1 Jahr" = "Weniger als 1 Jahr";
+"1 Jahr" = "1 Jahr";
+"%lld Jahren" = "%lld Jahren";
+"Verletzungen" = "Verletzungen";
+"Eine aktuelle Verletzung schont dein Coach, bei einer wiederkehrenden steigert er vorsichtiger und stärkt die Stelle mit Kraft und Mobilität. Keine Diagnose: Bei anhaltenden Beschwerden geh zum Arzt." = "Eine aktuelle Verletzung schont dein Coach, bei einer wiederkehrenden steigert er vorsichtiger und stärkt die Stelle mit Kraft und Mobilität. Keine Diagnose: Bei anhaltenden Beschwerden geh zum Arzt.";
+"Lange Einheit am" = "Lange Einheit am";
+"Kreuz an, was du sicher kannst. Dein Coach plant nur damit; ohne Kreuz gilt keine Angabe." = "Kreuz an, was du sicher kannst. Dein Coach plant nur damit; ohne Kreuz gilt keine Angabe.";
+"Bahnlänge" = "Bahnlänge";
+"Unterschiedlich" = "Unterschiedlich";
+"An welchen Tagen du hinkommst. An den anderen Tagen plant dein Coach dort nichts, im Freiwasser geht es trotzdem." = "An welchen Tagen du hinkommst. An den anderen Tagen plant dein Coach dort nichts, im Freiwasser geht es trotzdem.";
+"Belastung durch Beruf und Familie" = "Belastung durch Beruf und Familie";
+"Schichtarbeit" = "Schichtarbeit";
+"Intensität" = "Intensität";
+"Alltag" = "Alltag";
+"Bei viel Stress oder Schichtarbeit plant dein Coach höchstens einen harten Tag pro Woche. Die Intensität verschiebt, wie viel vom erlaubten harten Anteil er nutzt; rund 80 Prozent bleiben immer locker." = "Bei viel Stress oder Schichtarbeit plant dein Coach höchstens einen harten Tag pro Woche. Die Intensität verschiebt, wie viel vom erlaubten harten Anteil er nutzt; rund 80 Prozent bleiben immer locker.";
+"Erfahrung, Verletzungen, was du kannst, wann du ins Becken kommst, Alltag und Intensität. Alles freiwillig; dein Coach plant damit ab dem nächsten Plan genauer." = "Erfahrung, Verletzungen, was du kannst, wann du ins Becken kommst, Alltag und Intensität. Alles freiwillig; dein Coach plant damit ab dem nächsten Plan genauer.";
+"In vier Schritten zu deinem Plan: Ziel festlegen, deine Trainingstage eintragen, angeben, wo du gerade stehst, und ein paar freiwillige Fragen zu dir. Danach rechnet die App den Gesamtplan bis zu deinem Ziel." = "In vier Schritten zu deinem Plan: Ziel festlegen, deine Trainingstage eintragen, angeben, wo du gerade stehst, und ein paar freiwillige Fragen zu dir. Danach rechnet die App den Gesamtplan bis zu deinem Ziel.";
+"Ziel, Wochenraster, Startniveau und die Angaben über dich kannst du jederzeit in den Einstellungen ändern." = "Ziel, Wochenraster, Startniveau und die Angaben über dich kannst du jederzeit in den Einstellungen ändern.";
