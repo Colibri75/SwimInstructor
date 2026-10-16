@@ -1,6 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
 import path from "node:path";
+import { accountRoutes, AccountDeps, authRoutes } from "./account";
 import { adminRoutes } from "./admin";
+import { AppleIdentityVerifier } from "./apple";
+import { AppleRevoker } from "./appleRevoke";
 import { Alerter, webhookNotifier } from "./alerts";
 import { createApp } from "./app";
 import { loadConfig, Config } from "./config";
@@ -27,6 +30,9 @@ const logger = createLogger(config);
 
 if (config.anthropicApiKey === undefined) {
   logger.warn("ANTHROPIC_API_KEY nicht gesetzt: /v1/plan/today liefert nur gespeicherte Pläne");
+}
+if (config.appleRevoke === undefined) {
+  logger.warn("APPLE_SIWA_KEY_ID/APPLE_SIWA_PRIVATE_KEY nicht gesetzt: Konto-Löschen widerruft die Anmeldung mit Apple nicht");
 }
 const generator =
   config.anthropicApiKey === undefined
@@ -90,12 +96,27 @@ const planService = new MultiPlanService({
 
 const users = new FileUserDirectory(config.apiToken, config.dataDir, (message) => logger.error(message));
 const registerPlanRoutes = multiRoutes(planService);
-const registerAdminRoutes = adminRoutes({ usage, usersFile: path.join(config.dataDir, USERS_FILE), timezone: config.planTimezone });
+const usersFile = path.join(config.dataDir, USERS_FILE);
+const registerAdminRoutes = adminRoutes({ usage, usersFile, timezone: config.planTimezone });
+// Mit Apple anmelden: neue Nutzer in users.json, ihre Daten wie alle anderen unter users/<kennung>.
+const accountDeps: AccountDeps = {
+  usersFile,
+  dataDir: config.dataDir,
+  verifier: new AppleIdentityVerifier({ bundleIds: config.appleBundleIds }),
+  signupOpen: config.appleSignup === "open",
+  // Widerruf bei Apple beim Loeschen, nur mit APPLE_SIWA_KEY_ID und APPLE_SIWA_PRIVATE_KEY.
+  appleRevoker: config.appleRevoke === undefined ? undefined : new AppleRevoker(config.appleRevoke),
+  appleClientId: config.appleBundleIds[0],
+  onUsersChanged: () => users.invalidate()
+};
+const registerAccountRoutes = accountRoutes(accountDeps);
 const app = createApp(config, logger, {
   users,
+  registerPublicV1Routes: authRoutes(accountDeps),
   registerV1Routes: (router) => {
     registerPlanRoutes(router);
     registerAdminRoutes(router);
+    registerAccountRoutes(router);
   }
 });
 

@@ -25,7 +25,10 @@ export const testConfig: Config = {
   maxGenerationsTotalPerHour: 15,
   maxGenerationsTotalPerDay: 60,
   alerts: undefined,
-  privacy: { name: undefined, address: undefined, email: undefined, hoster: undefined }
+  privacy: { name: undefined, address: undefined, email: undefined, hoster: undefined },
+  appleBundleIds: ["com.kellner.SwimInstructor"],
+  appleSignup: "open",
+  appleRevoke: undefined
 };
 
 export function buildApp(options: AppOptions = {}): Express {
