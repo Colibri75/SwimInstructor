@@ -3,8 +3,8 @@ import SwimInstructorCore
 
 /// Ein Tag im Plan-Tab: der konkrete Trainingsplan mit allen Schritten (heute der Tagesplan, vorher der aus dem Verlauf,
 /// später eine Vorschau auf Knopfdruck), dazu anpassen: je Einheit Umfang und Sportart ändern oder sie entfernen, eine
-/// Einheit dazunehmen, Ruhetag, "keine Zeit", mit einem anderen Tag tauschen. Vergangene Tage lassen sich auf einen
-/// freien Ruhetag nachholen.
+/// Einheit dazunehmen, Kraft und Mobilität auf einen anderen Tag legen oder streichen, Ruhetag, "keine Zeit", mit einem
+/// anderen Tag tauschen. Vergangene Tage lassen sich auf einen freien Ruhetag nachholen.
 struct DayEditSheet: View {
     @AppStorage(Theme.greenWeakKey) private var greenWeak = false
     let date: String
@@ -47,6 +47,9 @@ struct DayEditSheet: View {
                             if let day = status.day, !day.isUnavailable {
                                 ForEach(Array(day.sessions.enumerated()), id: \.offset) { index, session in
                                     sessionSection(index: index, session: session, count: day.sessions.count)
+                                }
+                                ForEach(Array(day.extras.enumerated()), id: \.offset) { index, extra in
+                                    extraSection(index: index, extra: extra)
                                 }
                             }
                             editSection(status)
@@ -259,6 +262,33 @@ struct DayEditSheet: View {
         } footer: {
             if !session.focus.isEmpty {
                 Text(session.focus)
+            }
+        }
+    }
+
+    // MARK: Kraft und Mobilität anpassen (heute und später)
+
+    private func extraSection(index: Int, extra: WeekExtra) -> some View {
+        Section {
+            LabeledContent("Dauer") { Text("ca. \(PlanV2Formatting.duration(minutes: extra.minutes))") }
+            let targets = editableDates.filter { week?.day(on: $0)?.isUnavailable != true }
+            if !targets.isEmpty {
+                Menu("Auf anderen Tag legen") {
+                    ForEach(targets, id: \.self) { other in
+                        Button("\(weekCalendar.weekdayName(other)), \(PlanFormatting.shortGermanDate(other)): \(PlanV2Formatting.daySummary(week?.day(on: other)))") {
+                            weekLoader.moveExtra(from: date, extra: index, to: other)
+                        }
+                    }
+                }
+            }
+            Button("Ergänzung entfernen", role: .destructive) {
+                weekLoader.removeExtra(date, extra: index)
+            }
+        } header: {
+            Text(extra.kind.displayName)
+        } footer: {
+            if !extra.focus.isEmpty {
+                Text(extra.focus)
             }
         }
     }

@@ -1,4 +1,4 @@
 /* Hinweise der Berechtigungsabfragen, deutsch in Info.plist (docs/uebersetzungen.md) */
-"NSHealthShareUsageDescription" = "O Peaksmith lê seus treinos e dados vitais do Saúde para mostrar seu plano direto no relógio.";
-"NSHealthUpdateUsageDescription" = "O Peaksmith salva suas sessões no Saúde com percurso, mapa, piscinas e frequência cardíaca.";
-"NSLocationWhenInUseUsageDescription" = "O Peaksmith registra seu percurso ao ar livre por GPS, para ritmo, altimetria e o mapa no Saúde.";
+"NSHealthShareUsageDescription" = "O PeakSmith lê seus treinos e dados vitais do Saúde para mostrar seu plano direto no relógio.";
+"NSHealthUpdateUsageDescription" = "O PeakSmith salva suas sessões no Saúde com percurso, mapa, piscinas e frequência cardíaca.";
+"NSLocationWhenInUseUsageDescription" = "O PeakSmith registra seu percurso ao ar livre por GPS, para ritmo, altimetria e o mapa no Saúde.";

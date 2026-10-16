@@ -1,7 +1,7 @@
 # Design
 
 Farben, Schrift und Formen kommen aus dem Logo (`docs/logo/peaksmith-icon.svg`): der Gipfel ist das Ziel, der Hammer
-das Training. Entwürfe: Artifact "Peaksmith Design-Entwürfe". Im Code stehen die Werte in `Shared/Theme.swift`.
+das Training. Entwürfe: Artifact "PeakSmith Design-Entwürfe". Im Code stehen die Werte in `Shared/Theme.swift`.
 
 | Name | Wert | Rolle |
 |---|---|---|

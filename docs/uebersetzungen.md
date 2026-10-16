@@ -1,8 +1,8 @@
 # Übersetzungen
 
-Peaksmith gibt es auf Deutsch, Englisch, Französisch, Spanisch, Italienisch, Portugiesisch (Brasilien),
+PeakSmith gibt es auf Deutsch, Englisch, Französisch, Spanisch, Italienisch, Portugiesisch (Brasilien),
 Chinesisch (vereinfacht), Japanisch, Koreanisch und Hindi. Die App folgt der Sprache des iPhones; in den
-iOS-Einstellungen lässt sie sich auch nur für Peaksmith umstellen (Einstellungen › Peaksmith › Sprache). Spricht
+iOS-Einstellungen lässt sie sich auch nur für PeakSmith umstellen (Einstellungen › PeakSmith › Sprache). Spricht
 das iPhone keine dieser Sprachen, zeigt die App Englisch.
 
 ## Wie es funktioniert

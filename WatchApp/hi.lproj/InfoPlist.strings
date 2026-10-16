@@ -1,4 +1,4 @@
 /* Hinweise der Berechtigungsabfragen, deutsch in Info.plist (docs/uebersetzungen.md) */
-"NSHealthShareUsageDescription" = "Peaksmith आपके वर्कआउट और स्वास्थ्य डेटा को Health से पढ़ता है, ताकि आपकी घड़ी पर ही ट्रेनिंग प्लान दिखा सके।";
-"NSHealthUpdateUsageDescription" = "Peaksmith आपके सेशन को रूट, मैप, लैप्स और हार्ट रेट के साथ Health में सेव करता है।";
-"NSLocationWhenInUseUsageDescription" = "Peaksmith बाहर GPS से आपका रूट रिकॉर्ड करता है, ताकि Health में पेस, ऊंचाई और मैप मिल सकें।";
+"NSHealthShareUsageDescription" = "PeakSmith आपके वर्कआउट और स्वास्थ्य डेटा को Health से पढ़ता है, ताकि आपकी घड़ी पर ही ट्रेनिंग प्लान दिखा सके।";
+"NSHealthUpdateUsageDescription" = "PeakSmith आपके सेशन को रूट, मैप, लैप्स और हार्ट रेट के साथ Health में सेव करता है।";
+"NSLocationWhenInUseUsageDescription" = "PeakSmith बाहर GPS से आपका रूट रिकॉर्ड करता है, ताकि Health में पेस, ऊंचाई और मैप मिल सकें।";

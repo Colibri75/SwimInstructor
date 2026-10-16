@@ -61,7 +61,7 @@ struct PlanGlanceText {
     var first: PlanGlance.Item? { items.first }
 
     /// Ohne aktuellen Stand.
-    static var openApp: String { String(localized: "Öffne Peaksmith für deinen Plan") }
+    static var openApp: String { String(localized: "Öffne PeakSmith für deinen Plan") }
 
     /// Eine Zeile: "Heute: Laufen · 45 min", "Morgen: Ruhetag".
     var inline: String {
