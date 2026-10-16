@@ -17,6 +17,10 @@ on:
       - "**.md"
       - ".github/workflows/backend-ci.yml"
 
+# Der GITHUB_TOKEN braucht nur Lesezugriff aufs Repo; Signierung, TestFlight und Deploy laufen ueber eigene Secrets.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: macos-latest

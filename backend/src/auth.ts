@@ -1,4 +1,4 @@
-import { RequestHandler } from "express";
+import { Request, RequestHandler } from "express";
 import { AuthUser, UserDirectory } from "./users";
 
 /**
@@ -8,9 +8,8 @@ import { AuthUser, UserDirectory } from "./users";
  */
 export function requireBearerToken(users: UserDirectory): RequestHandler {
   return (req, res, next) => {
-    const header = req.header("authorization");
-    const match = header ? /^Bearer\s+(\S+)\s*$/i.exec(header) : null;
-    const user = match ? users.authenticate(match[1]) : null;
+    const token = bearerToken(req);
+    const user = token === undefined ? null : users.authenticate(token);
 
     if (user === null) {
       res.set("WWW-Authenticate", "Bearer").status(401).json({ error: "unauthorized" });
@@ -19,6 +18,13 @@ export function requireBearerToken(users: UserDirectory): RequestHandler {
     res.locals.user = user;
     next();
   };
+}
+
+/** Der Token aus `Authorization: Bearer <token>`, sonst `undefined`. */
+export function bearerToken(req: Request): string | undefined {
+  const header = req.header("authorization");
+  const match = header ? /^Bearer\s+(\S+)\s*$/i.exec(header) : null;
+  return match?.[1];
 }
 
 /** Nur fuer Admins (der Besitzer und Nutzer mit `admin`), nach `requireBearerToken`. */

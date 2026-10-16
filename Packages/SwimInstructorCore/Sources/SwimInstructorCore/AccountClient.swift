@@ -1,4 +1,6 @@
+import CryptoKit
 import Foundation
+import Security
 
 /// Ergebnis der Anmeldung: der Token für alle weiteren Aufrufe und wer angemeldet ist.
 public struct AccountSession: Equatable, Sendable {
@@ -54,7 +56,32 @@ public enum AccountError: Error, Equatable, LocalizedError {
     }
 }
 
-/// Anmeldung mit Apple (`POST /v1/auth/apple`) und Löschen des Kontos (`DELETE /v1/account`).
+/// Zufallszahl für "Mit Apple anmelden": Apple bekommt ihren SHA-256 (`hashed`) und schreibt ihn ins Identitätstoken, der
+/// Server bekommt sie im Klartext (`raw`) und prüft beides. Ein abgefangenes Token taugt so ohne sie nicht zur Anmeldung.
+public struct AppleSignInNonce: Equatable, Sendable {
+    public let raw: String
+
+    public init(raw: String) {
+        self.raw = raw
+    }
+
+    /// 32 zufällige Bytes als Hex (64 Zeichen).
+    public static func random() -> AppleSignInNonce {
+        var bytes = [UInt8](repeating: 0, count: 32)
+        if SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) != errSecSuccess {
+            bytes = (0..<32).map { _ in UInt8.random(in: .min ... .max) }
+        }
+        return AppleSignInNonce(raw: bytes.map { String(format: "%02x", $0) }.joined())
+    }
+
+    /// Für `ASAuthorizationAppleIDRequest.nonce`.
+    public var hashed: String {
+        SHA256.hash(data: Data(raw.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+}
+
+/// Anmeldung mit Apple (`POST /v1/auth/apple`), Abmelden (`POST /v1/auth/logout`) und Löschen des Kontos
+/// (`DELETE /v1/account`).
 public struct AccountClient: Sendable {
     public static let timeout: TimeInterval = 20
 
@@ -70,11 +97,13 @@ public struct AccountClient: Sendable {
     /// - Parameter name: Den Namen gibt Apple nur bei der ersten Anmeldung heraus; leer bleibt er weg.
     /// - Parameter authorizationCode: Einmal-Code von Apple. Der Server tauscht ihn gegen einen Refresh-Token, mit dem er
     ///   die Anmeldung beim Löschen des Kontos bei Apple widerruft. Leer bleibt er weg.
-    public func signInWithApple(identityToken: String, name: String?, authorizationCode: String? = nil) async throws -> AccountSession {
+    /// - Parameter nonce: die Zufallszahl, deren SHA-256 die App bei Apple angefragt hat (`AppleSignInNonce.hashed`).
+    public func signInWithApple(identityToken: String, name: String?, authorizationCode: String? = nil, nonce: AppleSignInNonce? = nil) async throws -> AccountSession {
         struct Body: Encodable {
             let identityToken: String
             let name: String?
             let authorizationCode: String?
+            let nonce: String?
         }
         struct Response: Decodable {
             struct User: Decodable {
@@ -93,7 +122,8 @@ public struct AccountClient: Sendable {
         request.httpBody = try JSONEncoder().encode(Body(
             identityToken: identityToken,
             name: trimmedName.isEmpty ? nil : trimmedName,
-            authorizationCode: code.isEmpty ? nil : code
+            authorizationCode: code.isEmpty ? nil : code,
+            nonce: nonce?.raw
         ))
 
         let (data, response) = try await perform(request)
@@ -111,6 +141,23 @@ public struct AccountClient: Sendable {
             throw AccountError.rateLimited
         case 503:
             throw AccountError.appleUnavailable
+        default:
+            throw AccountError.server(status: response.statusCode)
+        }
+    }
+
+    /// Meldet dieses Gerät beim Server ab: Der Token gilt danach dort nicht mehr. Ein Token von Hand bleibt gültig.
+    public func logout(token: String) async throws {
+        var request = makeRequest(path: "v1/auth/logout")
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        let (_, response) = try await perform(request)
+        switch response.statusCode {
+        case 200, 204:
+            return
+        case 401:
+            throw AccountError.unauthorized
         default:
             throw AccountError.server(status: response.statusCode)
         }
