@@ -5,6 +5,7 @@ import SwimInstructorCore
 struct WatchTodayView: View {
     @EnvironmentObject private var healthKitManager: HealthKitManager
     @EnvironmentObject private var planStore: WatchPlanStore
+    @Environment(\.scenePhase) private var scenePhase
 
     private let registry = SportRegistry.standard
 
@@ -37,6 +38,10 @@ struct WatchTodayView: View {
         }
         // Einmal vorab fragen, damit der Health-Dialog nicht erst am Start erscheint.
         .task { try? await healthKitManager.requestAuthorization() }
+        // Über Nacht offen geblieben oder seit Tagen nicht geöffnet: den Plan von heute holen.
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            if phase == .active { planStore.requestPlanIfOutdated() }
+        }
     }
 
     // MARK: - Plan
