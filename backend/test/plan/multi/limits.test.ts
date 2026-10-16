@@ -167,7 +167,7 @@ describe("dayLimits", () => {
   it("erzwingt bei Uebertrainingsrisiko einen Ruhetag und keinen Test", () => {
     const today = dayLimits(multiSnapshot({ flags: ["overreaching_risk"] }), TODAY);
 
-    expect(today.restReason).toContain("Übertrainingsrisiko");
+    expect(today.restReason?.toString()).toContain("Übertrainingsrisiko");
     expect(today.testBlockedReason).toBe(today.restReason);
   });
 
@@ -188,7 +188,7 @@ describe("dayLimits", () => {
     const today = dayLimits(multiSnapshot({ recovery: { status: "moderate" }, load: { days_since_last_hard_session: 5 } }), TODAY);
 
     expect(today.maxIntensity).toBe("moderate");
-    expect(today.intensityReasons).toEqual(["Erholung mäßig"]);
+    expect(today.intensityReasons.map(String)).toEqual(["Erholung mäßig"]);
   });
 
   it("verbietet hart nach einem harten Tag (Snapshot oder Verlauf) und nach zwei harten Tagen in 7 Tagen", () => {
@@ -205,8 +205,8 @@ describe("dayLimits", () => {
     ]);
 
     expect(snapshotHard.maxIntensity).toBe("moderate");
-    expect(yesterday.intensityReasons).toEqual(["gestern oder heute schon eine harte Einheit"]);
-    expect(twoInWeek.intensityReasons).toEqual(["schon 2 harte Tage in den letzten 7 Tagen"]);
+    expect(yesterday.intensityReasons.map(String)).toEqual(["gestern oder heute schon eine harte Einheit"]);
+    expect(twoInWeek.intensityReasons.map(String)).toEqual(["schon 2 harte Tage in den letzten 7 Tagen"]);
     expect(longAgo.maxIntensity).toBe("hard");
   });
 
@@ -214,9 +214,11 @@ describe("dayLimits", () => {
     const full = dayLimits(multiSnapshot({ sports: { swim: { meters_last_seven_days: 4300 } } }), TODAY);
     const tiny = dayLimits(multiSnapshot({ recovery: { status: "poor" } }), TODAY);
 
-    expect(full.sports.get("swim")).toMatchObject({ blockedReason: "Wochenumfang ausgeschöpft", maxAmount: 50 });
-    expect(tiny.sports.get("run")).toMatchObject({ blockedReason: "zu wenig sicherer Umfang", maxAmount: 10 });
-    expect(tiny.sports.get("run")?.intensityReasons).toContain("Wiedereinstieg nach Pause");
+    expect(full.sports.get("swim")).toMatchObject({ maxAmount: 50 });
+    expect(full.sports.get("swim")?.blockedReason?.toString()).toBe("Wochenumfang ausgeschöpft");
+    expect(tiny.sports.get("run")).toMatchObject({ maxAmount: 10 });
+    expect(tiny.sports.get("run")?.blockedReason?.toString()).toBe("zu wenig sicherer Umfang");
+    expect(tiny.sports.get("run")?.intensityReasons.map(String)).toContain("Wiedereinstieg nach Pause");
   });
 
   it("gibt einem Tag hoechstens die Haelfte der Wochenstunden, mindestens 45 Minuten", () => {
@@ -237,8 +239,8 @@ describe("Phasen und Testsperre", () => {
     const snapshot = multiSnapshot({ daysUntilGoal: 20 });
 
     expect(testBlackoutReason(snapshot, "2026-10-05")).toBeNull();
-    expect(testBlackoutReason(snapshot, "2026-10-06")).toContain("14 Tagen");
-    expect(testBlackoutReason(snapshot, "2026-10-20")).toContain("14 Tagen");
+    expect(testBlackoutReason(snapshot, "2026-10-06")?.toString()).toContain("14 Tagen");
+    expect(testBlackoutReason(snapshot, "2026-10-20")?.toString()).toContain("14 Tagen");
     expect(testBlackoutReason(snapshot, "2026-10-21")).toBeNull();
     expect(testBlackoutReason(multiSnapshot({ daysUntilGoal: -3 }), TODAY)).toBeNull();
   });

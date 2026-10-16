@@ -9,7 +9,9 @@ import { goalDayOf, MULTI_RULES } from "./limits";
 import { goalKind } from "./schedule";
 import { SnapshotSchema } from "../snapshot";
 import { DateString, LocationSchema, PlanVersion } from "./schemas";
-import { disciplineSeconds, planningContext, sportName } from "./sports";
+import { disciplineSeconds, planningContext } from "./sports";
+import { Language } from "../language";
+import { listText, render, say, sportText, Text } from "./texts";
 
 /**
  * Der Wettkampftag-Plan: Ablauf des Tages, Pacing je Disziplin, Wechsel und Verpflegung. Claude schreibt ihn aus Ziel,
@@ -153,6 +155,8 @@ export interface RacePlan {
 export interface RaceContext {
   /** Wetter am Wettkampftag, wenn schon vorhergesagt. */
   weather?: DayWeather;
+  /** Sprache der App fuer die Korrekturen. Ohne Angabe Deutsch. */
+  language?: Language;
 }
 
 export interface RaceSanityResult {
@@ -206,7 +210,7 @@ export function sanitizeRace(input: RacePlanRaw, snapshot: SnapshotV2, context: 
   if (reason !== null) return { plan: empty, adjustments: [], blocked: reason };
   if (input.overview.trim() === "") return { plan: empty, adjustments: [], blocked: "Überblick fehlt" };
 
-  const notes: string[] = [];
+  const notes: Text[] = [];
   const goal = snapshot.training_goal.disciplines;
 
   // 1. Disziplinen: genau die des Ziels in seiner Reihenfolge, Zielzeiten plausibel.
@@ -217,11 +221,11 @@ export function sanitizeRace(input: RacePlanRaw, snapshot: SnapshotV2, context: 
     const raw = input.disciplines.find((entry) => entry.sport === discipline.sport);
     const estimate = estimatedMinutes(discipline);
     let target = raw !== undefined && Number.isFinite(raw.target_minutes) ? Math.round(raw.target_minutes) : estimate;
-    if (raw === undefined) notes.push(`${sport.displayName}: fehlte im Plan, mit geschätzter Zeit ergänzt`);
+    if (raw === undefined) notes.push(say("raceMissing", sportText(sport.id)));
     const speed = discipline.distance_meters / Math.max(target * 60, 1);
     const plausible = speed >= sport.goalSpeed.minMetersPerSecond && speed <= sport.goalSpeed.maxMetersPerSecond && Math.abs(target - estimate) <= estimate * RACE_RULES.maxTargetDeviation;
     if (raw !== undefined && !plausible) {
-      notes.push(`${sport.displayName}: Zielzeit ${target} min unplausibel, ${estimate} min angenommen`);
+      notes.push(say("raceImplausible", sportText(sport.id), target, estimate));
       target = estimate;
     }
     const pacing = (raw?.pacing ?? []).slice(0, RACE_RULES.maxPacingSegments).map((entry) => {
@@ -231,9 +235,9 @@ export function sanitizeRace(input: RacePlanRaw, snapshot: SnapshotV2, context: 
     });
     return [{ sport: sport.id, distance_meters: discipline.distance_meters, target_minutes: target, pacing, notes: text(raw?.notes ?? "") }];
   });
-  const foreign = input.disciplines.filter((entry) => !goal.some((discipline) => discipline.sport === entry.sport)).map((entry) => sportName(entry.sport));
-  if (foreign.length > 0) notes.push(`Disziplinen ohne Bezug zum Ziel entfernt (${[...new Set(foreign)].join(", ")})`);
-  if (pacingChanged) notes.push("Pacing-Ziele an die Grenzen für dich angepasst");
+  const foreign = input.disciplines.filter((entry) => !goal.some((discipline) => discipline.sport === entry.sport)).map((entry) => entry.sport);
+  if (foreign.length > 0) notes.push(say("raceForeign", listText([...new Set(foreign)].map(sportText), "plain")));
+  if (pacingChanged) notes.push(say("racePacing"));
   const totalMinutes = disciplines.reduce((sum, discipline) => sum + discipline.target_minutes, 0);
 
   // 2. Ablauf: sortiert, im Zeitfenster um den Wettkampf.
@@ -259,7 +263,7 @@ export function sanitizeRace(input: RacePlanRaw, snapshot: SnapshotV2, context: 
     const sport = SPORTS.get(discipline.sport) as SportDefinition;
     const raw = input.nutrition.during.find((entry) => entry.sport === discipline.sport);
     if (!sport.planning.canFuelDuringRace) {
-      if (raw !== undefined && (raw.carbs_g_per_hour > 0 || raw.fluid_ml_per_hour > 0)) notes.push(`${sport.displayName}: keine Verpflegung während der Disziplin`);
+      if (raw !== undefined && (raw.carbs_g_per_hour > 0 || raw.fluid_ml_per_hour > 0)) notes.push(say("raceNoFuel", sportText(sport.id)));
       return [];
     }
     if (raw === undefined) return [];
@@ -273,7 +277,7 @@ export function sanitizeRace(input: RacePlanRaw, snapshot: SnapshotV2, context: 
     fuelChanged ||= fuel.carbs_g_per_hour !== Math.round(raw.carbs_g_per_hour) || fuel.fluid_ml_per_hour !== Math.round(raw.fluid_ml_per_hour) || fuel.sodium_mg_per_hour !== Math.round(raw.sodium_mg_per_hour);
     return [fuel];
   });
-  if (fuelChanged) notes.push(`Verpflegung auf höchstens ${carbsMax} g Kohlenhydrate, ${fluidMax} ml Flüssigkeit und ${RACE_RULES.sodiumMax} mg Natrium pro Stunde begrenzt`);
+  if (fuelChanged) notes.push(say("raceFuel", carbsMax, fluidMax, RACE_RULES.sodiumMax));
 
   return {
     plan: {
@@ -285,7 +289,7 @@ export function sanitizeRace(input: RacePlanRaw, snapshot: SnapshotV2, context: 
       checklist: list(input.checklist, RACE_RULES.maxChecklistItems),
       total_minutes: totalMinutes
     },
-    adjustments: notes,
+    adjustments: render(notes, context.language),
     blocked: null
   };
 }

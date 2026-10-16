@@ -409,7 +409,7 @@ export class MultiPlanService {
   }
 
   private async macroPlan(input: MacroInputV2, user: string, attempt: Attempt): Promise<MacroResultV2> {
-    const context = macroContext(input.snapshot, input.today, input.testSettings);
+    const context = macroContext(input.snapshot, input.today, input.testSettings, input.language);
     const generated = await this.generate("macro", inLanguage(MULTI_MACRO_SYSTEM_PROMPT, input.language), buildMacroUserMessageV2(input.snapshot, context), MultiMacroPlanSchema, user, attempt, { macro: true });
     const weeks = expandMacroBlocks(generated.data.blocks, context.weeks);
     const sanitized = sanitizeMacroV2({ rationale: generated.data.rationale, weeks }, input.snapshot, context);
@@ -424,7 +424,7 @@ export class MultiPlanService {
   }
 
   private async revise(input: ReviseInput, user: string, attempt: Attempt): Promise<ReviseResult> {
-    const context = macroContext(input.snapshot, input.today, input.testSettings);
+    const context = macroContext(input.snapshot, input.today, input.testSettings, input.language);
     const feedback = input.feedback.trim();
     const generated = await this.generate(
       "revise",
@@ -456,7 +456,7 @@ export class MultiPlanService {
   }
 
   private async review(input: ReviewInput, user: string, attempt: Attempt): Promise<ReviewResult> {
-    const context = macroContext(input.snapshot, input.today, input.testSettings);
+    const context = macroContext(input.snapshot, input.today, input.testSettings, input.language);
     const feedback = input.feedback?.trim() || undefined;
     const generated = await this.generate(
       "review",
@@ -517,7 +517,7 @@ export class MultiPlanService {
       attempt,
       { macro: true }
     );
-    const sanitized = sanitizeRace(generated.data, input.snapshot, weather !== undefined ? { weather } : {});
+    const sanitized = sanitizeRace(generated.data, input.snapshot, { ...(weather !== undefined ? { weather } : {}), ...(input.language !== undefined ? { language: input.language } : {}) });
     if (sanitized.blocked !== null) throw this.blocked("race", sanitized.blocked);
     this.logGenerated("race", generated.meta, sanitized.adjustments.length, { disciplines: sanitized.plan.disciplines.length, notesChars: notes?.length ?? 0 });
     return { raceDay, generatedAt: this.now().toISOString(), plan: sanitized.plan, adjustments: sanitized.adjustments, ...(weather !== undefined ? { weather } : {}) };
@@ -667,9 +667,9 @@ export class MultiPlanService {
   }
 }
 
-function macroContext(snapshot: SnapshotV2, today: string, testSettings?: TestSettings): MacroContextV2 {
+function macroContext(snapshot: SnapshotV2, today: string, testSettings?: TestSettings, language?: Language): MacroContextV2 {
   const goalDay = goalDayOf(snapshot);
-  return { today, goalDay, weeks: macroWeekStarts(today, goalDay), ...(testSettings !== undefined ? { testSettings } : {}) };
+  return { today, goalDay, weeks: macroWeekStarts(today, goalDay), ...(testSettings !== undefined ? { testSettings } : {}), ...(language !== undefined ? { language } : {}) };
 }
 
 /** Fingerabdruck des Tages ohne Erzeugungszeitpunkt: Zustand, Wunsch, Vorgabe, Equipment (sortiert), Verlauf, Tests. */

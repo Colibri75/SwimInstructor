@@ -8,6 +8,7 @@ import { goalDayOf, MULTI_RULES, SportLimitsNow, sportLimits } from "./limits";
 import { isFitnessGoal } from "./schedule";
 import { TestSettings } from "./schemas";
 import { emphasisOf, formatAmount, isConfirmed, plannedSports, stateOf } from "./sports";
+import { intensityText, say, testText, Text } from "./texts";
 
 /**
  * Leistungstests im Plan (T3). Die Module bringen Tests und deren Schritte mit; hier steht, wann ein Test in Frage
@@ -59,42 +60,43 @@ export interface TestOptions {
   maxMinutes?: number;
   maxIntensity: Intensity;
   /** Warum die Intensitaet begrenzt ist, fuer den Grund ohne Test. */
-  intensityReason?: string;
+  intensityReason?: Text;
 }
 
 /**
  * Waehlt den Test einer Sportart: der angefragte, sonst der bevorzugte, sonst die anderen in der Reihenfolge des
  * Moduls; der erste, der passt. Ohne passenden Test `plan: null` und der Grund fuer den ersten Kandidaten.
  */
-export function chooseTest(limits: SportLimitsNow, options: TestOptions): { plan: TestPlan | null; reason: string | null } {
+export function chooseTest(limits: SportLimitsNow, options: TestOptions): { plan: TestPlan | null; reason: Text | null } {
   const sport = limits.sport;
   const candidates: PerformanceTestDefinition[] = [];
   for (const test of [testOf(sport, options.requested), preferredTest(sport, options.settings), ...sport.performanceTests]) {
     if (test !== undefined && !candidates.includes(test)) candidates.push(test);
   }
-  let reason: string | null = candidates.length === 0 ? "kein Test für diese Sportart" : null;
-  const remember = (why: string) => {
+  let reason: Text | null = candidates.length === 0 ? say("noTestForSport") : null;
+  const remember = (why: Text) => {
     reason ??= why;
   };
   for (const test of candidates) {
+    const name = testText(test.id, test.displayName);
     if (test.maximalEffort) {
       if (options.maxIntensity !== "hard") {
-        remember(`${test.displayName}: keine Vollbelastung (${options.intensityReason ?? `höchstens "${options.maxIntensity}"`})`);
+        remember(say("noMaxEffort", name, options.intensityReason ?? say("atMost", intensityText(options.maxIntensity))));
         continue;
       }
       if (limits.state.longest_session_minutes < test.durationMinutes) {
-        remember(`${test.displayName}: längste Einheit der letzten 4 Wochen unter ${test.durationMinutes} min`);
+        remember(say("longestTooShort", name, test.durationMinutes));
         continue;
       }
     }
     const steps = sport.planning.testSessions[test.id] ?? [];
     const totals = stepsTotals(sport, steps, limits.speed);
     if (totals.amount > options.maxAmount) {
-      remember(`${test.displayName}: Testeinheit (${formatAmount(sport, totals.amount)}) über der Grenze (${formatAmount(sport, options.maxAmount)})`);
+      remember(say("testOverAmount", name, formatAmount(sport, totals.amount), formatAmount(sport, options.maxAmount)));
       continue;
     }
     if (options.maxMinutes !== undefined && totals.minutes > options.maxMinutes) {
-      remember(`${test.displayName}: Testeinheit (${Math.round(totals.minutes)} min) über der Tagesgrenze (${Math.round(options.maxMinutes)} min)`);
+      remember(say("testOverMinutes", name, Math.round(totals.minutes), Math.round(options.maxMinutes)));
       continue;
     }
     return { plan: { sport, test, steps, ...totals, intensity: test.maximalEffort ? "hard" : "easy" }, reason: null };

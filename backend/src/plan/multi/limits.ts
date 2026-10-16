@@ -5,7 +5,8 @@ import { SnapshotV2 } from "../snapshot";
 import { addDays } from "../calendar";
 import { PainArea, RecentTraining } from "./schemas";
 import { fixedSport, isFitnessGoal, scheduleDay, weeklyMinutes } from "./schedule";
-import { floorAmount, formatAmount, plannedSports, raceAmount, raceSeconds, sportName, stateAmounts, stateOf, trainingSpeed } from "./sports";
+import { CATALOGS, dateText, say, sportText, Text } from "./texts";
+import { floorAmount, formatAmount, plannedSports, raceAmount, raceSeconds, stateAmounts, stateOf, trainingSpeed } from "./sports";
 
 /**
  * Die Grenzen der Planung fuer mehrere Sportarten, aus dem Snapshot berechnet. Dieselben Zahlen gehen an Claude
@@ -213,10 +214,10 @@ export function declaredLevelText(limits: SportLimitsNow): string {
 /** Grenzen einer Sportart fuer heute. */
 export interface SportDayLimits {
   /** Grund, warum die Sportart heute nicht geht, sonst `null`. */
-  blockedReason: string | null;
+  blockedReason: Text | null;
   maxAmount: number;
   maxIntensity: Intensity;
-  intensityReasons: string[];
+  intensityReasons: Text[];
   /** Woraus `maxAmount` entsteht, damit Claude die Grenze in der Begruendung erklaeren kann. */
   sessionCap: number;
   weeklyCap: number;
@@ -238,14 +239,14 @@ export function dayMinutesCap(snapshot: SnapshotV2, date?: string): number {
 /** Die Grenzen fuer heute ueber alle Sportarten. */
 export interface DayLimitsV2 {
   /** Grund fuer einen Pflicht-Ruhetag, sonst `null`. */
-  restReason: string | null;
+  restReason: Text | null;
   maxIntensity: Intensity;
-  intensityReasons: string[];
+  intensityReasons: Text[];
   /** Hoechstens so viele Minuten ueber alle Einheiten des Tages. */
   maxMinutes: number;
   sports: Map<string, SportDayLimits>;
   /** Grund, warum heute gar kein Leistungstest geht, sonst `null` (ein Test mit Vollbelastung braucht ausserdem "hard"). */
-  testBlockedReason: string | null;
+  testBlockedReason: Text | null;
 }
 
 /** Hart laut Plan und Puls oder nach der gefuehlten Anstrengung. */
@@ -269,8 +270,6 @@ const PAIN_AREA_TEXT: Record<PainArea, string> = {
   other: "sonstige"
 };
 
-const PAIN_TEXT = ["", "leichte", "deutliche", "starke"] as const;
-
 export function painAreaText(area: PainArea | undefined): string {
   return area === undefined ? "" : PAIN_AREA_TEXT[area];
 }
@@ -283,7 +282,7 @@ export interface PainRestriction {
   /** Anteil der Tagesgrenze, der bleibt. */
   amountFactor: number;
   /** Lesbar, z. B. "deutliche Beschwerden (Knie) nach Laufen am 04.10." */
-  reason: string;
+  reason: Text;
   /** Letzter Tag, an dem die Bremse gilt. */
   until: string;
 }
@@ -300,8 +299,11 @@ export function painRestriction(recent: readonly RecentTraining[], sportId: stri
   }
   if (worst === null) return null;
   const { entry, level } = worst;
-  const area = entry.pain_area !== undefined ? ` (${PAIN_AREA_TEXT[entry.pain_area]})` : "";
-  const reason = `${PAIN_TEXT[level]} Beschwerden${area} nach ${sportName(entry.sport)} am ${entry.date.slice(8, 10)}.${entry.date.slice(5, 7)}.`;
+  const area = entry.pain_area;
+  const reason = new Text((language) => {
+    const texts = CATALOGS[language];
+    return texts.pain(level, area !== undefined ? texts.painAreas[area] : "", sportText(entry.sport).in(language), texts.date(entry.date));
+  });
   const until = addDays(entry.date, MULTI_RULES.painDays[level] - 1);
   if (level >= 3) return { blocked: true, maxIntensity: "easy", amountFactor: 0, reason, until };
   if (level === 2) return { blocked: false, maxIntensity: "easy", amountFactor: MULTI_RULES.painModerateAmountFactor, reason, until };
@@ -328,27 +330,27 @@ export function recentBefore(sport: SportDefinition, recent: readonly RecentTrai
  */
 export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly RecentTraining[] = [], preview = false): DayLimitsV2 {
   const restReason = snapshot.flags.includes("overreaching_risk")
-    ? "Erholungswerte schlecht bei hoher Belastung (Übertrainingsrisiko)"
+    ? say("overreaching")
     : scheduleDay(snapshot, today)?.trains === false
-      ? "Ruhetag laut Wochenraster"
+      ? say("scheduleRest")
       : null;
   const fixed = fixedSport(snapshot, today);
   const poor = snapshot.flags.includes("recovery_poor") || snapshot.recovery.status === "poor";
 
   let maxIntensity = "hard" as Intensity;
-  const intensityReasons: string[] = [];
-  const cap = (limit: Intensity, reason: string) => {
+  const intensityReasons: Text[] = [];
+  const cap = (limit: Intensity, reason: Text) => {
     maxIntensity = lower(maxIntensity, limit);
     intensityReasons.push(reason);
   };
-  if (poor) cap("easy", "Erholung schlecht");
-  else if (snapshot.recovery.status === "moderate") cap("moderate", "Erholung mäßig");
+  if (poor) cap("easy", say("recoveryPoor"));
+  else if (snapshot.recovery.status === "moderate") cap("moderate", say("recoveryModerate"));
   const hardDaysAgo = snapshot.load.days_since_last_hard_session;
   if (hardOn(recent, today) || hardOn(recent, addDays(today, -1)) || (hardDaysAgo !== undefined && hardDaysAgo <= 1)) {
-    cap("moderate", "gestern oder heute schon eine harte Einheit");
+    cap("moderate", say("hardRecently"));
   } else {
     const hardDays = new Set(recent.filter((entry) => isHardEntry(entry) && entry.date < today && entry.date >= addDays(today, -6)).map((entry) => entry.date));
-    if (hardDays.size >= MULTI_RULES.maxHardDaysPerWeek) cap("moderate", `schon ${hardDays.size} harte Tage in den letzten 7 Tagen`);
+    if (hardDays.size >= MULTI_RULES.maxHardDaysPerWeek) cap("moderate", say("hardDaysRecently", hardDays.size));
   }
 
   const sports = new Map<string, SportDayLimits>();
@@ -364,7 +366,7 @@ export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly 
     let sportMax = maxIntensity;
     if (limits.pause) {
       sportMax = lower(sportMax, "easy");
-      reasons.push("Wiedereinstieg nach Pause");
+      reasons.push(say("reentry"));
     }
     if (pain !== null && !pain.blocked && RANK[pain.maxIntensity] < RANK[sportMax]) {
       sportMax = pain.maxIntensity;
@@ -372,13 +374,13 @@ export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly 
     }
     const blockedReason =
       fixed !== undefined && fixed !== sport.id
-        ? `laut Wochenraster heute nur ${sportName(fixed)}`
+        ? say("fixedSportToday", sportText(fixed))
         : pain?.blocked === true
-        ? `${pain.reason}: Pause bis ${pain.until.slice(8, 10)}.${pain.until.slice(5, 7)}.`
+        ? say("painPause", pain.reason, dateText(pain.until))
         : maxAmount < sport.planning.limits.minSession
         ? limits.weeklyCap - lastSeven < sport.planning.limits.minSession
-          ? "Wochenumfang ausgeschöpft"
-          : "zu wenig sicherer Umfang"
+          ? say("weekExhausted")
+          : say("tooLittleSafe")
         : null;
     sports.set(sport.id, {
       blockedReason,
@@ -398,12 +400,12 @@ export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly 
 }
 
 /** Kein Leistungstest in den letzten 14 Tagen vor dem Ziel (der Tag selbst zaehlt mit). */
-export function testBlackoutReason(snapshot: SnapshotV2, date: string): string | null {
+export function testBlackoutReason(snapshot: SnapshotV2, date: string): Text | null {
   if (isFitnessGoal(snapshot)) return null;
   const goalDay = goalDayOf(snapshot);
   if (goalDay < snapshot.generated_at.slice(0, 10)) return null;
   const days = daysBetween(date, goalDay);
-  return days >= 0 && days <= MULTI_RULES.testBlackoutDays ? "kein Test in den letzten 14 Tagen vor dem Ziel" : null;
+  return days >= 0 && days <= MULTI_RULES.testBlackoutDays ? say("testBlackout", MULTI_RULES.testBlackoutDays) : null;
 }
 
 // --- Phasen bis zum Ziel ---

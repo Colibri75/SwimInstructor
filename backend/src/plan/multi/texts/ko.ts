@@ -1,0 +1,146 @@
+import { intlDate, intlList, SafetyCatalog } from "./catalog";
+
+const LOCALE = "ko";
+const PAIN = ["", "가벼운", "뚜렷한", "심한"];
+
+/** Endet das Wort auf einen Konsonanten (Batchim)? 0: nein, 8: auf ㄹ, sonst ja. Ohne Hangul am Ende `null`. */
+function batchim(word: string): number | null {
+  const code = word.trim().replace(/[\s"')）]+$/u, "").slice(-1).charCodeAt(0) - 0xac00;
+  return code >= 0 && code <= 11171 ? code % 28 : null;
+}
+/** Thema: 은/는 */
+const topic = (word: string) => `${word}${batchim(word) === 0 ? "는" : batchim(word) === null ? "은(는)" : "은"}`;
+/** Objekt: 을/를 */
+const object = (word: string) => `${word}${batchim(word) === 0 ? "를" : batchim(word) === null ? "을(를)" : "을"}`;
+/** Richtung: (으)로; nach Vokal oder ㄹ nur 로 */
+const toward = (word: string) => `${word}${batchim(word) === 0 || batchim(word) === 8 ? "로" : batchim(word) === null ? "(으)로" : "으로"}`;
+
+export const ko: SafetyCatalog = {
+  sports: { swim: "수영", bike: "사이클", run: "달리기" },
+  extras: { strength: "근력", mobility: "가동성" },
+  equipment: { pull_buoy: "풀부이", paddles: "패들", fins: "핀", snorkel: "스노클", kickboard: "킥보드", ankle_band: "레그 밴드" },
+  venues: { indoor_trainer: "실내 자전거", treadmill: "트레드밀", open_water: "오픈워터" },
+  tests: { css_400_200: "CSS 테스트 400/200 m", time_trial_1000m: "1000 m 테스트", threshold_30min: "30분 테스트", entry_easy_25min: "가벼운 입문 테스트" },
+  intensities: { easy: "가볍게", moderate: "보통", hard: "강함", rest: "휴식" },
+  day: (iso) => intlDate(LOCALE, iso, true),
+  date: (iso) => intlDate(LOCALE, iso, false),
+  week: (iso) => `${intlDate(LOCALE, iso, false)}부터의 주`,
+  list: (items, kind) => intlList(LOCALE, items, kind),
+  onDay: (day, text) => `${day}: ${text}`,
+
+  safetyNote: (first, more) => `참고: 안전을 위해 조정했습니다(${first.join("; ")}${more > 0 ? `; 외 ${more}건` : ""}).`,
+  macroNote: (count) => `참고: 안전을 위해 ${count}곳을 조정했습니다. 각 주에는 확인된 훈련량이 표시됩니다.`,
+  restToday: (reason) => `오늘은 휴식입니다: ${reason}.`,
+  restNothingFits: () => "오늘은 휴식입니다: 계획된 훈련이 오늘의 한도에 맞지 않습니다.",
+
+  missingDays: (count, days) => `빠진 ${count}일을 휴식일로 추가(${days})`,
+  noTimeRest: () => "시간 없음, 휴식일로 설정",
+  calendarNoTimeRest: () => "캘린더상 시간 없음, 휴식일로 설정",
+  scheduleRest: () => "주간 일정상 휴식일",
+  scheduleOnly: (sport) => `주간 일정상 ${sport}만 가능, 다른 종목 삭제`,
+  sessionsCut: (count) => `${count}회로 줄임`,
+  sessionsCutToday: (count) => `${count}회로 줄임`,
+  unplannedSessions: (sports) => `중점 종목이 아닌 훈련 삭제(${sports})`,
+  dayCapped: (from, to, calendar) => `하루 훈련량을 ${from} min에서 최대 ${to} min으로 줄임${calendar ? "(캘린더의 여유 시간)" : ""}`,
+  oneHardPerDay: () => "강한 훈련은 하루 1회만, 나머지는 \"보통\"으로 낮춤",
+  oneHardToday: () => "강한 훈련은 하루 1회만, 다른 하나는 \"보통\"으로 낮춤",
+  weeklyCut: (sport, from, to) => `${sport}: 주간 훈련량을 ${from}에서 최대 ${to}로 줄임`,
+  restDaySet: (reason) => `휴식일로 설정(${reason})`,
+  totalCut: (from, to) => `총 훈련량을 ${from} min에서 최대 ${to} min으로 줄임(목표의 주간 시간)`,
+  dropped: (sport, reason) => `${sport} 삭제(${reason})`,
+  lowered: (sport, intensity, reason) => `${object(sport)} ${toward(`"${intensity}"`)} 낮춤(${reason})`,
+  cut: (sport, from, to, reason) => `${object(sport)} ${from}에서 ${to}로 줄임(${reason})`,
+  brickSeparate: (sport, after) => `${object(sport)} 별도 훈련으로(${after === "" ? "이 종목은 브릭 훈련 불가" : `브릭 훈련은 ${after} 직후에만`})`,
+  outdoor: (sport, venue) => `${topic(sport)} 실외에서(${venue === "" ? "실내 옵션 없음" : `${venue} 등록 안 됨`})`,
+  indoorForWeather: (weather, sport, venue) => `${weather}, ${topic(sport)} 실내에서(${venue})`,
+  indoorForWeatherToday: (weather, sport, venue) => `${weather}: ${topic(sport)} 실내에서(${venue})`,
+  pool: (sport, noOpenWater) => `${topic(sport)} 수영장에서(${noOpenWater ? "오픈워터 옵션 없음" : "오픈워터 이용 등록 안 됨"})`,
+  poolForWeather: (weather, sport) => `${weather}, ${topic(sport)} 수영장에서`,
+  poolForWeatherToday: (weather, sport) => `${weather}: ${topic(sport)} 수영장에서`,
+  openWaterForRace: (sport) => `${object(sport)} 오픈워터에서(목표 대회가 오픈워터)`,
+  noStrengthBeforeGoal: (days) => `목표 전 마지막 ${days}일은 근력 훈련 없음`,
+  noStrength: (reason) => `근력 훈련 없음(${reason})`,
+  noStrengthBeforeHard: () => "강한 훈련 전날은 근력 훈련 없음",
+  extraMaxPerWeek: (extra, count) => `${extra} 삭제(주 최대 ${count}회)`,
+  extraNoTime: (extra) => `${extra} 삭제(그날 시간 소진)`,
+  easyAfterPause: (sport) => `${sport} 가볍게(휴식 후 복귀)`,
+  raised: (sport, from, to) => `${object(sport)} ${from}에서 ${to}로 늘림(의미 있는 최소 훈련)`,
+  belowMinimum: (sport, minimum) => `${minimum} 미만의 ${sport} 삭제`,
+  noTest: (sport, reason) => `${sport} 테스트 없음(${reason}), 대신 가벼운 훈련`,
+  noTestToday: (sport, reason) => `오늘 ${sport} 테스트 없음(${reason}), 대신 가벼운 훈련`,
+  hardLowered: (reason) => `강한 훈련을 "보통"으로 낮춤(${reason})`,
+  testMoved: (sport, day, reason) => `${sport} 테스트를 ${toward(day)} 옮김(${reason})`,
+  forcedRest: (reason) => `휴식 필수(${reason})`,
+  forcedRestToday: (reason) => `휴식 필수: ${reason}`,
+  moreCorrections: (count) => `… 외 ${count}건 수정`,
+
+  maxSessionsPerWeek: (count) => `주 최대 ${count}회`,
+  maxTrainingDays: (count) => `훈련일 최대 ${count}일`,
+  minOneRestDay: () => "주 1일 이상 휴식",
+  notTwoDaysInRow: () => "이틀 연속 불가",
+  maxHardDays: (count) => `강한 날 최대 ${count}일`,
+  rollingWindow: (cap, used) => `7일간 최대 ${cap}, 이미 ${used} 사용`,
+  sessionCap: () => "1회 한도",
+  todayCap: () => "오늘의 한도",
+  easyShare: (percent) => `한 주의 약 ${percent} %는 가볍게`,
+  testsOff: () => "체력 테스트가 꺼져 있음",
+  oneTestPerDay: () => "테스트는 하루 1회까지",
+  oneTestPerSport: () => "테스트는 종목별 주 1회까지",
+  doesNotFit: () => "맞지 않음",
+  reentry: () => "휴식 후 복귀",
+
+  extrasNotPlanned: (extras) => `오늘 ${extras} 삭제(계획 없음)`,
+  equipmentRemoved: (items) => `가지고 있지 않은 용품 삭제: ${items}`,
+  targetsAdjusted: () => "목표값을 나의 한도와 강도에 맞게 조정",
+  stepsCut: (sport, count) => `${sport}: ${count}단계로 줄임`,
+  noSteps: (sport) => `${sport}: 단계가 없는 훈련 삭제`,
+  intensityLowered: (sport, from, to, reasons) => `${sport}: 강도를 "${from}"에서 ${toward(`"${to}"`)} 낮춤(${reasons})`,
+  tooLittleLeft: () => "안전하게 남길 수 있는 훈련량이 너무 적음",
+  amountCutToday: (sport, from, to, cap) => `${sport}: 훈련량을 ${from}에서 ${to}로 줄임(오늘의 한도: ${cap})`,
+
+  deloadSet: (weeks) => `회복 주로 설정(늦어도 부하 주 ${weeks}주 후)`,
+  capped: (sport, from, to, reason) => `${object(sport)} ${from}에서 ${to}로 제한(${reason})`,
+  firstWeekCap: () => "첫 주 한도",
+  deloadWeek: () => "회복 주",
+  growth: (percent) => `회복 주가 아닌 지난주보다 최대 ${percent} % 증가`,
+  returnGrowth: (percent) => `휴식 전 수준으로 복귀: 회복 주가 아닌 지난주보다 최대 ${percent} % 증가`,
+  taper: () => "테이퍼",
+  goalWeek: () => "목표 주",
+  taperSessions: (sport, kept, requested) => `${sport} ${requested}회 대신 ${kept}회(테이퍼 중에도 횟수 유지)`,
+  missingWeeks: (count) => `빠진 ${count}주를 지난주 훈련량으로 추가`,
+  unplannedSports: (sports) => `중점 종목이 아닌 종목 삭제: ${sports}`,
+  moreVolumeCorrections: (count) => `… 외 ${count}건 훈련량 수정`,
+
+  overreaching: () => "높은 부하에서 회복 지표 나쁨(과훈련 위험)",
+  recoveryPoor: () => "회복 나쁨",
+  recoveryModerate: () => "회복 보통",
+  hardRecently: () => "어제나 오늘 이미 강한 훈련",
+  hardDaysRecently: (count) => `최근 7일간 이미 강한 날 ${count}일`,
+  fixedSportToday: (sport) => `주간 일정상 오늘은 ${sport}만`,
+  painPause: (pain, until) => `${pain}: ${until}까지 휴식`,
+  weekExhausted: () => "주간 훈련량 소진",
+  tooLittleSafe: () => "안전한 훈련량이 너무 적음",
+  pain: (level, area, sport, date) => `${date} ${sport} 후 ${area !== "" ? `${area} ` : ""}${PAIN[level] ?? PAIN[3]} 통증`,
+  painAreas: { knee: "무릎", shin: "정강이", achilles: "아킬레스건", foot: "발", hip: "고관절", back: "허리", shoulder: "어깨", other: "기타 부위" },
+  testBlackout: (days) => `목표 전 마지막 ${days}일은 테스트 없음`,
+
+  thunderstorm: () => "뇌우 예보",
+  storm: (kmh) => `강풍 예보(최대 ${kmh} km/h)`,
+  heavyRain: (mm) => `폭우 예보(${mm} mm)`,
+  ice: () => "빙판 가능성",
+  tooColdForOpenWater: (celsius) => `오픈워터에는 너무 추움(최고 ${celsius} °C)`,
+
+  noTestForSport: () => "이 종목의 테스트 없음",
+  noMaxEffort: (test, reason) => `${test}: 최대 강도 불가(${reason})`,
+  atMost: (intensity) => `최대 "${intensity}"`,
+  longestTooShort: (test, minutes) => `${test}: 최근 4주 최장 훈련이 ${minutes} min 미만`,
+  testOverAmount: (test, amount, cap) => `${test}: 테스트 훈련(${amount})이 한도(${cap}) 초과`,
+  testOverMinutes: (test, minutes, cap) => `${test}: 테스트 훈련(${minutes} min)이 하루 한도(${cap} min) 초과`,
+
+  raceMissing: (sport) => `${sport}: 플랜에 없어 예상 시간으로 추가`,
+  raceImplausible: (sport, target, estimate) => `${sport}: 목표 시간 ${target} min은 비현실적이라 ${estimate} min으로 가정`,
+  raceForeign: (sports) => `목표와 관계없는 종목 삭제(${sports})`,
+  racePacing: () => "페이스 목표를 나의 한도에 맞게 조정",
+  raceNoFuel: (sport) => `${sport}: 이 종목 중에는 보급 없음`,
+  raceFuel: (carbs, fluid, sodium) => `보급을 시간당 최대 탄수화물 ${carbs} g, 수분 ${fluid} ml, 나트륨 ${sodium} mg으로 제한`
+};

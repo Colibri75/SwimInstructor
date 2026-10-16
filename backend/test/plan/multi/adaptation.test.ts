@@ -31,7 +31,7 @@ describe("Beschwerden nach einer Einheit", () => {
     expect(painRestriction([run(0)], "run", "2026-09-29")).toBeNull();
     const both = painRestriction([run(1, { date: "2026-09-30" }), run(2)], "run", "2026-09-30");
     expect(both?.maxIntensity).toBe("easy");
-    expect(both?.reason).toBe("deutliche Beschwerden (Knie) nach Laufen am 29.09.");
+    expect(both?.reason.toString()).toBe("deutliche Beschwerden (Knie) nach Laufen am 29.09.");
   });
 
   it("sperren die Sportart heute oder senken Intensitaet und Umfang", () => {
@@ -39,11 +39,11 @@ describe("Beschwerden nach einer Einheit", () => {
     const moderate = dayLimits(runner(), TODAY, [run(2)]).sports.get("run");
     const none = dayLimits(runner(), TODAY, []).sports.get("run");
 
-    expect(strong?.blockedReason).toBe("starke Beschwerden (Knie) nach Laufen am 29.09.: Pause bis 01.10.");
+    expect(strong?.blockedReason?.toString()).toBe("starke Beschwerden (Knie) nach Laufen am 29.09.: Pause bis 01.10.");
     expect(moderate?.blockedReason).toBeNull();
     expect(moderate?.maxIntensity).toBe("easy");
     expect(moderate?.maxAmount).toBeLessThanOrEqual(Math.floor((none?.maxAmount ?? 0) / 2 / 5) * 5 + 5);
-    expect(moderate?.intensityReasons).toContain("deutliche Beschwerden (Knie) nach Laufen am 29.09.");
+    expect(moderate?.intensityReasons.map(String)).toContain("deutliche Beschwerden (Knie) nach Laufen am 29.09.");
   });
 
   it("wirken in der Woche auf die Tage danach, nicht auf andere Sportarten", () => {

@@ -88,13 +88,13 @@ describe("Wochenraster", () => {
 
   it("macht einen freien Tag zum Ruhetag, begrenzt die Minuten und erlaubt am festen Tag nur dessen Sportart", () => {
     const snapshot = scheduled();
-    expect(dayLimits(snapshot, FRIDAY).restReason).toBe("Ruhetag laut Wochenraster");
+    expect(dayLimits(snapshot, FRIDAY).restReason?.toString()).toBe("Ruhetag laut Wochenraster");
     expect(dayLimits(snapshot, TODAY)).toMatchObject({ restReason: null, maxMinutes: 45 });
     const thursday = dayLimits(snapshot, THURSDAY);
     expect(thursday.maxMinutes).toBe(60);
     expect(thursday.sports.get("swim")?.blockedReason).toBeNull();
-    expect(thursday.sports.get("bike")?.blockedReason).toBe("laut Wochenraster heute nur Schwimmen");
-    expect(thursday.sports.get("run")?.blockedReason).toBe("laut Wochenraster heute nur Schwimmen");
+    expect(thursday.sports.get("bike")?.blockedReason?.toString()).toBe("laut Wochenraster heute nur Schwimmen");
+    expect(thursday.sports.get("run")?.blockedReason?.toString()).toBe("laut Wochenraster heute nur Schwimmen");
     // Schlechte Erholung kuerzt auch die Minuten des Wochenrasters.
     expect(dayLimits(scheduled({ recovery: { status: "poor" } }), SATURDAY).maxMinutes).toBe(90);
   });
