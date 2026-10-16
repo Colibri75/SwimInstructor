@@ -13,11 +13,16 @@ struct AppleSignInButton: View {
 
     @State private var isSigningIn = false
     @State private var errorMessage: String?
+    /// Je Anmeldeversuch neu; Apple bekommt ihren SHA-256, der Server die Zahl selbst.
+    @State private var nonce: AppleSignInNonce?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             SignInWithAppleButton(.signIn) { request in
                 request.requestedScopes = [.fullName, .email]
+                let nonce = AppleSignInNonce.random()
+                self.nonce = nonce
+                request.nonce = nonce.hashed
             } onCompletion: { result in
                 handle(result)
             }
@@ -54,7 +59,9 @@ struct AppleSignInButton: View {
             let name = credential.fullName.map { PersonNameComponentsFormatter.localizedString(from: $0, style: .default) }
             // Einmal-Code: Damit kann der Server die Anmeldung beim Löschen des Kontos bei Apple widerrufen.
             let authorizationCode = credential.authorizationCode.flatMap { String(data: $0, encoding: .utf8) }
-            Task { await signIn(identityToken: identityToken, name: name, authorizationCode: authorizationCode) }
+            let nonce = self.nonce
+            self.nonce = nil
+            Task { await signIn(identityToken: identityToken, name: name, authorizationCode: authorizationCode, nonce: nonce) }
         case .failure(let error):
             // Abgebrochen: keine Meldung, der Nutzer wollte es so.
             if let authorizationError = error as? ASAuthorizationError, authorizationError.code == .canceled { return }
@@ -62,13 +69,13 @@ struct AppleSignInButton: View {
         }
     }
 
-    private func signIn(identityToken: String, name: String?, authorizationCode: String?) async {
+    private func signIn(identityToken: String, name: String?, authorizationCode: String?, nonce: AppleSignInNonce?) async {
         isSigningIn = true
         errorMessage = nil
         defer { isSigningIn = false }
         do {
             let session = try await AccountClient(baseURL: settings.baseURL)
-                .signInWithApple(identityToken: identityToken, name: name, authorizationCode: authorizationCode)
+                .signInWithApple(identityToken: identityToken, name: name, authorizationCode: authorizationCode, nonce: nonce)
             try settings.signIn(session)
             onSignedIn()
         } catch {
@@ -97,7 +104,7 @@ struct AccountSection: View {
                 }
                 Button("Abmelden") {
                     errorMessage = nil
-                    try? settings.signOut()
+                    signOut()
                 }
                 if settings.isSignedInWithApple {
                     Button(role: .destructive) {
@@ -135,6 +142,17 @@ struct AccountSection: View {
             Text("Konto")
         } footer: {
             Text("Mit deiner Apple-ID meldest du dich beim Server deines Coaches an. Gespeichert werden dort eine Kennung von Apple und, falls du sie teilst, dein Name und deine E-Mail-Adresse.")
+        }
+    }
+
+    /// Vergisst den Token sofort in der App und meldet die Sitzung im Hintergrund auch beim Server ab. Klappt das nicht
+    /// (offline), gilt der Token dort weiter, bis das Konto gelöscht oder der Token erneuert wird.
+    private func signOut() {
+        let token = settings.isSignedInWithApple ? settings.configuration?.token : nil
+        let baseURL = settings.baseURL
+        try? settings.signOut()
+        if let token {
+            Task { try? await AccountClient(baseURL: baseURL).logout(token: token) }
         }
     }
 

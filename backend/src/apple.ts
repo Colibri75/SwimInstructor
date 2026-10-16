@@ -1,4 +1,4 @@
-import { createPublicKey, KeyObject, verify } from "node:crypto";
+import { createHash, createPublicKey, KeyObject, timingSafeEqual, verify } from "node:crypto";
 
 /**
  * Prueft das Identitaetstoken aus "Mit Apple anmelden" (ein JWT, RS256) gegen Apples oeffentliche Schluessel (JWKS):
@@ -61,7 +61,12 @@ export class AppleIdentityVerifier {
     this.refetchMinIntervalMs = options.refetchMinIntervalMs ?? 60 * 1000;
   }
 
-  async verify(token: string): Promise<AppleIdentityClaims> {
+  /**
+   * - Parameter nonce: die Zufallszahl der App im Klartext. Die App gibt Apple ihren SHA-256 mit, Apple schreibt ihn als
+   *   `nonce` ins Token. So taugt ein abgefangenes Token ohne die Zufallszahl nicht zur Anmeldung. Ohne `nonce` (aeltere
+   *   App-Versionen) gilt nur ein Token, das auch keine `nonce` traegt.
+   */
+  async verify(token: string, options: { nonce?: string } = {}): Promise<AppleIdentityClaims> {
     const parts = token.split(".");
     if (parts.length !== 3 || parts.some((part) => !/^[A-Za-z0-9_-]+$/.test(part))) throw new AppleTokenError("kein JWT");
     const header = decodeJson(parts[0]);
@@ -81,6 +86,7 @@ export class AppleIdentityVerifier {
     if (typeof payload.exp !== "number" || payload.exp + CLOCK_SKEW_SECONDS < nowSeconds) throw new AppleTokenError("abgelaufen");
     if (typeof payload.iat === "number" && payload.iat - CLOCK_SKEW_SECONDS > nowSeconds) throw new AppleTokenError("aus der Zukunft");
     if (typeof payload.sub !== "string" || payload.sub === "" || payload.sub.length > 255) throw new AppleTokenError("sub fehlt");
+    checkNonce(payload.nonce, options.nonce);
 
     const email = typeof payload.email === "string" && payload.email.length <= 320 ? payload.email : undefined;
     return { sub: payload.sub, ...(email === undefined ? {} : { email }), audience };
@@ -130,6 +136,18 @@ export class AppleIdentityVerifier {
     })();
     return this.pending;
   }
+}
+
+function checkNonce(claim: unknown, nonce: string | undefined): void {
+  if (nonce === undefined) {
+    // Ein Token mit nonce gehoert zu einer Anmeldung, die die Zufallszahl mitschickt: ohne sie ist es abgefangen.
+    if (claim !== undefined) throw new AppleTokenError("nonce fehlt");
+    return;
+  }
+  if (typeof claim !== "string") throw new AppleTokenError("nonce fehlt im Token");
+  const expected = createHash("sha256").update(nonce).digest();
+  const actual = Buffer.from(claim, "hex");
+  if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) throw new AppleTokenError("nonce falsch");
 }
 
 function decodeJson(part: string): Record<string, unknown> {

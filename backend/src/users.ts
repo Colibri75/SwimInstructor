@@ -303,6 +303,27 @@ export function signInWithApple(
 }
 
 /**
+ * Abmelden: Die Sitzung zu diesem Token gilt nicht mehr. Nur Sitzungen aus "Mit Apple anmelden"; ein Token von Hand und
+ * der Besitzer bleiben (die aendert nur die CLI). `false`, wenn es keine solche Sitzung gab.
+ */
+export function removeSession(file: string, id: string, token: string): boolean {
+  const users = readUsers(file);
+  const digest = sha256Hex(token);
+  const user = users.find((entry) => entry.id === id);
+  if (user?.token_sha256s === undefined || !user.token_sha256s.includes(digest)) return false;
+  const remaining = user.token_sha256s.filter((hex) => hex !== digest);
+  writeUsers(
+    file,
+    users.map((entry) => {
+      if (entry.id !== id) return entry;
+      const { token_sha256s: _sessions, ...rest } = entry;
+      return remaining.length === 0 ? rest : { ...rest, token_sha256s: remaining };
+    })
+  );
+  return true;
+}
+
+/**
  * Merkt sich Apples Refresh-Token beim Nutzer (der neueste ersetzt den alten). `false`, wenn es den Nutzer nicht mehr
  * gibt (inzwischen geloescht): Dann sollte der Aufrufer den Token gleich widerrufen.
  */

@@ -2,17 +2,17 @@ import express, { Request, Response, Router } from "express";
 import { rmSync } from "node:fs";
 import { z } from "zod";
 import { AppleIdentityClaims, AppleKeysUnavailableError, AppleTokenError } from "./apple";
-import { currentUser } from "./auth";
-import { OWNER_ID, readUsers, removeUser, setAppleRefreshToken, signInWithApple, userDataDir } from "./users";
+import { bearerToken, currentUser } from "./auth";
+import { OWNER_ID, readUsers, removeSession, removeUser, setAppleRefreshToken, signInWithApple, userDataDir } from "./users";
 
 /**
- * Konto: Anmeldung mit Apple (`POST /v1/auth/apple`, oeffentlich) und Loeschen des eigenen Kontos
- * (`DELETE /v1/account`, mit Token; Apple verlangt die Loeschung in der App).
+ * Konto: Anmeldung mit Apple (`POST /v1/auth/apple`, oeffentlich), Abmelden (`POST /v1/auth/logout`, mit Token) und
+ * Loeschen des eigenen Kontos (`DELETE /v1/account`, mit Token; Apple verlangt die Loeschung in der App).
  */
 export interface AccountDeps {
   usersFile: string;
   dataDir: string;
-  verifier: { verify(token: string): Promise<AppleIdentityClaims> };
+  verifier: { verify(token: string, options?: { nonce?: string }): Promise<AppleIdentityClaims> };
   signupOpen: boolean;
   /** Nach jeder Aenderung von `users.json`, damit der neue Token sofort gilt (`UserDirectory.invalidate`). */
   onUsersChanged?: () => void;
@@ -35,7 +35,9 @@ const AppleSignInSchema = z.object({
   identityToken: z.string().min(1).max(8_000),
   name: z.string().max(200).optional(),
   /** Einmal-Code von Apple, nur fuer den spaeteren Widerruf beim Loeschen. */
-  authorizationCode: z.string().min(1).max(2_000).optional()
+  authorizationCode: z.string().min(1).max(2_000).optional(),
+  /** Zufallszahl der App im Klartext; ihr SHA-256 steht als `nonce` im Identitaetstoken. */
+  nonce: z.string().min(16).max(128).optional()
 });
 
 /** Oeffentliche Routen unter /v1, vor der Token-Pruefung. */
@@ -57,7 +59,7 @@ export function authRoutes(deps: AccountDeps): (router: Router) => void {
       }
       let identity: AppleIdentityClaims;
       try {
-        identity = await deps.verifier.verify(parsed.data.identityToken);
+        identity = await deps.verifier.verify(parsed.data.identityToken, parsed.data.nonce === undefined ? {} : { nonce: parsed.data.nonce });
       } catch (error) {
         if (error instanceof AppleKeysUnavailableError) {
           req.log.warn({ err: error }, "apple keys unavailable");
@@ -94,6 +96,17 @@ export function authRoutes(deps: AccountDeps): (router: Router) => void {
 /** Routen hinter der Token-Pruefung. */
 export function accountRoutes(deps: AccountDeps): (router: Router) => void {
   return (router) => {
+    // Abmelden: Die Sitzung dieses Geraets gilt danach auf dem Server nicht mehr (nicht nur in der App vergessen).
+    router.post("/auth/logout", (req: Request, res: Response) => {
+      const user = currentUser(res.locals);
+      const token = bearerToken(req);
+      if (user !== undefined && token !== undefined && user.id !== OWNER_ID && removeSession(deps.usersFile, user.id, token)) {
+        deps.onUsersChanged?.();
+        req.log.info({ user: user.id }, "signed out");
+      }
+      res.status(204).end();
+    });
+
     router.delete("/account", async (req: Request, res: Response) => {
       const user = currentUser(res.locals);
       if (user === undefined) {

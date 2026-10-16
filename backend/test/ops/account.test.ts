@@ -1,4 +1,4 @@
-import { generateKeyPairSync, KeyObject, sign } from "node:crypto";
+import { createHash, generateKeyPairSync, KeyObject, sign } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -130,6 +130,26 @@ describe("Apple-Identitaetstoken", () => {
     fail = true;
     now += 2 * 24 * 60 * 60_000;
     await expect(v.verify(identityToken({ exp: Math.floor(now / 1000) + 600, iat: Math.floor(now / 1000) }))).resolves.toBeDefined();
+  });
+});
+
+describe("Apple-Identitaetstoken: nonce", () => {
+  const nonce = "zufall-0123456789abcdef";
+  const hashed = createHash("sha256").update(nonce).digest("hex");
+
+  it("nimmt ein Token mit passender nonce an", async () => {
+    await expect(verifier().verify(identityToken({ nonce: hashed }), { nonce })).resolves.toMatchObject({ sub: "001234.abcdef.1234" });
+  });
+
+  it("lehnt falsche, fehlende und nicht mitgeschickte nonce ab", async () => {
+    await expect(verifier().verify(identityToken({ nonce: hashed }), { nonce: "andere-zufallszahl-123" })).rejects.toBeInstanceOf(AppleTokenError);
+    await expect(verifier().verify(identityToken(), { nonce })).rejects.toBeInstanceOf(AppleTokenError);
+    // Abgefangenes Token einer neuen App-Version, ohne die Zufallszahl eingereicht.
+    await expect(verifier().verify(identityToken({ nonce: hashed }))).rejects.toBeInstanceOf(AppleTokenError);
+  });
+
+  it("nimmt Tokens aelterer App-Versionen ohne nonce weiter an", async () => {
+    await expect(verifier().verify(identityToken())).resolves.toMatchObject({ sub: "001234.abcdef.1234" });
   });
 });
 
@@ -296,6 +316,39 @@ describe("Konto-Routen", () => {
     expect((await request(app).get("/v1/status").set("Authorization", `Bearer ${otherToken}`)).status).toBe(200);
     // Das Datenverzeichnis selbst bleibt.
     expect(existsSync(dir)).toBe(true);
+  });
+
+  it("meldet mit nonce an und lehnt dasselbe Token ohne nonce ab", async () => {
+    const { app } = setup();
+    const nonce = "zufall-0123456789abcdef";
+    const token = identityToken({ nonce: createHash("sha256").update(nonce).digest("hex") });
+
+    const withNonce = await request(app).post("/v1/auth/apple").send({ identityToken: token, nonce });
+    const withoutNonce = await request(app).post("/v1/auth/apple").send({ identityToken: token });
+
+    expect(withNonce.status).toBe(200);
+    expect(withoutNonce.status).toBe(401);
+  });
+
+  it("meldet nur die eigene Sitzung ab, andere Geraete und Tokens von Hand bleiben", async () => {
+    const { app, deps } = setup();
+    const { token: manual } = addUser(deps.usersFile, "bert");
+    const first = (await request(app).post("/v1/auth/apple").send({ identityToken: identityToken() })).body.token as string;
+    const second = (await request(app).post("/v1/auth/apple").send({ identityToken: identityToken() })).body.token as string;
+
+    const logout = await request(app).post("/v1/auth/logout").set("Authorization", `Bearer ${first}`);
+    const manualLogout = await request(app).post("/v1/auth/logout").set("Authorization", `Bearer ${manual}`);
+    const ownerLogout = await request(app).post("/v1/auth/logout").set("Authorization", `Bearer ${TEST_TOKEN}`);
+    const anonymous = await request(app).post("/v1/auth/logout");
+
+    expect(logout.status).toBe(204);
+    expect(manualLogout.status).toBe(204);
+    expect(ownerLogout.status).toBe(204);
+    expect(anonymous.status).toBe(401);
+    expect((await request(app).get("/v1/status").set("Authorization", `Bearer ${first}`)).status).toBe(401);
+    expect((await request(app).get("/v1/status").set("Authorization", `Bearer ${second}`)).status).toBe(200);
+    expect((await request(app).get("/v1/status").set("Authorization", `Bearer ${manual}`)).status).toBe(200);
+    expect((await request(app).get("/v1/status").set("Authorization", `Bearer ${TEST_TOKEN}`)).status).toBe(200);
   });
 
   it("laesst den Besitzer sich nicht loeschen (409) und verlangt einen Token", async () => {

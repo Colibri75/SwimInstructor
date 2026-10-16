@@ -22,6 +22,45 @@ final class AccountClientTests: XCTestCase {
         XCTAssertEqual(json["authorizationCode"] as? String, "c0de.123")
     }
 
+    func testSignInSendsRawNonce() async throws {
+        let transport = StubTransport(status: 200, body: #"{"token":"t","user":{"id":"a-1","name":"Apple-ID"}}"#)
+
+        _ = try await AccountClient(baseURL: baseURL, transport: transport)
+            .signInWithApple(identityToken: "x", name: nil, nonce: AppleSignInNonce(raw: "abc"))
+
+        let body = try XCTUnwrap(transport.requests.first?.httpBody)
+        let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: body) as? [String: Any])
+        XCTAssertEqual(json["nonce"] as? String, "abc")
+    }
+
+    func testNonceIsRandomAndHashedWithSHA256() {
+        let first = AppleSignInNonce.random()
+        let second = AppleSignInNonce.random()
+
+        XCTAssertEqual(first.raw.count, 64)
+        XCTAssertNotEqual(first, second)
+        // echo -n abc | shasum -a 256
+        XCTAssertEqual(AppleSignInNonce(raw: "abc").hashed, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+    }
+
+    func testLogoutSendsTokenAndMapsErrors() async throws {
+        let transport = StubTransport(status: 204, body: "")
+
+        try await AccountClient(baseURL: baseURL, transport: transport).logout(token: "server-token")
+
+        let request = try XCTUnwrap(transport.requests.first)
+        XCTAssertEqual(request.url?.absoluteString, "https://example.test/v1/auth/logout")
+        XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer server-token")
+
+        do {
+            try await AccountClient(baseURL: baseURL, transport: StubTransport(status: 401, body: "{}")).logout(token: "t")
+            XCTFail("Fehler erwartet")
+        } catch {
+            XCTAssertEqual(error as? AccountError, .unauthorized)
+        }
+    }
+
     func testEmptyNameIsLeftOut() async throws {
         let transport = StubTransport(status: 200, body: #"{"token":"t","user":{"id":"a-1","name":"Apple-ID"}}"#)
 
@@ -31,6 +70,7 @@ final class AccountClientTests: XCTestCase {
         let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: body) as? [String: Any])
         XCTAssertNil(json["name"])
         XCTAssertNil(json["authorizationCode"])
+        XCTAssertNil(json["nonce"])
     }
 
     func testEmptyAuthorizationCodeIsLeftOut() async throws {

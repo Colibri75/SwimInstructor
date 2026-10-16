@@ -336,8 +336,11 @@ In der App meldet man sich mit „Mit Apple anmelden" an, ohne Token von Hand. S
 
 1. Die App holt bei Apple ein Identitätstoken (ein von Apple signiertes JWT) und schickt es an
    `POST /v1/auth/apple` (öffentlich, ohne Bearer-Token) als
-   `{ "identityToken": "…", "name": "…", "authorizationCode": "…" }`. Den Namen gibt Apple nur bei der allerersten
-   Anmeldung heraus; der Einmal-Code `authorizationCode` dient nur dem Widerruf beim Löschen (siehe unten).
+   `{ "identityToken": "…", "name": "…", "authorizationCode": "…", "nonce": "…" }`. Den Namen gibt Apple nur bei der
+   allerersten Anmeldung heraus; der Einmal-Code `authorizationCode` dient nur dem Widerruf beim Löschen (siehe unten).
+   `nonce` ist eine Zufallszahl der App: Apple bekommt ihren SHA-256 und schreibt ihn ins Token, der Server prüft, dass
+   beides zusammenpasst. Ein Token mit `nonce` gilt nur zusammen mit der Zufallszahl; ältere App-Versionen ohne `nonce`
+   melden sich weiter an.
 2. Der Server prüft das JWT mit Apples öffentlichen Schlüsseln (`https://appleid.apple.com/auth/keys`, RS256, einen
    Tag zwischengespeichert): Aussteller `https://appleid.apple.com`, Empfänger eine der `APPLE_BUNDLE_IDS`, Ablauf
    und die Apple-Kennung `sub`.
@@ -347,6 +350,8 @@ In der App meldet man sich mit „Mit Apple anmelden" an, ohne Token von Hand. S
    `{ "token": "…", "user": { "id": "a-…", "name": "…" } }`.
 4. Die App legt den Token in den Schlüsselbund, an dieselbe Stelle wie früher den Token von Hand; alle anderen
    Aufrufe laufen unverändert mit `Authorization: Bearer <token>`.
+5. „Abmelden" in der App ruft `POST /v1/auth/logout` mit dem Token auf: Diese eine Sitzung gilt danach auch auf dem
+   Server nicht mehr. Ein Token von Hand und der Besitzer-Token bleiben gültig (die ändert nur die CLI).
 
 Für Apple-Nutzer gelten dieselben Budgets wie für alle (`PLAN_MAX_GENERATIONS_PER_*` je Nutzer, `…_TOTAL_…` für den
 Server). Anmeldeversuche sind je IP auf 20 pro Minute begrenzt (Antwort 429). `DELETE /v1/account` (mit Token)
