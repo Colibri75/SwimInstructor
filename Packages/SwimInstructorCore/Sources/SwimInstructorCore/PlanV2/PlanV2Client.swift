@@ -366,7 +366,24 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
     static let planVersion = 2
 
     public func fetchDayPlanV2(_ request: DayPlanV2Request) async throws -> DayPlanV2Response {
-        try await postV2(path: "v1/plan/today", body: DayBody(
+        try await postV2(path: Self.dayPath, body: Self.dayBody(request))
+    }
+
+    /// Dieselbe Anfrage wie `fetchDayPlanV2`, als fertiger `URLRequest` samt Body: für eine Übertragung im Hintergrund,
+    /// die iOS zu Ende führt, auch wenn die App schon wieder schläft. Ohne Einwilligung keine.
+    public func dayPlanV2URLRequest(_ request: DayPlanV2Request) async throws -> URLRequest {
+        try await postRequest(path: Self.dayPath, body: try AthleteStateSnapshot.jsonEncoder().encode(Self.dayBody(request)))
+    }
+
+    /// Liest die Antwort auf `dayPlanV2URLRequest` wie `fetchDayPlanV2`.
+    public static func decodeDayPlanV2(data: Data, statusCode: Int) throws -> DayPlanV2Response {
+        try decodeV2(data: data, statusCode: statusCode)
+    }
+
+    private static let dayPath = "v1/plan/today"
+
+    private static func dayBody(_ request: DayPlanV2Request) -> DayBody {
+        DayBody(
             planVersion: Self.planVersion,
             snapshot: request.snapshot,
             date: request.date,
@@ -380,7 +397,7 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
             location: request.extras.location,
             // Beim Tagesplan steht in `availability` nur der geplante Tag.
             availableMinutes: request.date.map { request.extras.availableMinutes(on: $0) } ?? request.extras.availability.first?.minutes
-        ))
+        )
     }
 
     public func fetchWeekPlanV2(_ request: WeekPlanV2Request) async throws -> WeekPlanV2Response {
@@ -464,7 +481,11 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
         body: Body
     ) async throws -> Response {
         let (data, response) = try await post(path: path, body: try AthleteStateSnapshot.jsonEncoder().encode(body), timeout: timeout)
-        switch response.statusCode {
+        return try Self.decodeV2(data: data, statusCode: response.statusCode)
+    }
+
+    static func decodeV2<Response: Decodable>(data: Data, statusCode: Int) throws -> Response {
+        switch statusCode {
         case 200:
             do {
                 return try PlanCoding.jsonDecoder().decode(Response.self, from: data)
@@ -480,7 +501,7 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
             let body = try? JSONDecoder().decode(ErrorBody.self, from: data)
             throw PlanAPIError.planUnavailable(reason: body?.reason)
         default:
-            throw statusError(response.statusCode)
+            throw statusError(statusCode)
         }
     }
 

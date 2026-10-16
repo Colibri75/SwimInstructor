@@ -47,6 +47,8 @@ final class WatchPlanStore: NSObject, ObservableObject {
                 self.isRequesting = false
                 if let response {
                     self.apply(response)
+                } else if PlanSyncCodec.isPreparing(reply) {
+                    self.message = String(localized: "Dein Coach erstellt gerade den Plan für heute auf dem iPhone. Er kommt von selbst auf die Uhr.")
                 } else {
                     self.message = String(localized: "Auf dem iPhone ist noch kein Plan. Öffne dort die App.")
                 }
@@ -58,6 +60,14 @@ final class WatchPlanStore: NSObject, ObservableObject {
                 self.message = text
             }
         })
+    }
+
+    /// Ist der Plan auf der Uhr nicht von heute, gleich beim iPhone nachfragen, ohne dass jemand "Vom iPhone holen"
+    /// drückt: beim Öffnen und sobald das iPhone erreichbar wird. Ist es nicht erreichbar, bleibt es still.
+    func requestPlanIfOutdated(now: Date = .now) {
+        guard !isRequesting, let session, session.activationState == .activated, session.isReachable else { return }
+        if let response, response.date == PlanFormatting.isoDay(now) { return }
+        requestPlan()
     }
 
     /// Ein Testergebnis ans iPhone. Die Übertragung wartet, bis das iPhone erreichbar ist, auch über einen Neustart der
@@ -91,8 +101,16 @@ extension WatchPlanStore: WCSessionDelegate {
         error: Error?
     ) {
         // Was das iPhone geschickt hat, während die Watch-App nicht lief.
-        guard let response = PlanSyncCodec.dayPlan(from: session.receivedApplicationContext) else { return }
-        Task { @MainActor in self.apply(response) }
+        let response = PlanSyncCodec.dayPlan(from: session.receivedApplicationContext)
+        Task { @MainActor in
+            if let response { self.apply(response) }
+            self.requestPlanIfOutdated()
+        }
+    }
+
+    nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
+        guard session.isReachable else { return }
+        Task { @MainActor in self.requestPlanIfOutdated() }
     }
 
     nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
