@@ -10,8 +10,11 @@ public struct BackendConfiguration: Equatable, Sendable {
         self.token = token
     }
 
-    /// Der Produktionsserver aus M4.
-    public static let defaultBaseURL = URL(string: "https://swiminstructor.kellner.v6.rocks")!
+    /// Der Produktionsserver.
+    public static let defaultBaseURL = URL(string: "https://api.peak-smith.com")!
+
+    /// Frühere Adressen desselben Servers. Wer eine davon gespeichert hat, landet beim Start auf `defaultBaseURL`.
+    public static let legacyBaseURLs = [URL(string: "https://swiminstructor.kellner.v6.rocks")!]
 }
 
 public enum PlanAPIError: Error, Equatable, LocalizedError {

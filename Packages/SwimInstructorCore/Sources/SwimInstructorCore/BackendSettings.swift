@@ -98,8 +98,14 @@ public final class BackendSettings: ObservableObject {
     public init(defaults: UserDefaults = .standard, secrets: SecretStoring = KeychainSecretStore()) {
         self.defaults = defaults
         self.secrets = secrets
-        self.baseURL = defaults.string(forKey: Self.baseURLKey).flatMap(Self.validatedURL)
+        var baseURL = defaults.string(forKey: Self.baseURLKey).flatMap(Self.validatedURL)
             ?? BackendConfiguration.defaultBaseURL
+        if BackendConfiguration.legacyBaseURLs.contains(baseURL) {
+            // Der Server ist umgezogen; die alte Adresse in den Einstellungen gleich mit umstellen.
+            baseURL = BackendConfiguration.defaultBaseURL
+            defaults.set(baseURL.absoluteString, forKey: Self.baseURLKey)
+        }
+        self.baseURL = baseURL
         let hasToken = !(secrets.read() ?? "").isEmpty
         self.hasToken = hasToken
         self.accountName = hasToken ? defaults.string(forKey: Self.accountNameKey) : nil

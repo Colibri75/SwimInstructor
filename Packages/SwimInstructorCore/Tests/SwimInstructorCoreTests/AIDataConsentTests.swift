@@ -46,9 +46,9 @@ final class AIDataConsentTests: XCTestCase {
     // MARK: - Link
 
     func testPolicyLinkFollowsTheAppLanguage() {
-        XCTAssertEqual(PrivacyPolicy.url(languageCode: "de").absoluteString, "https://swiminstructor.kellner.v6.rocks/datenschutz")
-        XCTAssertEqual(PrivacyPolicy.url(languageCode: "en").absoluteString, "https://swiminstructor.kellner.v6.rocks/privacy")
-        XCTAssertEqual(PrivacyPolicy.url(languageCode: "ja").absoluteString, "https://swiminstructor.kellner.v6.rocks/privacy")
+        XCTAssertEqual(PrivacyPolicy.url(languageCode: "de").absoluteString, "https://api.peak-smith.com/datenschutz")
+        XCTAssertEqual(PrivacyPolicy.url(languageCode: "en").absoluteString, "https://api.peak-smith.com/privacy")
+        XCTAssertEqual(PrivacyPolicy.url(languageCode: "ja").absoluteString, "https://api.peak-smith.com/privacy")
     }
 
     // MARK: - Oberfläche

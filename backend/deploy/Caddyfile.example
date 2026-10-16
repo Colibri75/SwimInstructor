@@ -9,7 +9,9 @@
 # Dann ohne Ausfall neu laden:
 #   docker exec caddy caddy reload --config /etc/caddy/Caddyfile
 
-swiminstructor.kellner.v6.rocks {
+# api.peak-smith.com ist die Adresse der App. Die alte DynDNS-Adresse bleibt vorerst mit im Block,
+# damit aeltere App-Versionen weiter funktionieren; sie kann weg, sobald niemand mehr eine alte Version nutzt.
+api.peak-smith.com, swiminstructor.kellner.v6.rocks {
 	encode zstd gzip
 
 	header {

@@ -9,7 +9,9 @@ ergänzt nur einen Block in der Caddyfile.
 Die Befehle laufen als `root` auf dem Server (sonst `sudo` davorsetzen). `docker compose` liest
 die Konfigurationsdatei als aufrufender Nutzer, deshalb auch die Deploys als root ausführen.
 
-Die API bekommt den Hostnamen **`swiminstructor.kellner.v6.rocks`**.
+Die API bekommt den Hostnamen **`api.peak-smith.com`**. Die frühere Adresse
+`swiminstructor.kellner.v6.rocks` zeigt auf denselben Server und bleibt vorerst erreichbar, damit
+ältere App-Versionen weiter funktionieren (Abschnitt [Umzug auf api.peak-smith.com](#umzug-auf-apipeak-smithcom)).
 
 ## Voraussetzungen prüfen
 
@@ -27,11 +29,11 @@ Außerdem muss der Hostname auf deinen Server zeigen. Prüfe das von deinem Rech
 Server aus:
 
 ```bash
-dig +short A    swiminstructor.kellner.v6.rocks   # soll 144.91.69.144 zeigen
-dig +short AAAA swiminstructor.kellner.v6.rocks   # falls vorhanden: die IPv6-Adresse des Servers
+dig +short A    api.peak-smith.com   # soll 144.91.69.144 zeigen
+dig +short AAAA api.peak-smith.com   # falls vorhanden: die IPv6-Adresse des Servers
 ```
 
-Kommt bei `A` nichts zurück, ist im DynDNS-Eintrag keine IPv4-Adresse hinterlegt. Trag dort
+Kommt bei `A` nichts zurück, ist im DNS-Eintrag keine IPv4-Adresse hinterlegt. Trag dort
 `144.91.69.144` ein, sonst kann Caddy kein Zertifikat holen und iPhones im Mobilfunknetz
 erreichen die API womöglich nicht.
 
@@ -106,13 +108,13 @@ anpassen, prüfen, neu laden.
 Von deinem Rechner aus, nicht vom Server:
 
 ```bash
-curl -i https://swiminstructor.kellner.v6.rocks/health
+curl -i https://api.peak-smith.com/health
 # HTTP/2 200 ... {"status":"ok",...}
 
-curl -i https://swiminstructor.kellner.v6.rocks/v1/status
+curl -i https://api.peak-smith.com/v1/status
 # HTTP/2 401 ... {"error":"unauthorized"}
 
-curl -i -H "Authorization: Bearer <DEIN-TOKEN>" https://swiminstructor.kellner.v6.rocks/v1/status
+curl -i -H "Authorization: Bearer <DEIN-TOKEN>" https://api.peak-smith.com/v1/status
 # HTTP/2 200 ... {"status":"authenticated","user":"owner"}
 ```
 
@@ -122,11 +124,11 @@ beim Einfügen nicht angezeigt:
 ```powershell
 $s = Read-Host -AsSecureString -Prompt "Token"
 $t = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s))
-curl.exe -i -H "Authorization: Bearer $t" https://swiminstructor.kellner.v6.rocks/v1/status
+curl.exe -i -H "Authorization: Bearer $t" https://api.peak-smith.com/v1/status
 Remove-Variable s, t
 ```
 
-Im Browser muss beim Aufruf von `https://swiminstructor.kellner.v6.rocks/health` ein gültiges
+Im Browser muss beim Aufruf von `https://api.peak-smith.com/health` ein gültiges
 Schloss erscheinen (keine Zertifikatswarnung). Prüfe außerdem, dass deine anderen Dienste (Financial,
 Vaultwarden, Immich, Nextcloud) weiter normal erreichbar sind.
 
@@ -162,7 +164,16 @@ Neustarts und Updates. Weitere Einstellungen (`PLAN_MODEL`, `PLAN_EFFORT`, Koste
 stehen in [plan-generation.md](plan-generation.md) und lassen sich in derselben Datei
 `/etc/swiminstructor/backend.env` setzen.
 
-## Hinweis zum Zertifikat
+## Umzug auf api.peak-smith.com
+
+Bis Oktober 2026 lief die API unter `swiminstructor.kellner.v6.rocks`. Seitdem nutzt die App
+`api.peak-smith.com`; eine gespeicherte alte Adresse stellt sie beim Start von selbst um (eine
+eigene Server-Adresse bleibt unverändert). Caddy bedient beide Namen im selben Block
+([Caddyfile.example](../backend/deploy/Caddyfile.example)), damit ältere TestFlight-Builds weiter
+funktionieren. Die alte Adresse kann aus dem Block raus, sobald niemand mehr einen Build von vor
+dem Umzug nutzt.
+
+## Hinweis zum Zertifikat (alte Adresse)
 
 `v6.rocks` ist eine gemeinsame DynDNS-Domain. Let's Encrypt begrenzt neue Zertifikate pro Domain
 (50 pro Woche), und dieses Limit ist dort oft ausgeschöpft. Im Caddy-Log steht dann `HTTP 429 ...
@@ -238,7 +249,7 @@ ssh -i /root/gh-swiminstructor -o IdentitiesOnly=yes deploy@localhost   # endet 
 
 Der Server liefert die Datenschutzerklärung der App öffentlich und ohne Token aus: `GET /datenschutz` (Deutsch) und
 `GET /privacy` (Englisch). Die App verlinkt darauf (Einstellungen › Datenschutz und Einwilligung), im App Store gehört
-`https://swiminstructor.kellner.v6.rocks/privacy` (oder `/datenschutz`) als Privacy-Policy-URL eingetragen. Der Text
+`https://api.peak-smith.com/privacy` (oder `/datenschutz`) als Privacy-Policy-URL eingetragen. Der Text
 steht in `backend/src/privacy/texts.ts`; die Angaben zum Verantwortlichen und zum Hoster kommen aus der Konfiguration:
 
 | Variable | Standard | Bedeutung |
@@ -251,7 +262,7 @@ steht in `backend/src/privacy/texts.ts`; die Angaben zum Verantwortlichen und zu
 Die Variablen gehören in `/etc/swiminstructor/backend.env`; danach `docker compose up -d --force-recreate`. Prüfen:
 
 ```bash
-curl -s https://swiminstructor.kellner.v6.rocks/datenschutz | grep -c "wird ergänzt"   # 0, sobald alles gesetzt ist
+curl -s https://api.peak-smith.com/datenschutz | grep -c "wird ergänzt"   # 0, sobald alles gesetzt ist
 ```
 
 Ändert sich, welche Daten die App an Server oder Anthropic schickt: Text anpassen, `PRIVACY_POLICY_DATE` setzen und in
@@ -434,8 +445,8 @@ Modell, Token, Dauer und geschätzten Kosten in `/data/metrics/usage-<Tag>.jsonl
 Auswertung liefert der Server Admins:
 
 ```bash
-curl -s -H "Authorization: Bearer <TOKEN>" "https://swiminstructor.kellner.v6.rocks/v1/admin/usage?days=7" | jq '.total, .days[-1]'
-curl -s -H "Authorization: Bearer <TOKEN>" https://swiminstructor.kellner.v6.rocks/v1/admin/users | jq
+curl -s -H "Authorization: Bearer <TOKEN>" "https://api.peak-smith.com/v1/admin/usage?days=7" | jq '.total, .days[-1]'
+curl -s -H "Authorization: Bearer <TOKEN>" https://api.peak-smith.com/v1/admin/users | jq
 ```
 
 Je Tag: Anfragen, Claude-Aufrufe, Ergebnisse, Fehlerquote (Fallback und Ausfall), Gründe, Token, Kosten, Dauer je
@@ -480,7 +491,7 @@ markiert ihn als `unhealthy`, wenn `/health` nicht mehr antwortet. Benachrichtig
 aber nicht. Dafür zwei kostenlose Dienste, beide ohne Änderung am Server:
 
 1. **Erreichbarkeit von außen**: Ein Uptime-Monitor (z. B. UptimeRobot, oder Uptime Kuma, falls
-   du es schon betreibst) ruft alle 5 Minuten `https://swiminstructor.kellner.v6.rocks/health`
+   du es schon betreibst) ruft alle 5 Minuten `https://api.peak-smith.com/health`
    auf, erwartet Status 200 und das Stichwort `"ok"`, und meldet sich per Mail oder Push. Schalte
    dort auch die Warnung vor Ablauf des Zertifikats ein. Das deckt Container, Caddy, DNS und
    Zertifikat in einem ab.
