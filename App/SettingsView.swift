@@ -80,6 +80,8 @@ struct SettingsView: View {
                     startingLevelSection
                         .onAppear { startingLevels = startingLevelStore.levels() }
 
+                    aboutMeSection
+
                     pauseSection
                         .onAppear { pauseReport = pauseStore.report() }
 
@@ -349,6 +351,20 @@ struct SettingsView: View {
             }
         } footer: {
             Text("Wenn Health weniger zeigt, als du schaffst (Training ohne Uhr, Pause), gib hier deinen Wochenumfang und deine längste Einheit an. Die Angabe gilt 28 Tage.")
+        }
+    }
+
+    // MARK: - Über mich
+
+    private var aboutMeSection: some View {
+        Section {
+            NavigationLink {
+                AthleteProfileView()
+            } label: {
+                Label("Über mich", systemImage: "person.text.rectangle")
+            }
+        } footer: {
+            Text("Erfahrung, Verletzungen, was du kannst, wann du ins Becken kommst, Alltag und Intensität. Alles freiwillig; dein Coach plant damit ab dem nächsten Plan genauer.")
         }
     }
 

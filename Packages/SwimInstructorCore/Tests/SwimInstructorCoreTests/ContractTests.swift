@@ -20,12 +20,24 @@ final class ContractTests: XCTestCase {
             let weatherSensitive: Bool
             let indoor: Indoor?
             let openWater: Indoor?
+            let pool: Pool?
+            let skills: [Skill]
             let performanceMetrics: [Metric]
             let performanceTests: [Test]
         }
 
         struct Indoor: Decodable, Equatable {
             let equipment: String
+            let displayName: String
+        }
+
+        struct Pool: Decodable, Equatable {
+            let displayName: String
+            let lapLengths: [Int]
+        }
+
+        struct Skill: Decodable, Equatable {
+            let id: String
             let displayName: String
         }
 
@@ -116,6 +128,8 @@ final class ContractTests: XCTestCase {
             XCTAssertEqual(module.weatherSensitive, sport.weatherSensitive, sport.id)
             XCTAssertEqual(module.indoorEquipment.map { SportsContract.Indoor(equipment: $0.id, displayName: $0.displayName) }, sport.indoor, sport.id)
             XCTAssertEqual(module.openWater.map { SportsContract.Indoor(equipment: $0.id, displayName: $0.displayName) }, sport.openWater, sport.id)
+            XCTAssertEqual(module.pool.map { SportsContract.Pool(displayName: $0.displayName, lapLengths: $0.lapLengths) }, sport.pool, sport.id)
+            XCTAssertEqual(module.skills.map { SportsContract.Skill(id: $0.id, displayName: $0.displayName) }, sport.skills, sport.id)
             XCTAssertEqual(module.performanceMetrics.map { SportsContract.Metric($0) }, sport.performanceMetrics, sport.id)
             XCTAssertEqual(module.performanceTests.map { SportsContract.Test($0) }, sport.performanceTests, sport.id)
         }

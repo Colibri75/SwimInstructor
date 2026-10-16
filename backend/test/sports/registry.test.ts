@@ -31,6 +31,8 @@ const planning: SportPlanning = {
   weatherSensitive: false,
   indoor: null,
   openWater: null,
+  pool: null,
+  skills: [],
   canFuelDuringRace: true,
   promptRules: "- Ruhig atmen."
 };
@@ -151,7 +153,11 @@ describe("SportRegistry", () => {
     ["drinnen ohne Namen", { weatherSensitive: true, indoor: { equipment: "mat", displayName: " " } }],
     ["drinnen, aber nicht wetterabhaengig", { indoor: { equipment: "mat", displayName: "Matte" } }],
     ["Freiwasser mit ungueltigem Zugang", { openWater: { equipment: "See!", displayName: "See" } }],
-    ["Freiwasser ohne Namen", { openWater: { equipment: "lake", displayName: "" } }]
+    ["Freiwasser ohne Namen", { openWater: { equipment: "lake", displayName: "" } }],
+    ["Bahn ohne Bahnlaenge", { pool: { displayName: "Halle", lapLengths: [] } }],
+    ["Bahn mit krummer Bahnlaenge", { pool: { displayName: "Halle", lapLengths: [12.5] } }],
+    ["Faehigkeit doppelt", { skills: [{ id: "sweep", displayName: "Riemen" }, { id: "sweep", displayName: "Riemen" }] }],
+    ["Faehigkeit ohne Namen", { skills: [{ id: "sweep", displayName: " " }] }]
   ])("lehnt ungueltige Planungsangaben ab: %s", (_why, patch) => {
     expect(problemOf([stub({ planning: { ...planning, ...patch } })])).toBe("invalid_planning");
   });

@@ -54,6 +54,8 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
     public let performance: PerformanceSummary?
     /// Ab v2, optional: das Startniveau, das der Athlet selbst angegeben hat (nur gültige Angaben). Fehlt ohne Angabe.
     public let startingLevels: [StartingLevel]?
+    /// Ab v2, optional: was der Athlet unter "Über mich" angibt. Fehlt ohne Angabe.
+    public let athleteProfile: AthleteProfileSummary?
 
     public init(
         schemaVersion: Int = AthleteStateSnapshot.currentSchemaVersion,
@@ -68,7 +70,8 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
         sports: [SportStateSummary]? = nil,
         totalLoad: TotalLoadSummary? = nil,
         performance: PerformanceSummary? = nil,
-        startingLevels: [StartingLevel]? = nil
+        startingLevels: [StartingLevel]? = nil,
+        athleteProfile: AthleteProfileSummary? = nil
     ) {
         self.schemaVersion = schemaVersion
         self.generatedAt = generatedAt
@@ -83,6 +86,7 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
         self.totalLoad = totalLoad
         self.performance = performance
         self.startingLevels = startingLevels
+        self.athleteProfile = athleteProfile
     }
 
     /// Derselbe Snapshot als v2, mit Gesamtziel, Werten je Sportart und Gesamtlast.
@@ -95,7 +99,7 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
             schemaVersion: Self.multiSportSchemaVersion,
             generatedAt: generatedAt, goal: goal, volume: volume, pace: pace, load: load, recovery: recovery, flags: flags,
             trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad, performance: performance,
-            startingLevels: startingLevels
+            startingLevels: startingLevels, athleteProfile: athleteProfile
         )
     }
 
@@ -105,7 +109,7 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
             schemaVersion: schemaVersion,
             generatedAt: generatedAt, goal: goal, volume: volume, pace: pace, load: load, recovery: recovery, flags: flags,
             trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad, performance: performance,
-            startingLevels: startingLevels
+            startingLevels: startingLevels, athleteProfile: athleteProfile
         )
     }
 
@@ -116,7 +120,17 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
             schemaVersion: schemaVersion,
             generatedAt: generatedAt, goal: goal, volume: volume, pace: pace, load: load, recovery: recovery, flags: flags,
             trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad, performance: performance,
-            startingLevels: levels.isEmpty ? nil : levels
+            startingLevels: levels.isEmpty ? nil : levels, athleteProfile: athleteProfile
+        )
+    }
+
+    /// Derselbe Snapshot mit den Angaben unter "Über mich" (nur für v2 gedacht; `version1` lässt sie weg).
+    public func withAthleteProfile(_ profile: AthleteProfileSummary?) -> AthleteStateSnapshot {
+        AthleteStateSnapshot(
+            schemaVersion: schemaVersion,
+            generatedAt: generatedAt, goal: goal, volume: volume, pace: pace, load: load, recovery: recovery, flags: flags,
+            trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad, performance: performance,
+            startingLevels: startingLevels, athleteProfile: profile
         )
     }
 
@@ -361,6 +375,65 @@ public extension AthleteStateSnapshot {
         public init(athlete: [Value], sports: [Sport]) {
             self.athlete = athlete
             self.sports = sports
+        }
+    }
+
+    /// Die Angaben unter "Über mich", wie sie zum Server gehen: nur Zahlen und feste Begriffe, leere Teile fehlen.
+    struct AthleteProfileSummary: Codable, Equatable, Sendable {
+        public struct Injury: Codable, Equatable, Sendable {
+            public let area: PainArea
+            public let status: InjuryStatus
+
+            public init(area: PainArea, status: InjuryStatus) {
+                self.area = area
+                self.status = status
+            }
+        }
+
+        public struct Sport: Codable, Equatable, Sendable {
+            public let sport: SportID
+            public let skills: [String]?
+            public let longSessionWeekday: Int?
+            public let lapLengthMeters: Int?
+            public let poolWeekdays: [Int]?
+
+            public init(sport: SportID, skills: [String]?, longSessionWeekday: Int?, lapLengthMeters: Int?, poolWeekdays: [Int]?) {
+                self.sport = sport
+                self.skills = skills
+                self.longSessionWeekday = longSessionWeekday
+                self.lapLengthMeters = lapLengthMeters
+                self.poolWeekdays = poolWeekdays
+            }
+        }
+
+        public let age: Int?
+        public let trainingYears: Int?
+        public let injuries: [Injury]?
+        public let sports: [Sport]?
+        public let lifeStress: LifeStress?
+        public let shiftWork: Bool?
+        public let intensityPreference: IntensityPreference?
+
+        public init(
+            age: Int?,
+            trainingYears: Int?,
+            injuries: [Injury]?,
+            sports: [Sport]?,
+            lifeStress: LifeStress?,
+            shiftWork: Bool?,
+            intensityPreference: IntensityPreference?
+        ) {
+            self.age = age
+            self.trainingYears = trainingYears
+            self.injuries = injuries
+            self.sports = sports
+            self.lifeStress = lifeStress
+            self.shiftWork = shiftWork
+            self.intensityPreference = intensityPreference
+        }
+
+        var isEmpty: Bool {
+            age == nil && trainingYears == nil && injuries == nil && sports == nil && lifeStress == nil && shiftWork == nil && intensityPreference == nil
         }
     }
 

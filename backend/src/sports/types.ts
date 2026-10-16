@@ -191,6 +191,17 @@ export interface SportPlanning {
    * Disziplin), dann plant der Server passende Einheiten. Gegenstueck: `SportModule.openWater`.
    */
   readonly openWater: { readonly equipment: string; readonly displayName: string } | null;
+  /**
+   * Der uebliche Ort mit Bahnen (Schwimmen: Becken) mit den Bahnlaengen, die der Athlet angeben kann; `null` ohne. Mit
+   * Angaben im Athletenprofil plant der Server Schritte im Raster der Bahnlaenge und dort nur an den Tagen, an denen der
+   * Athlet hinkommt (Freiwasser geht immer). Gegenstueck: `SportModule.pool`.
+   */
+  readonly pool: { readonly displayName: string; readonly lapLengths: readonly number[] } | null;
+  /**
+   * Was der Athlet in dieser Sportart koennen kann (Schwimmen: Lagen, Rollwende), mit deutschem Namen. Er kreuzt im
+   * Athletenprofil an, was er kann; Claude plant nur damit. Leer: nichts abzufragen. Gegenstueck: `SportModule.skills`.
+   */
+  readonly skills: readonly { readonly id: string; readonly displayName: string }[];
   /** Ob man waehrend dieser Disziplin im Wettkampf essen und trinken kann (beim Schwimmen nicht). */
   readonly canFuelDuringRace: boolean;
   /**

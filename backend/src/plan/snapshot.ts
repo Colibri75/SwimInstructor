@@ -243,6 +243,65 @@ const StartingLevelSchema = z.object({
   reported_at: z.iso.datetime()
 });
 
+/** Koerperstellen fuer Beschwerden nach einer Einheit und fuer die Verletzungsgeschichte im Athletenprofil. */
+export const PAIN_AREAS = ["knee", "shin", "achilles", "foot", "hip", "back", "shoulder", "other"] as const;
+export type PainArea = (typeof PAIN_AREAS)[number];
+
+/** Verletzungsgeschichte: jetzt gerade, kommt immer wieder, frueher (ausgeheilt). */
+export const INJURY_STATUSES = ["current", "recurring", "past"] as const;
+export const LIFE_STRESS_LEVELS = ["low", "normal", "high"] as const;
+export const INTENSITY_PREFERENCES = ["easy", "balanced", "intense"] as const;
+
+const weekday = z.number().int().min(1).max(7);
+
+/**
+ * Was der Athlet ueber sich angibt (Einstellungen "Über mich"), alles optional: Alter (aus Health oder Geburtsjahr),
+ * Jahre Ausdauersport, Verletzungsgeschichte, je Sportart Koennen, Tag der langen Einheit und Bahn (Laenge, Tage mit
+ * Zugang), Alltagsbelastung und Vorliebe bei der Intensitaet. Nur Enums und Zahlen, wie der Rest des Snapshots.
+ */
+const AthleteProfileSchema = z
+  .object({
+    age: z.number().int().min(10).max(100).optional(),
+    training_years: z.number().int().min(0).max(70).optional(),
+    injuries: z.array(z.object({ area: z.enum(PAIN_AREAS), status: z.enum(INJURY_STATUSES) })).max(PAIN_AREAS.length).optional(),
+    sports: z
+      .array(
+        z.object({
+          sport: sportId,
+          skills: z.array(z.string().regex(/^[a-z][a-z0-9_]{1,39}$/)).max(16).optional(),
+          long_session_weekday: weekday.optional(),
+          lap_length_meters: z.number().int().min(10).max(100).optional(),
+          pool_weekdays: z.array(weekday).min(1).max(7).optional()
+        })
+      )
+      .max(16)
+      .optional(),
+    life_stress: z.enum(LIFE_STRESS_LEVELS).optional(),
+    shift_work: z.boolean().optional(),
+    intensity_preference: z.enum(INTENSITY_PREFERENCES).optional()
+  })
+  .superRefine((profile, ctx) => {
+    const areas = (profile.injuries ?? []).map((injury) => injury.area);
+    if (new Set(areas).size !== areas.length) ctx.addIssue({ code: "custom", path: ["injuries"], message: "Körperstelle doppelt" });
+    const sports = (profile.sports ?? []).map((entry) => entry.sport);
+    if (new Set(sports).size !== sports.length) ctx.addIssue({ code: "custom", path: ["sports"], message: "Sportart doppelt" });
+    (profile.sports ?? []).forEach((entry, index) => {
+      const planning = SPORTS.get(entry.sport)?.planning;
+      if (planning === undefined) return;
+      const known = new Set(planning.skills.map((skill) => skill.id));
+      const skills = entry.skills ?? [];
+      if (new Set(skills).size !== skills.length || !skills.every((skill) => known.has(skill))) {
+        ctx.addIssue({ code: "custom", path: ["sports", index, "skills"], message: "unbekannte oder doppelte Fähigkeit" });
+      }
+      if (entry.lap_length_meters !== undefined && !(planning.pool?.lapLengths.includes(entry.lap_length_meters) ?? false)) {
+        ctx.addIssue({ code: "custom", path: ["sports", index, "lap_length_meters"], message: "Bahnlänge passt nicht zur Sportart" });
+      }
+      const days = entry.pool_weekdays ?? [];
+      if (days.length > 0 && planning.pool === null) ctx.addIssue({ code: "custom", path: ["sports", index, "pool_weekdays"], message: "Sportart ohne Bahn" });
+      if (new Set(days).size !== days.length) ctx.addIssue({ code: "custom", path: ["sports", index, "pool_weekdays"], message: "Wochentag doppelt" });
+    });
+  });
+
 export const SnapshotSchema = z
   .object({
     schema_version: z.literal(2, { error: "Plan v2 braucht Snapshot v2" }),
@@ -251,7 +310,8 @@ export const SnapshotSchema = z
     sports: z.array(SportStateSchema).max(16),
     total_load: TotalLoadSchema,
     performance: PerformanceSchema.optional(),
-    starting_levels: z.array(StartingLevelSchema).max(16).optional()
+    starting_levels: z.array(StartingLevelSchema).max(16).optional(),
+    athlete_profile: AthleteProfileSchema.optional()
   })
   .superRefine((snapshot, ctx) => {
     const ids = snapshot.sports.map((state) => state.sport);
@@ -266,4 +326,6 @@ export type ScheduleDay = NonNullable<TrainingGoal["weekly_schedule"]>[number];
 export type SportState = SnapshotV2["sports"][number];
 export type Performance = NonNullable<SnapshotV2["performance"]>;
 export type StartingLevel = NonNullable<SnapshotV2["starting_levels"]>[number];
+export type AthleteProfile = NonNullable<SnapshotV2["athlete_profile"]>;
+export type SportProfile = NonNullable<AthleteProfile["sports"]>[number];
 export type SnapshotFlag = SnapshotV2["flags"][number];

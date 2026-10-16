@@ -8,6 +8,7 @@ import { DayWeather, severeWeather } from "../weather";
 import { EXERCISE_RULES, EXTRA_RULES, normalizeWeekExtras, perWeek, strengthBlackout, WeekExtra } from "./extras";
 import { amountToMeters, amountToMinutes, floorAmount, formatAmount, plannedSports, roundAmount, sportName } from "./sports";
 import { fixedSport, scheduleDay, trainingDaysPerWeek, weeklyMinutes } from "./schedule";
+import { poolClosed } from "./profile";
 import { chooseTest, TestPlan, TestRef, testRef } from "./tests";
 import { inOpenWaterBlock, openWaterAllowed, openWaterBlocked, raceInOpenWater } from "./openWater";
 import { Language, LANGUAGES, serverTexts } from "../language";
@@ -304,7 +305,13 @@ function sanitizeBlock(input: MultiWeekPlanRaw, snapshot: SnapshotV2, context: W
         .flatMap((draft) => applyPain(draft, day.date, reports, notes))
         .flatMap((draft) => limitSession(draft, day.date, notes))
         .map((draft) => placeIndoor(draft, day.date, context, notes))
-        .map((draft) => placeOpenWater(draft, day.date, context, notes)),
+        .map((draft) => placeOpenWater(draft, day.date, context, notes))
+        .filter((draft) => {
+          // Die Bahn nur an den Tagen, an denen der Athlet hinkommt (Freiwasser geht immer).
+          if (draft.openWater || !poolClosed(snapshot, draft.sport, day.date)) return true;
+          notes.push(`${label(day.date)}: ${draft.sport.displayName} gestrichen (kein ${draft.sport.planning.pool?.displayName ?? ""} an diesem Tag laut deinen Angaben)`);
+          return false;
+        }),
       day.date,
       []
     )
