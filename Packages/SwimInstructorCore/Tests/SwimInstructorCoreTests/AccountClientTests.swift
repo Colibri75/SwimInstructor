@@ -8,7 +8,7 @@ final class AccountClientTests: XCTestCase {
         let transport = StubTransport(status: 200, body: #"{"token":"server-token","user":{"id":"a-123456789abc","name":"Anna"}}"#)
 
         let session = try await AccountClient(baseURL: baseURL, transport: transport)
-            .signInWithApple(identityToken: "apple.jwt.token", name: "  Anna  ")
+            .signInWithApple(identityToken: "apple.jwt.token", name: "  Anna  ", authorizationCode: "c0de.123")
 
         XCTAssertEqual(session, AccountSession(token: "server-token", userID: "a-123456789abc", name: "Anna"))
         let request = try XCTUnwrap(transport.requests.first)
@@ -19,6 +19,7 @@ final class AccountClientTests: XCTestCase {
         let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: body) as? [String: Any])
         XCTAssertEqual(json["identityToken"] as? String, "apple.jwt.token")
         XCTAssertEqual(json["name"] as? String, "Anna")
+        XCTAssertEqual(json["authorizationCode"] as? String, "c0de.123")
     }
 
     func testEmptyNameIsLeftOut() async throws {
@@ -29,6 +30,18 @@ final class AccountClientTests: XCTestCase {
         let body = try XCTUnwrap(transport.requests.first?.httpBody)
         let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: body) as? [String: Any])
         XCTAssertNil(json["name"])
+        XCTAssertNil(json["authorizationCode"])
+    }
+
+    func testEmptyAuthorizationCodeIsLeftOut() async throws {
+        let transport = StubTransport(status: 200, body: #"{"token":"t","user":{"id":"a-1","name":"Apple-ID"}}"#)
+
+        _ = try await AccountClient(baseURL: baseURL, transport: transport)
+            .signInWithApple(identityToken: "x", name: nil, authorizationCode: "  ")
+
+        let body = try XCTUnwrap(transport.requests.first?.httpBody)
+        let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: body) as? [String: Any])
+        XCTAssertNil(json["authorizationCode"])
     }
 
     func testSignInErrorsMapToAccountErrors() async {

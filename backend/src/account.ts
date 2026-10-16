@@ -3,7 +3,7 @@ import { rmSync } from "node:fs";
 import { z } from "zod";
 import { AppleIdentityClaims, AppleKeysUnavailableError, AppleTokenError } from "./apple";
 import { currentUser } from "./auth";
-import { OWNER_ID, readUsers, removeUser, signInWithApple, userDataDir } from "./users";
+import { OWNER_ID, readUsers, removeUser, setAppleRefreshToken, signInWithApple, userDataDir } from "./users";
 
 /**
  * Konto: Anmeldung mit Apple (`POST /v1/auth/apple`, oeffentlich) und Loeschen des eigenen Kontos
@@ -19,11 +19,23 @@ export interface AccountDeps {
   /** Anmeldeversuche je IP und Minute. */
   rateLimitPerMinute?: number;
   now?: () => number;
+  /**
+   * Widerruf der Apple-Anmeldung beim Loeschen (`AppleRevoker`); ohne ihn (kein Schluessel konfiguriert) wird nur
+   * geloescht und eine Warnung geloggt.
+   */
+  appleRevoker?: {
+    exchangeCode(code: string, clientId: string): Promise<string>;
+    revoke(refreshToken: string, clientId: string): Promise<void>;
+  };
+  /** client_id fuer Apple, wenn das Identitaetstoken keine Bundle-ID nennt: die erste aus `APPLE_BUNDLE_IDS`. */
+  appleClientId?: string;
 }
 
 const AppleSignInSchema = z.object({
   identityToken: z.string().min(1).max(8_000),
-  name: z.string().max(200).optional()
+  name: z.string().max(200).optional(),
+  /** Einmal-Code von Apple, nur fuer den spaeteren Widerruf beim Loeschen. */
+  authorizationCode: z.string().min(1).max(2_000).optional()
 });
 
 /** Oeffentliche Routen unter /v1, vor der Token-Pruefung. */
@@ -68,6 +80,13 @@ export function authRoutes(deps: AccountDeps): (router: Router) => void {
         return;
       }
       res.json({ token: result.token, user: { id: result.user.id, name: result.user.name } });
+
+      // Erst nach der Antwort, damit die Anmeldung schnell bleibt; ein Fehler bei Apple stoert sie nicht.
+      const code = parsed.data.authorizationCode;
+      const clientId = identity.audience ?? deps.appleClientId;
+      if (code !== undefined && deps.appleRevoker !== undefined && clientId !== undefined) {
+        void storeAppleRefreshToken(deps, deps.appleRevoker, result.user.id, code, clientId, req.log);
+      }
     });
   };
 }
@@ -75,7 +94,7 @@ export function authRoutes(deps: AccountDeps): (router: Router) => void {
 /** Routen hinter der Token-Pruefung. */
 export function accountRoutes(deps: AccountDeps): (router: Router) => void {
   return (router) => {
-    router.delete("/account", (req: Request, res: Response) => {
+    router.delete("/account", async (req: Request, res: Response) => {
       const user = currentUser(res.locals);
       if (user === undefined) {
         res.status(401).json({ error: "unauthorized" });
@@ -84,6 +103,24 @@ export function accountRoutes(deps: AccountDeps): (router: Router) => void {
       if (user.id === OWNER_ID) {
         res.status(409).json({ error: "owner_cannot_be_deleted" });
         return;
+      }
+      const record = readUsers(deps.usersFile).find((entry) => entry.id === user.id);
+      if (record?.apple_sub !== undefined) {
+        // Apple verlangt, die Anmeldung mit Apple beim Loeschen zu widerrufen (TN3194). Scheitert das, wird trotzdem geloescht.
+        if (deps.appleRevoker === undefined) {
+          req.log.warn({ user: user.id }, "apple revoke skipped: no key");
+        } else if (record.apple_refresh_token === undefined) {
+          req.log.warn({ user: user.id }, "apple revoke skipped: no refresh token");
+        } else {
+          const clientId = record.apple_client_id ?? deps.appleClientId;
+          try {
+            if (clientId === undefined) throw new Error("keine client_id");
+            await deps.appleRevoker.revoke(record.apple_refresh_token, clientId);
+            req.log.info({ user: user.id }, "apple sign in revoked");
+          } catch (error) {
+            req.log.warn({ user: user.id, reason: (error as Error).message }, "apple revoke failed");
+          }
+        }
       }
       if (readUsers(deps.usersFile).some((entry) => entry.id === user.id)) {
         removeUser(deps.usersFile, user.id);
@@ -95,6 +132,31 @@ export function accountRoutes(deps: AccountDeps): (router: Router) => void {
       res.status(204).end();
     });
   };
+}
+
+/**
+ * Tauscht den Einmal-Code gegen Apples Refresh-Token und legt ihn beim Nutzer ab. Gibt es den Nutzer inzwischen nicht
+ * mehr, wird der Token gleich widerrufen. Wirft nie; der Token selbst landet in keinem Log.
+ */
+export async function storeAppleRefreshToken(
+  deps: Pick<AccountDeps, "usersFile">,
+  revoker: NonNullable<AccountDeps["appleRevoker"]>,
+  userId: string,
+  code: string,
+  clientId: string,
+  log: { info(obj: object, msg: string): void; warn(obj: object, msg: string): void }
+): Promise<void> {
+  try {
+    const refreshToken = await revoker.exchangeCode(code, clientId);
+    if (setAppleRefreshToken(deps.usersFile, userId, refreshToken, clientId)) {
+      log.info({ user: userId }, "apple refresh token stored");
+    } else {
+      await revoker.revoke(refreshToken, clientId);
+      log.info({ user: userId }, "apple sign in revoked (account already deleted)");
+    }
+  } catch (error) {
+    log.warn({ user: userId, reason: (error as Error).message }, "apple token exchange failed");
+  }
 }
 
 /** Einfaches festes Fenster je Schluessel (IP), nur im Speicher. */

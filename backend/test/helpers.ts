@@ -27,7 +27,8 @@ export const testConfig: Config = {
   alerts: undefined,
   privacy: { name: undefined, address: undefined, email: undefined, hoster: undefined },
   appleBundleIds: ["com.kellner.SwimInstructor"],
-  appleSignup: "open"
+  appleSignup: "open",
+  appleRevoke: undefined
 };
 
 export function buildApp(options: AppOptions = {}): Express {

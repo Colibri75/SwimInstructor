@@ -6,7 +6,7 @@
  * Aendert sich, was an den Server oder an Anthropic geht, hier anpassen, `PRIVACY_POLICY_DATE` setzen und in der App
  * `AIDataConsentStore.currentVersion` erhoehen, damit alle neu zustimmen.
  */
-export const PRIVACY_POLICY_DATE = { de: "9. Oktober 2026", en: "9 October 2026" };
+export const PRIVACY_POLICY_DATE = { de: "16. Oktober 2026", en: "16 October 2026" };
 
 export const POLICY_DE = `
 <h1>Datenschutzerklärung für die App PeakSmith</h1>
@@ -51,7 +51,8 @@ Bei Fragen zum Datenschutz und für alle Anträge zu deinen Rechten genügt eine
 <p>Wenn du dich mit „Mit Apple anmelden“ anmeldest, speichert der Server die von Apple vergebene, nur für diese App
 gültige Nutzerkennung und, falls du sie bei der Anmeldung freigibst, deine E-Mail-Adresse (auch Apples anonyme
 Weiterleitungsadresse) und deinen Namen. Dazu kommt ein Zugangsschlüssel, mit dem die App ihre Anfragen
-ausweist.</p>
+ausweist. Außerdem speichert der Server ein Token von Apple (Refresh-Token), allein um deine Anmeldung mit Apple
+beim Löschen deines Kontos bei Apple widerrufen zu können.</p>
 
 <h3>b) Anfragen für einen Plan (nur mit deiner Einwilligung)</h3>
 <ul>
@@ -216,7 +217,8 @@ appointed. For any privacy question and to exercise your rights, simply send an 
 <h3>a) Your account</h3>
 <p>If you use “Sign in with Apple”, the server stores the user identifier Apple issues for this app and, if you share
 them when signing in, your email address (including Apple's private relay address) and your name. In addition, an
-access key identifies the app's requests.</p>
+access key identifies the app's requests. The server also stores a token from Apple (refresh token), solely so that it
+can revoke your Sign in with Apple authorization with Apple when you delete your account.</p>
 
 <h3>b) Plan requests (only with your consent)</h3>
 <ul>

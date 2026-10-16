@@ -52,7 +52,9 @@ struct AppleSignInButton: View {
                 return
             }
             let name = credential.fullName.map { PersonNameComponentsFormatter.localizedString(from: $0, style: .default) }
-            Task { await signIn(identityToken: identityToken, name: name) }
+            // Einmal-Code: Damit kann der Server die Anmeldung beim Löschen des Kontos bei Apple widerrufen.
+            let authorizationCode = credential.authorizationCode.flatMap { String(data: $0, encoding: .utf8) }
+            Task { await signIn(identityToken: identityToken, name: name, authorizationCode: authorizationCode) }
         case .failure(let error):
             // Abgebrochen: keine Meldung, der Nutzer wollte es so.
             if let authorizationError = error as? ASAuthorizationError, authorizationError.code == .canceled { return }
@@ -60,13 +62,13 @@ struct AppleSignInButton: View {
         }
     }
 
-    private func signIn(identityToken: String, name: String?) async {
+    private func signIn(identityToken: String, name: String?, authorizationCode: String?) async {
         isSigningIn = true
         errorMessage = nil
         defer { isSigningIn = false }
         do {
             let session = try await AccountClient(baseURL: settings.baseURL)
-                .signInWithApple(identityToken: identityToken, name: name)
+                .signInWithApple(identityToken: identityToken, name: name, authorizationCode: authorizationCode)
             try settings.signIn(session)
             onSignedIn()
         } catch {

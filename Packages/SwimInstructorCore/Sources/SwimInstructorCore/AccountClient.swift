@@ -68,10 +68,13 @@ public struct AccountClient: Sendable {
 
     /// Tauscht das Identitätstoken von Apple gegen einen Token des Servers.
     /// - Parameter name: Den Namen gibt Apple nur bei der ersten Anmeldung heraus; leer bleibt er weg.
-    public func signInWithApple(identityToken: String, name: String?) async throws -> AccountSession {
+    /// - Parameter authorizationCode: Einmal-Code von Apple. Der Server tauscht ihn gegen einen Refresh-Token, mit dem er
+    ///   die Anmeldung beim Löschen des Kontos bei Apple widerruft. Leer bleibt er weg.
+    public func signInWithApple(identityToken: String, name: String?, authorizationCode: String? = nil) async throws -> AccountSession {
         struct Body: Encodable {
             let identityToken: String
             let name: String?
+            let authorizationCode: String?
         }
         struct Response: Decodable {
             struct User: Decodable {
@@ -86,7 +89,12 @@ public struct AccountClient: Sendable {
         var request = makeRequest(path: "v1/auth/apple")
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(Body(identityToken: identityToken, name: trimmedName.isEmpty ? nil : trimmedName))
+        let code = authorizationCode?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        request.httpBody = try JSONEncoder().encode(Body(
+            identityToken: identityToken,
+            name: trimmedName.isEmpty ? nil : trimmedName,
+            authorizationCode: code.isEmpty ? nil : code
+        ))
 
         let (data, response) = try await perform(request)
         switch response.statusCode {

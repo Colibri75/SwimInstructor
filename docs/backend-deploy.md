@@ -324,8 +324,9 @@ rm -rf /tmp/restore
 In der App meldet man sich mit „Mit Apple anmelden" an, ohne Token von Hand. So läuft es:
 
 1. Die App holt bei Apple ein Identitätstoken (ein von Apple signiertes JWT) und schickt es an
-   `POST /v1/auth/apple` (öffentlich, ohne Bearer-Token) als `{ "identityToken": "…", "name": "…" }`. Den Namen
-   gibt Apple nur bei der allerersten Anmeldung heraus.
+   `POST /v1/auth/apple` (öffentlich, ohne Bearer-Token) als
+   `{ "identityToken": "…", "name": "…", "authorizationCode": "…" }`. Den Namen gibt Apple nur bei der allerersten
+   Anmeldung heraus; der Einmal-Code `authorizationCode` dient nur dem Widerruf beim Löschen (siehe unten).
 2. Der Server prüft das JWT mit Apples öffentlichen Schlüsseln (`https://appleid.apple.com/auth/keys`, RS256, einen
    Tag zwischengespeichert): Aussteller `https://appleid.apple.com`, Empfänger eine der `APPLE_BUNDLE_IDS`, Ablauf
    und die Apple-Kennung `sub`.
@@ -340,6 +341,7 @@ Für Apple-Nutzer gelten dieselben Budgets wie für alle (`PLAN_MAX_GENERATIONS_
 Server). Anmeldeversuche sind je IP auf 20 pro Minute begrenzt (Antwort 429). `DELETE /v1/account` (mit Token)
 löscht den eigenen Eintrag in `users.json` und den Ordner `/data/users/<kennung>/`; das verlangt Apple für Apps mit
 Konten (in der App: *Einstellungen → Konto → Konto löschen*). Der Besitzer kann sich so nicht löschen (409).
+Vorher widerruft der Server die Anmeldung mit Apple (siehe „Widerruf bei Apple beim Konto-Löschen").
 
 Umgebungsvariablen (in `/etc/swiminstructor/backend.env`, alle optional):
 
@@ -347,6 +349,9 @@ Umgebungsvariablen (in `/etc/swiminstructor/backend.env`, alle optional):
 | --- | --- | --- |
 | `APPLE_BUNDLE_IDS` | `com.kellner.SwimInstructor` | Bundle-IDs (mit Komma getrennt), für die Apple-Tokens gelten |
 | `APPLE_SIGNUP` | `open` | `open`: jede Apple-ID bekommt sofort ein Konto. `closed`: neue Konten entstehen gesperrt, die App zeigt „noch nicht freigeschaltet" (403 `signup_closed`), bis du sie freigibst |
+| `APPLE_TEAM_ID` | `TTLJUNRA3R` | Team-ID des Apple-Developer-Kontos (für den Widerruf) |
+| `APPLE_SIWA_KEY_ID` | – | Key-ID des Schlüssels „Sign in with Apple" (für den Widerruf) |
+| `APPLE_SIWA_PRIVATE_KEY` | – | Inhalt der `.p8`-Datei dieses Schlüssels, Zeilenumbrüche als `\n` (für den Widerruf) |
 
 Bei `APPLE_SIGNUP=closed` freigeben:
 
@@ -357,6 +362,45 @@ docker exec swiminstructor-backend node dist/cli/users.js enable a-1a2b3c4d5e6f
 
 Danach meldet sich die Person in der App noch einmal an. Voraussetzung auf Apple-Seite: Die App-ID
 `com.kellner.SwimInstructor` hat die Capability *Sign In with Apple*, und die Profile sind danach neu erzeugt.
+
+### Widerruf bei Apple beim Konto-Löschen
+
+Apple verlangt (App-Store-Richtlinie 5.1.1(v), Technote TN3194), dass beim Löschen eines Kontos auch die Anmeldung mit
+Apple widerrufen wird. Dafür:
+
+1. Bei der Anmeldung schickt die App zusätzlich den Einmal-Code (`authorizationCode`). Gleich nach der Antwort tauscht
+   der Server ihn bei `https://appleid.apple.com/auth/token` gegen einen Refresh-Token und speichert ihn beim Nutzer in
+   `users.json` (`apple_refresh_token`, der neueste zählt; er erscheint weder in `users.js list` noch in
+   `/v1/admin/users`). Scheitert der Tausch, klappt die Anmeldung trotzdem (Log: `apple token exchange failed`).
+2. `DELETE /v1/account` schickt den Refresh-Token an `https://appleid.apple.com/auth/revoke` und löscht dann. Scheitert
+   der Widerruf, wird trotzdem gelöscht (Log: `apple revoke failed`).
+
+Beide Aufrufe weisen sich mit einem kurzlebigen JWT (ES256) aus, das der Server mit einem eigenen Schlüssel signiert.
+Ohne diesen Schlüssel läuft alles wie bisher, nur ohne Widerruf (Log beim Start und beim Löschen:
+`apple revoke skipped: no key`). Schlüssel einmalig anlegen:
+
+1. [developer.apple.com](https://developer.apple.com/account) → *Certificates, Identifiers & Profiles* → *Keys* → **+**.
+2. Einen Namen vergeben (z. B. „PeakSmith Sign in with Apple"), **Sign in with Apple** ankreuzen → *Configure* →
+   als *Primary App ID* `com.kellner.SwimInstructor` wählen → *Save* → *Continue* → *Register*.
+3. **Download**: die Datei `AuthKey_<KEYID>.p8` gibt es nur dieses eine Mal, sicher aufbewahren. Die **Key ID**
+   (10 Zeichen) steht auf derselben Seite.
+4. Datei auf den Server kopieren (z. B. `scp AuthKey_ABC123DEFG.p8 root@server:/root/`) und eintragen:
+
+```bash
+KEY_ID=ABC123DEFG                                  # die Key ID aus Schritt 3
+printf 'APPLE_SIWA_KEY_ID=%s\n' "$KEY_ID" >> /etc/swiminstructor/backend.env
+# Den Schlüssel als eine Zeile mit \n statt Zeilenumbrüchen anhängen:
+printf 'APPLE_SIWA_PRIVATE_KEY=%s\n' "$(awk 'NF { printf "%s\\n", $0 }' /root/AuthKey_$KEY_ID.p8)" >> /etc/swiminstructor/backend.env
+rm /root/AuthKey_$KEY_ID.p8                        # die Kopie auf dem Server wird nicht mehr gebraucht
+cd /opt/stack/swiminstructor/backend && docker compose up -d --force-recreate
+docker compose logs --tail 20 backend              # keine Meldung "APPLE_SIWA_… nicht gesetzt" mehr
+```
+
+Die Team-ID `TTLJUNRA3R` ist voreingestellt (`APPLE_TEAM_ID` nur bei einem anderen Konto setzen). Ist der Schlüssel
+unlesbar oder nur eine der beiden Variablen gesetzt, startet der Server nicht (Meldung in `docker compose logs`).
+Widerrufen werden kann nur, wer sich nach diesem Update angemeldet hat; ältere Apple-Konten haben noch keinen
+Refresh-Token (Log beim Löschen: `apple revoke skipped: no refresh token`) und bekommen ihn bei der nächsten
+Anmeldung.
 
 Der Token des Besitzers (`API_TOKEN`) und Tokens aus `users.js add` funktionieren weiter: In der App stehen
 Server-Adresse und Token unter *Einstellungen → Erweitert*.

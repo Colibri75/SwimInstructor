@@ -22,6 +22,8 @@ export type JwksFetcher = () => Promise<{ keys: Jwk[] }>;
 export interface AppleIdentityClaims {
   sub: string;
   email?: string;
+  /** Die Bundle-ID aus `aud`, fuer die das Token gilt (client_id fuer Apples Token- und Widerrufs-Schnittstelle). */
+  audience?: string;
 }
 
 /** Das Token ist ungueltig (Format, Signatur, Aussteller, Empfaenger, Ablauf). */
@@ -73,14 +75,15 @@ export class AppleIdentityVerifier {
 
     if (payload.iss !== APPLE_ISSUER) throw new AppleTokenError("Aussteller falsch");
     const audiences = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
-    if (!audiences.some((aud) => typeof aud === "string" && this.options.bundleIds.includes(aud))) throw new AppleTokenError("Empfaenger falsch");
+    const audience = audiences.find((aud): aud is string => typeof aud === "string" && this.options.bundleIds.includes(aud));
+    if (audience === undefined) throw new AppleTokenError("Empfaenger falsch");
     const nowSeconds = Math.floor(this.now() / 1000);
     if (typeof payload.exp !== "number" || payload.exp + CLOCK_SKEW_SECONDS < nowSeconds) throw new AppleTokenError("abgelaufen");
     if (typeof payload.iat === "number" && payload.iat - CLOCK_SKEW_SECONDS > nowSeconds) throw new AppleTokenError("aus der Zukunft");
     if (typeof payload.sub !== "string" || payload.sub === "" || payload.sub.length > 255) throw new AppleTokenError("sub fehlt");
 
     const email = typeof payload.email === "string" && payload.email.length <= 320 ? payload.email : undefined;
-    return { sub: payload.sub, ...(email === undefined ? {} : { email }) };
+    return { sub: payload.sub, ...(email === undefined ? {} : { email }), audience };
   }
 
   private async key(kid: string): Promise<KeyObject> {

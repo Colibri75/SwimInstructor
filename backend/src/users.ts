@@ -31,6 +31,13 @@ const UserRecordSchema = z.object({
   /** Stabile Kennung der Apple-ID (`sub` im Identitaetstoken), nur bei Apple-Nutzern. */
   apple_sub: z.string().min(1).max(255).optional(),
   email: z.string().max(320).optional(),
+  /**
+   * Refresh-Token von Apple (aus dem Einmal-Code der App), nur um die Anmeldung beim Loeschen des Kontos bei Apple zu
+   * widerrufen. Geheim: erscheint in keiner Ausgabe (CLI, Admin-Route, Logs). Der neueste zaehlt.
+   */
+  apple_refresh_token: z.string().min(1).max(2_000).optional(),
+  /** Bundle-ID, fuer die Apple den Refresh-Token ausgegeben hat (client_id beim Widerruf). */
+  apple_client_id: z.string().max(255).optional(),
   created_at: z.string(),
   admin: z.boolean().optional(),
   disabled: z.boolean().optional()
@@ -293,6 +300,17 @@ export function signInWithApple(
   const saved = user;
   writeUsers(file, created ? [...users, saved] : users.map((entry) => (entry.id === saved.id ? saved : entry)));
   return token === undefined ? { status: "disabled", user: saved, created } : { status: "ok", token, user: saved, created };
+}
+
+/**
+ * Merkt sich Apples Refresh-Token beim Nutzer (der neueste ersetzt den alten). `false`, wenn es den Nutzer nicht mehr
+ * gibt (inzwischen geloescht): Dann sollte der Aufrufer den Token gleich widerrufen.
+ */
+export function setAppleRefreshToken(file: string, id: string, refreshToken: string, clientId: string): boolean {
+  const users = readUsers(file);
+  if (!users.some((entry) => entry.id === id)) return false;
+  writeUsers(file, users.map((entry) => (entry.id === id ? { ...entry, apple_refresh_token: refreshToken, apple_client_id: clientId } : entry)));
+  return true;
 }
 
 /** Datenordner eines Nutzers: der Besitzer im Datenverzeichnis selbst (wie vor der Nutzertrennung), alle anderen darunter. */

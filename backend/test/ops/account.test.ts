@@ -64,11 +64,11 @@ function verifier(fetchJwks = async () => ({ keys: [apple.jwk] }), now = () => N
 
 describe("Apple-Identitaetstoken", () => {
   it("nimmt ein gueltiges Token an und liefert sub und E-Mail", async () => {
-    await expect(verifier().verify(identityToken())).resolves.toEqual({ sub: "001234.abcdef.1234", email: "x@privaterelay.appleid.com" });
+    await expect(verifier().verify(identityToken())).resolves.toEqual({ sub: "001234.abcdef.1234", email: "x@privaterelay.appleid.com", audience: BUNDLE_ID });
   });
 
   it("nimmt auch aud als Liste an", async () => {
-    await expect(verifier().verify(identityToken({ aud: ["andere.app", BUNDLE_ID] }))).resolves.toMatchObject({ sub: "001234.abcdef.1234" });
+    await expect(verifier().verify(identityToken({ aud: ["andere.app", BUNDLE_ID] }))).resolves.toMatchObject({ sub: "001234.abcdef.1234", audience: BUNDLE_ID });
   });
 
   it.each([
