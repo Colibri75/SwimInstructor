@@ -29,10 +29,19 @@ final class PhonePlanSync: NSObject, ObservableObject {
         guard let session, subscription == nil else { return }
         session.delegate = self
         session.activate()
-        subscription = loader.$response
-            .compactMap { $0 }
+        // Auch der im Hintergrund vorab geholte Plan von heute geht gleich raus, nicht erst beim Öffnen der App.
+        // `@Published` meldet vor dem Setzen, darum erst danach auf der Hauptschlange lesen.
+        subscription = loader.$response.combineLatest(loader.$previews)
+            .receive(on: DispatchQueue.main)
+            .compactMap { [weak self] _ in self?.watchPlan }
             .removeDuplicates()
             .sink { [weak self] response in self?.push(response) }
+    }
+
+    /// Was die Watch zeigen soll: der Plan von heute, auch der vorab geholte, solange die App ihn noch nicht übernommen
+    /// hat; sonst der letzte.
+    private var watchPlan: DayPlanV2Response? {
+        loader.dayPlan(on: loader.todayKey) ?? loader.response
     }
 
     private func push(_ response: DayPlanV2Response) {
@@ -52,7 +61,7 @@ final class PhonePlanSync: NSObject, ObservableObject {
     /// Ist der Plan hier nicht von heute (die App war seit Tagen nicht offen oder plant gerade), antwortet das iPhone
     /// "entsteht gerade" statt mit dem alten Plan; der neue kommt danach als Application Context.
     private func answerPlanRequest(_ replyHandler: @escaping ([String: Any]) -> Void) {
-        replyHandler(PlanSyncCodec.reply(for: loader.response, today: loader.todayKey, canPlan: !loader.needsConfiguration))
+        replyHandler(PlanSyncCodec.reply(for: watchPlan, today: loader.todayKey, canPlan: !loader.needsConfiguration))
         Task { await loader.refreshIfNeeded() }
     }
 }
@@ -65,7 +74,7 @@ extension PhonePlanSync: WCSessionDelegate {
     ) {
         guard activationState == .activated else { return }
         Task { @MainActor in
-            if let response = self.loader.response {
+            if let response = self.watchPlan {
                 self.push(response)
             }
         }
@@ -80,7 +89,7 @@ extension PhonePlanSync: WCSessionDelegate {
 
     nonisolated func sessionWatchStateDidChange(_ session: WCSession) {
         Task { @MainActor in
-            if let response = self.loader.response {
+            if let response = self.watchPlan {
                 self.push(response)
             }
         }
