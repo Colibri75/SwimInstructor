@@ -53,17 +53,26 @@ jobs:
           sudo chown "$USER":"$USER" /etc/swiminstructor/backend.env
           sudo chmod 600 /etc/swiminstructor/backend.env
 
+      # Der ECR-Spiegel antwortet CI-Runnern zeitweise mit 429 ("Data limit exceeded"). Das Basis-Image deshalb
+      # vorab holen, notfalls von Googles Docker-Hub-Spiegel oder Docker Hub, und unter dem Namen aus dem
+      # Dockerfile ablegen; der Bau nimmt dann das lokale Image.
+      - name: Basis-Image holen
+        run: |
+          base=public.ecr.aws/docker/library/node:22-alpine
+          for wait in 0 20 60; do
+            sleep "$wait"
+            for src in "$base" mirror.gcr.io/library/node:22-alpine docker.io/library/node:22-alpine; do
+              if docker pull -q "$src"; then
+                docker tag "$src" "$base"
+                exit 0
+              fi
+            done
+          done
+          exit 1
+
       - name: Image bauen und Container starten
         working-directory: backend
-        # Der ECR-Spiegel antwortet den CI-Runnern gelegentlich mit 429; deshalb bis zu 4 Versuche mit Pause.
-        run: |
-          for wait in 0 15 30 60; do
-            sleep "$wait"
-            docker compose build && break
-            [ "$wait" = 60 ] && exit 1
-            echo "Bauen fehlgeschlagen, neuer Versuch"
-          done
-          docker compose up -d
+        run: docker compose up -d --build
 
       - name: Warten, bis der Container gesund ist
         run: |
