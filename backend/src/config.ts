@@ -34,7 +34,7 @@ export interface PrivacyContact {
 export const PRIVACY_DEFAULTS = {
   name: "Steffen Kellner",
   address: "Alfelder Weg 55, 90482 Nürnberg, Deutschland",
-  email: "steffen.kellner91@gmail.com"
+  email: "info@peak-smith.com"
 } as const;
 
 export interface Config {

@@ -83,7 +83,7 @@ describe("Datenschutzerklaerung", () => {
 
     const response = await request(createApp(config, createLogger(config))).get("/datenschutz");
     expect(response.text).toContain("Steffen Kellner<br>Alfelder Weg 55, 90482 Nürnberg, Deutschland");
-    expect(response.text).toContain("mailto:steffen.kellner91@gmail.com");
+    expect(response.text).toContain("mailto:info@peak-smith.com");
     expect(response.text).toContain("bei [wird ergänzt]");
   });
 

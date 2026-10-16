@@ -245,7 +245,7 @@ steht in `backend/src/privacy/texts.ts`; die Angaben zum Verantwortlichen und zu
 |---|---|---|
 | `PRIVACY_CONTACT_NAME` | `Steffen Kellner` | Name des Verantwortlichen |
 | `PRIVACY_CONTACT_ADDRESS` | `Alfelder Weg 55, 90482 Nürnberg, Deutschland` | Ladungsfähige Anschrift; Zeilen mit `\n` trennen |
-| `PRIVACY_CONTACT_EMAIL` | `steffen.kellner91@gmail.com` | Kontakt für Datenschutzanfragen |
+| `PRIVACY_CONTACT_EMAIL` | `info@peak-smith.com` | Kontakt für Datenschutzanfragen |
 | `PRIVACY_HOSTER` | (leer: „[wird ergänzt]“) | Hosting-Anbieter des VPS mit Sitz, z. B. `Beispiel GmbH, Stadt (Deutschland)` |
 
 Die Variablen gehören in `/etc/swiminstructor/backend.env`; danach `docker compose up -d --force-recreate`. Prüfen:
