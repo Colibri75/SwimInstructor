@@ -8,7 +8,7 @@ werden muss. Grundlage ist, was App und Server tatsächlich tun (Datenschutzerkl
 
 | Feld | Eintrag |
 |---|---|
-| Datenschutzrichtlinie-URL | `https://swiminstructor.kellner.v6.rocks/privacy` (Deutsch: `/datenschutz`) |
+| Datenschutzrichtlinie-URL | `https://api.peak-smith.com/privacy` (Deutsch: `/datenschutz`) |
 | Erfassen Sie oder Drittanbieter Daten aus dieser App? | **Ja** |
 | Tracking (App Tracking Transparency) | **Nein**, keine Daten werden zum Tracking verwendet, kein ATT-Dialog nötig |
 | Werbung, Analyse-SDKs, Crash-Reporter von Dritten | keine |

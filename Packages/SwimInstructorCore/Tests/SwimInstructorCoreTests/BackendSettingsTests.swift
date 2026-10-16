@@ -23,6 +23,23 @@ final class BackendSettingsTests: XCTestCase {
         XCTAssertNil(settings.configuration)
     }
 
+    func testOldServerAddressMovesToNewDefault() {
+        defaults.set("https://swiminstructor.kellner.v6.rocks", forKey: BackendSettings.baseURLKey)
+
+        let settings = BackendSettings(defaults: defaults, secrets: InMemorySecretStore())
+
+        XCTAssertEqual(settings.baseURL.absoluteString, "https://api.peak-smith.com")
+        XCTAssertEqual(defaults.string(forKey: BackendSettings.baseURLKey), "https://api.peak-smith.com")
+    }
+
+    func testOwnServerAddressStays() {
+        defaults.set("https://plan.example.test", forKey: BackendSettings.baseURLKey)
+
+        let settings = BackendSettings(defaults: defaults, secrets: InMemorySecretStore())
+
+        XCTAssertEqual(settings.baseURL.absoluteString, "https://plan.example.test")
+    }
+
     func testSaveStoresTokenAndNormalizedURL() throws {
         let secrets = InMemorySecretStore()
         let settings = BackendSettings(defaults: defaults, secrets: secrets)
