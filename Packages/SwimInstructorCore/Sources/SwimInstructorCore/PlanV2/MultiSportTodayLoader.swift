@@ -174,8 +174,12 @@ public final class MultiSportTodayLoader: ObservableObject {
     /// Ob heute feststeht: Es gibt schon einen Tagesplan oder eine Vorschau für heute, oder heute wurde schon trainiert.
     /// Dann ändert das Neu-Abstimmen der 14 Tage heute nicht mehr, nur noch du (Plan-Tab, Wunsch, Knopf).
     public var isTodayLocked: Bool {
+        hasFreshPlanForToday || previews[todayKey] != nil || hasTrainedToday
+    }
+
+    /// Ob heute laut Health schon trainiert wurde.
+    public var hasTrainedToday: Bool {
         let today = todayKey
-        if hasFreshPlanForToday || previews[today] != nil { return true }
         return reading?.allWorkouts.contains { PlanFormatting.isoDay($0.startDate, calendar: calendar) == today } ?? false
     }
 

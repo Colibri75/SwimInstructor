@@ -180,6 +180,8 @@ public struct PlannedDay: Codable, Equatable, Sendable, Identifiable {
     public var contentBeforeUnavailable: PlannedDayContent?
     /// Der Athlet hat diesen Tag von Hand geändert.
     public var isEdited: Bool
+    /// "Keine Zeit" kommt von einer gemeldeten Pause (nicht von Hand): Endet oder entfällt sie, kommt das Training zurück.
+    public var isPause: Bool
     /// Kraft- und Mobilitätsblöcke (vom Server).
     public var extras: [WeekExtra]
 
@@ -191,7 +193,8 @@ public struct PlannedDay: Codable, Equatable, Sendable, Identifiable {
         isUnavailable: Bool = false,
         contentBeforeUnavailable: PlannedDayContent? = nil,
         isEdited: Bool = false,
-        extras: [WeekExtra] = []
+        extras: [WeekExtra] = [],
+        isPause: Bool = false
     ) {
         self.date = date
         self.focus = content.focus
@@ -200,10 +203,11 @@ public struct PlannedDay: Codable, Equatable, Sendable, Identifiable {
         self.contentBeforeUnavailable = contentBeforeUnavailable
         self.isEdited = isEdited
         self.extras = extras
+        self.isPause = isPause
     }
 
     private enum CodingKeys: String, CodingKey {
-        case date, focus, sessions, isUnavailable, contentBeforeUnavailable, isEdited, extras
+        case date, focus, sessions, isUnavailable, contentBeforeUnavailable, isEdited, extras, isPause
     }
 
     public init(from decoder: Decoder) throws {
@@ -215,6 +219,7 @@ public struct PlannedDay: Codable, Equatable, Sendable, Identifiable {
         contentBeforeUnavailable = try container.decodeIfPresent(PlannedDayContent.self, forKey: .contentBeforeUnavailable)
         isEdited = try container.decodeIfPresent(Bool.self, forKey: .isEdited) ?? false
         extras = (try container.decodeIfPresent([WeekExtra].self, forKey: .extras) ?? []).filter { $0.kind != .unknown }
+        isPause = try container.decodeIfPresent(Bool.self, forKey: .isPause) ?? false
     }
 
     public var content: PlannedDayContent {

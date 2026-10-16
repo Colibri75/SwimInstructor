@@ -113,6 +113,9 @@ export const zhHans: SafetyCatalog = {
   pain: (level, area, sport, date) => `${date} ${sport}后${area !== "" ? `${area}` : ""}${PAIN[level] ?? PAIN[3]}不适`,
   painAreas: { knee: "膝盖", shin: "胫骨", achilles: "跟腱", foot: "脚", hip: "髋部", back: "背部", shoulder: "肩部", other: "其他部位" },
   testBlackout: (days) => `目标前最后 ${days} 天不做测试`,
+  reportedPause: (kind) => `已报告的暂停（${kind}）`,
+  afterReportedPause: (kind, until) => `已报告的暂停（${kind}）后至 ${until} 只练轻松`,
+  pauseKinds: { sick: "生病", injury: "受伤", vacation: "休假", other: "其他" },
 
   thunderstorm: () => "预报有雷雨",
   storm: (kmh) => `预报有大风（最高 ${kmh} km/h）`,

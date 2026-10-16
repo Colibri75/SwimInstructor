@@ -43,9 +43,31 @@ public enum MultiSportWeekEditor {
             day.content = day.contentBeforeUnavailable ?? .rest()
             day.contentBeforeUnavailable = nil
             day.isUnavailable = false
+            day.isPause = false
             // Das Training von vorher kommt zurück; der Coach darf den Tag wieder abstimmen.
             day.isEdited = false
         }
+    }
+
+    /// Gemeldete Pause: Ihre Tage (`inPause`) werden wie "keine Zeit" zum Ruhetag, das Geplante wird gemerkt. Tage, die
+    /// eine Pause so gesetzt hatte und die nicht mehr in ihr liegen (Pause früher beendet oder gelöscht), bekommen ihr
+    /// Training zurück. Von Hand gesetzte Tage ohne Zeit bleiben, wie sie sind.
+    public static func applyPause(_ plan: WeekPlanV2, inPause: (String) -> Bool) -> WeekPlanV2 {
+        var copy = plan
+        for index in copy.days.indices {
+            let day = copy.days[index]
+            if inPause(day.date), !day.isUnavailable {
+                copy = update(copy, day.date) { paused in
+                    paused.contentBeforeUnavailable = paused.isRestDay ? nil : paused.content
+                    paused.content = .rest(focus: String(localized: "Gemeldete Pause"))
+                    paused.isUnavailable = true
+                    paused.isPause = true
+                }
+            } else if day.isPause, !inPause(day.date) {
+                copy = clearUnavailable(copy, date: day.date)
+            }
+        }
+        return copy
     }
 
     public static func setRest(_ plan: WeekPlanV2, date: String) -> WeekPlanV2 {

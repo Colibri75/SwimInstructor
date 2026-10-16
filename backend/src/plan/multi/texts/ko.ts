@@ -125,6 +125,9 @@ export const ko: SafetyCatalog = {
   pain: (level, area, sport, date) => `${date} ${sport} 후 ${area !== "" ? `${area} ` : ""}${PAIN[level] ?? PAIN[3]} 통증`,
   painAreas: { knee: "무릎", shin: "정강이", achilles: "아킬레스건", foot: "발", hip: "고관절", back: "허리", shoulder: "어깨", other: "기타 부위" },
   testBlackout: (days) => `목표 전 마지막 ${days}일은 테스트 없음`,
+  reportedPause: (kind) => `알린 휴식(${kind})`,
+  afterReportedPause: (kind, until) => `알린 휴식(${kind}) 후 ${until}까지 가볍게만`,
+  pauseKinds: { sick: "아픔", injury: "부상", vacation: "휴가", other: "기타" },
 
   thunderstorm: () => "뇌우 예보",
   storm: (kmh) => `강풍 예보(최대 ${kmh} km/h)`,

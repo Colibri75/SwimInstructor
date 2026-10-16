@@ -390,6 +390,7 @@
 "Keine Messung an diesen Tagen." = "इन दिनों कोई माप नहीं।";
 "Keine Pulswerte für diese Einheit in Health." = "Health में इस सेशन के लिए हार्ट रेट डेटा नहीं है।";
 "Keine Verbindung zum Server: %@" = "सर्वर से कनेक्शन नहीं: %@";
+"Gemeldete Pause" = "बताया गया ब्रेक";
 "Keine Zeit" = "समय नहीं";
 "Keine Zeit an diesem Tag" = "इस दिन समय नहीं";
 "Keine Änderung am Plan." = "प्लान में कोई बदलाव नहीं।";

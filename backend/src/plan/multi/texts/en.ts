@@ -114,6 +114,9 @@ export const en: SafetyCatalog = {
   pain: (level, area, sport, date) => `${PAIN[level] ?? PAIN[3]} pain${area !== "" ? ` (${area})` : ""} after ${sport.toLowerCase()} on ${date}`,
   painAreas: { knee: "knee", shin: "shin", achilles: "Achilles tendon", foot: "foot", hip: "hip", back: "back", shoulder: "shoulder", other: "other" },
   testBlackout: (days) => `no test in the last ${days} days before your goal`,
+  reportedPause: (kind) => `reported break (${kind})`,
+  afterReportedPause: (kind, until) => `easy only until ${until} after your reported break (${kind})`,
+  pauseKinds: { sick: "sick", injury: "injured", vacation: "vacation", other: "other reason" },
 
   thunderstorm: () => "thunderstorms forecast",
   storm: (kmh) => `storm forecast (up to ${kmh} km/h)`,

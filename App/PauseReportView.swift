@@ -6,6 +6,7 @@ import SwimInstructorCore
 struct PauseReportView: View {
     @EnvironmentObject private var todayLoader: MultiSportTodayLoader
     @EnvironmentObject private var reviewRunner: MacroReviewRunner
+    @EnvironmentObject private var weekLoader: MultiSportWeekLoader
     @Environment(\.dismiss) private var dismiss
 
     private let store: PauseReportStoring
@@ -61,6 +62,8 @@ struct PauseReportView: View {
                         Button("Meldung löschen", role: .destructive) {
                             store.setReport(nil)
                             self.existing = nil
+                            // Die Tage der Pause bekommen ihr Training zurück.
+                            weekLoader.syncPause()
                         }
                     }
                 }
@@ -91,6 +94,8 @@ struct PauseReportView: View {
         let report = draft
         store.setReport(report)
         existing = store.report()
+        // Die Tage der Pause werden im Plan zu Tagen ohne Zeit.
+        weekLoader.syncPause()
         if report.triggersReview(), let reading = todayLoader.reading {
             reviewRunner.startIfDue(reading: reading)
         }

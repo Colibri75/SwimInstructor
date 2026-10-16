@@ -390,6 +390,7 @@
 "Keine Messung an diesen Tagen." = "No measurements on these days.";
 "Keine Pulswerte für diese Einheit in Health." = "No heart rate data for this session in Health.";
 "Keine Verbindung zum Server: %@" = "No connection to the server: %@";
+"Gemeldete Pause" = "Reported break";
 "Keine Zeit" = "No time";
 "Keine Zeit an diesem Tag" = "No time on this day";
 "Keine Änderung am Plan." = "No change to the plan.";

@@ -114,6 +114,9 @@ export const de: SafetyCatalog = {
   pain: (level, area, sport, date) => `${PAIN[level] ?? PAIN[3]} Beschwerden${area !== "" ? ` (${area})` : ""} nach ${sport} am ${date}`,
   painAreas: { knee: "Knie", shin: "Schienbein", achilles: "Achillessehne", foot: "Fuß", hip: "Hüfte", back: "Rücken", shoulder: "Schulter", other: "sonstige" },
   testBlackout: (days) => `kein Test in den letzten ${days} Tagen vor dem Ziel`,
+  reportedPause: (kind) => `gemeldete Pause (${kind})`,
+  afterReportedPause: (kind, until) => `nach gemeldeter Pause (${kind}) bis ${until} nur locker`,
+  pauseKinds: { sick: "krank", injury: "verletzt", vacation: "Urlaub", other: "anderer Grund" },
 
   thunderstorm: () => "Gewitter angesagt",
   storm: (kmh) => `Sturm angesagt (bis ${kmh} km/h)`,

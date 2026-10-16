@@ -34,6 +34,7 @@ struct SwimInstructorApp: App {
         let startingLevelStore = UserDefaultsStartingLevelStore()
         let scheduleStore = UserDefaultsWeeklyScheduleStore()
         let athleteProfileStore = UserDefaultsAthleteProfileStore()
+        let pauseStore = UserDefaultsPauseReportStore()
         let builder = SnapshotBuilder(
             repository: HealthKitWorkoutRepository(),
             vitalsRepository: HealthKitDailyVitalsRepository(),
@@ -51,7 +52,9 @@ struct SwimInstructorApp: App {
             // Der Wochenraster, ohne gespeicherten einer aus Trainingstagen und Stunden des Ziels.
             weeklyScheduleProvider: { scheduleStore.schedule(for: goalStore.goal()) },
             // Die Angaben unter "Über mich" (Erfahrung, Verletzungen, Können, Bahn, Alltag).
-            athleteProfileProvider: { athleteProfileStore.profile() }
+            athleteProfileProvider: { athleteProfileStore.profile() },
+            // Die gemeldete Pause: an ihren Tagen kein Training, nach Krankheit oder Verletzung erst locker.
+            pauseReportProvider: { pauseStore.report() }
         )
         let ownedEquipment = UserDefaultsOwnedEquipmentStore()
         let indoorEquipment = UserDefaultsIndoorEquipmentStore()
@@ -89,7 +92,7 @@ struct SwimInstructorApp: App {
             goalVersion: { goalStore.goalVersion }
         )
         // Fortschreibung alle zwei Wochen und nach einer gemeldeten Pause, im Hintergrund (P4).
-        let reviewRunner = MacroReviewRunner(macroLoader: macroLoader, pauseStore: UserDefaultsPauseReportStore())
+        let reviewRunner = MacroReviewRunner(macroLoader: macroLoader, pauseStore: pauseStore)
         let wishStore = UserDefaultsDailyWishStore()
         let loader = MultiSportTodayLoader(
             authorizer: healthKitManager,
@@ -137,6 +140,10 @@ struct SwimInstructorApp: App {
         weekLoader.onEdit = { [weak loader] in loader?.scheduleSync() }
         // Steht heute fest (Tagesplan, Vorschau, schon trainiert), bleibt es beim Neu-Abstimmen der nächsten Tage.
         weekLoader.todayLockedProvider = { [weak loader] in loader?.isTodayLocked ?? false }
+        // Nach einem Ausfall gestern hält nur ein schon begonnener Tag heute fest.
+        weekLoader.todayTrainedProvider = { [weak loader] in loader?.hasTrainedToday ?? false }
+        // Die Tage einer gemeldeten Pause werden zu Tagen ohne Zeit.
+        weekLoader.pauseProvider = { pauseStore.report() }
         reviewRunner.onReviewed = { [weak loader] in await loader?.refreshIfNeeded() }
         weekLoader.equipmentProvider = equipment
         weekLoader.extrasProvider = planningExtras

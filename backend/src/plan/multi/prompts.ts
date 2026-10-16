@@ -4,7 +4,7 @@ import { StepTarget } from "../../sports/vocabulary";
 import { daysBetween, mondayOf } from "../calendar";
 import { SnapshotV2 } from "../snapshot";
 import { weekDates, weekdayName } from "../calendar";
-import { dayLimits, DayLimitsV2, dayMinutesCap, declaredLevelText, goalDayOf, MULTI_RULES, painAreaText, painRestriction, phaseOf, realismGaps, recentBefore, SportDayLimits, sportLimits, taperFactors, taperWeeks, testBlackoutReason, weeksToGoal } from "./limits";
+import { afterPauseRestriction, dayLimits, DayLimitsV2, dayMinutesCap, declaredLevelText, goalDayOf, MULTI_RULES, painAreaText, painRestriction, phaseOf, realismGaps, recentBefore, reportedPauseReason, SportDayLimits, sportLimits, taperFactors, taperWeeks, testBlackoutReason, weeksToGoal } from "./limits";
 import { goalKind, isFitnessGoal, scheduleDayText, trainingDaysPerWeek, weeklyMinutes } from "./schedule";
 import { MacroContextV2, macroSportLimits } from "./macroSanity";
 import {
@@ -372,6 +372,20 @@ const REPLAN_REASON_TEXT: Record<ReplanReason, string> = {
   pain: "der Athlet hat nach einer Einheit Beschwerden gemeldet",
   manual: "der Athlet hat die Neuplanung angestoßen"
 };
+
+/** Gemeldete Pause: ihre Tage sind Ruhetage, nach Krankheit oder Verletzung folgen lockere Tage (das System setzt beides durch). */
+function reportedPauseLines(snapshot: SnapshotV2, dates: readonly string[]): string[] {
+  const paused = dates.filter((date) => reportedPauseReason(snapshot, date) !== null);
+  const easy = dates.filter((date) => afterPauseRestriction(snapshot, date) !== null);
+  if (paused.length === 0 && easy.length === 0) return [];
+  const lines = ["", "Gemeldete Pause (vom Athleten in der App gemeldet, das System setzt sie durch):"];
+  if (paused.length > 0) lines.push(`- ${reportedPauseReason(snapshot, paused[0])}: ${paused.join(", ")} sind Ruhetage ohne Einheiten und ohne Kraft oder Mobilität.`);
+  if (easy.length > 0) {
+    const after = afterPauseRestriction(snapshot, easy[0]);
+    lines.push(`- ${after?.reason}: ${easy.join(", ")} nur lockere Einheiten und kein Leistungstest; steige mit kurzen Einheiten wieder ein.`);
+  }
+  return lines;
+}
 
 function missedLines(missed: readonly MissedSession[] | undefined): string[] {
   if (missed === undefined || missed.length === 0) return [];
@@ -745,6 +759,7 @@ export function buildWeekUserMessageV2(input: WeekPromptInput): string {
   lines.push(...startingLevelLines(snapshot));
   lines.push(...painLines(snapshot, context.reports ?? context.recent, context.dates));
   lines.push(...missedLines(context.missed));
+  lines.push(...reportedPauseLines(snapshot, context.dates));
   lines.push("", "Leistungstests:", ...weekTestLines(snapshot, context));
   lines.push("", ...brickLines(snapshot));
   const indoor = indoorLines(snapshot, context.equipment);

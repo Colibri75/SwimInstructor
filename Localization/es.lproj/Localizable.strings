@@ -390,6 +390,7 @@
 "Keine Messung an diesen Tagen." = "No hay mediciones en estos días.";
 "Keine Pulswerte für diese Einheit in Health." = "No hay datos de pulso para esta sesión en Salud.";
 "Keine Verbindung zum Server: %@" = "Sin conexión con el servidor: %@";
+"Gemeldete Pause" = "Pausa comunicada";
 "Keine Zeit" = "Sin tiempo";
 "Keine Zeit an diesem Tag" = "Sin tiempo este día";
 "Keine Änderung am Plan." = "Sin cambios en el plan.";

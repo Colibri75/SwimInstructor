@@ -223,6 +223,12 @@ export interface SafetyCatalog {
   painAreas: Record<string, string>;
   /** "kein Test in den letzten 14 Tagen vor dem Ziel" */
   testBlackout(days: number): string;
+  /** "gemeldete Pause (krank)": Grund für einen Ruhetag in der Pause */
+  reportedPause(kind: string): string;
+  /** "nach gemeldeter Pause (krank) bis 24.10. nur locker" */
+  afterReportedPause(kind: string, until: string): string;
+  /** Art der gemeldeten Pause (sick, injury, vacation, other), passend in die Klammer oben. */
+  pauseKinds: Record<string, string>;
 
   // --- Wetter ---
   /** "Gewitter angesagt" */

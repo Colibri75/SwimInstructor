@@ -109,6 +109,8 @@ const SAMPLES: { [K in Sentence]: Parameters<SafetyCatalog[K]> } = {
   tooLittleSafe: [],
   pain: [2, "Knie", "Sport", "04.10."],
   testBlackout: [14],
+  reportedPause: ["krank"],
+  afterReportedPause: ["krank", "24.10."],
   thunderstorm: [],
   storm: [70],
   heavyRain: [15],
@@ -146,7 +148,7 @@ describe("Texte der Sicherheitsschicht", () => {
   });
 
   it.each(LANGUAGES)("kennt in %s dieselben Woerter wie auf Deutsch", (language) => {
-    for (const words of ["sports", "extras", "equipment", "venues", "tests", "intensities", "painAreas"] as const) {
+    for (const words of ["sports", "extras", "equipment", "venues", "tests", "intensities", "painAreas", "pauseKinds"] as const) {
       expect(Object.keys(CATALOGS[language][words]).sort()).toEqual(Object.keys(CATALOGS.de[words]).sort());
     }
   });

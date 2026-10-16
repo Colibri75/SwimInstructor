@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isRealDate } from "./calendar";
 import { PERFORMANCE_SOURCES } from "../sports/performance";
 import { SPORTS } from "../sports/registry";
 import { STEP_TARGETS } from "../sports/vocabulary";
@@ -302,6 +303,18 @@ const AthleteProfileSchema = z
     });
   });
 
+/** Art einer gemeldeten Pause (Einstellungen › Pause melden). */
+export const PAUSE_KINDS = ["sick", "injury", "vacation", "other"] as const;
+const isoDay = z.string().refine(isRealDate, { message: "kein gültiges Datum" });
+
+/**
+ * Die zuletzt gemeldete Pause, solange sie noch wirkt: An ihren Tagen wird nicht trainiert, nach Krankheit oder
+ * Verletzung sind die ersten Tage danach locker. `to` fehlt, solange die Pause noch nicht vorbei ist.
+ */
+const ReportedPauseSchema = z
+  .object({ kind: z.enum(PAUSE_KINDS), from: isoDay, to: isoDay.optional() })
+  .refine((pause) => pause.to === undefined || pause.to >= pause.from, { message: "Ende vor dem Anfang", path: ["to"] });
+
 export const SnapshotSchema = z
   .object({
     schema_version: z.literal(2, { error: "Plan v2 braucht Snapshot v2" }),
@@ -311,7 +324,8 @@ export const SnapshotSchema = z
     total_load: TotalLoadSchema,
     performance: PerformanceSchema.optional(),
     starting_levels: z.array(StartingLevelSchema).max(16).optional(),
-    athlete_profile: AthleteProfileSchema.optional()
+    athlete_profile: AthleteProfileSchema.optional(),
+    reported_pause: ReportedPauseSchema.optional()
   })
   .superRefine((snapshot, ctx) => {
     const ids = snapshot.sports.map((state) => state.sport);
@@ -327,5 +341,7 @@ export type SportState = SnapshotV2["sports"][number];
 export type Performance = NonNullable<SnapshotV2["performance"]>;
 export type StartingLevel = NonNullable<SnapshotV2["starting_levels"]>[number];
 export type AthleteProfile = NonNullable<SnapshotV2["athlete_profile"]>;
+export type ReportedPause = NonNullable<SnapshotV2["reported_pause"]>;
+export type PauseKind = ReportedPause["kind"];
 export type SportProfile = NonNullable<AthleteProfile["sports"]>[number];
 export type SnapshotFlag = SnapshotV2["flags"][number];

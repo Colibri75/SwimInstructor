@@ -390,6 +390,7 @@
 "Keine Messung an diesen Tagen." = "这些天没有测量数据。";
 "Keine Pulswerte für diese Einheit in Health." = "“健康”中没有这次训练的心率数据。";
 "Keine Verbindung zum Server: %@" = "无法连接服务器：%@";
+"Gemeldete Pause" = "已报告的休息";
 "Keine Zeit" = "没时间";
 "Keine Zeit an diesem Tag" = "这一天没时间";
 "Keine Änderung am Plan." = "计划没有变化。";

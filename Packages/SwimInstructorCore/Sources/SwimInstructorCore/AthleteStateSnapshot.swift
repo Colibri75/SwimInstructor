@@ -56,6 +56,9 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
     public let startingLevels: [StartingLevel]?
     /// Ab v2, optional: was der Athlet unter "Über mich" angibt. Fehlt ohne Angabe.
     public let athleteProfile: AthleteProfileSummary?
+    /// Ab v2, optional: die zuletzt gemeldete Pause, solange sie wirkt (an ihren Tagen kein Training, nach Krankheit oder
+    /// Verletzung erst locker). Fehlt ohne Meldung.
+    public let reportedPause: ReportedPauseSummary?
 
     public init(
         schemaVersion: Int = AthleteStateSnapshot.currentSchemaVersion,
@@ -71,7 +74,8 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
         totalLoad: TotalLoadSummary? = nil,
         performance: PerformanceSummary? = nil,
         startingLevels: [StartingLevel]? = nil,
-        athleteProfile: AthleteProfileSummary? = nil
+        athleteProfile: AthleteProfileSummary? = nil,
+        reportedPause: ReportedPauseSummary? = nil
     ) {
         self.schemaVersion = schemaVersion
         self.generatedAt = generatedAt
@@ -87,6 +91,7 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
         self.performance = performance
         self.startingLevels = startingLevels
         self.athleteProfile = athleteProfile
+        self.reportedPause = reportedPause
     }
 
     /// Derselbe Snapshot als v2, mit Gesamtziel, Werten je Sportart und Gesamtlast.
@@ -99,7 +104,7 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
             schemaVersion: Self.multiSportSchemaVersion,
             generatedAt: generatedAt, goal: goal, volume: volume, pace: pace, load: load, recovery: recovery, flags: flags,
             trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad, performance: performance,
-            startingLevels: startingLevels, athleteProfile: athleteProfile
+            startingLevels: startingLevels, athleteProfile: athleteProfile, reportedPause: reportedPause
         )
     }
 
@@ -109,7 +114,7 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
             schemaVersion: schemaVersion,
             generatedAt: generatedAt, goal: goal, volume: volume, pace: pace, load: load, recovery: recovery, flags: flags,
             trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad, performance: performance,
-            startingLevels: startingLevels, athleteProfile: athleteProfile
+            startingLevels: startingLevels, athleteProfile: athleteProfile, reportedPause: reportedPause
         )
     }
 
@@ -120,7 +125,7 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
             schemaVersion: schemaVersion,
             generatedAt: generatedAt, goal: goal, volume: volume, pace: pace, load: load, recovery: recovery, flags: flags,
             trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad, performance: performance,
-            startingLevels: levels.isEmpty ? nil : levels, athleteProfile: athleteProfile
+            startingLevels: levels.isEmpty ? nil : levels, athleteProfile: athleteProfile, reportedPause: reportedPause
         )
     }
 
@@ -130,7 +135,17 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
             schemaVersion: schemaVersion,
             generatedAt: generatedAt, goal: goal, volume: volume, pace: pace, load: load, recovery: recovery, flags: flags,
             trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad, performance: performance,
-            startingLevels: startingLevels, athleteProfile: profile
+            startingLevels: startingLevels, athleteProfile: profile, reportedPause: reportedPause
+        )
+    }
+
+    /// Derselbe Snapshot mit der gemeldeten Pause (nur für v2 gedacht; `version1` lässt sie weg).
+    public func withReportedPause(_ pause: ReportedPauseSummary?) -> AthleteStateSnapshot {
+        AthleteStateSnapshot(
+            schemaVersion: schemaVersion,
+            generatedAt: generatedAt, goal: goal, volume: volume, pace: pace, load: load, recovery: recovery, flags: flags,
+            trainingGoal: trainingGoal, sports: sports, totalLoad: totalLoad, performance: performance,
+            startingLevels: startingLevels, athleteProfile: athleteProfile, reportedPause: pause
         )
     }
 
@@ -141,6 +156,20 @@ public struct AthleteStateSnapshot: Codable, Equatable, Sendable {
             schemaVersion: Self.currentSchemaVersion,
             generatedAt: generatedAt, goal: goal, volume: volume, pace: pace, load: load, recovery: recovery, flags: flags
         )
+    }
+
+    /// Die gemeldete Pause im Snapshot (`reported_pause`): Art (`sick`, `injury`, `vacation`, `other`), erster und letzter
+    /// Tag als `yyyy-MM-dd`; `to` fehlt, solange sie noch nicht vorbei ist.
+    public struct ReportedPauseSummary: Codable, Equatable, Sendable {
+        public let kind: String
+        public let from: String
+        public let to: String?
+
+        public init(kind: String, from: String, to: String?) {
+            self.kind = kind
+            self.from = from
+            self.to = to
+        }
     }
 
     public struct GoalSummary: Codable, Equatable, Sendable {

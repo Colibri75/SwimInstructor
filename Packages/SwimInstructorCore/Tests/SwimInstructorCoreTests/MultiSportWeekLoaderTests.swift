@@ -827,4 +827,95 @@ final class MultiSportWeekLoaderTests: XCTestCase {
         XCTAssertTrue(loader.isBeyondWindow("2026-10-14"))
         XCTAssertFalse(loader.isBeyondWindow("2026-09-28"))
     }
+
+    // MARK: - Ausfall und gemeldete Pause
+
+    func testAfterAMissedSessionTodayIsReplannedEvenWithAPlanFetchedAhead() async throws {
+        // Gestern (29.09.) ist alles ausgefallen; für heute liegt schon ein Plan aus dem Hintergrund vor.
+        let provider = FakeProvider()
+        let loader = makeLoader(store: MemoryStore([WeekLoaderV2Data.currentWeek()]), provider: provider)
+        loader.todayLockedProvider = { true }
+
+        await loader.refreshDaily()
+
+        XCTAssertEqual(provider.requests.first?.reason, .missed)
+        XCTAssertEqual(provider.requests.first?.fixedDays.map(\.date), [], "Heute darf sich nach dem Ausfall noch ändern")
+        XCTAssertEqual(loader.lastAdaptation?.reason, .missed)
+    }
+
+    func testAfterAMissedSessionTodayStaysOnceTrained() async throws {
+        let provider = FakeProvider()
+        let loader = makeLoader(store: MemoryStore([WeekLoaderV2Data.currentWeek()]), provider: provider)
+        loader.todayLockedProvider = { true }
+        loader.todayTrainedProvider = { true }
+
+        await loader.planNextDays(reason: .missed)
+        await loader.planNextDays(reason: .daily)
+
+        XCTAssertEqual(provider.requests.map { $0.fixedDays.map(\.date) }, [["2026-09-30"], ["2026-09-30"]])
+    }
+
+    func testOtherReasonsKeepTodayWhenItIsLocked() async throws {
+        let provider = FakeProvider()
+        let loader = makeLoader(store: MemoryStore([WeekLoaderV2Data.currentWeek()]), provider: provider)
+        loader.todayLockedProvider = { true }
+
+        await loader.planNextDays(reason: .pain)
+
+        XCTAssertEqual(provider.requests.first?.fixedDays.map(\.date), ["2026-09-30"])
+    }
+
+    func testAReportedPauseTurnsItsDaysIntoDaysWithoutTimeAndBack() async throws {
+        let provider = FakeProvider()
+        let loader = makeLoader(store: MemoryStore([WeekLoaderV2Data.currentWeek()]), provider: provider)
+        var pause: PauseReport? = PauseReport(kind: .sick, from: "2026-09-29", to: "2026-10-02", reportedAt: TestFixtures.now)
+        loader.pauseProvider = { pause }
+        let friday = try XCTUnwrap(loader.day(on: "2026-10-02"))
+        // Von Hand ohne Zeit: bleibt so, auch wenn die Pause endet.
+        loader.markUnavailable("2026-10-01")
+        var edits = 0
+        loader.onEdit = { edits += 1 }
+
+        loader.syncPause()
+
+        XCTAssertEqual(edits, 1)
+        XCTAssertEqual(loader.day(on: "2026-09-29")?.isPause, true)
+        XCTAssertEqual(loader.day(on: "2026-10-02")?.isUnavailable, true)
+        XCTAssertEqual(loader.day(on: "2026-10-02")?.focus, "Gemeldete Pause")
+        XCTAssertEqual(loader.day(on: "2026-10-02")?.target.sessions, [])
+        XCTAssertEqual(loader.day(on: "2026-10-01")?.isPause, false)
+        // Die Tage der Pause zählen nicht als Ausfall, der Radtest am Montag davor schon.
+        XCTAssertEqual(loader.missedSessions(workouts: []).map(\.date), ["2026-09-28"])
+
+        await loader.planNextDays()
+        XCTAssertEqual(provider.requests.first?.unavailableDates, ["2026-09-30", "2026-10-01", "2026-10-02"])
+        XCTAssertEqual(loader.day(on: "2026-10-02")?.isPause, true, "Die Antwort überschreibt einen Pausentag nicht")
+
+        // Früher wieder gesund: Freitag bekommt sein Training zurück, der Tag von Hand bleibt ohne Zeit.
+        pause = PauseReport(kind: .sick, from: "2026-09-29", to: "2026-09-30", reportedAt: TestFixtures.now)
+        loader.syncPause()
+        XCTAssertEqual(loader.day(on: "2026-10-02")?.content, friday.content)
+        XCTAssertEqual(loader.day(on: "2026-10-02")?.isUnavailable, false)
+        XCTAssertEqual(loader.day(on: "2026-10-01")?.isUnavailable, true)
+
+        // Meldung gelöscht: auch die Tage davor sind wieder normale Tage.
+        pause = nil
+        loader.syncPause()
+        XCTAssertEqual(loader.day(on: "2026-09-30")?.isUnavailable, false)
+        XCTAssertEqual(loader.day(on: "2026-09-29")?.isPause, false)
+    }
+
+    func testAnOngoingPauseCoversEveryNewlyPlannedDay() async throws {
+        let provider = FakeProvider()
+        let loader = makeLoader(store: MemoryStore([WeekLoaderV2Data.currentWeek()]), provider: provider)
+        loader.pauseProvider = { PauseReport(kind: .injury, from: "2026-10-03", to: nil, reportedAt: TestFixtures.now) }
+
+        await loader.planNextDays()
+
+        XCTAssertEqual(provider.requests.first?.unavailableDates, Array(WeekLoaderV2Data.window.dropFirst(3)))
+        // Die Tage der nächsten Woche kommen erst mit der Antwort und sind danach gleich Pausentage.
+        XCTAssertEqual(loader.day(on: "2026-10-05")?.isPause, true)
+        XCTAssertEqual(loader.day(on: "2026-10-05")?.isRestDay, true)
+        XCTAssertEqual(loader.day(on: "2026-10-02")?.isPause, false)
+    }
 }
