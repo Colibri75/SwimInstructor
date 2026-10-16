@@ -4,6 +4,7 @@ import { chooseTest, entryTest, fitsToday, lastConfirmedTest, preferredTest, sch
 import { SnapshotV2 } from "../../../src/plan/snapshot";
 import { SPORTS } from "../../../src/sports/registry";
 import { multiSnapshot, RUNNER, TODAY } from "./fixtures";
+import { literal } from "../../../src/plan/multi/texts";
 
 const swim = SPORTS.get("swim")!;
 const bike = SPORTS.get("bike")!;
@@ -62,17 +63,19 @@ describe("Testwahl", () => {
   it("nennt den Grund des ersten Kandidaten, wenn kein Test passt", () => {
     const limits = sportLimits(multiSnapshot(), bike);
 
-    expect(chooseTest(limits, { maxAmount: 120, maxIntensity: "easy", intensityReason: "Erholung schlecht" }).reason).toBe("30-Minuten-Test: keine Vollbelastung (Erholung schlecht)");
-    expect(chooseTest(limits, { maxAmount: 120, maxIntensity: "moderate" }).reason).toContain('höchstens "moderate"');
-    expect(chooseTest(limits, { maxAmount: 30, maxIntensity: "hard" }).reason).toBe("30-Minuten-Test: Testeinheit (58 min) über der Grenze (30 min)");
-    expect(chooseTest(limits, { maxAmount: 120, maxMinutes: 45, maxIntensity: "hard" }).reason).toBe("30-Minuten-Test: Testeinheit (58 min) über der Tagesgrenze (45 min)");
-    expect(chooseTest(sportLimits(multiSnapshot({ sports: { bike: { longest_session_minutes: 20 } } }), bike), { maxAmount: 120, maxIntensity: "hard" }).reason).toContain("unter 30 min");
+    expect(chooseTest(limits, { maxAmount: 120, maxIntensity: "easy", intensityReason: literal("Erholung schlecht") }).reason?.toString()).toBe("30-Minuten-Test: keine Vollbelastung (Erholung schlecht)");
+    expect(chooseTest(limits, { maxAmount: 120, maxIntensity: "moderate" }).reason?.toString()).toContain('höchstens "moderate"');
+    expect(chooseTest(limits, { maxAmount: 30, maxIntensity: "hard" }).reason?.toString()).toBe("30-Minuten-Test: Testeinheit (58 min) über der Grenze (30 min)");
+    expect(chooseTest(limits, { maxAmount: 120, maxMinutes: 45, maxIntensity: "hard" }).reason?.toString()).toBe("30-Minuten-Test: Testeinheit (58 min) über der Tagesgrenze (45 min)");
+    expect(chooseTest(sportLimits(multiSnapshot({ sports: { bike: { longest_session_minutes: 20 } } }), bike), { maxAmount: 120, maxIntensity: "hard" }).reason?.toString()).toContain("unter 30 min");
   });
 
   it("meldet eine Sportart ohne Tests", () => {
     const limits = { ...sportLimits(multiSnapshot(), bike), sport: { ...bike, performanceTests: [] } };
 
-    expect(chooseTest(limits, { maxAmount: 120, maxIntensity: "hard" })).toEqual({ plan: null, reason: "kein Test für diese Sportart" });
+    const none = chooseTest(limits, { maxAmount: 120, maxIntensity: "hard" });
+    expect(none.plan).toBeNull();
+    expect(none.reason?.toString()).toBe("kein Test für diese Sportart");
   });
 
   it("beschreibt einen Test fuer die App", () => {

@@ -85,12 +85,12 @@ describe("Drinnen und Wetter", () => {
   });
 
   it("erkennt Unwetter, aber nicht Hitze oder leichten Regen", () => {
-    expect(severeWeather({ ...sunny(TODAY), weather_code: 96 })).toBe("Gewitter angesagt");
-    expect(severeWeather({ ...sunny(TODAY), wind_max_kmh: 65 })).toBe("Sturm angesagt (bis 65 km/h)");
-    expect(severeWeather({ ...sunny(TODAY), precipitation_mm: 25, weather_code: 65 })).toBe("Starkregen angesagt (25 mm)");
-    expect(severeWeather({ ...sunny(TODAY), temp_min_c: -3, weather_code: 71, precipitation_mm: 2 })).toBe("Glätte möglich");
-    expect(severeWeather({ ...sunny(TODAY), temp_max_c: 34 })).toBeNull();
-    expect(severeWeather({ ...sunny(TODAY), precipitation_mm: 3, weather_code: 61 })).toBeNull();
+    expect(severeWeather({ ...sunny(TODAY), weather_code: 96 })?.toString() ?? null).toBe("Gewitter angesagt");
+    expect(severeWeather({ ...sunny(TODAY), wind_max_kmh: 65 })?.toString() ?? null).toBe("Sturm angesagt (bis 65 km/h)");
+    expect(severeWeather({ ...sunny(TODAY), precipitation_mm: 25, weather_code: 65 })?.toString() ?? null).toBe("Starkregen angesagt (25 mm)");
+    expect(severeWeather({ ...sunny(TODAY), temp_min_c: -3, weather_code: 71, precipitation_mm: 2 })?.toString() ?? null).toBe("Glätte möglich");
+    expect(severeWeather({ ...sunny(TODAY), temp_max_c: 34 })?.toString() ?? null).toBeNull();
+    expect(severeWeather({ ...sunny(TODAY), precipitation_mm: 3, weather_code: 61 })?.toString() ?? null).toBeNull();
     expect(weatherText({ ...sunny(TODAY), temp_max_c: 31, precipitation_mm: 2.5, precipitation_probability: 60, weather_code: 61 })).toBe("10 bis 31 °C, Regen (60 %, 2,5 mm), Wind bis 10 km/h, heiß");
   });
 

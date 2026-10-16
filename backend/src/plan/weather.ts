@@ -1,4 +1,5 @@
 import { GeoLocation } from "./multi/schemas";
+import { say, Text } from "./multi/texts";
 
 /**
  * Wettervorhersage fuer die Planung: je Tag Temperatur, Niederschlag, Wind und Wettercode (WMO). Quelle ist Open-Meteo
@@ -106,11 +107,11 @@ const THUNDERSTORM = new Set([95, 96, 99]);
 const FREEZING_OR_SNOW = new Set([56, 57, 66, 67, 71, 73, 75, 77, 85, 86]);
 
 /** Warum draussen heute nicht sicher ist (Gewitter, Starkregen, Sturm, Glaette), sonst `null`. Hitze zaehlt nicht dazu. */
-export function severeWeather(day: DayWeather): string | null {
-  if (THUNDERSTORM.has(day.weather_code)) return "Gewitter angesagt";
-  if (day.wind_max_kmh >= WEATHER_RULES.stormWindKmh) return `Sturm angesagt (bis ${day.wind_max_kmh} km/h)`;
-  if (day.precipitation_mm >= WEATHER_RULES.heavyRainMm) return `Starkregen angesagt (${day.precipitation_mm} mm)`;
-  if (day.temp_min_c <= WEATHER_RULES.freezingTempC && (FREEZING_OR_SNOW.has(day.weather_code) || day.precipitation_mm >= 1)) return "Glätte möglich";
+export function severeWeather(day: DayWeather): Text | null {
+  if (THUNDERSTORM.has(day.weather_code)) return say("thunderstorm");
+  if (day.wind_max_kmh >= WEATHER_RULES.stormWindKmh) return say("storm", day.wind_max_kmh);
+  if (day.precipitation_mm >= WEATHER_RULES.heavyRainMm) return say("heavyRain", day.precipitation_mm);
+  if (day.temp_min_c <= WEATHER_RULES.freezingTempC && (FREEZING_OR_SNOW.has(day.weather_code) || day.precipitation_mm >= 1)) return say("ice");
   return null;
 }
 

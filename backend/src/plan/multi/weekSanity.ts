@@ -1,17 +1,18 @@
 import { LimitUnit, SportDefinition } from "../../sports/types";
 import { Intensity, SessionType } from "../vocabulary";
 import { SnapshotV2 } from "../snapshot";
-import { addDays, weekdayName } from "../calendar";
+import { addDays } from "../calendar";
 import { dayLimits, DayLimitsV2, dayMinutesCap, hardOn, lower, MULTI_RULES, painRestriction, RANK, recentBefore, sportLimits, SportLimitsNow, testBlackoutReason } from "./limits";
 import { Availability, FixedDay, MacroWeekTargetV2, MissedSession, MultiWeekPlanRaw, RecentTraining, ReplanReason, Supplements, TestSettings, WeekSessionRaw } from "./schemas";
 import { DayWeather, severeWeather } from "../weather";
-import { EXERCISE_RULES, EXTRA_RULES, normalizeWeekExtras, perWeek, strengthBlackout, WeekExtra } from "./extras";
-import { amountToMeters, amountToMinutes, floorAmount, formatAmount, plannedSports, roundAmount, sportName } from "./sports";
+import { EXERCISE_RULES, normalizeWeekExtras, perWeek, strengthBlackout, WeekExtra } from "./extras";
+import { amountToMeters, amountToMinutes, floorAmount, formatAmount, plannedSports, roundAmount } from "./sports";
 import { fixedSport, scheduleDay, trainingDaysPerWeek, weeklyMinutes } from "./schedule";
 import { poolClosed } from "./profile";
 import { chooseTest, TestPlan, TestRef, testRef } from "./tests";
 import { inOpenWaterBlock, openWaterAllowed, openWaterBlocked, raceInOpenWater } from "./openWater";
 import { Language, LANGUAGES, serverTexts } from "../language";
+import { CATALOGS, dayText, equipmentText, extraText, intensityText, listText, onDay, reasonsText, render, say, sportText, Text } from "./texts";
 
 /**
  * Sicherheitsschicht fuer den Wochenplan ueber mehrere Sportarten (die naechsten 7 oder 14 Tage, je Block von 7 Tagen). Reiner Code: korrigiert
@@ -159,10 +160,6 @@ export function indoorAllowed(sport: SportDefinition, equipment: readonly string
   return indoor !== null && (equipment === undefined || equipment.includes(indoor.equipment));
 }
 
-function label(date: string): string {
-  return `${weekdayName(date)}, ${date.slice(8, 10)}.${date.slice(5, 7)}.`;
-}
-
 function minutesOf(draft: Draft): number {
   return draft.test?.minutes ?? amountToMinutes(draft.sport, draft.amount, draft.limits.speed);
 }
@@ -196,7 +193,7 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
   const problem = findProblem(input, context.dates.length);
   if (problem !== null) return { plan: { rationale: input.rationale, total_minutes: 0, days: [] }, adjustments: [], blocked: problem };
 
-  const notes: string[] = [];
+  const notes: Text[] = [];
   const result: WeekDayV2[] = [];
   const reports = context.reports ?? context.recent;
   let recent = context.recent;
@@ -209,8 +206,8 @@ export function sanitizeWeekV2(input: MultiWeekPlanRaw, snapshot: SnapshotV2, co
     priorTests = [...priorTests, ...block.flatMap((day) => day.sessions.filter((session) => session.test !== null).map((session) => ({ date: day.date, sport: session.sport })))];
   }
 
-  const adjustments = notes.slice(0, MULTI_RULES.maxAdjustmentLines);
-  if (notes.length > MULTI_RULES.maxAdjustmentLines) adjustments.push(`… und ${notes.length - MULTI_RULES.maxAdjustmentLines} weitere Korrekturen`);
+  const adjustments = render(notes.slice(0, MULTI_RULES.maxAdjustmentLines), context.language);
+  if (notes.length > MULTI_RULES.maxAdjustmentLines) adjustments.push(say("moreCorrections", notes.length - MULTI_RULES.maxAdjustmentLines).in(context.language));
   return {
     plan: {
       rationale: withNote(input.rationale, notes, context.language),
@@ -246,7 +243,7 @@ function plannedAsRecent(day: WeekDayV2): RecentTraining[] {
 }
 
 /** Die Regeln fuer einen Block von hoechstens `WEEK_BLOCK_DAYS` Tagen; Korrekturen landen in `notes`. */
-function sanitizeBlock(input: MultiWeekPlanRaw, snapshot: SnapshotV2, context: WeekContextV2, notes: string[]): WeekDayV2[] {
+function sanitizeBlock(input: MultiWeekPlanRaw, snapshot: SnapshotV2, context: WeekContextV2, notes: Text[]): WeekDayV2[] {
   const unplanned = new Set<string>();
   // Feste Tage: stehen schon, ihr Umfang geht von den Grenzen der Woche ab.
   const base = weekLimitsV2(snapshot, context);
@@ -257,7 +254,7 @@ function sanitizeBlock(input: MultiWeekPlanRaw, snapshot: SnapshotV2, context: W
   const byDate = new Map<string, MultiWeekPlanRaw["days"][number]>();
   for (const day of input.days) if (context.dates.includes(day.date) && !byDate.has(day.date)) byDate.set(day.date, day);
   const missing = context.dates.filter((date) => !byDate.has(date));
-  if (missing.length > 0) notes.push(`${missing.length} fehlende Tage als Ruhetag ergänzt (${missing.map(label).join(", ")})`);
+  if (missing.length > 0) notes.push(say("missingDays", missing.length, listText(missing.map(dayText), "plain")));
 
   const free = new Map((context.availability ?? []).map((entry) => [entry.date, entry.minutes]));
   let days: DraftDay[] = context.dates.map((date) => {
@@ -269,32 +266,32 @@ function sanitizeBlock(input: MultiWeekPlanRaw, snapshot: SnapshotV2, context: W
     if (pinned.has(date)) return { date, focus: "", sessions: [], extras: [] };
     // 2. Keine Zeit (auch laut Kalender) oder Ruhetag laut Wochenraster: Ruhetag. An einem Tag mit fester Sportart nur diese.
     if (context.unavailable.includes(date)) {
-      if (sessions.length > 0) notes.push(`${label(date)}: keine Zeit, als Ruhetag gesetzt`);
+      if (sessions.length > 0) notes.push(onDay(date, say("noTimeRest")));
       return { date, focus: "Keine Zeit", sessions: [], extras: [] };
     }
     const freeMinutes = free.get(date);
     if (freeMinutes !== undefined && freeMinutes < MIN_FREE_MINUTES) {
-      if (sessions.length > 0 || extras.length > 0) notes.push(`${label(date)}: laut Kalender keine Zeit, als Ruhetag gesetzt`);
+      if (sessions.length > 0 || extras.length > 0) notes.push(onDay(date, say("calendarNoTimeRest")));
       return { date, focus: "Keine Zeit", sessions: [], extras: [] };
     }
     if (scheduleDay(snapshot, date)?.trains === false) {
-      if (sessions.length > 0) notes.push(`${label(date)}: Ruhetag laut Wochenraster`);
+      if (sessions.length > 0) notes.push(onDay(date, say("scheduleRest")));
       return { date, focus: "Ruhetag", sessions: [], extras: extras.filter((extra) => extra.kind === "mobility") };
     }
     const fixed = fixedSport(snapshot, date);
     if (fixed !== undefined && sessions.some((draft) => draft.sport.id !== fixed)) {
-      notes.push(`${label(date)}: laut Wochenraster nur ${sportName(fixed)}, andere Sportarten gestrichen`);
+      notes.push(onDay(date, say("scheduleOnly", sportText(fixed))));
       sessions = sessions.filter((draft) => draft.sport.id === fixed);
     }
     // 3. Hoechstens zwei Einheiten am Tag, die laengsten bleiben.
     if (sessions.length > MULTI_RULES.maxSessionsPerDay) {
-      notes.push(`${label(date)}: auf ${MULTI_RULES.maxSessionsPerDay} Einheiten gekürzt`);
+      notes.push(onDay(date, say("sessionsCut", MULTI_RULES.maxSessionsPerDay)));
       const keep = [...sessions].sort((a, b) => minutesOf(b) - minutesOf(a)).slice(0, MULTI_RULES.maxSessionsPerDay);
       sessions = sessions.filter((session) => keep.includes(session));
     }
     return { date, focus, sessions: fixBricks(sessions, date, notes), extras };
   });
-  if (unplanned.size > 0) notes.push(`Einheiten von Sportarten ohne Schwerpunkt entfernt (${[...unplanned].map(sportName).join(", ")})`);
+  if (unplanned.size > 0) notes.push(say("unplannedSessions", listText([...unplanned].map(sportText), "plain")));
 
   // 4. Je Einheit: Beschwerden der letzten Tage, Grenze der Sportart, Wiedereinstieg locker, kleinste sinnvolle Einheit.
   const reports = context.reports ?? context.recent;
@@ -309,7 +306,7 @@ function sanitizeBlock(input: MultiWeekPlanRaw, snapshot: SnapshotV2, context: W
         .filter((draft) => {
           // Die Bahn nur an den Tagen, an denen der Athlet hinkommt (Freiwasser geht immer).
           if (draft.openWater || !poolClosed(snapshot, draft.sport, day.date)) return true;
-          notes.push(`${label(day.date)}: ${draft.sport.displayName} gestrichen (kein ${draft.sport.planning.pool?.displayName ?? ""} an diesem Tag laut deinen Angaben)`);
+          notes.push(onDay(day.date, say("dropped", sportText(draft.sport.id), say("poolClosedDay"))));
           return false;
         }),
       day.date,
@@ -327,7 +324,7 @@ function sanitizeBlock(input: MultiWeekPlanRaw, snapshot: SnapshotV2, context: W
     const ruleCap = day.date === context.today && today !== null ? today.maxMinutes : (week.dayMinutes.get(day.date) ?? week.maxDayMinutes);
     const cap = Math.min(ruleCap, free.get(day.date) ?? Infinity);
     if (dayMinutes(day) <= cap) return day;
-    notes.push(`${label(day.date)}: Tagesumfang von ${Math.round(dayMinutes(day))} min auf höchstens ${cap} min gekürzt${cap < ruleCap ? " (freie Zeit laut Kalender)" : ""}`);
+    notes.push(onDay(day.date, say("dayCapped", Math.round(dayMinutes(day)), cap, cap < ruleCap)));
     return scaleSessions([day], () => true, cap, minutesOf)[0];
   });
 
@@ -336,7 +333,7 @@ function sanitizeBlock(input: MultiWeekPlanRaw, snapshot: SnapshotV2, context: W
     const hard = day.sessions.filter(isHard);
     if (hard.length <= MULTI_RULES.maxHardSessionsPerDay) return day;
     const keep = hard.find((draft) => draft.test !== null) ?? hard[0];
-    notes.push(`${label(day.date)}: nur eine harte Einheit am Tag, die anderen auf "moderate" gesenkt`);
+    notes.push(onDay(day.date, say("oneHardPerDay")));
     return { ...day, sessions: day.sessions.map((draft) => (isHard(draft) && draft !== keep ? soften(draft, "moderate") : draft)) };
   });
   days = limitHardDays(days, week, notes, new Set([...pinned.values()].filter((day) => day.sessions.some(isHard)).map((day) => day.date)));
@@ -348,12 +345,12 @@ function sanitizeBlock(input: MultiWeekPlanRaw, snapshot: SnapshotV2, context: W
       const own = days.flatMap((day) => day.sessions.filter((draft) => draft.sport.id === sportId).map((draft) => ({ day, draft })));
       if (own.length <= max) break;
       const smallest = [...own].sort((a, b) => Number(a.draft.test !== null) - Number(b.draft.test !== null) || a.draft.amount - b.draft.amount)[0];
-      notes.push(`${label(smallest.day.date)}: ${limits.sport.displayName} gestrichen (höchstens ${max} Einheiten pro Woche)`);
+      notes.push(onDay(smallest.day.date, say("dropped", sportText(sportId), say("maxSessionsPerWeek", max))));
       days = days.map((day) => (day === smallest.day ? { ...day, sessions: day.sessions.filter((draft) => draft !== smallest.draft) } : day));
     }
     const total = days.reduce((sum, day) => sum + day.sessions.filter((draft) => draft.sport.id === sportId).reduce((s, draft) => s + draft.amount, 0), 0);
     if (total > limits.weeklyCap) {
-      notes.push(`${limits.sport.displayName}: Wochenumfang von ${formatAmount(limits.sport, total)} auf höchstens ${formatAmount(limits.sport, limits.weeklyCap)} gekürzt`);
+      notes.push(say("weeklyCut", sportText(sportId), formatAmount(limits.sport, total), formatAmount(limits.sport, limits.weeklyCap)));
       days = scaleSessions(days, (draft) => draft.sport.id === sportId, limits.weeklyCap, (draft) => draft.amount);
     }
   }
@@ -370,14 +367,14 @@ function sanitizeBlock(input: MultiWeekPlanRaw, snapshot: SnapshotV2, context: W
     const lightest = [...training].sort(
       (a, b) => Number(a.sessions.some((d) => d.test !== null)) - Number(b.sessions.some((d) => d.test !== null)) || dayMinutes(a) - dayMinutes(b) || b.date.localeCompare(a.date)
     )[0];
-    notes.push(`${label(lightest.date)}: als Ruhetag gesetzt (${training.length > week.maxTrainingDays ? `höchstens ${week.maxTrainingDays} Trainingstage` : "mindestens ein Ruhetag pro Woche"})`);
+    notes.push(onDay(lightest.date, say("restDaySet", training.length > week.maxTrainingDays ? say("maxTrainingDays", week.maxTrainingDays) : say("minOneRestDay"))));
     days = days.map((day) => (day === lightest ? { ...day, focus: "Ruhetag", sessions: [] } : day));
   }
 
   // 10. Hoechstens die Wochenstunden des Ziels.
   const minutes = days.reduce((sum, day) => sum + dayMinutes(day), 0);
   if (minutes > week.maxMinutes) {
-    notes.push(`Gesamtumfang von ${Math.round(minutes)} min auf höchstens ${week.maxMinutes} min gekürzt (Wochenstunden des Ziels)`);
+    notes.push(say("totalCut", Math.round(minutes), week.maxMinutes));
     days = scaleSessions(days, () => true, week.maxMinutes, minutesOf);
   }
 
@@ -438,23 +435,23 @@ function toDraft(session: WeekSessionRaw, week: WeekLimitsV2, unplanned: Set<str
 }
 
 /** Beschwerden nach einer Einheit: Sportart pausiert, nur locker oder kuerzer (siehe `painRestriction`). */
-function applyPain(draft: Draft, date: string, reports: readonly RecentTraining[], notes: string[]): Draft[] {
+function applyPain(draft: Draft, date: string, reports: readonly RecentTraining[], notes: Text[]): Draft[] {
   const pain = painRestriction(reports, draft.sport.id, date);
   if (pain === null) return [draft];
   const sport = draft.sport;
   if (pain.blocked) {
-    notes.push(`${label(date)}: ${sport.displayName} gestrichen (${pain.reason})`);
+    notes.push(onDay(date, say("dropped", sportText(sport.id), pain.reason)));
     return [];
   }
   let result = draft;
   if (RANK[result.intensity] > RANK[pain.maxIntensity]) {
-    notes.push(`${label(date)}: ${sport.displayName} auf "${pain.maxIntensity}" gesenkt (${pain.reason})`);
+    notes.push(onDay(date, say("lowered", sportText(sport.id), intensityText(pain.maxIntensity), pain.reason)));
     result = soften(result, pain.maxIntensity);
   }
   if (pain.amountFactor < 1 && result.test === null) {
     const cap = floorAmount(sport, draft.limits.sessionCap * pain.amountFactor);
     if (result.amount > cap) {
-      notes.push(`${label(date)}: ${sport.displayName} von ${formatAmount(sport, result.amount)} auf ${formatAmount(sport, cap)} gekürzt (${pain.reason})`);
+      notes.push(onDay(date, say("cut", sportText(sport.id), formatAmount(sport, result.amount), formatAmount(sport, cap), pain.reason)));
       result = { ...result, amount: cap };
     }
   }
@@ -466,13 +463,12 @@ function applyPain(draft: Draft, date: string, reports: readonly RecentTraining[
  * erlaubt (`brickAfter`). Sonst wird es eine eigene Einheit; `notes` bekommt den Hinweis (leer: still korrigieren, etwa
  * wenn die erste Einheit gestrichen wurde).
  */
-function fixBricks(sessions: Draft[], date: string, notes: string[]): Draft[] {
+function fixBricks(sessions: Draft[], date: string, notes: Text[]): Draft[] {
   return sessions.map((draft, index) => {
     if (!draft.brick) return draft;
     const previous = index === 1 ? sessions[0] : undefined;
     if (previous !== undefined && draft.sport.planning.brickAfter.includes(previous.sport.id)) return draft;
-    const allowed = draft.sport.planning.brickAfter.map(sportName).join(" oder ");
-    notes.push(`${label(date)}: ${draft.sport.displayName} als eigene Einheit (Koppeltraining nur direkt nach ${allowed || "keiner Sportart"})`);
+    notes.push(onDay(date, say("brickSeparate", sportText(draft.sport.id), listText(draft.sport.planning.brickAfter.map(sportText), "or"))));
     return { ...draft, brick: false };
   });
 }
@@ -481,33 +477,33 @@ function fixBricks(sessions: Draft[], date: string, notes: string[]): Draft[] {
  * Drinnen nur, wo die Sportart es kennt und der Athlet das Hilfsmittel hat. Bei Gewitter, Sturm, Starkregen oder
  * Glaette kommt eine wetterabhaengige Einheit nach drinnen, wenn das geht.
  */
-function placeIndoor(draft: Draft, date: string, context: WeekContextV2, notes: string[]): Draft {
+function placeIndoor(draft: Draft, date: string, context: WeekContextV2, notes: Text[]): Draft {
   const sport = draft.sport;
   const allowed = indoorAllowed(sport, context.equipment);
   if (draft.indoor && !allowed) {
-    notes.push(`${label(date)}: ${sport.displayName} draußen (${sport.planning.indoor === null ? "drinnen gibt es nicht" : `kein ${sport.planning.indoor.displayName} angegeben`})`);
+    notes.push(onDay(date, say("outdoor", sportText(sport.id), sport.planning.indoor === null ? "" : equipmentText(sport.planning.indoor.equipment))));
     return { ...draft, indoor: false };
   }
   const weather = context.weather?.find((day) => day.date === date);
   const severe = weather !== undefined && sport.planning.weatherSensitive ? severeWeather(weather) : null;
   if (severe !== null && !draft.indoor && allowed && sport.planning.indoor !== null) {
-    notes.push(`${label(date)}: ${severe}, ${sport.displayName} drinnen (${sport.planning.indoor.displayName})`);
+    notes.push(onDay(date, say("indoorForWeather", severe, sportText(sport.id), equipmentText(sport.planning.indoor.equipment))));
     return { ...draft, indoor: true };
   }
   return draft;
 }
 
 /** Freiwasser nur, wo die Sportart es kennt, der Athlet Zugang hat und das Wetter passt (sonst ins Becken). */
-function placeOpenWater(draft: Draft, date: string, context: WeekContextV2, notes: string[]): Draft {
+function placeOpenWater(draft: Draft, date: string, context: WeekContextV2, notes: Text[]): Draft {
   if (!draft.openWater) return draft;
   const venue = draft.sport.planning.openWater;
   if (venue === null || !openWaterAllowed(draft.sport, context.equipment)) {
-    notes.push(`${label(date)}: ${draft.sport.displayName} im Becken (${venue === null ? "Freiwasser gibt es nicht" : "kein Zugang zu Freiwasser angegeben"})`);
+    notes.push(onDay(date, say("pool", sportText(draft.sport.id), venue === null)));
     return { ...draft, openWater: false };
   }
   const blocked = openWaterBlocked(context.weather?.find((day) => day.date === date));
   if (blocked !== null) {
-    notes.push(`${label(date)}: ${blocked}, ${draft.sport.displayName} im Becken`);
+    notes.push(onDay(date, say("poolForWeather", blocked, sportText(draft.sport.id))));
     return { ...draft, openWater: false };
   }
   return draft;
@@ -517,7 +513,7 @@ function placeOpenWater(draft: Draft, date: string, context: WeekContextV2, note
  * Ein Ziel im Freiwasser braucht Gewoehnung (Orientierung, Start, kein Abstossen an der Wand): Liegt die Woche in den
  * letzten Wochen davor und plant sie die Sportart ohne Freiwasser, kommt die laengste passende Einheit dorthin.
  */
-function ensureOpenWater(days: DraftDay[], snapshot: SnapshotV2, context: WeekContextV2, notes: string[]): DraftDay[] {
+function ensureOpenWater(days: DraftDay[], snapshot: SnapshotV2, context: WeekContextV2, notes: Text[]): DraftDay[] {
   let result = days;
   for (const discipline of snapshot.training_goal.disciplines) {
     const own = result.flatMap((day) => day.sessions.filter((draft) => draft.sport.id === discipline.sport).map((draft) => ({ day, draft })));
@@ -529,7 +525,7 @@ function ensureOpenWater(days: DraftDay[], snapshot: SnapshotV2, context: WeekCo
     );
     const chosen = [...candidates].sort((a, b) => RANK[a.draft.intensity] - RANK[b.draft.intensity] || b.draft.amount - a.draft.amount)[0];
     if (chosen === undefined) continue;
-    notes.push(`${label(chosen.day.date)}: ${sport.displayName} im Freiwasser (Ziel im Freiwasser)`);
+    notes.push(onDay(chosen.day.date, say("openWaterForRace", sportText(sport.id))));
     result = result.map((day) =>
       day === chosen.day ? { ...day, sessions: day.sessions.map((draft) => (draft === chosen.draft ? { ...draft, openWater: true } : draft)) } : day
     );
@@ -538,29 +534,29 @@ function ensureOpenWater(days: DraftDay[], snapshot: SnapshotV2, context: WeekCo
 }
 
 /** Kraft und Mobilitaet nach den Regeln in `extras.ts`. */
-function placeExtras(days: DraftDay[], snapshot: SnapshotV2, context: WeekContextV2, week: WeekLimitsV2, free: ReadonlyMap<string, number>, notes: string[]): DraftDay[] {
+function placeExtras(days: DraftDay[], snapshot: SnapshotV2, context: WeekContextV2, week: WeekLimitsV2, free: ReadonlyMap<string, number>, notes: Text[]): DraftDay[] {
   const counts = new Map<string, number>();
   return days.map((day, index) => {
     const nextHard = days[index + 1]?.sessions.some(isHard) ?? false;
     const extras = day.extras.flatMap((extra) => {
-      const name = EXTRA_RULES[extra.kind].displayName;
+      const name = extraText(extra.kind);
       if (extra.kind === "strength") {
         if (strengthBlackout(snapshot, day.date)) {
-          notes.push(`${label(day.date)}: kein Krafttraining in den letzten ${EXERCISE_RULES.noStrengthDaysBeforeGoal} Tagen vor dem Ziel`);
+          notes.push(onDay(day.date, say("noStrengthBeforeGoal", EXERCISE_RULES.noStrengthDaysBeforeGoal)));
           return [];
         }
         if (day.date === context.today && week.today?.restReason != null) {
-          notes.push(`${label(day.date)}: kein Krafttraining (${week.today.restReason})`);
+          notes.push(onDay(day.date, say("noStrength", week.today.restReason)));
           return [];
         }
         if (nextHard) {
-          notes.push(`${label(day.date)}: kein Krafttraining am Tag vor einer harten Einheit`);
+          notes.push(onDay(day.date, say("noStrengthBeforeHard")));
           return [];
         }
       }
       const used = counts.get(extra.kind) ?? 0;
       if (used >= perWeek(context.supplements, extra.kind)) {
-        notes.push(`${label(day.date)}: ${name} gestrichen (höchstens ${perWeek(context.supplements, extra.kind)}-mal pro Woche)`);
+        notes.push(onDay(day.date, say("extraMaxPerWeek", name, perWeek(context.supplements, extra.kind))));
         return [];
       }
       counts.set(extra.kind, used + 1);
@@ -579,32 +575,32 @@ function placeExtras(days: DraftDay[], snapshot: SnapshotV2, context: WeekContex
           room -= extra.minutes;
           return true;
         }
-        notes.push(`${label(day.date)}: ${EXTRA_RULES[extra.kind].displayName} gestrichen (Tageszeit ausgeschöpft)`);
+        notes.push(onDay(day.date, say("extraNoTime", extraText(extra.kind))));
         return false;
       });
     return { ...day, extras: extras.filter((extra) => kept.includes(extra)) };
   });
 }
 
-function limitSession(draft: Draft, date: string, notes: string[]): Draft[] {
+function limitSession(draft: Draft, date: string, notes: Text[]): Draft[] {
   const { sport, limits } = draft;
   const minimum = sport.planning.limits.minSession;
   if (draft.session_type === "test") return [draft];
   let result = draft;
   if (limits.pause && RANK[result.intensity] > RANK.easy) {
-    notes.push(`${label(date)}: ${sport.displayName} locker (Wiedereinstieg nach Pause)`);
+    notes.push(onDay(date, say("easyAfterPause", sportText(sport.id))));
     result = soften(result, "easy");
   }
   if (result.amount > limits.sessionCap) {
-    notes.push(`${label(date)}: ${sport.displayName} von ${formatAmount(sport, result.amount)} auf ${formatAmount(sport, limits.sessionCap)} gekürzt (Grenze pro Einheit)`);
+    notes.push(onDay(date, say("cut", sportText(sport.id), formatAmount(sport, result.amount), formatAmount(sport, limits.sessionCap), say("sessionCap"))));
     result = { ...result, amount: limits.sessionCap };
   }
   if (result.amount < minimum) {
     if (result.amount * 2 >= minimum && minimum <= limits.sessionCap) {
-      notes.push(`${label(date)}: ${sport.displayName} von ${formatAmount(sport, result.amount)} auf ${formatAmount(sport, minimum)} angehoben (kleinste sinnvolle Einheit)`);
+      notes.push(onDay(date, say("raised", sportText(sport.id), formatAmount(sport, result.amount), formatAmount(sport, minimum))));
       return [{ ...result, amount: minimum }];
     }
-    notes.push(`${label(date)}: ${sport.displayName} unter ${formatAmount(sport, minimum)} gestrichen`);
+    notes.push(onDay(date, say("belowMinimum", sportText(sport.id), formatAmount(sport, minimum))));
     return [];
   }
   return [result];
@@ -615,7 +611,7 @@ function limitSession(draft: Draft, date: string, notes: string[]): Draft[] {
  * Tage mit einem Test kommen zuerst zum Zug, dann die uebrigen in der Reihenfolge der Tage. Was nicht passt, wird
  * leichter: ein Test zur lockeren Einheit, eine harte Einheit "moderate".
  */
-function limitHardDays(days: DraftDay[], week: WeekLimitsV2, notes: string[], fixedHard: ReadonlySet<string> = new Set()): DraftDay[] {
+function limitHardDays(days: DraftDay[], week: WeekLimitsV2, notes: Text[], fixedHard: ReadonlySet<string> = new Set()): DraftDay[] {
   const result = [...days];
   // Harte feste Tage stehen schon: Sie zaehlen mit und duerfen keine harten Nachbarn bekommen.
   const hard = new Set<number>(days.flatMap((day, index) => (fixedHard.has(day.date) ? [index] : [])));
@@ -629,12 +625,8 @@ function limitHardDays(days: DraftDay[], week: WeekLimitsV2, notes: string[], fi
         hard.add(index);
         return;
       }
-      const why = neighbour ? "nicht an zwei Tagen nacheinander" : `höchstens ${week.maxHardDays} harte Tage`;
-      notes.push(
-        session.test !== null
-          ? `${label(day.date)}: kein Leistungstest ${session.sport.displayName} (${why}), lockere Einheit statt dessen`
-          : `${label(day.date)}: harte Einheit auf "moderate" gesenkt (${why})`
-      );
+      const why = neighbour ? say("notTwoDaysInRow") : say("maxHardDays", week.maxHardDays);
+      notes.push(onDay(day.date, session.test !== null ? say("noTest", sportText(session.sport.id), why) : say("hardLowered", why)));
       const sessions = day.sessions.map((draft) => (isHard(draft) ? soften(draft, draft.test !== null ? "easy" : "moderate") : draft));
       result[index] = { ...day, focus: focusWithoutTest(day.focus, sessions), sessions };
     });
@@ -655,7 +647,7 @@ function limitRollingWindow(
   snapshot: SnapshotV2,
   context: WeekContextV2,
   free: ReadonlyMap<string, number>,
-  notes: string[]
+  notes: Text[]
 ): DraftDay[] {
   const result = [...days];
   for (const [sportId, limits] of base.sports) {
@@ -675,14 +667,14 @@ function limitRollingWindow(
       if (day.date === context.today || pinned.has(day.date) || own(day).length === 0) continue;
       const used = usedBefore(day.date);
       const allowed = Math.max(limits.weeklyCap - used, 0);
-      const why = `in 7 Tagen höchstens ${formatAmount(sport, limits.weeklyCap)}, davon schon ${formatAmount(sport, used)}`;
+      const why = say("rollingWindow", formatAmount(sport, limits.weeklyCap), formatAmount(sport, used));
       const test = own(day).find((draft) => draft.test !== null);
       if (test !== undefined && test.amount > allowed) {
         const moved = moveTest(result, index, test, limits.weeklyCap, usedBefore, base, pinned, snapshot, context, free);
         if (moved !== null) {
-          notes.push(`${label(day.date)}: Leistungstest ${sport.displayName} auf ${label(result[moved].date)} verlegt (${why})`);
+          notes.push(onDay(day.date, say("testMoved", sportText(sport.id), dayText(result[moved].date), why)));
         } else {
-          notes.push(`${label(day.date)}: kein Leistungstest ${sport.displayName} (${why}), lockere Einheit statt dessen`);
+          notes.push(onDay(day.date, say("noTest", sportText(sport.id), why)));
           const sessions = day.sessions.map((draft) => (draft === test ? soften(draft, "easy") : draft));
           result[index] = { ...day, focus: focusWithoutTest(day.focus, sessions), sessions };
         }
@@ -692,7 +684,7 @@ function limitRollingWindow(
       if (total <= allowed) continue;
       const [scaled] = scaleSessions([current], (draft) => draft.sport.id === sportId, allowed, (draft) => draft.amount);
       const left = own(scaled).reduce((sum, draft) => sum + draft.amount, 0);
-      notes.push(`${label(current.date)}: ${sport.displayName} ${left > 0 ? `von ${formatAmount(sport, total)} auf ${formatAmount(sport, left)} gekürzt` : "gestrichen"} (${why})`);
+      notes.push(onDay(current.date, left > 0 ? say("cut", sportText(sport.id), formatAmount(sport, total), formatAmount(sport, left), why) : say("dropped", sportText(sport.id), why)));
       result[index] = { ...scaled, focus: scaled.sessions.length > 0 ? scaled.focus : "Ruhetag" };
     }
   }
@@ -747,25 +739,25 @@ function moveTest(
   return null;
 }
 
-function applyToday(day: DraftDay, today: DayLimitsV2, notes: string[]): DraftDay {
+function applyToday(day: DraftDay, today: DayLimitsV2, notes: Text[]): DraftDay {
   if (today.restReason !== null) {
-    if (day.sessions.length > 0) notes.push(`${label(day.date)}: Ruhetag erzwungen (${today.restReason})`);
+    if (day.sessions.length > 0) notes.push(onDay(day.date, say("forcedRest", today.restReason)));
     return { ...day, focus: "Ruhetag", sessions: [] };
   }
   const sessions = day.sessions.flatMap((draft) => {
     const limits = today.sports.get(draft.sport.id);
     if (limits === undefined) return [];
     if (limits.blockedReason !== null) {
-      notes.push(`${label(day.date)}: ${draft.sport.displayName} gestrichen (${limits.blockedReason})`);
+      notes.push(onDay(day.date, say("dropped", sportText(draft.sport.id), limits.blockedReason)));
       return [];
     }
     let result = draft;
     if (RANK[result.intensity] > RANK[limits.maxIntensity] && result.session_type !== "test") {
-      notes.push(`${label(day.date)}: ${draft.sport.displayName} auf "${limits.maxIntensity}" gesenkt (${limits.intensityReasons.join(", ")})`);
+      notes.push(onDay(day.date, say("lowered", sportText(draft.sport.id), intensityText(limits.maxIntensity), reasonsText(limits.intensityReasons))));
       result = soften(result, limits.maxIntensity);
     }
     if (result.amount > limits.maxAmount && result.session_type !== "test") {
-      notes.push(`${label(day.date)}: ${draft.sport.displayName} von ${formatAmount(draft.sport, result.amount)} auf ${formatAmount(draft.sport, limits.maxAmount)} gekürzt (Grenze für heute)`);
+      notes.push(onDay(day.date, say("cut", sportText(draft.sport.id), formatAmount(draft.sport, result.amount), formatAmount(draft.sport, limits.maxAmount), say("todayCap"))));
       result = { ...result, amount: limits.maxAmount };
     }
     return [result];
@@ -774,7 +766,7 @@ function applyToday(day: DraftDay, today: DayLimitsV2, notes: string[]): DraftDa
 }
 
 /** Setzt die Testeinheiten ein oder macht aus einem unpassenden Test eine normale Einheit. */
-function placeTests(days: DraftDay[], snapshot: SnapshotV2, context: WeekContextV2, week: WeekLimitsV2, notes: string[]): DraftDay[] {
+function placeTests(days: DraftDay[], snapshot: SnapshotV2, context: WeekContextV2, week: WeekLimitsV2, notes: Text[]): DraftDay[] {
   let previousTestDay: string | null = (context.priorTests ?? []).reduce<string | null>((last, test) => (last === null || test.date > last ? test.date : last), null);
   const testedSports = new Set<string>((context.priorTests ?? []).map((test) => test.sport));
   // Tests werden nie gekuerzt: zusammen passen sie in die Wochenstunden.
@@ -786,12 +778,12 @@ function placeTests(days: DraftDay[], snapshot: SnapshotV2, context: WeekContext
       const isToday = day.date === context.today && week.today !== null;
       const dayLimitsForSport = isToday ? week.today?.sports.get(draft.sport.id) : undefined;
       const blocked =
-        (context.testSettings?.offer === false ? "Leistungstests sind abgeschaltet" : null) ??
+        (context.testSettings?.offer === false ? say("testsOff") : null) ??
         testBlackoutReason(snapshot, day.date) ??
         (isToday ? (week.today?.testBlockedReason ?? null) : null) ??
-        (testToday ? "höchstens ein Test pro Tag" : null) ??
-        (testedSports.has(draft.sport.id) ? "höchstens ein Test je Sportart pro Woche" : null) ??
-        (previousTestDay !== null && previousTestDay === addDays(day.date, -1) ? "nicht an zwei Tagen nacheinander" : null);
+        (testToday ? say("oneTestPerDay") : null) ??
+        (testedSports.has(draft.sport.id) ? say("oneTestPerSport") : null) ??
+        (previousTestDay !== null && previousTestDay === addDays(day.date, -1) ? say("notTwoDaysInRow") : null);
       let test: TestPlan | null = null;
       let reason = blocked;
       if (blocked === null) {
@@ -801,13 +793,13 @@ function placeTests(days: DraftDay[], snapshot: SnapshotV2, context: WeekContext
           maxAmount: Math.min(draft.limits.sessionCap, draft.limits.weeklyCap, dayLimitsForSport?.maxAmount ?? Infinity),
           maxMinutes: Math.min(isToday && week.today !== null ? week.today.maxMinutes : (week.dayMinutes.get(day.date) ?? week.maxDayMinutes), week.maxMinutes - testMinutes),
           maxIntensity: dayLimitsForSport?.maxIntensity ?? (draft.limits.pause ? "easy" : "hard"),
-          intensityReason: dayLimitsForSport?.intensityReasons.join(", ") ?? "Wiedereinstieg nach Pause"
+          intensityReason: dayLimitsForSport !== undefined ? reasonsText(dayLimitsForSport.intensityReasons) : say("reentry")
         });
         test = chosen.plan;
         reason = chosen.reason;
       }
       if (test === null) {
-        notes.push(`${label(day.date)}: kein Leistungstest ${draft.sport.displayName} (${reason ?? "passt nicht"}), lockere Einheit statt dessen`);
+        notes.push(onDay(day.date, say("noTest", sportText(draft.sport.id), reason ?? say("doesNotFit"))));
         const fallback = soften(draft, "easy");
         return { ...fallback, amount: Math.min(fallback.amount, floorAmount(draft.sport, draft.limits.sessionCap)) };
       }
@@ -832,7 +824,7 @@ export function intenseMinutes(sessions: readonly { intensity: Intensity; minute
  * locker, die laengsten zuerst; harte Einheiten regelt schon die Zahl der harten Tage. Erst ab
  * `minSessionsForIntensityShare` Einheiten: Bei ein oder zwei Einheiten sagt ein Anteil wenig.
  */
-function limitIntensity(days: DraftDay[], notes: string[]): DraftDay[] {
+function limitIntensity(days: DraftDay[], notes: Text[]): DraftDay[] {
   if (days.reduce((sum, day) => sum + day.sessions.length, 0) < MULTI_RULES.minSessionsForIntensityShare) return days;
   const measure = () => {
     const all = days.flatMap((day) => day.sessions.map((draft) => ({ intensity: draft.intensity, minutes: minutesOf(draft) })));
@@ -844,7 +836,7 @@ function limitIntensity(days: DraftDay[], notes: string[]): DraftDay[] {
   for (const { day, draft } of candidates) {
     const { intense, total } = measure();
     if (total <= 0 || intense <= total * MULTI_RULES.maxIntenseShareOfWeek) break;
-    notes.push(`${label(day.date)}: ${draft.sport.displayName} auf "easy" gesenkt (etwa ${Math.round((1 - MULTI_RULES.maxIntenseShareOfWeek) * 100)} % der Woche locker)`);
+    notes.push(onDay(day.date, say("lowered", sportText(draft.sport.id), intensityText("easy"), say("easyShare", Math.round((1 - MULTI_RULES.maxIntenseShareOfWeek) * 100)))));
     days = days.map((other) => (other.date === day.date ? { ...other, sessions: other.sessions.map((item) => (item === draft ? soften(item, "easy") : item)) } : other));
   }
   return days;
@@ -943,11 +935,10 @@ function isNoTime(focus: string): boolean {
   return LANGUAGES.some((language) => serverTexts(language).noTime === focus);
 }
 
-export function withNote(rationale: string, notes: string[], language: Language = "de"): string {
+export function withNote(rationale: string, notes: readonly Text[], language: Language = "de"): string {
   const text = rationale.trim().slice(0, MULTI_RULES.maxRationaleLength);
   if (notes.length === 0) return text;
-  // Die Korrekturen selbst sind deutsch; in anderen Sprachen nur der Hinweis, dass angepasst wurde.
-  const note = language !== "de" ? serverTexts(language).safetyNote : `Hinweis: Zur Sicherheit angepasst (${notes.slice(0, 3).join("; ")}${notes.length > 3 ? `; und ${notes.length - 3} weitere` : ""}).`;
+  const note = CATALOGS[language].safetyNote(render(notes.slice(0, 3), language), Math.max(notes.length - 3, 0));
   const room = Math.max(MULTI_RULES.maxRationaleLength - note.length - 1, 0);
   return `${text.slice(0, room).trimEnd()} ${note}`.trim().slice(0, MULTI_RULES.maxRationaleLength);
 }

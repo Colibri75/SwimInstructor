@@ -5,8 +5,10 @@ import { addDays } from "../calendar";
 import { MULTI_RULES, phaseOf, sportLimits, SportLimitsNow, taperFactors, taperWeeks, weeksToGoal } from "./limits";
 import { trainingDaysPerWeek, weeklyMinutes } from "./schedule";
 import { MacroBlockRaw, MacroWeekRawV2, MacroWeeksRaw, TestSettings } from "./schemas";
-import { amountToMeters, amountToMinutes, floorAmount, formatAmount, plannedSports, raceAmount, roundAmount, sportName } from "./sports";
+import { amountToMeters, amountToMinutes, floorAmount, formatAmount, plannedSports, raceAmount, roundAmount } from "./sports";
 import { scheduleMacroTests, ScheduledTest } from "./tests";
+import { Language } from "../language";
+import { CATALOGS, inWeek, listText, render, say, sportText, Text } from "./texts";
 
 /**
  * Sicherheitsschicht fuer den Gesamtplan ueber mehrere Sportarten. Reiner Code ohne Netzwerk: korrigiert Claudes Plan
@@ -23,6 +25,8 @@ export interface MacroContextV2 {
   /** Die Wochen (Montage), aufsteigend. */
   weeks: string[];
   testSettings?: TestSettings;
+  /** Sprache der App fuer die Korrekturen und den Hinweis an der Begruendung. Ohne Angabe Deutsch. */
+  language?: Language;
 }
 
 export interface MacroSportWeek {
@@ -93,10 +97,6 @@ export function macroSportLimits(snapshot: SnapshotV2): MacroSportLimits[] {
   });
 }
 
-function label(weekStart: string): string {
-  return `Woche ab ${weekStart.slice(8, 10)}.${weekStart.slice(5, 7)}.`;
-}
-
 /** Ohne Angabe hat eine Entlastungswoche so viel der letzten Woche davor (etwas unter der Grenze `deloadFactor`). */
 export const DEFAULT_DELOAD_SHARE = 0.65;
 
@@ -156,7 +156,7 @@ export function sanitizeMacroV2(input: MacroWeeksRaw, snapshot: SnapshotV2, cont
   const peak = new Map<string, number>();
   /** Einheiten je Sportart in der letzten Belastungswoche; beim Zuspitzen bleibt ihre Zahl (Bosquet 2007). */
   const loadingSessions = new Map<string, number>();
-  const notes: string[] = [];
+  const notes: Text[] = [];
   const weeks: MacroWeekV2[] = [];
   let missing = 0;
   let loadingStreak = 0;
@@ -182,7 +182,7 @@ export function sanitizeMacroV2(input: MacroWeeksRaw, snapshot: SnapshotV2, cont
     let deload = raw.deload && index > 0 && loading;
     if (!deload && index > 0 && loading && loadingStreak >= MULTI_RULES.maxLoadingWeeks) {
       deload = true;
-      notes.push(`${label(weekStart)}: als Entlastungswoche gesetzt (spätestens nach ${MULTI_RULES.maxLoadingWeeks} Belastungswochen)`);
+      notes.push(inWeek(weekStart, say("deloadSet", MULTI_RULES.maxLoadingWeeks)));
     }
 
     let sports: MacroSportWeek[] = sportLimitsList.map((entry) => {
@@ -193,47 +193,47 @@ export function sanitizeMacroV2(input: MacroWeeksRaw, snapshot: SnapshotV2, cont
       const ref = reference.get(sport.id) ?? 0;
       const sportPeak = peak.get(sport.id) ?? 0;
       let cap: number;
-      let why: string;
+      let why: Text;
       if (index === 0) {
         cap = entry.firstWeekCap;
-        why = "Grenze für die erste Woche";
+        why = say("firstWeekCap");
       } else if (deload) {
         cap = floorAmount(sport, ref * MULTI_RULES.deloadFactor);
-        why = "Entlastungswoche";
+        why = say("deloadWeek");
       } else {
         const base = Math.max(ref, entry.floor);
         cap = floorAmount(sport, base * entry.growthFactor);
-        why = `höchstens ${Math.round((entry.growthFactor - 1) * 100)} % mehr als die letzte Woche ohne Entlastung`;
+        why = say("growth", Math.round((entry.growthFactor - 1) * 100));
         // Zurueck zum Niveau vor der Pause geht es schneller, aber nie darueber hinaus.
         const back = floorAmount(sport, Math.min(base * entry.returnGrowthFactor, entry.returnTarget));
         if (back > cap) {
           cap = back;
-          why = `Rückkehr zum Niveau vor der Pause: höchstens ${Math.round((entry.returnGrowthFactor - 1) * 100)} % mehr als die letzte Woche ohne Entlastung`;
+          why = say("returnGrowth", Math.round((entry.returnGrowthFactor - 1) * 100));
         }
       }
       if (phase === "taper" && sportPeak > 0) {
         const factor = factors[Math.min(Math.max(taper - toGoal, 0), factors.length - 1)];
         if (floorAmount(sport, sportPeak * factor) < cap) {
           cap = floorAmount(sport, sportPeak * factor);
-          why = "Zuspitzen";
+          why = say("taper");
         }
       } else if (phase === "goal_week") {
         const goalCap = Math.max(sportPeak > 0 ? floorAmount(sport, sportPeak * MULTI_RULES.goalWeekFactor) : 0, floorAmount(sport, entry.race * MULTI_RULES.goalWeekRaceFactor));
         if (sportPeak > 0 || goalCap > cap) {
           cap = goalCap;
-          why = "Zielwoche";
+          why = say("goalWeek");
         }
       }
       cap = Math.min(cap, entry.absoluteWeekly);
       if (amount > cap) {
-        notes.push(`${label(weekStart)}: ${sport.displayName} von ${formatAmount(sport, amount)} auf ${formatAmount(sport, cap)} begrenzt (${why})`);
+        notes.push(inWeek(weekStart, say("capped", sportText(sport.id), formatAmount(sport, amount), formatAmount(sport, cap), why)));
         amount = cap;
       }
       if (amount > 0 && amount < limits.minSession) amount = cap >= limits.minSession ? limits.minSession : 0;
       let requestedSessions = Math.round(requested?.sessions ?? 0);
       const before = loadingSessions.get(sport.id) ?? 0;
       if (phase === "taper" && amount > 0 && requestedSessions < before) {
-        notes.push(`${label(weekStart)}: ${sport.displayName} mit ${before} statt ${requestedSessions} Einheiten (beim Zuspitzen bleibt die Zahl der Einheiten)`);
+        notes.push(inWeek(weekStart, say("taperSessions", sportText(sport.id), before, requestedSessions)));
         requestedSessions = before;
       }
       const sessions = clampSessions(requestedSessions, amount, limits.minSession, limits.maxSessionsPerWeek);
@@ -251,7 +251,7 @@ export function sanitizeMacroV2(input: MacroWeeksRaw, snapshot: SnapshotV2, cont
         if (amount < minimum) amount = 0;
         return toSportWeek(limits, amount, clampSessions(entry.sessions, amount, minimum, limits.sport.planning.limits.maxSessionsPerWeek));
       });
-      notes.push(`${label(weekStart)}: Gesamtumfang von ${Math.round(total)} min auf höchstens ${Math.round(weeklyMinutesCap)} min gekürzt (Wochenstunden des Ziels)`);
+      notes.push(inWeek(weekStart, say("totalCut", Math.round(total), Math.round(weeklyMinutesCap))));
     }
     // Hoechstens zwei Einheiten an jedem Trainingstag.
     while (sports.reduce((sum, entry) => sum + entry.sessions, 0) > maxSessions) {
@@ -289,15 +289,17 @@ export function sanitizeMacroV2(input: MacroWeeksRaw, snapshot: SnapshotV2, cont
   );
   for (const week of weeks) week.tests = scheduled.get(week.week_start) ?? [];
 
-  const adjustments: string[] = [];
-  if (missing > 0) adjustments.push(`${missing} fehlende Wochen mit dem Umfang der Vorwoche ergänzt`);
-  if (unplanned.size > 0) adjustments.push(`Sportarten ohne Schwerpunkt entfernt: ${[...unplanned].map(sportName).join(", ")}`);
-  adjustments.push(...notes.slice(0, MULTI_RULES.maxAdjustmentLines));
-  if (notes.length > MULTI_RULES.maxAdjustmentLines) adjustments.push(`… und ${notes.length - MULTI_RULES.maxAdjustmentLines} weitere Korrekturen am Umfang`);
+  const language = context.language ?? "de";
+  const lines: Text[] = [];
+  if (missing > 0) lines.push(say("missingWeeks", missing));
+  if (unplanned.size > 0) lines.push(say("unplannedSports", listText([...unplanned].map(sportText), "plain")));
+  lines.push(...notes.slice(0, MULTI_RULES.maxAdjustmentLines));
+  if (notes.length > MULTI_RULES.maxAdjustmentLines) lines.push(say("moreVolumeCorrections", notes.length - MULTI_RULES.maxAdjustmentLines));
+  const adjustments = render(lines, language);
 
   let rationale = input.rationale.trim().slice(0, MULTI_RULES.maxRationaleLength);
   if (notes.length > 0) {
-    const note = `Hinweis: Zur Sicherheit an ${notes.length} ${notes.length === 1 ? "Stelle" : "Stellen"} angepasst, die Wochen zeigen die geprüften Umfänge.`;
+    const note = CATALOGS[language].macroNote(notes.length);
     const room = Math.max(MULTI_RULES.maxRationaleLength - note.length - 1, 0);
     rationale = `${rationale.slice(0, room).trimEnd()} ${note}`.trim();
   }

@@ -28,6 +28,7 @@ import { emphasisOf, formatAmount, planningContext, plannedSports, raceAmount, r
 import { chooseTest, lastConfirmedTest, preferredTest, scheduleMacroTests } from "./tests";
 import { indoorAllowed, MIN_FREE_MINUTES, WEEK_BLOCK_DAYS, WeekContextV2, weekLimitsV2 } from "./weekSanity";
 import { DayWeather, severeWeather, weatherText } from "../weather";
+import { reasonsText, say } from "./texts";
 import { EXTRA_RULES, perWeek, strengthBlackout } from "./extras";
 import { inOpenWaterBlock, OPEN_WATER_RULES, openWaterAllowed, raceInOpenWater } from "./openWater";
 import { athleteProfileLines, lapGrid, poolClosedLines } from "./profile";
@@ -586,7 +587,7 @@ export function buildDayUserMessageV2(input: DayPromptInput): string {
                   maxAmount: limits.maxAmount,
                   maxMinutes: today.maxMinutes,
                   maxIntensity: limits.maxIntensity,
-                  intensityReason: limits.intensityReasons.join(", ")
+                  intensityReason: reasonsText(limits.intensityReasons)
                 });
         lines.push(
           chosen.plan !== null
@@ -668,7 +669,7 @@ function weekTestLines(snapshot: SnapshotV2, context: WeekContextV2): string[] {
       maxAmount: Math.min(limits.sessionCap, limits.weeklyCap),
       maxMinutes: Math.max(...context.dates.map((date) => dayMinutesCap(snapshot, date))),
       maxIntensity: limits.pause ? "easy" : "hard",
-      intensityReason: "Wiedereinstieg nach Pause"
+      intensityReason: say("reentry")
     });
     return chosen.plan !== null
       ? `- Leistungstest ${sport.displayName} (${why}): ${chosen.plan.test.displayName}, test_id ${chosen.plan.test.id}, etwa ${formatAmount(sport, chosen.plan.amount)} mit Ein- und Auslaufen${chosen.plan.test.maximalEffort ? ", harte Einheit" : ", locker"}. Lege ihn auf einen frischen Tag.`

@@ -1,5 +1,6 @@
 import { inLanguage, languageFrom, serverTexts } from "../../src/plan/language";
 import { withNote } from "../../src/plan/multi/weekSanity";
+import { say, sportText } from "../../src/plan/multi/texts";
 
 describe("Sprache der App", () => {
   it("liest den Header und bleibt ohne ihn deutsch", () => {
@@ -22,9 +23,10 @@ describe("Sprache der App", () => {
     expect(english).toContain(`"${serverTexts("en").noTime}"`);
   });
 
-  it("nennt die Korrekturen nur auf Deutsch einzeln", () => {
-    expect(withNote("Gut.", ["Laufen gekürzt"])).toContain("Laufen gekürzt");
-    expect(withNote("Good.", ["Laufen gekürzt"], "en")).toBe(`Good. ${serverTexts("en").safetyNote}`);
+  it("nennt die Korrekturen in der Sprache der App", () => {
+    const note = say("dropped", sportText("run"), say("todayCap"));
+    expect(withNote("Gut.", [note])).toBe("Gut. Hinweis: Zur Sicherheit angepasst (Laufen gestrichen (Grenze für heute)).");
+    expect(withNote("Good.", [note], "en")).toBe("Good. Note: adjusted for safety (Running removed (today's limit)).");
     expect(withNote("Good.", [], "en")).toBe("Good.");
   });
 });

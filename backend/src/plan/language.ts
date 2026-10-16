@@ -27,21 +27,19 @@ interface ServerTexts {
   noTime: string;
   restDay: string;
   easyInsteadOfTest: string;
-  /** Hängt an die Begründung, wenn die Sicherheitsschicht etwas geändert hat (Deutsch nennt die Änderungen einzeln). */
-  safetyNote: string;
 }
 
 const TEXTS: Record<Language, ServerTexts> = {
-  de: { noTime: "Keine Zeit", restDay: "Ruhetag", easyInsteadOfTest: "Locker statt Leistungstest", safetyNote: "Hinweis: Zur Sicherheit angepasst." },
-  en: { noTime: "No time", restDay: "Rest day", easyInsteadOfTest: "Easy instead of test", safetyNote: "Note: some parts were adjusted for safety." },
-  fr: { noTime: "Pas le temps", restDay: "Jour de repos", easyInsteadOfTest: "Facile au lieu du test", safetyNote: "Remarque : certains éléments ont été ajustés par sécurité." },
-  es: { noTime: "Sin tiempo", restDay: "Día de descanso", easyInsteadOfTest: "Suave en lugar del test", safetyNote: "Nota: algunas partes se ajustaron por seguridad." },
-  it: { noTime: "Niente tempo", restDay: "Giorno di riposo", easyInsteadOfTest: "Leggero invece del test", safetyNote: "Nota: alcune parti sono state adattate per sicurezza." },
-  "pt-BR": { noTime: "Sem tempo", restDay: "Dia de descanso", easyInsteadOfTest: "Leve em vez do teste", safetyNote: "Observação: algumas partes foram ajustadas por segurança." },
-  "zh-Hans": { noTime: "没时间", restDay: "休息日", easyInsteadOfTest: "以轻松训练代替测试", safetyNote: "提示：部分内容出于安全考虑已调整。" },
-  ja: { noTime: "時間なし", restDay: "休養日", easyInsteadOfTest: "テストの代わりに軽め", safetyNote: "注：安全のため一部を調整しました。" },
-  ko: { noTime: "시간 없음", restDay: "휴식일", easyInsteadOfTest: "테스트 대신 가볍게", safetyNote: "참고: 안전을 위해 일부를 조정했습니다." },
-  hi: { noTime: "समय नहीं", restDay: "आराम का दिन", easyInsteadOfTest: "टेस्ट की जगह हल्का", safetyNote: "नोट: सुरक्षा के लिए कुछ हिस्से बदले गए हैं।" }
+  de: { noTime: "Keine Zeit", restDay: "Ruhetag", easyInsteadOfTest: "Locker statt Leistungstest" },
+  en: { noTime: "No time", restDay: "Rest day", easyInsteadOfTest: "Easy instead of test" },
+  fr: { noTime: "Pas le temps", restDay: "Jour de repos", easyInsteadOfTest: "Facile au lieu du test" },
+  es: { noTime: "Sin tiempo", restDay: "Día de descanso", easyInsteadOfTest: "Suave en lugar del test" },
+  it: { noTime: "Niente tempo", restDay: "Giorno di riposo", easyInsteadOfTest: "Leggero invece del test" },
+  "pt-BR": { noTime: "Sem tempo", restDay: "Dia de descanso", easyInsteadOfTest: "Leve em vez do teste" },
+  "zh-Hans": { noTime: "没时间", restDay: "休息日", easyInsteadOfTest: "以轻松训练代替测试" },
+  ja: { noTime: "時間なし", restDay: "休養日", easyInsteadOfTest: "テストの代わりに軽め" },
+  ko: { noTime: "시간 없음", restDay: "휴식일", easyInsteadOfTest: "테스트 대신 가볍게" },
+  hi: { noTime: "समय नहीं", restDay: "आराम का दिन", easyInsteadOfTest: "टेस्ट की जगह हल्का" }
 };
 
 /** Die Sprache aus dem Header; ohne Header Deutsch, eine unbekannte wie in der App Englisch. */

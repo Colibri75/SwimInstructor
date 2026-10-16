@@ -3,6 +3,7 @@ import { daysBetween } from "../calendar";
 import { SnapshotV2 } from "../snapshot";
 import { DayWeather, severeWeather } from "../weather";
 import { goalDayOf } from "./limits";
+import { say, Text } from "./texts";
 
 /**
  * Freiwasser (Schwimmen im See oder Meer statt im Becken). Die Sportart sagt ueber `planning.openWater`, ob es das gibt;
@@ -28,11 +29,11 @@ export function raceInOpenWater(snapshot: SnapshotV2, sportId: string): boolean 
 }
 
 /** Warum an diesem Tag kein Freiwasser geht (Unwetter, zu kalt), sonst `null`. Ohne Vorhersage: kein Einwand. */
-export function openWaterBlocked(weather: DayWeather | undefined): string | null {
+export function openWaterBlocked(weather: DayWeather | undefined): Text | null {
   if (weather === undefined) return null;
   const severe = severeWeather(weather);
   if (severe !== null) return severe;
-  if (weather.temp_max_c < OPEN_WATER_RULES.minAirTempC) return `zu kalt fürs Freiwasser (höchstens ${weather.temp_max_c} °C)`;
+  if (weather.temp_max_c < OPEN_WATER_RULES.minAirTempC) return say("tooColdForOpenWater", weather.temp_max_c);
   return null;
 }
 

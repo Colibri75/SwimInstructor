@@ -45,3 +45,15 @@ das iPhone keine dieser Sprachen, zeigt die App Englisch.
 Der Compiler macht aus Einsetzungen Platzhalter: `String` und andere Texte werden `%@`, `Int` wird `%lld`.
 `Text("Woche \(nummer)")` mit `nummer: Int` hat also den Schlüssel `"Woche %lld"`. Ein `%` im Text wird im
 Schlüssel zu `%%`.
+
+## Texte des Servers
+
+- Was Claude schreibt (Begründungen, Schwerpunkte, Übungen), kommt über die Sprachanweisung im Prompt
+  (`backend/src/plan/language.ts`) gleich in der Sprache der App.
+- Die Sicherheitsschicht schreibt ihre Korrekturen selbst: die Liste „Zur Sicherheit angepasst“ unter einem Plan und
+  den Hinweis an der Begründung. Diese Sätze stehen in `backend/src/plan/multi/texts/`, eine Datei je Sprache
+  (`de.ts`, `en.ts`, …). Die Schicht rechnet mit `Text` (`say("dropped", sportText("run"), …)`), erst das Ergebnis
+  wird in der Sprache der App geschrieben. `toString()` liefert Deutsch, damit bleiben Prompts und Logs deutsch.
+- Ein neuer Satz kommt in `texts/catalog.ts` und in **jede** Sprachdatei, sonst meldet TypeScript einen Fehler; dazu
+  ein Beispielwert in `backend/test/plan/multi/texts.test.ts`. Sportarten, Hilfsmittel, Kraft und Mobilität,
+  Leistungstests und Intensitäten heißen dort wie in der App (`Localizable.strings`).

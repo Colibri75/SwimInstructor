@@ -1,5 +1,6 @@
 import { sanitizeWeekV2, WeekContextV2, weekLimitsV2, withNote } from "../../../src/plan/multi/weekSanity";
 import { multiSnapshot, RUNNER, TODAY, weekDates, weekPlan, weekSession } from "./fixtures";
+import { literal } from "../../../src/plan/multi/texts";
 
 const rested = { load: { days_since_last_hard_session: 5 }, sports: { swim: { meters_last_seven_days: 1000 }, bike: { minutes_last_seven_days: 30 } } };
 const context = (patch: Partial<WeekContextV2> = {}): WeekContextV2 => ({ today: TODAY, dates: weekDates(), unavailable: [], recent: [], ...patch });
@@ -319,7 +320,7 @@ describe("sanitizeWeekV2", () => {
 describe("withNote", () => {
   it("haengt bis zu drei Korrekturen an und haelt die Laenge", () => {
     expect(withNote("Plan.", [])).toBe("Plan.");
-    expect(withNote("Plan.", ["a", "b", "c", "d"])).toBe("Plan. Hinweis: Zur Sicherheit angepasst (a; b; c; und 1 weitere).");
-    expect(withNote("x".repeat(1300), ["a"]).length).toBeLessThanOrEqual(1200);
+    expect(withNote("Plan.", ["a", "b", "c", "d"].map(literal))).toBe("Plan. Hinweis: Zur Sicherheit angepasst (a; b; c; und 1 weitere).");
+    expect(withNote("x".repeat(1300), [literal("a")]).length).toBeLessThanOrEqual(1200);
   });
 });
