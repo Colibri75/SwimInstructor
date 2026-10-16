@@ -59,9 +59,12 @@ struct AIConsentSheet: View {
 }
 
 /// Der Bereich "Datenschutz" der Einstellungen: Link zur Erklärung, Stand der Einwilligung, Widerruf.
+/// Das Blatt zum Zustimmen hängt am Formular der Einstellungen (`PrivacyConsentSheetModifier`), nicht an diesem
+/// Bereich: In einer Form gilt ein Modifier am Section für jede Zeile, mehrere Blätter am selben Schalter schlossen
+/// sich sofort wieder.
 struct PrivacySettingsSection: View {
     @EnvironmentObject private var consent: AIDataConsent
-    @State private var showsConsent = false
+    @Binding var showsConsent: Bool
 
     var body: some View {
         Section {
@@ -84,13 +87,22 @@ struct PrivacySettingsSection: View {
         } footer: {
             Text("Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung.")
         }
-        .sheet(isPresented: $showsConsent) {
+    }
+}
+
+/// Das Blatt zum Zustimmen aus den Einstellungen, außerhalb der Form angehängt.
+struct PrivacyConsentSheetModifier: ViewModifier {
+    @EnvironmentObject private var consent: AIDataConsent
+    @Binding var isPresented: Bool
+
+    func body(content: Content) -> some View {
+        content.sheet(isPresented: $isPresented) {
             AIConsentContent(
                 onAgree: {
                     consent.grant()
-                    showsConsent = false
+                    isPresented = false
                 },
-                onDecline: { showsConsent = false }
+                onDecline: { isPresented = false }
             )
         }
     }
