@@ -91,6 +91,14 @@ Vorhersage, an Anthropic geht nur das Wetter in Worten. Aus dem Kalender gehen n
 keine Termine. Der Server speichert je Nutzer nur den letzten Tagesplan, den Snapshot selbst
 nicht, dazu die Nutzung je Anfrage (Nutzerkennung, Plan-Art, Ergebnis, Token, Dauer, keine Trainingsdaten).
 
+Vor der ersten Plananfrage muss der Athlet einmal zustimmen, dass seine Trainings- und Gesundheitsdaten an den Server
+und an Anthropic gehen (Apple 5.1.2(i), DSGVO Art. 9 Abs. 2 lit. a). Die Zustimmung liegt mit Version in UserDefaults
+(`UserDefaultsAIDataConsentStore`); `PlanAPIClient.post` schickt ohne sie nichts und meldet `consentRequired`. Die App
+fragt in der Einrichtung, sonst einmal je Start als Blatt vor der ersten Anfrage; Widerruf unter Einstellungen ›
+Datenschutz. Die Datenschutzerklärung liefert der Server unter `/datenschutz` und `/privacy`
+([backend-deploy.md](backend-deploy.md#datenschutzerklärung)), die App-Store-Angaben stehen in
+[app-store-datenschutz.md](app-store-datenschutz.md).
+
 ## Konfiguration
 
 | Variable | Standard | Bedeutung |

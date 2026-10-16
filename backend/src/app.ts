@@ -3,6 +3,7 @@ import { Logger } from "pino";
 import { pinoHttp } from "pino-http";
 import { currentUser, requireBearerToken } from "./auth";
 import { Config } from "./config";
+import { registerPrivacyRoutes } from "./privacy/routes";
 import { SingleUserDirectory, UserDirectory } from "./users";
 
 export interface AppOptions {
@@ -42,6 +43,9 @@ export function createApp(config: Config, logger: Logger, options: AppOptions = 
   app.get("/health", (_req, res) => {
     res.json({ status: "ok", uptimeSeconds: Math.round(process.uptime()) });
   });
+
+  // Oeffentlich: die Datenschutzerklaerung fuer App Store und App (Deutsch und Englisch).
+  registerPrivacyRoutes(app, config.privacy);
 
   const v1 = Router();
   // Erst Auth, dann Body-Parsing: Unautorisierte Requests kosten keine Parsing-Arbeit.

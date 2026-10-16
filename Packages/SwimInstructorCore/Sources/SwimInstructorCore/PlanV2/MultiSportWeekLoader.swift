@@ -297,6 +297,16 @@ public final class MultiSportWeekLoader: ObservableObject {
         edit(date) { MultiSportWeekEditor.removeSession($0, date: date, session: index) }
     }
 
+    public func removeExtra(_ date: String, extra index: Int) {
+        edit(date) { MultiSportWeekEditor.removeExtra($0, date: date, extra: index) }
+    }
+
+    /// Einen Kraft- oder Mobilitätsblock auf einen anderen Tag derselben Woche legen.
+    public func moveExtra(from source: String, extra index: Int, to target: String) {
+        guard weekStart(of: source) == weekStart(of: target) else { return }
+        edit(source) { MultiSportWeekEditor.moveExtra($0, from: source, extra: index, to: target) }
+    }
+
     public func addSession(_ date: String, sport: SportID) {
         let registry = self.registry
         edit(date) { MultiSportWeekEditor.addSession($0, date: date, sport: sport, registry: registry) }

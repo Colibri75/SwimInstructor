@@ -20,11 +20,14 @@ struct SwimInstructorApp: App {
     @StateObject private var locationProvider: LocationProvider
     @StateObject private var calendarProvider: CalendarAvailabilityProvider
     @StateObject private var coach: BackgroundCoach
+    @StateObject private var consent: AIDataConsent
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
         let healthKitManager = HealthKitManager()
         let settings = BackendSettings()
+        // Ohne Einwilligung in die Datenweitergabe (Server, Anthropic) geht keine Plananfrage hinaus.
+        let consent = AIDataConsent()
         let goalStore = UserDefaultsTrainingGoalStore()
         let profileStore = UserDefaultsPerformanceProfileStore()
         let testSettingsStore = UserDefaultsTestSettingsStore()
@@ -69,14 +72,14 @@ struct SwimInstructorApp: App {
         let weekLoader = MultiSportWeekLoader(
             store: FileWeekPlanV2Store.standard(),
             planProvider: { [weak settings] in
-                settings?.configuration.map { PlanAPIClient(configuration: $0) }
+                settings?.planClient(consent: consent)
             }
         )
         // Der Gesamtplan bis zum Zieltag, für alle Sportarten des Ziels aus den Einstellungen.
         let macroLoader = MultiSportMacroLoader(
             store: FileMacroPlanV2Store.standard(),
             planProvider: { [weak settings] in
-                settings?.configuration.map { PlanAPIClient(configuration: $0) }
+                settings?.planClient(consent: consent)
             },
             goal: { goalStore.goal() },
             // Ein Gesamtplan gehört zu einer Zielversion: Eine Feinjustierung lässt ihn stehen (P3).
@@ -89,7 +92,7 @@ struct SwimInstructorApp: App {
             authorizer: healthKitManager,
             snapshotBuilder: builder,
             planProvider: { [weak settings] in
-                settings?.configuration.map { PlanAPIClient(configuration: $0) }
+                settings?.planClient(consent: consent)
             },
             cache: FileDayPlanV2Cache.standard(),
             history: FileDayPlanV2History.standard(),
@@ -157,6 +160,7 @@ struct SwimInstructorApp: App {
 
         _healthKitManager = StateObject(wrappedValue: healthKitManager)
         _settings = StateObject(wrappedValue: settings)
+        _consent = StateObject(wrappedValue: consent)
         // Früh starten: Weckt die Watch die App im Hintergrund, muss die Sitzung schon aktiv sein.
         // Testergebnisse der Watch warten hier, bis der Athlet sie bestätigt oder verwirft.
         let testResultInbox = WatchTestResultInbox(store: FileWatchTestResultStore.standard())
@@ -176,7 +180,7 @@ struct SwimInstructorApp: App {
         // Der Plan für den Wettkampftag, auf dem Gerät gespeichert.
         _raceLoader = StateObject(wrappedValue: RacePlanLoader(
             store: FileRacePlanStore.standard(),
-            planProvider: { [weak settings] in settings?.configuration.map { PlanAPIClient(configuration: $0) } }
+            planProvider: { [weak settings] in settings?.planClient(consent: consent) }
         ))
         // Arbeitet ohne offene App: neue Einheiten aus Health, Plan für morgen, Mitteilungen. Früh starten, damit die
         // Hintergrundaufgabe vor dem Ende des Starts angemeldet ist.
@@ -206,6 +210,7 @@ struct SwimInstructorApp: App {
                 .environmentObject(locationProvider)
                 .environmentObject(calendarProvider)
                 .environmentObject(coach)
+                .environmentObject(consent)
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { coach.didEnterBackground() }

@@ -12,6 +12,26 @@ export interface AlertConfig {
   failureRate: number;
 }
 
+/**
+ * Angaben fuer die Datenschutzerklaerung (`/datenschutz`, `/privacy`). Name, Anschrift und E-Mail haben Standardwerte
+ * (`PRIVACY_DEFAULTS`); fehlt eine Angabe trotzdem (Tests), steht dort "[wird ergänzt]".
+ */
+export interface PrivacyContact {
+  name: string | undefined;
+  /** Anschrift; `\n` (als zwei Zeichen) oder ein Zeilenumbruch trennt die Zeilen. */
+  address: string | undefined;
+  email: string | undefined;
+  /** Hosting-Anbieter des Servers mit Sitz, z. B. "Hetzner Online GmbH, Gunzenhausen (Deutschland)". */
+  hoster: string | undefined;
+}
+
+/** Der Verantwortliche, wenn PRIVACY_CONTACT_* nicht gesetzt sind. Den Hoster gibt es nur per PRIVACY_HOSTER. */
+export const PRIVACY_DEFAULTS = {
+  name: "Steffen Kellner",
+  address: "Alfelder Weg 55, 90482 Nürnberg, Deutschland",
+  email: "steffen.kellner91@gmail.com"
+} as const;
+
 export interface Config {
   env: Environment;
   host: string;
@@ -39,6 +59,7 @@ export interface Config {
   maxGenerationsTotalPerDay: number;
   /** Alarme per Webhook; `undefined` ohne `ALERT_WEBHOOK_URL`. */
   alerts: AlertConfig | undefined;
+  privacy: PrivacyContact;
 }
 
 const MIN_PRODUCTION_TOKEN_LENGTH = 32;
@@ -75,7 +96,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     maxGenerationsPerDay: parseInteger("PLAN_MAX_GENERATIONS_PER_DAY", env.PLAN_MAX_GENERATIONS_PER_DAY, 20, 1, 10_000),
     maxGenerationsTotalPerHour: parseInteger("PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR", env.PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR, 15, 1, 10_000),
     maxGenerationsTotalPerDay: parseInteger("PLAN_MAX_GENERATIONS_TOTAL_PER_DAY", env.PLAN_MAX_GENERATIONS_TOTAL_PER_DAY, 60, 1, 100_000),
-    alerts: parseAlerts(env)
+    alerts: parseAlerts(env),
+    privacy: {
+      name: env.PRIVACY_CONTACT_NAME?.trim() || PRIVACY_DEFAULTS.name,
+      address: env.PRIVACY_CONTACT_ADDRESS?.trim() || PRIVACY_DEFAULTS.address,
+      email: env.PRIVACY_CONTACT_EMAIL?.trim() || PRIVACY_DEFAULTS.email,
+      hoster: env.PRIVACY_HOSTER?.trim() || undefined
+    }
   };
 }
 

@@ -234,6 +234,30 @@ ssh -i /root/gh-swiminstructor -o IdentitiesOnly=yes deploy@localhost   # endet 
 5. Einmal von Hand starten (*Actions → Backend Deploy → Run workflow*) und im Log auf
    "Deploy erfolgreich" achten.
 
+## Datenschutzerklärung
+
+Der Server liefert die Datenschutzerklärung der App öffentlich und ohne Token aus: `GET /datenschutz` (Deutsch) und
+`GET /privacy` (Englisch). Die App verlinkt darauf (Einstellungen › Datenschutz und Einwilligung), im App Store gehört
+`https://swiminstructor.kellner.v6.rocks/privacy` (oder `/datenschutz`) als Privacy-Policy-URL eingetragen. Der Text
+steht in `backend/src/privacy/texts.ts`; die Angaben zum Verantwortlichen und zum Hoster kommen aus der Konfiguration:
+
+| Variable | Standard | Bedeutung |
+|---|---|---|
+| `PRIVACY_CONTACT_NAME` | `Steffen Kellner` | Name des Verantwortlichen |
+| `PRIVACY_CONTACT_ADDRESS` | `Alfelder Weg 55, 90482 Nürnberg, Deutschland` | Ladungsfähige Anschrift; Zeilen mit `\n` trennen |
+| `PRIVACY_CONTACT_EMAIL` | `steffen.kellner91@gmail.com` | Kontakt für Datenschutzanfragen |
+| `PRIVACY_HOSTER` | (leer: „[wird ergänzt]“) | Hosting-Anbieter des VPS mit Sitz, z. B. `Beispiel GmbH, Stadt (Deutschland)` |
+
+Die Variablen gehören in `/etc/swiminstructor/backend.env`; danach `docker compose up -d --force-recreate`. Prüfen:
+
+```bash
+curl -s https://swiminstructor.kellner.v6.rocks/datenschutz | grep -c "wird ergänzt"   # 0, sobald alles gesetzt ist
+```
+
+Ändert sich, welche Daten die App an Server oder Anthropic schickt: Text anpassen, `PRIVACY_POLICY_DATE` setzen und in
+der App `AIDataConsentStore.currentVersion` erhöhen, damit alle neu zustimmen. Mit dem Hosting-Anbieter und mit
+Anthropic sollte ein Vertrag zur Auftragsverarbeitung (AVV/DPA) bestehen; bei Anthropic ist er Teil der Commercial Terms.
+
 ## Logs
 
 ```bash

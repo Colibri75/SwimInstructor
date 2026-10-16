@@ -126,6 +126,8 @@ struct SettingsView: View {
                         }
                     }
 
+                    PrivacySettingsSection()
+
                     if settings.hasToken {
                         Section {
                             Button("Token entfernen", role: .destructive) {
