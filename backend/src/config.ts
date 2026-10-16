@@ -30,11 +30,12 @@ export interface PrivacyContact {
   hoster: string | undefined;
 }
 
-/** Der Verantwortliche, wenn PRIVACY_CONTACT_* nicht gesetzt sind. Den Hoster gibt es nur per PRIVACY_HOSTER. */
+/** Verantwortlicher und Hoster, wenn PRIVACY_CONTACT_* bzw. PRIVACY_HOSTER nicht gesetzt sind. */
 export const PRIVACY_DEFAULTS = {
   name: "Steffen Kellner",
   address: "Alfelder Weg 55, 90482 Nürnberg, Deutschland",
-  email: "info@peak-smith.com"
+  email: "info@peak-smith.com",
+  hoster: "Contabo GmbH, Welfenstraße 22, 81541 München (Deutschland)"
 } as const;
 
 export interface Config {
@@ -111,7 +112,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       name: env.PRIVACY_CONTACT_NAME?.trim() || PRIVACY_DEFAULTS.name,
       address: env.PRIVACY_CONTACT_ADDRESS?.trim() || PRIVACY_DEFAULTS.address,
       email: env.PRIVACY_CONTACT_EMAIL?.trim() || PRIVACY_DEFAULTS.email,
-      hoster: env.PRIVACY_HOSTER?.trim() || undefined
+      hoster: env.PRIVACY_HOSTER?.trim() || PRIVACY_DEFAULTS.hoster
     },
     appleBundleIds: parseBundleIds(env.APPLE_BUNDLE_IDS),
     appleSignup: parseAppleSignup(env.APPLE_SIGNUP),

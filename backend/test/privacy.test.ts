@@ -77,14 +77,15 @@ describe("Datenschutzerklaerung", () => {
     expect(escapeHtml("a & 'b'")).toBe("a &amp; &#39;b&#39;");
   });
 
-  it("nimmt ohne Umgebungsvariablen den Verantwortlichen aus dem Code, den Hoster nicht", async () => {
+  it("nimmt ohne Umgebungsvariablen Verantwortlichen und Hoster aus dem Code", async () => {
     const config = loadConfig({ API_TOKEN: TEST_TOKEN });
-    expect(config.privacy).toEqual({ ...PRIVACY_DEFAULTS, hoster: undefined });
+    expect(config.privacy).toEqual(PRIVACY_DEFAULTS);
 
     const response = await request(createApp(config, createLogger(config))).get("/datenschutz");
     expect(response.text).toContain("Steffen Kellner<br>Alfelder Weg 55, 90482 Nürnberg, Deutschland");
     expect(response.text).toContain("mailto:info@peak-smith.com");
-    expect(response.text).toContain("bei [wird ergänzt]");
+    expect(response.text).toContain("bei Contabo GmbH, Welfenstraße 22, 81541 München (Deutschland)");
+    expect(response.text).not.toContain("[wird ergänzt]");
   });
 
   it("liest die Angaben aus den Umgebungsvariablen", () => {
@@ -96,7 +97,7 @@ describe("Datenschutzerklaerung", () => {
       PRIVACY_HOSTER: ""
     });
 
-    expect(config.privacy).toEqual({ name: "Erika Muster", address: "Musterstraße 1", email: "datenschutz@example.org", hoster: undefined });
+    expect(config.privacy).toEqual({ name: "Erika Muster", address: "Musterstraße 1", email: "datenschutz@example.org", hoster: PRIVACY_DEFAULTS.hoster });
   });
 
   it("bleibt unter /v1 hinter dem Token", async () => {
