@@ -13,17 +13,17 @@ extension View {
     }
 }
 
-/// Hauptaktion: Glut-Fläche mit Navy-Schrift (in beiden Modi lesbar), rund wie die Linien im Logo.
+/// Hauptaktion: dunkel Glut-Fläche mit Navy-Schrift, hell Nacht-Blau mit weißer Schrift, rund wie die Linien im Logo.
 struct EmberButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.body.weight(.heavy))
-            .foregroundStyle(Theme.onBright)
+            .foregroundStyle(Theme.onAction)
             .padding(.horizontal, 18)
             .frame(maxWidth: .infinity, minHeight: 50)
-            .background(Theme.ember.opacity(isEnabled ? (configuration.isPressed ? 0.75 : 1) : 0.4), in: Capsule())
+            .background(Theme.action.opacity(isEnabled ? (configuration.isPressed ? 0.75 : 1) : 0.4), in: Capsule())
             .contentShape(Capsule())
     }
 }
