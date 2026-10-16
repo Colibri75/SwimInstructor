@@ -184,7 +184,12 @@ struct SwimInstructorApp: App {
         ))
         // Arbeitet ohne offene App: neue Einheiten aus Health, Plan für morgen, Mitteilungen. Früh starten, damit die
         // Hintergrundaufgabe vor dem Ende des Starts angemeldet ist.
-        let coach = BackgroundCoach(loader: loader, weekLoader: weekLoader, feedbackBook: feedbackBook)
+        let coach = BackgroundCoach(
+            loader: loader,
+            weekLoader: weekLoader,
+            feedbackBook: feedbackBook,
+            planClient: { [weak settings] in settings?.planClient(consent: consent) }
+        )
         coach.start()
         _coach = StateObject(wrappedValue: coach)
         _statisticDashboard = StateObject(wrappedValue: StatisticDashboard(store: UserDefaultsStatisticLayoutStore()))
@@ -214,6 +219,10 @@ struct SwimInstructorApp: App {
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { coach.didEnterBackground() }
+        }
+        // iOS weckt die App, weil die Antwort auf den Plan für heute da ist (`BackgroundDayPlanFetcher`).
+        .backgroundTask(.urlSession(BackgroundDayPlanFetcher.sessionID)) {
+            await BackgroundDayPlanFetcher.shared.handleEvents()
         }
     }
 }
