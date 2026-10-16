@@ -121,10 +121,19 @@ export const swim: SportDefinition = {
     weatherSensitive: false,
     indoor: null,
     openWater: { equipment: "open_water", displayName: "Freiwasser" },
+    pool: { displayName: "Becken", lapLengths: [25, 50] },
+    skills: [
+      { id: "freestyle", displayName: "Kraul" },
+      { id: "breaststroke", displayName: "Brust" },
+      { id: "backstroke", displayName: "Rückenkraul" },
+      { id: "butterfly", displayName: "Schmetterling" },
+      { id: "flip_turn", displayName: "Rollwende" }
+    ],
     canFuelDuringRace: false,
     promptRules: `- Gesteuert über das Tempo pro 100 m (target_type pace_per_100m, target_value in Sekunden pro 100 m) oder die gefühlte Anstrengung (perceived_effort, 1 bis 10). Kein Pulsziel: Puls ist im Wasser kaum brauchbar. Die Pace im Snapshot enthält Pausen, das reine Schwimmtempo ist schneller.
 - Ist die CSS-Pace bekannt (Abschnitt Leistungswerte), richte das Tempo danach: Grundlage etwa 8 bis 12 % langsamer als die CSS-Pace, Schwelle (CSS-Serien) etwa auf CSS-Pace, kurze schnelle Wiederholungen etwa 5 % schneller.
-- Eine Einheit besteht aus Einschwimmen, Hauptteil und Ausschwimmen. Jeder Schritt wird über die Strecke gemessen (measure distance). Jede Wiederholung ist ein Vielfaches von 50 m und mindestens 50 m lang (50, 100, 150, 200 …), damit der Plan in einem 25-m- und in einem 50-m-Becken aufgeht: keine 25er und keine 75er.
+- Eine Einheit besteht aus Einschwimmen, Hauptteil und Ausschwimmen. Jeder Schritt wird über die Strecke gemessen (measure distance). Jede Wiederholung ist ein Vielfaches von 50 m und mindestens 50 m lang (50, 100, 150, 200 …), damit der Plan in einem 25-m- und in einem 50-m-Becken aufgeht: keine 25er und keine 75er. Nennt die Nutzernachricht ein 25-m-Becken, sind auch 25er und 75er erlaubt (etwa kurze Sprints oder Technik über eine Bahn).
+- Was der Athlet kann, steht unter "Über den Athleten": Plane Lagen nur, wenn er sie kann, Lagenwechsel und Technikübungen in anderen Lagen also nur damit; ohne Kraul schwimmt er Brust und lernt Kraul in kurzen, lockeren Abschnitten mit Erklärung. Ohne Rollwende keine Anweisung dazu. Fehlt die Angabe, gilt Kraul als Hauptlage.
 - Der Athlet schwimmt ohne Trainer vor Ort: Erkläre jede Technikübung im Feld instructions in ein bis zwei Sätzen und verwende keinen Fachbegriff ohne diese Erklärung. Das Feld cue liest er im Wasser auf der Uhr: zwei bis vier Wörter, höchstens 30 Zeichen, zum Beispiel "Locker kraulen" oder "Zielpace halten".
 - Hilfsmittel (pull_buoy, paddles, fins, snorkel, kickboard, ankle_band) sparsam und nur, wenn der Athlet sie hat; Abschnitte mit Hilfsmitteln ohne Zielpace.
 - Im Triathlon zählt Schwimmen als Technik- und Ausdauerdisziplin: Technik und gleichmäßiges Tempo gehen vor harten Serien, die Schulter wird nicht überlastet.

@@ -94,6 +94,21 @@ abgerundet), die Woche bis 5450 m. Ohne Angabe wären es 800 m je Einheit (Wiede
 Beim Schwimmen liegen die Untergrenzen seit dem Betatest höher als im früheren Schwimmplan (1500 statt 1000 m je
 Einheit, 2500 statt 1500 m in 7 Tagen): Mit wenig Schwimmverlauf blieben sonst oft nur wenige hundert Meter am Tag.
 
+## Über mich
+
+Was der Athlet unter Einstellungen › Über mich angibt (`athlete_profile` im Snapshot, siehe
+[AthleteStateSnapshot.md](AthleteStateSnapshot.md)), steht in jeder Nutzernachricht (Tag, Woche, Gesamtplan,
+Überarbeitung, Fortschreibung) im Abschnitt "Über den Athleten" in Worten; Leitplanke 13 sagt Claude, was daraus folgt
+(Alter und Erfahrung: behutsamer steigern; aktuelle Verletzung schonen, wiederkehrende vorsichtig steigern und mit
+Kraft und Mobilität stärken; lange Einheit auf den Wunschtag; viel Stress oder Schichtarbeit: höchstens ein harter Tag;
+Vorliebe bei der Intensität nur innerhalb der 80/20-Regel). Die Grenzen ändert keine Angabe.
+
+Zwei Angaben setzt die Sicherheitsschicht selbst durch (`src/plan/multi/profile.ts`):
+
+- **Bahnlänge:** Ist die Bahn kürzer als das Streckenraster der Sportart und geht darin auf (25 m beim 50-m-Raster des
+  Schwimmens), sind Schritte in Vielfachen der Bahnlänge erlaubt (25er, 75er). Im Freiwasser gilt das nicht.
+- **Tage mit Bahn:** An anderen Tagen streichen Tages- und Wochenplan Einheiten dieser Sportart, außer im Freiwasser.
+
 ## Zielarten und Wochenraster (P2)
 
 Das Ziel hat eine Art (`training_goal.kind`): Wettkampf, Zeit über eine Strecke, Strecke schaffen oder fit werden und

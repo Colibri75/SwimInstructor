@@ -53,4 +53,70 @@ final class PlanSyncCodecTests: XCTestCase {
         XCTAssertFalse(PlanSyncCodec.isPlanRequest([:]))
         XCTAssertFalse(PlanSyncCodec.isPlanRequest(["request": "etwas anderes"]))
     }
+
+    /// So landet der Plan auch auf der Uhr: mit Vorgabe der 14 Tage (nur in der App) und Kraftblock mit Übungen.
+    private func planWithTargetAndExtras(date: String? = nil, source: PlanSource? = nil) throws -> DayPlanV2Response {
+        let original = try dayPlan()
+        let plan = DayPlanV2(
+            rationale: original.plan.rationale,
+            sessions: original.plan.sessions,
+            extras: [DayExtra(kind: .strength, minutes: 20, focus: "Rumpf", exercises: [
+                Exercise(name: "Unterarmstütz", sets: 3, seconds: 40, restSeconds: 30, cue: "Bauch fest", instructions: "Ellbogen unter den Schultern."),
+                Exercise(name: "Ausfallschritt", sets: 3, reps: 10)
+            ])],
+            coachNotes: ["Viel trinken."]
+        )
+        var response = DayPlanV2Response(
+            source: source ?? original.source, date: date ?? original.date, generatedAt: original.generatedAt, stale: false,
+            plan: plan, adjustments: original.adjustments, wishes: original.wishes
+        )
+        response.requestedTarget = DayTargetV2(
+            focus: "Grundlage",
+            sessions: [.init(sport: .swim, sessionType: .endurance, intensity: .easy, amount: 2_000, focus: "Technik", testID: "css")],
+            extras: [.init(kind: .strength, minutes: 20, focus: "Rumpf")]
+        )
+        return response
+    }
+
+    func testRoundTripKeepsTargetAndExtras() throws {
+        let original = try planWithTargetAndExtras()
+
+        XCTAssertEqual(PlanSyncCodec.dayPlan(from: try PlanSyncCodec.context(for: original)), original)
+    }
+
+    func testTodaysPlanIsTheReply() throws {
+        let today = try planWithTargetAndExtras(date: "2026-10-16")
+
+        let reply = PlanSyncCodec.reply(for: today, today: "2026-10-16", canPlan: true)
+
+        XCTAssertEqual(PlanSyncCodec.dayPlan(from: reply), today)
+        XCTAssertFalse(PlanSyncCodec.isPreparing(reply))
+    }
+
+    func testAnOldPlanIsNotSentAsTheNewest() throws {
+        // Die iPhone-App war seit dem 11. nicht offen: Sie plant gerade, die Uhr soll das wissen statt den alten Plan zu
+        // bekommen.
+        let old = try planWithTargetAndExtras(date: "2026-10-11")
+
+        let reply = PlanSyncCodec.reply(for: old, today: "2026-10-16", canPlan: true)
+
+        XCTAssertNil(PlanSyncCodec.dayPlan(from: reply))
+        XCTAssertTrue(PlanSyncCodec.isPreparing(reply))
+        XCTAssertTrue(PlanSyncCodec.isPreparing(PlanSyncCodec.reply(for: nil, today: "2026-10-16", canPlan: true)))
+    }
+
+    func testAFallbackOrAPhoneThatCannotPlanSendsWhatItHas() throws {
+        let fallback = try planWithTargetAndExtras(date: "2026-10-11", source: .fallback)
+        let old = try planWithTargetAndExtras(date: "2026-10-11")
+
+        XCTAssertEqual(PlanSyncCodec.dayPlan(from: PlanSyncCodec.reply(for: fallback, today: "2026-10-16", canPlan: true)), fallback)
+        XCTAssertEqual(PlanSyncCodec.dayPlan(from: PlanSyncCodec.reply(for: old, today: "2026-10-16", canPlan: false)), old)
+        XCTAssertTrue(PlanSyncCodec.reply(for: nil, today: "2026-10-16", canPlan: false).isEmpty)
+    }
+
+    func testPreparingIsNotAPlanAndNotAnOldFormat() {
+        XCTAssertNil(PlanSyncCodec.dayPlan(from: PlanSyncCodec.preparingReply))
+        XCTAssertFalse(PlanSyncCodec.isPreparing([:]))
+        XCTAssertFalse(PlanSyncCodec.isPreparing(["status": "preparing", "version": 2]))
+    }
 }

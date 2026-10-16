@@ -1,8 +1,13 @@
+import { AppleRevokeConfig, parseSiwaPrivateKey } from "./appleRevoke";
+
 export type Environment = "development" | "production" | "test";
 
 export type Effort = "low" | "medium" | "high" | "xhigh" | "max";
 
 export type AlertFormat = "ntfy" | "slack" | "discord" | "json";
+
+/** Neue Konten ueber "Mit Apple anmelden": sofort frei (`open`) oder erst nach Freigabe durch den Besitzer (`closed`). */
+export type AppleSignup = "open" | "closed";
 
 export interface AlertConfig {
   webhookUrl: string;
@@ -60,6 +65,11 @@ export interface Config {
   /** Alarme per Webhook; `undefined` ohne `ALERT_WEBHOOK_URL`. */
   alerts: AlertConfig | undefined;
   privacy: PrivacyContact;
+  /** Bundle-IDs, fuer die Apple-Identitaetstoken gelten (`aud`). */
+  appleBundleIds: string[];
+  appleSignup: AppleSignup;
+  /** Widerruf der Apple-Anmeldung beim Loeschen; `undefined` ohne `APPLE_SIWA_KEY_ID` und `APPLE_SIWA_PRIVATE_KEY`. */
+  appleRevoke: AppleRevokeConfig | undefined;
 }
 
 const MIN_PRODUCTION_TOKEN_LENGTH = 32;
@@ -102,8 +112,55 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       address: env.PRIVACY_CONTACT_ADDRESS?.trim() || PRIVACY_DEFAULTS.address,
       email: env.PRIVACY_CONTACT_EMAIL?.trim() || PRIVACY_DEFAULTS.email,
       hoster: env.PRIVACY_HOSTER?.trim() || undefined
-    }
+    },
+    appleBundleIds: parseBundleIds(env.APPLE_BUNDLE_IDS),
+    appleSignup: parseAppleSignup(env.APPLE_SIGNUP),
+    appleRevoke: parseAppleRevoke(env)
   };
+}
+
+export const DEFAULT_APPLE_BUNDLE_ID = "com.kellner.SwimInstructor";
+
+function parseBundleIds(value: string | undefined): string[] {
+  const ids = (value ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter((id) => id !== "");
+  if (ids.length === 0) return [DEFAULT_APPLE_BUNDLE_ID];
+  for (const id of ids) {
+    if (!/^[A-Za-z0-9.-]+$/.test(id)) throw new Error(`APPLE_BUNDLE_IDS ungueltig: "${id}" (Bundle-IDs mit Komma getrennt)`);
+  }
+  return ids;
+}
+
+export const DEFAULT_APPLE_TEAM_ID = "TTLJUNRA3R";
+
+/**
+ * Schluessel "Sign in with Apple" fuer den Widerruf beim Loeschen. Ohne Key-ID und Schluessel bleibt er aus (Loeschen
+ * klappt trotzdem); halb gesetzt oder unlesbar verweigert der Server den Start, damit der Fehler auffaellt.
+ */
+function parseAppleRevoke(env: NodeJS.ProcessEnv): AppleRevokeConfig | undefined {
+  const keyId = env.APPLE_SIWA_KEY_ID?.trim() || undefined;
+  const privateKey = env.APPLE_SIWA_PRIVATE_KEY?.trim() || undefined;
+  if (keyId === undefined && privateKey === undefined) return undefined;
+  if (keyId === undefined || privateKey === undefined) {
+    throw new Error("APPLE_SIWA_KEY_ID und APPLE_SIWA_PRIVATE_KEY nur zusammen setzen (oder beide weglassen)");
+  }
+  const teamId = env.APPLE_TEAM_ID?.trim() || DEFAULT_APPLE_TEAM_ID;
+  if (!/^[A-Z0-9]{10}$/.test(keyId)) throw new Error(`APPLE_SIWA_KEY_ID ungueltig: "${keyId}" (10 Zeichen, A-Z und 0-9)`);
+  if (!/^[A-Z0-9]{10}$/.test(teamId)) throw new Error(`APPLE_TEAM_ID ungueltig: "${teamId}" (10 Zeichen, A-Z und 0-9)`);
+  try {
+    parseSiwaPrivateKey(privateKey);
+  } catch (error) {
+    throw new Error(`APPLE_SIWA_PRIVATE_KEY nicht lesbar (Inhalt der .p8-Datei erwartet): ${(error as Error).message}`);
+  }
+  return { teamId, keyId, privateKey };
+}
+
+function parseAppleSignup(value: string | undefined): AppleSignup {
+  const signup = value?.trim().toLowerCase() || "open";
+  if (signup === "open" || signup === "closed") return signup;
+  throw new Error(`APPLE_SIGNUP ungueltig: "${value}" (erlaubt: open, closed)`);
 }
 
 function parseAlerts(env: NodeJS.ProcessEnv): AlertConfig | undefined {

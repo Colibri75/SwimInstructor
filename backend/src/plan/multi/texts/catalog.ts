@@ -89,6 +89,10 @@ export interface SafetyCatalog {
   poolForWeatherToday(weather: string, sport: string): string;
   /** "Schwimmen im Freiwasser (Ziel im Freiwasser)" */
   openWaterForRace(sport: string): string;
+  /** "heute kein Becken laut deinen Angaben" (Grund für `dropped`) */
+  poolClosedToday(): string;
+  /** "kein Becken an diesem Tag laut deinen Angaben" (Grund für `dropped`) */
+  poolClosedDay(): string;
   /** "kein Krafttraining in den letzten 10 Tagen vor dem Ziel" */
   noStrengthBeforeGoal(days: number): string;
   /** "kein Krafttraining (Grund)" */

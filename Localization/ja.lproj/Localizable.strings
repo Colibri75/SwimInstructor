@@ -159,6 +159,7 @@
 "Dashboard" = "ダッシュボード";
 "Dauer" = "時間";
 "Dauert noch an" = "継続中";
+"Dein Coach erstellt gerade den Plan für heute auf dem iPhone. Er kommt von selbst auf die Uhr." = "コーチがiPhoneで今日のプランを作成中です。できあがると自動でウォッチに届きます。";
 "Dein Coach hat keinen neuen Plan geliefert." = "コーチから新しいプランが届きませんでした。";
 "Dein Coach hat nichts geändert." = "コーチは何も変更しませんでした。";
 "Dein Coach passt deinen Plan für die nächsten Tage an …" = "コーチが数日先までのプランを調整しています…";
@@ -367,7 +368,6 @@
 "Hüfte" = "股関節";
 "Im %@" = "%@で";
 "In Health gespeichert. Das iPhone berücksichtigt die Einheit beim nächsten Plan." = "ヘルスケアに保存しました。iPhoneは次のプランでこのセッションを考慮します。";
-"In drei Schritten zu deinem Plan: Ziel festlegen, deine Trainingstage eintragen und angeben, wo du gerade stehst. Danach rechnet die App den Gesamtplan bis zu deinem Ziel." = "3ステップでプランを作成：目標を決め、トレーニング日を入力し、今のレベルを伝えます。その後、アプリが目標までの全体プランを計算します。";
 "Intervalle" = "インターバル";
 "Ist dein Training erledigt, holt dein Coach im Hintergrund schon den Plan für morgen. Er kommt dann morgens zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Nach einer Einheit fragt er, wie es war. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt." = "トレーニングが終わると、コーチがバックグラウンドで明日のプランを取得しておきます。プランは選んだ時刻の朝に届き、「今日」タブにすぐ表示されます。セッション後には、どうだったかを尋ねます。アプリがバックグラウンドで動作できるタイミングはiOSが決めます。うまくいかない場合は、いつもどおり「今日」を開いたときに計画します。";
 "Jede Sportart braucht genau einen Schwerpunkt." = "各種目にはちょうど1つの比重が必要です。";
@@ -734,7 +734,6 @@
 "Ziel" = "目標";
 "Ziel am %@, noch %lld Wochen" = "目標日 %@、あと%lld週間";
 "Ziel, Abstand und Pace." = "目標、差、ペース。";
-"Ziel, Wochenraster und Startniveau kannst du jederzeit in den Einstellungen ändern." = "目標、週間スケジュール、開始レベルは設定からいつでも変更できます。";
 "Zielart" = "目標の種類";
 "Zielpace %@ erreicht." = "目標ペース%@を達成しました。";
 "Zielpace %@: noch %lld s pro 100 m zu langsam." = "目標ペース%@：あと100 mあたり%lld秒遅れています。";
@@ -847,7 +846,7 @@
 /* Datenschutz und Einwilligung */
 "Kein neuer Plan: Dafür brauchst du deine Zustimmung zur Datenweitergabe (Einstellungen › Datenschutz)." = "新しいプランはありません：データ共有への同意が必要です（設定 › プライバシー）。";
 "Deine Daten und dein Coach" = "あなたのデータとコーチ";
-"Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic (USA): Umfang und Dauer deiner Einheiten, Abweichungen von Ruhepuls und HRV, Schlaf, Leistungswerte, Beschwerden, dein Ziel und deine Wünsche." = "コーチは Anthropic の Claude を使ってプランを作成します。そのため、トレーニングと健康のデータが当社のサーバーと Anthropic（米国）に送信されます：セッションの量と時間、安静時心拍数と HRV の変化、睡眠、パフォーマンス値、不調、目標と希望。";
+"Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic (USA): Umfang und Dauer deiner Einheiten, Abweichungen von Ruhepuls und HRV, Schlaf, Leistungswerte, Beschwerden, dein Ziel, deine Wünsche und deine Angaben unter „Über mich“ wie Alter und Verletzungen." = "コーチは Anthropic の Claude を使ってプランを作成します。そのため、トレーニングと健康のデータが当社のサーバーと Anthropic（米国）に送信されます：セッションの量と時間、安静時心拍数と HRV の変化、睡眠、パフォーマンス値、不調、目標と希望、「自分について」で入力した年齢やケガなどの情報。";
 "Einzelne Messwerte aus Health und Kalendertermine bleiben auf dem iPhone, und Anthropic erfährt weder deinen Namen noch deine E-Mail-Adresse. Die Daten dienen nur deinem Plan, nie der Werbung, und werden nicht verkauft." = "「ヘルスケア」の個々の測定値とカレンダーの予定は iPhone に残り、Anthropic にあなたの名前やメールアドレスが伝わることはありません。データはプランのためだけに使われ、広告には使われず、販売されることもありません。";
 "Du kannst deine Zustimmung jederzeit in den Einstellungen unter Datenschutz widerrufen. Ohne Zustimmung erstellt dein Coach keine neuen Pläne." = "同意はいつでも設定の「プライバシー」で取り消せます。同意がない場合、コーチは新しいプランを作成しません。";
 "Datenschutzerklärung" = "プライバシーポリシー";
@@ -859,5 +858,70 @@
 "Zustimmen …" = "同意する…";
 "Datenschutz" = "プライバシー";
 "Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung." = "コーチは Anthropic の Claude を使ってプランを作成します。そのため、トレーニングと健康のデータが当社のサーバーと Anthropic に送信されます。トラッキングも広告もありません。";
+
+
+/* Mit Apple anmelden, Konto */
+"Anmelden" = "サインイン";
+"Anmeldung läuft …" = "サインイン中…";
+"Angemeldet als %@" = "%@ としてサインイン中";
+"Mit Server-Token verbunden" = "サーバートークンで接続中";
+"Abmelden" = "サインアウト";
+"Konto" = "アカウント";
+"Konto löschen" = "アカウントを削除";
+"Konto löschen?" = "アカウントを削除しますか？";
+"Konto wird gelöscht …" = "アカウントを削除中…";
+"Konto und Pläne löschen" = "アカウントとプランを削除";
+"Dein Konto und deine Pläne auf dem Server werden endgültig gelöscht. Deine Daten in Apple Health und deine Einstellungen auf diesem iPhone bleiben." = "サーバー上のアカウントとプランは完全に削除されます。Apple ヘルスケアのデータとこの iPhone の設定は残ります。";
+"Melde dich an, damit dein Coach Pläne erstellen kann." = "サインインすると、コーチがプランを作成できます。";
+"Mit deiner Apple-ID meldest du dich beim Server deines Coaches an. Gespeichert werden dort eine Kennung von Apple und, falls du sie teilst, dein Name und deine E-Mail-Adresse." = "Apple アカウントでコーチのサーバーにサインインします。サーバーには Apple の識別子と、共有した場合は名前とメールアドレスが保存されます。";
+"Erweitert" = "詳細";
+"Nur für eigene Server: Server-Adresse und ein Token vom Server (beim Besitzer der Wert von API_TOKEN). Der Token wird nur im Schlüsselbund dieses iPhones gespeichert. Mit Apple angemeldet brauchst du hier nichts." = "独自サーバー用のみ：サーバーのアドレスとサーバーのトークン（所有者は API_TOKEN の値）。トークンはこの iPhone のキーチェーンにのみ保存されます。Apple でサインインしている場合、ここは不要です。";
+"Dein Konto ist noch nicht freigeschaltet. Versuche es später noch einmal." = "アカウントはまだ有効になっていません。後でもう一度お試しください。";
+"Die Anmeldung mit Apple hat nicht geklappt. Versuche es noch einmal." = "Apple でのサインインに失敗しました。もう一度お試しください。";
+"Zu viele Anmeldeversuche. Warte eine Minute und versuche es dann noch einmal." = "サインインの試行回数が多すぎます。1分待ってからもう一度お試しください。";
+"Der Zugang des Server-Besitzers lässt sich in der App nicht löschen." = "サーバー所有者のアクセスはアプリでは削除できません。";
+"Deine Anmeldung gilt nicht mehr. Melde dich neu an und lösche das Konto dann." = "サインインが無効になっています。もう一度サインインしてからアカウントを削除してください。";
+"Apple ist gerade nicht erreichbar. Versuche es später noch einmal." = "現在 Apple に接続できません。後でもう一度お試しください。";
+"Der Server hat die Anmeldung abgelehnt. Melde dich in den Einstellungen neu an." = "サーバーがサインインを拒否しました。設定でもう一度サインインしてください。";
+
 "Auf anderen Tag legen" = "別の日に移す";
 "Ergänzung entfernen" = "補強を削除";
+"Gerade aktuell" = "現在あり";
+"Kommt immer wieder" = "繰り返す";
+"Früher, ausgeheilt" = "過去にあり、完治";
+"Wenig" = "少ない";
+"Normal" = "普通";
+"Hoch" = "多い";
+"Lieber locker" = "軽めが好き";
+"Ausgewogen" = "バランス重視";
+"Lieber knackig" = "きつめが好き";
+"Kraul" = "クロール";
+"Rückenkraul" = "背泳ぎ";
+"Rollwende" = "クイックターン";
+"Über mich" = "自分について";
+"Alter" = "年齢";
+"%lld Jahre" = "%lld歳";
+"Geburtsjahr" = "生まれ年";
+"Keine Angabe" = "未設定";
+"Ausdauersport seit" = "持久系スポーツ歴";
+"Erfahrung" = "経験";
+"Das Alter kommt aus Apple Health. Mit Alter und Erfahrung steigert dein Coach behutsamer oder plant mehr Erholung." = "年齢は Apple ヘルスケアから取得します。年齢と経験に応じて、コーチは負荷を慎重に上げたり、回復を多めに計画したりします。";
+"Mit Alter und Erfahrung steigert dein Coach behutsamer oder plant mehr Erholung. Das Geburtsjahr fragt die App nur, wenn Apple Health kein Geburtsdatum kennt." = "年齢と経験に応じて、コーチは負荷を慎重に上げたり、回復を多めに計画したりします。生まれ年は Apple ヘルスケアに生年月日がない場合のみ尋ねます。";
+"Weniger als 1 Jahr" = "1年未満";
+"1 Jahr" = "1年";
+"%lld Jahren" = "%lld年";
+"Verletzungen" = "ケガ";
+"Eine aktuelle Verletzung schont dein Coach, bei einer wiederkehrenden steigert er vorsichtiger und stärkt die Stelle mit Kraft und Mobilität. Keine Diagnose: Bei anhaltenden Beschwerden geh zum Arzt." = "現在のケガはコーチが負担を避け、繰り返すケガには慎重に負荷を上げ、筋トレとモビリティでその部位を強化します。診断ではありません。痛みが続く場合は医師に相談してください。";
+"Lange Einheit am" = "ロング練習の曜日";
+"Kreuz an, was du sicher kannst. Dein Coach plant nur damit; ohne Kreuz gilt keine Angabe." = "自信を持ってできるものにチェックしてください。コーチはそれだけで計画します。チェックなしは未設定です。";
+"Bahnlänge" = "プールの長さ";
+"Unterschiedlich" = "いろいろ";
+"An welchen Tagen du hinkommst. An den anderen Tagen plant dein Coach dort nichts, im Freiwasser geht es trotzdem." = "行ける曜日です。ほかの曜日はコーチがそこで練習を計画しません。オープンウォーターは可能です。";
+"Belastung durch Beruf und Familie" = "仕事と家庭の負担";
+"Schichtarbeit" = "シフト勤務";
+"Intensität" = "強度";
+"Alltag" = "日常";
+"Bei viel Stress oder Schichtarbeit plant dein Coach höchstens einen harten Tag pro Woche. Die Intensität verschiebt, wie viel vom erlaubten harten Anteil er nutzt; rund 80 Prozent bleiben immer locker." = "ストレスが多い場合やシフト勤務では、コーチは週に最大1日だけきつい日を入れます。強度の好みは、許容されるきつい練習の割合をどれだけ使うかを変えます。約80%は常に軽めです。";
+"Erfahrung, Verletzungen, was du kannst, wann du ins Becken kommst, Alltag und Intensität. Alles freiwillig; dein Coach plant damit ab dem nächsten Plan genauer." = "経験、ケガ、できること、プールに行ける日、日常、強度。すべて任意です。次のプランからコーチがより的確に計画します。";
+"In vier Schritten zu deinem Plan: Ziel festlegen, deine Trainingstage eintragen, angeben, wo du gerade stehst, und ein paar freiwillige Fragen zu dir. Danach rechnet die App den Gesamtplan bis zu deinem Ziel." = "4つのステップでプランへ：目標を決め、練習日を入力し、今のレベルを伝え、自分についての任意の質問に答えます。その後、アプリが目標までの全体プランを作成します。";
+"Ziel, Wochenraster, Startniveau und die Angaben über dich kannst du jederzeit in den Einstellungen ändern." = "目標、週間スケジュール、開始レベル、自分についての情報は、いつでも設定で変更できます。";

@@ -9,8 +9,8 @@ import WatchConnectivity
 ///
 /// Jeder neue Plan landet als Application Context: WatchConnectivity hält davon nur den letzten
 /// Stand vor und liefert ihn, sobald die Watch wieder erreichbar ist. Bittet die Watch aktiv um den
-/// Plan, antwortet das iPhone sofort mit dem, was es hat, und fragt im Hintergrund nach einem
-/// neueren; kommt einer, geht er wieder als Application Context raus.
+/// Plan, antwortet das iPhone sofort mit dem von heute oder sagt, dass er gerade entsteht, und fragt im Hintergrund
+/// nach einem neueren; kommt einer, geht er wieder als Application Context raus.
 @MainActor
 final class PhonePlanSync: NSObject, ObservableObject {
     private let loader: MultiSportTodayLoader
@@ -29,10 +29,19 @@ final class PhonePlanSync: NSObject, ObservableObject {
         guard let session, subscription == nil else { return }
         session.delegate = self
         session.activate()
-        subscription = loader.$response
-            .compactMap { $0 }
+        // Auch der im Hintergrund vorab geholte Plan von heute geht gleich raus, nicht erst beim Öffnen der App.
+        // `@Published` meldet vor dem Setzen, darum erst danach auf der Hauptschlange lesen.
+        subscription = loader.$response.combineLatest(loader.$previews)
+            .receive(on: DispatchQueue.main)
+            .compactMap { [weak self] _ in self?.watchPlan }
             .removeDuplicates()
             .sink { [weak self] response in self?.push(response) }
+    }
+
+    /// Was die Watch zeigen soll: der Plan von heute, auch der vorab geholte, solange die App ihn noch nicht übernommen
+    /// hat; sonst der letzte.
+    private var watchPlan: DayPlanV2Response? {
+        loader.dayPlan(on: loader.todayKey) ?? loader.response
     }
 
     private func push(_ response: DayPlanV2Response) {
@@ -49,9 +58,10 @@ final class PhonePlanSync: NSObject, ObservableObject {
         }
     }
 
+    /// Ist der Plan hier nicht von heute (die App war seit Tagen nicht offen oder plant gerade), antwortet das iPhone
+    /// "entsteht gerade" statt mit dem alten Plan; der neue kommt danach als Application Context.
     private func answerPlanRequest(_ replyHandler: @escaping ([String: Any]) -> Void) {
-        let reply = loader.response.flatMap { try? PlanSyncCodec.context(for: $0) } ?? [:]
-        replyHandler(reply)
+        replyHandler(PlanSyncCodec.reply(for: watchPlan, today: loader.todayKey, canPlan: !loader.needsConfiguration))
         Task { await loader.refreshIfNeeded() }
     }
 }
@@ -64,7 +74,7 @@ extension PhonePlanSync: WCSessionDelegate {
     ) {
         guard activationState == .activated else { return }
         Task { @MainActor in
-            if let response = self.loader.response {
+            if let response = self.watchPlan {
                 self.push(response)
             }
         }
@@ -79,7 +89,7 @@ extension PhonePlanSync: WCSessionDelegate {
 
     nonisolated func sessionWatchStateDidChange(_ session: WCSession) {
         Task { @MainActor in
-            if let response = self.loader.response {
+            if let response = self.watchPlan {
                 self.push(response)
             }
         }

@@ -11,6 +11,7 @@ public enum PlanSyncCodec {
     static let planKey = "plan_v2"
     static let versionKey = "version"
     static let requestKey = "request"
+    static let statusKey = "status"
     /// Hebt sich das Format einmal inkompatibel, ignoriert eine alte Watch neue Pläne, statt abzustürzen.
     static let formatVersion = 1
 
@@ -19,6 +20,24 @@ public enum PlanSyncCodec {
 
     public static func isPlanRequest(_ message: [String: Any]) -> Bool {
         message[requestKey] as? String == "plan"
+    }
+
+    /// Antwort des iPhones auf `planRequest`, wenn sein Plan nicht von heute ist: Es erstellt ihn gerade und schickt ihn
+    /// danach als Application Context. So hält die Watch keinen alten Plan für den neuesten.
+    public static var preparingReply: [String: Any] { [versionKey: formatVersion, statusKey: "preparing"] }
+
+    public static func isPreparing(_ reply: [String: Any]) -> Bool {
+        reply[versionKey] as? Int == formatVersion && reply[statusKey] as? String == "preparing"
+    }
+
+    /// Was das iPhone auf `planRequest` antwortet: den Plan von heute; einen Ersatzplan (mit eigenem Hinweis) oder,
+    /// wenn es gar nicht planen kann (kein Token), den letzten Plan; sonst `preparingReply`, weil der Plan von heute
+    /// gerade entsteht.
+    public static func reply(for response: DayPlanV2Response?, today: String, canPlan: Bool) -> [String: Any] {
+        if let response, response.date == today || response.source == .fallback || !canPlan {
+            return (try? context(for: response)) ?? [:]
+        }
+        return canPlan ? preparingReply : [:]
     }
 
     /// Tagesplan als Application Context bzw. Antwort auf `planRequest` (nur Property-List-Typen).

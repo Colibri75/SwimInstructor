@@ -37,6 +37,14 @@ public struct SwimModule: SportModule {
     /// 2:05 pro 100 m inklusive Pausen.
     public let typicalSpeedMetersPerSecond: Double = 0.8
     public let openWater: OpenWaterVenue? = OpenWaterVenue(id: "open_water", displayName: String(localized: "Freiwasser"), locationID: RecordingLocation.openWater.id)
+    public let pool: PoolVenue? = PoolVenue(displayName: String(localized: "Becken"), lapLengths: PoolLength.presets)
+    public let skills: [SportSkill] = [
+        SportSkill(id: "freestyle", displayName: String(localized: "Kraul")),
+        SportSkill(id: "breaststroke", displayName: String(localized: "Brust")),
+        SportSkill(id: "backstroke", displayName: String(localized: "Rückenkraul")),
+        SportSkill(id: "butterfly", displayName: String(localized: "Schmetterling")),
+        SportSkill(id: "flip_turn", displayName: String(localized: "Rollwende"))
+    ]
 
     public let recording = SportRecording(
         locations: [.pool, .openWater],

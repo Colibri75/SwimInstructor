@@ -25,6 +25,7 @@ export interface SnapshotPatch {
   daysUntilGoal?: number;
   performance?: SnapshotV2["performance"] | null;
   startingLevels?: SnapshotV2["starting_levels"];
+  athleteProfile?: SnapshotV2["athlete_profile"];
 }
 
 function shiftDate(iso: string, days: number): string {
@@ -55,6 +56,7 @@ export function multiSnapshot(patch: SnapshotPatch = {}): SnapshotV2 {
   if (patch.performance === null) delete result.performance;
   else if (patch.performance !== undefined) result.performance = patch.performance;
   if (patch.startingLevels !== undefined) result.starting_levels = patch.startingLevels;
+  if (patch.athleteProfile !== undefined) result.athlete_profile = patch.athleteProfile;
   return result;
 }
 

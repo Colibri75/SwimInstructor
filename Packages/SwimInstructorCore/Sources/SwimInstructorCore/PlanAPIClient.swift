@@ -15,7 +15,7 @@ public struct BackendConfiguration: Equatable, Sendable {
 }
 
 public enum PlanAPIError: Error, Equatable, LocalizedError {
-    /// Token fehlt oder ist falsch (401).
+    /// Token fehlt, ist falsch oder das Konto gibt es nicht mehr (401).
     case unauthorized
     /// Der Server hat den Snapshot abgelehnt (400); `details` nennt die fehlerhaften Felder.
     case invalidRequest(details: [String])
@@ -36,7 +36,7 @@ public enum PlanAPIError: Error, Equatable, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .unauthorized:
-            return String(localized: "Der Server hat das Token abgelehnt. Prüfe es in den Einstellungen.")
+            return String(localized: "Der Server hat die Anmeldung abgelehnt. Melde dich in den Einstellungen neu an.")
         case .invalidRequest(let details):
             guard !details.isEmpty else { return String(localized: "Der Server hat die Trainingsdaten abgelehnt.") }
             let fields = details.joined(separator: ", ")
@@ -108,12 +108,16 @@ public struct PlanAPIClient: Sendable {
     /// Alle Plananfragen (und damit alle Trainings- und Gesundheitsdaten) laufen hier durch: Ohne Einwilligung geht
     /// nichts hinaus.
     func post(path: String, body: Data, timeout: TimeInterval = PlanAPIClient.planTimeout) async throws -> (Data, HTTPURLResponse) {
+        try await perform(postRequest(path: path, body: body, timeout: timeout))
+    }
+
+    func postRequest(path: String, body: Data, timeout: TimeInterval = PlanAPIClient.planTimeout) async throws -> URLRequest {
         guard await consentGate.allows() else { throw PlanAPIError.consentRequired }
         var request = makeRequest(path: path, timeout: timeout)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = body
-        return try await perform(request)
+        return request
     }
 
     /// Leerer Wunsch oder nur Leerraum: nichts senden. Länger als erlaubt: kürzen statt vom Server ablehnen lassen.
@@ -171,7 +175,11 @@ public struct PlanAPIClient: Sendable {
         }
     }
 
-    func statusError(_ status: Int) -> PlanAPIError {
+    static func statusError(_ status: Int) -> PlanAPIError {
         status == 401 ? .unauthorized : .server(status: status)
+    }
+
+    func statusError(_ status: Int) -> PlanAPIError {
+        Self.statusError(status)
     }
 }

@@ -159,6 +159,7 @@
 "Dashboard" = "Painel";
 "Dauer" = "Duração";
 "Dauert noch an" = "Ainda em andamento";
+"Dein Coach erstellt gerade den Plan für heute auf dem iPhone. Er kommt von selbst auf die Uhr." = "Seu coach está montando o plano de hoje no iPhone. Ele chega sozinho ao relógio.";
 "Dein Coach hat keinen neuen Plan geliefert." = "Seu coach não entregou um novo plano.";
 "Dein Coach hat nichts geändert." = "Seu coach não alterou nada.";
 "Dein Coach passt deinen Plan für die nächsten Tage an …" = "Seu coach está ajustando seu plano para os próximos dias…";
@@ -367,7 +368,6 @@
 "Hüfte" = "Quadril";
 "Im %@" = "Em %@";
 "In Health gespeichert. Das iPhone berücksichtigt die Einheit beim nächsten Plan." = "Salvo no Saúde. O iPhone considera o treino no próximo plano.";
-"In drei Schritten zu deinem Plan: Ziel festlegen, deine Trainingstage eintragen und angeben, wo du gerade stehst. Danach rechnet die App den Gesamtplan bis zu deinem Ziel." = "Seu plano em três passos: defina o objetivo, informe seus dias de treino e diga em que nível você está. Depois o app calcula o plano geral até o seu objetivo.";
 "Intervalle" = "Intervalados";
 "Ist dein Training erledigt, holt dein Coach im Hintergrund schon den Plan für morgen. Er kommt dann morgens zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Nach einer Einheit fragt er, wie es war. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt." = "Quando seu treino estiver concluído, seu coach já busca em segundo plano o plano de amanhã. Ele chega de manhã no horário escolhido, e a aba Hoje o mostra na hora. Depois de um treino, ele pergunta como foi. Quem decide quando o app pode trabalhar em segundo plano é o iOS; se não der certo, a aba Hoje planeja ao abrir, como de costume.";
 "Jede Sportart braucht genau einen Schwerpunkt." = "Cada esporte precisa de exatamente um foco.";
@@ -734,7 +734,6 @@
 "Ziel" = "Objetivo";
 "Ziel am %@, noch %lld Wochen" = "Objetivo em %@, faltam %lld semanas";
 "Ziel, Abstand und Pace." = "Objetivo, diferença e pace.";
-"Ziel, Wochenraster und Startniveau kannst du jederzeit in den Einstellungen ändern." = "Você pode alterar objetivo, grade semanal e nível inicial a qualquer momento nos Ajustes.";
 "Zielart" = "Tipo de objetivo";
 "Zielpace %@ erreicht." = "Pace-alvo de %@ atingido.";
 "Zielpace %@: noch %lld s pro 100 m zu langsam." = "Pace-alvo %@: ainda %lld s por 100 m mais lento.";
@@ -847,7 +846,7 @@
 /* Datenschutz und Einwilligung */
 "Kein neuer Plan: Dafür brauchst du deine Zustimmung zur Datenweitergabe (Einstellungen › Datenschutz)." = "Nenhum plano novo: é preciso o seu consentimento para compartilhar dados (Ajustes › Privacidade).";
 "Deine Daten und dein Coach" = "Seus dados e seu coach";
-"Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic (USA): Umfang und Dauer deiner Einheiten, Abweichungen von Ruhepuls und HRV, Schlaf, Leistungswerte, Beschwerden, dein Ziel und deine Wünsche." = "Seu coach cria planos com o Claude, da Anthropic. Para isso, seus dados de treino e de saúde vão para o nosso servidor e para a Anthropic (EUA): volume e duração das sessões, desvios da frequência cardíaca em repouso e da VFC, sono, valores de desempenho, desconfortos, seu objetivo e seus desejos.";
+"Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic (USA): Umfang und Dauer deiner Einheiten, Abweichungen von Ruhepuls und HRV, Schlaf, Leistungswerte, Beschwerden, dein Ziel, deine Wünsche und deine Angaben unter „Über mich“ wie Alter und Verletzungen." = "Seu coach cria planos com o Claude, da Anthropic. Para isso, seus dados de treino e de saúde vão para o nosso servidor e para a Anthropic (EUA): volume e duração das sessões, desvios da frequência cardíaca em repouso e da VFC, sono, valores de desempenho, desconfortos, seu objetivo, seus desejos e o que você informa em “Sobre mim”, como idade e lesões.";
 "Einzelne Messwerte aus Health und Kalendertermine bleiben auf dem iPhone, und Anthropic erfährt weder deinen Namen noch deine E-Mail-Adresse. Die Daten dienen nur deinem Plan, nie der Werbung, und werden nicht verkauft." = "Medições individuais do Saúde e eventos da agenda ficam no iPhone, e a Anthropic não fica sabendo nem o seu nome nem o seu e-mail. Os dados servem apenas ao seu plano, nunca à publicidade, e nunca são vendidos.";
 "Du kannst deine Zustimmung jederzeit in den Einstellungen unter Datenschutz widerrufen. Ohne Zustimmung erstellt dein Coach keine neuen Pläne." = "Você pode retirar seu consentimento a qualquer momento em Ajustes, em Privacidade. Sem consentimento, seu coach não cria planos novos.";
 "Datenschutzerklärung" = "Política de Privacidade";
@@ -859,5 +858,70 @@
 "Zustimmen …" = "Concordar …";
 "Datenschutz" = "Privacidade";
 "Dein Coach erstellt Pläne mit Claude von Anthropic. Dafür gehen deine Trainings- und Gesundheitsdaten an unseren Server und an Anthropic. Kein Tracking, keine Werbung." = "Seu coach cria planos com o Claude, da Anthropic. Para isso, seus dados de treino e de saúde vão para o nosso servidor e para a Anthropic. Sem rastreamento, sem anúncios.";
+
+
+/* Mit Apple anmelden, Konto */
+"Anmelden" = "Entrar";
+"Anmeldung läuft …" = "Entrando …";
+"Angemeldet als %@" = "Conectado como %@";
+"Mit Server-Token verbunden" = "Conectado com token do servidor";
+"Abmelden" = "Sair";
+"Konto" = "Conta";
+"Konto löschen" = "Excluir conta";
+"Konto löschen?" = "Excluir conta?";
+"Konto wird gelöscht …" = "Excluindo conta …";
+"Konto und Pläne löschen" = "Excluir conta e planos";
+"Dein Konto und deine Pläne auf dem Server werden endgültig gelöscht. Deine Daten in Apple Health und deine Einstellungen auf diesem iPhone bleiben." = "Sua conta e seus planos no servidor serão excluídos definitivamente. Seus dados no Apple Saúde e seus ajustes neste iPhone permanecem.";
+"Melde dich an, damit dein Coach Pläne erstellen kann." = "Entre para que seu coach possa criar planos.";
+"Mit deiner Apple-ID meldest du dich beim Server deines Coaches an. Gespeichert werden dort eine Kennung von Apple und, falls du sie teilst, dein Name und deine E-Mail-Adresse." = "Você entra no servidor do seu coach com seu ID Apple. Lá ficam salvos um identificador da Apple e, se você compartilhar, seu nome e seu e-mail.";
+"Erweitert" = "Avançado";
+"Nur für eigene Server: Server-Adresse und ein Token vom Server (beim Besitzer der Wert von API_TOKEN). Der Token wird nur im Schlüsselbund dieses iPhones gespeichert. Mit Apple angemeldet brauchst du hier nichts." = "Só para servidor próprio: endereço do servidor e um token do servidor (para o proprietário, o valor de API_TOKEN). O token fica salvo apenas nas chaves deste iPhone. Conectado com a Apple, você não precisa de nada aqui.";
+"Dein Konto ist noch nicht freigeschaltet. Versuche es später noch einmal." = "Sua conta ainda não foi ativada. Tente novamente mais tarde.";
+"Die Anmeldung mit Apple hat nicht geklappt. Versuche es noch einmal." = "Não foi possível entrar com a Apple. Tente novamente.";
+"Zu viele Anmeldeversuche. Warte eine Minute und versuche es dann noch einmal." = "Muitas tentativas de entrar. Aguarde um minuto e tente novamente.";
+"Der Zugang des Server-Besitzers lässt sich in der App nicht löschen." = "O acesso do proprietário do servidor não pode ser excluído no app.";
+"Deine Anmeldung gilt nicht mehr. Melde dich neu an und lösche das Konto dann." = "Seu login não é mais válido. Entre novamente e depois exclua a conta.";
+"Apple ist gerade nicht erreichbar. Versuche es später noch einmal." = "A Apple não está acessível no momento. Tente novamente mais tarde.";
+"Der Server hat die Anmeldung abgelehnt. Melde dich in den Einstellungen neu an." = "O servidor recusou seu login. Entre novamente nos ajustes.";
+
 "Auf anderen Tag legen" = "Passar para outro dia";
 "Ergänzung entfernen" = "Remover complemento";
+"Gerade aktuell" = "Atual";
+"Kommt immer wieder" = "Recorrente";
+"Früher, ausgeheilt" = "Antiga, curada";
+"Wenig" = "Baixa";
+"Normal" = "Normal";
+"Hoch" = "Alta";
+"Lieber locker" = "Prefiro leve";
+"Ausgewogen" = "Equilibrada";
+"Lieber knackig" = "Prefiro intensa";
+"Kraul" = "Crawl";
+"Rückenkraul" = "Costas";
+"Rollwende" = "Virada olímpica";
+"Über mich" = "Sobre mim";
+"Alter" = "Idade";
+"%lld Jahre" = "%lld anos";
+"Geburtsjahr" = "Ano de nascimento";
+"Keine Angabe" = "Não informado";
+"Ausdauersport seit" = "Esporte de resistência há";
+"Erfahrung" = "Experiência";
+"Das Alter kommt aus Apple Health. Mit Alter und Erfahrung steigert dein Coach behutsamer oder plant mehr Erholung." = "A idade vem do app Saúde. Com base na idade e na experiência, seu coach aumenta a carga com mais cuidado ou planeja mais recuperação.";
+"Mit Alter und Erfahrung steigert dein Coach behutsamer oder plant mehr Erholung. Das Geburtsjahr fragt die App nur, wenn Apple Health kein Geburtsdatum kennt." = "Com base na idade e na experiência, seu coach aumenta a carga com mais cuidado ou planeja mais recuperação. O app só pede o ano de nascimento se o app Saúde não souber sua data de nascimento.";
+"Weniger als 1 Jahr" = "Menos de 1 ano";
+"1 Jahr" = "1 ano";
+"%lld Jahren" = "%lld anos";
+"Verletzungen" = "Lesões";
+"Eine aktuelle Verletzung schont dein Coach, bei einer wiederkehrenden steigert er vorsichtiger und stärkt die Stelle mit Kraft und Mobilität. Keine Diagnose: Bei anhaltenden Beschwerden geh zum Arzt." = "Seu coach poupa uma lesão atual. Com uma recorrente, ele progride com mais cuidado e fortalece a região com força e mobilidade. Não é um diagnóstico: se a dor persistir, procure um médico.";
+"Lange Einheit am" = "Treino longo no dia";
+"Kreuz an, was du sicher kannst. Dein Coach plant nur damit; ohne Kreuz gilt keine Angabe." = "Marque o que você faz com segurança. Seu coach planeja só com isso; sem marcação conta como não informado.";
+"Bahnlänge" = "Comprimento da piscina";
+"Unterschiedlich" = "Varia";
+"An welchen Tagen du hinkommst. An den anderen Tagen plant dein Coach dort nichts, im Freiwasser geht es trotzdem." = "Os dias em que você consegue ir. Nos outros dias seu coach não planeja nada lá; em águas abertas continua possível.";
+"Belastung durch Beruf und Familie" = "Carga de trabalho e família";
+"Schichtarbeit" = "Trabalho em turnos";
+"Intensität" = "Intensidade";
+"Alltag" = "Dia a dia";
+"Bei viel Stress oder Schichtarbeit plant dein Coach höchstens einen harten Tag pro Woche. Die Intensität verschiebt, wie viel vom erlaubten harten Anteil er nutzt; rund 80 Prozent bleiben immer locker." = "Com muito estresse ou trabalho em turnos, seu coach planeja no máximo um dia forte por semana. A intensidade muda quanto da parte forte permitida ele usa; cerca de 80 por cento continua sempre leve.";
+"Erfahrung, Verletzungen, was du kannst, wann du ins Becken kommst, Alltag und Intensität. Alles freiwillig; dein Coach plant damit ab dem nächsten Plan genauer." = "Experiência, lesões, o que você sabe fazer, quando consegue ir à piscina, dia a dia e intensidade. Tudo opcional; seu coach planeja com mais precisão a partir do próximo plano.";
+"In vier Schritten zu deinem Plan: Ziel festlegen, deine Trainingstage eintragen, angeben, wo du gerade stehst, und ein paar freiwillige Fragen zu dir. Danach rechnet die App den Gesamtplan bis zu deinem Ziel." = "Quatro passos até o seu plano: definir a meta, informar seus dias de treino, dizer onde você está agora e responder algumas perguntas opcionais sobre você. Depois o app calcula o plano geral até a sua meta.";
+"Ziel, Wochenraster, Startniveau und die Angaben über dich kannst du jederzeit in den Einstellungen ändern." = "Você pode mudar a qualquer momento a meta, a grade semanal, o nível inicial e as informações sobre você em Ajustes.";

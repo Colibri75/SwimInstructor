@@ -5,18 +5,24 @@ import UserNotifications
 import WidgetKit
 import SwimInstructorCore
 
-/// Der Coach arbeitet, ohne dass die App offen ist: Landet eine Einheit in Health (Health weckt die App) oder gibt iOS der
-/// App Zeit im Hintergrund, liest er Health neu, fragt mit einer Mitteilung "Wie war's?" und holt nach erledigtem
-/// Training den Plan für morgen. Steht der, kommt er morgens zur eingestellten Uhrzeit als Mitteilung, und Heute zeigt ihn
-/// beim Öffnen sofort.
+/// Der Coach arbeitet, ohne dass die App offen ist: Landet eine Einheit oder die Nacht in Health (Health weckt die App) oder
+/// gibt iOS der App Zeit im Hintergrund, liest er Health neu, fragt mit einer Mitteilung "Wie war's?" und holt nach
+/// erledigtem Training den Plan für morgen. Fehlt morgens der Plan für heute, holt er ihn mit der letzten Nacht. Steht der
+/// Plan, kommt er morgens zur eingestellten Uhrzeit als Mitteilung, und Heute zeigt ihn beim Öffnen sofort.
 ///
 /// Grenzen von iOS: Health lässt sich nur bei entsperrtem iPhone lesen, und wann die App im Hintergrund Zeit bekommt,
-/// entscheidet das System. Klappt es nicht, plant Heute beim Öffnen wie bisher.
+/// entscheidet das System. Der Plan für heute braucht länger als diese Zeit; die Anfrage läuft darum als Übertragung im
+/// Hintergrund weiter (`BackgroundDayPlanFetcher`). Klappt es nicht, plant Heute beim Öffnen wie bisher.
 @MainActor
 final class BackgroundCoach: ObservableObject {
     static let refreshTaskID = "com.kellner.SwimInstructor.coach"
     /// Was nach einer Einheit nicht länger zurückliegt, bekommt noch eine Frage.
     static let feedbackWindow: TimeInterval = 6 * 3_600
+    /// Ab dieser Stunde holt der Coach den Plan für heute vorab; davor fehlt noch die Nacht.
+    static let todayAheadFromHour = 4
+    /// So oft je Tag höchstens (ein Versuch kann an der Verbindung scheitern).
+    static let todayAheadAttempts = 2
+    private static let todayAheadKey = "coach.todayAhead"
 
     @Published private(set) var preferences: NotificationPreferences
 
@@ -25,10 +31,13 @@ final class BackgroundCoach: ObservableObject {
     private let feedbackBook: SessionFeedbackBook
     private let preferencesStore: NotificationPreferencesStoring
     private let log: NoticeLogging
+    private let planClient: @MainActor () -> PlanAPIClient?
+    private let fetcher = BackgroundDayPlanFetcher.shared
+    private let defaults = UserDefaults.standard
     private let healthStore = HKHealthStore()
     private let center = UNUserNotificationCenter.current()
     private let weekCalendar = WeekCalendar()
-    private var observer: HKObserverQuery?
+    private var observers: [HKObserverQuery] = []
     private var isRunning = false
     private var backgroundTask = UIBackgroundTaskIdentifier.invalid
 
@@ -36,9 +45,11 @@ final class BackgroundCoach: ObservableObject {
         loader: MultiSportTodayLoader,
         weekLoader: MultiSportWeekLoader,
         feedbackBook: SessionFeedbackBook,
+        planClient: @escaping @MainActor () -> PlanAPIClient?,
         preferencesStore: NotificationPreferencesStoring = UserDefaultsNotificationPreferencesStore(),
         log: NoticeLogging = UserDefaultsNoticeLog()
     ) {
+        self.planClient = planClient
         self.loader = loader
         self.weekLoader = weekLoader
         self.feedbackBook = feedbackBook
@@ -49,13 +60,15 @@ final class BackgroundCoach: ObservableObject {
 
     // MARK: - Start
 
-    /// Beim Start der App, bevor sie fertig geladen ist: Hintergrundaufgabe anmelden und auf neue Einheiten in Health
-    /// hören (Health weckt die App dafür auch im Hintergrund).
+    /// Beim Start der App, bevor sie fertig geladen ist: Hintergrundaufgabe anmelden, auf neue Einheiten und die Nacht in
+    /// Health hören (Health weckt die App dafür auch im Hintergrund) und Antworten auf den Plan für heute annehmen, auch
+    /// wenn iOS die App nur dafür startet.
     func start() {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: Self.refreshTaskID, using: nil) { [weak self] task in
             Task { @MainActor in self?.handle(task) }
         }
-        observeWorkouts()
+        fetcher.onDelivery = { [weak self] plan, target in self?.receiveTodayAhead(plan, target: target) }
+        observeHealth()
         scheduleRefresh()
     }
 
@@ -80,21 +93,29 @@ final class BackgroundCoach: ObservableObject {
 
     // MARK: - Wecken
 
-    private func observeWorkouts() {
+    /// Neue Einheiten und der Schlaf der Nacht: Kommt der morgens von der Watch, ist das iPhone meist entsperrt, und der
+    /// Plan für heute kann mit der Nacht entstehen.
+    private func observeHealth() {
         guard HKHealthStore.isHealthDataAvailable() else { return }
-        let type = HKObjectType.workoutType()
+        observe(HKObjectType.workoutType(), name: "Neue Einheit")
+        if let sleep = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
+            observe(sleep, name: "Neue Nacht")
+        }
+    }
+
+    private func observe(_ type: HKSampleType, name: String) {
         let query = HKObserverQuery(sampleType: type, predicate: nil) { [weak self] _, completion, error in
             guard error == nil else {
                 completion()
                 return
             }
             Task { @MainActor in
-                await self?.runWithBackgroundTime(name: "Neue Einheit")
+                await self?.runWithBackgroundTime(name: name)
                 completion()
             }
         }
         healthStore.execute(query)
-        observer = query
+        observers.append(query)
         healthStore.enableBackgroundDelivery(for: type, frequency: .immediate) { _, _ in }
     }
 
@@ -134,8 +155,8 @@ final class BackgroundCoach: ObservableObject {
 
     // MARK: - Ein Durchgang
 
-    /// Health lesen, nach neuen Einheiten fragen, nach erledigtem Training den Plan für morgen holen und die
-    /// Morgen-Mitteilung stellen. Ist die App offen, macht das Heute selbst.
+    /// Health lesen, nach neuen Einheiten fragen, morgens den Plan für heute anstoßen, nach erledigtem Training den Plan
+    /// für morgen holen und die Morgen-Mitteilung stellen. Ist die App offen, macht das Heute selbst.
     func run() async {
         guard !isRunning, UIApplication.shared.applicationState != .active else { return }
         // Bei gesperrtem iPhone gibt Health nichts heraus.
@@ -153,6 +174,7 @@ final class BackgroundCoach: ObservableObject {
             scheduleMorningNotice()
             updateGlance()
         }
+        await requestTodayAhead(now: now, workouts: reading.allWorkouts)
         // Erledigt oder heute nichts geplant (Ruhetag, keine Zeit): den Plan für morgen holen.
         let nothingToday = weekLoader.day(on: today).map { $0.sessions.isEmpty || $0.isUnavailable } ?? true
         guard let tomorrow = weekCalendar.addingDays(1, to: today), nothingToday || isTrainingDone(today, workouts: reading.allWorkouts, now: now) else {
@@ -161,6 +183,45 @@ final class BackgroundCoach: ObservableObject {
         if loader.dayPlan(on: tomorrow) == nil, loader.canPreview(tomorrow), !Task.isCancelled {
             await loader.loadPreview(for: tomorrow)
         }
+    }
+
+    // MARK: - Plan für heute vorab
+
+    /// Morgens, bevor du die App öffnest: Fehlt der Plan für heute, die Anfrage mit dem frisch gelesenen Zustand an iOS
+    /// abgeben. Die Antwort kommt über `receiveTodayAhead`, auch wenn die App bis dahin wieder schläft.
+    private func requestTodayAhead(now: Date, workouts: [Workout]) async {
+        let today = weekLoader.todayKey
+        guard Calendar.current.component(.hour, from: now) >= Self.todayAheadFromHour,
+              todayAheadAttempts(on: today) < Self.todayAheadAttempts,
+              !isTrainingDone(today, workouts: workouts, now: now),
+              let ahead = loader.todayAheadRequest(),
+              let client = planClient() else { return }
+        let pending = await fetcher.hasPendingRequest()
+        guard !pending else { return }
+        do {
+            let request = try await client.dayPlanV2URLRequest(ahead.request)
+            try fetcher.start(request, target: ahead.target)
+            defaults.set("\(today)|\(todayAheadAttempts(on: today) + 1)", forKey: Self.todayAheadKey)
+        } catch {
+            // Ohne Einwilligung oder Konfiguration plant Heute beim Öffnen und fragt dort nach.
+        }
+    }
+
+    private func todayAheadAttempts(on date: String) -> Int {
+        let parts = (defaults.string(forKey: Self.todayAheadKey) ?? "").split(separator: "|")
+        guard parts.count == 2, parts[0] == date else { return 0 }
+        return Int(parts[1]) ?? 0
+    }
+
+    /// Die Antwort auf den Plan für heute: als Plan von heute bereitlegen, Widget auffrischen und melden.
+    private func receiveTodayAhead(_ plan: DayPlanV2Response?, target: DayTargetV2) {
+        guard let plan, loader.acceptTodayAhead(plan, target: target) else { return }
+        updateGlance()
+        guard preferences.morningPlan,
+              UIApplication.shared.applicationState != .active,
+              let notice = CoachNotices.morningPlan(plan) else { return }
+        // Vor der eingestellten Uhrzeit dann, danach sofort.
+        post(notice, at: CoachNotices.morningDate(for: plan.date, preferences: preferences, now: Date()))
     }
 
     /// Alles, was heute geplant war, ist gemacht (wie in Aktuell).

@@ -50,8 +50,11 @@ Eine weitere Sportart: [Neue Sportart hinzufügen](docs/neue-sportart.md) (acht 
   Stelle). Bei deutlichen oder starken Beschwerden, einer sehr harten Einheit (ab 8 von 10) oder einer ausgefallenen
   Einheit plant die App die 14 Tage außer der Reihe neu; der Server bremst die betroffene Sportart.
 - **Coach im Hintergrund:** Landet eine Einheit in Health, fragt eine Mitteilung "Wie war's?"; ist das Training des Tages
-  erledigt, holt die App den Plan für morgen schon im Hintergrund. Er kommt morgens zur eingestellten Uhrzeit als
-  Mitteilung, und Aktuell zeigt ihn sofort (`App/BackgroundCoach.swift`, Einstellungen "Mitteilungen"). Nach dem Ende einer
+  erledigt, holt die App den Plan für morgen schon im Hintergrund. Fehlt morgens (ab 4 Uhr) der Plan für heute, stößt
+  die App ihn im Hintergrund mit der letzten Nacht an, sobald iOS ihr Zeit gibt und das iPhone entsperrt ist (auch wenn
+  der Schlaf von der Watch ankommt); die Anfrage läuft als Hintergrund-Übertragung weiter (`App/BackgroundDayPlanFetcher.swift`).
+  Der Plan kommt morgens zur eingestellten Uhrzeit als Mitteilung, und Aktuell zeigt ihn sofort (`App/BackgroundCoach.swift`,
+  Einstellungen "Mitteilungen"). Ein Ruhetag laut Plan braucht keinen Aufruf an den Coach. Nach dem Ende einer
   Einheit fragt die Watch nach der Anstrengung (1 bis 10) und speichert sie in Health.
 - **Widget und Komplikation:** "Nächste Einheit" auf Home- und Sperrbildschirm des iPhones und auf dem Zifferblatt
   (`Widgets/`, `WatchWidgets/`, gemeinsam `WidgetsShared/`). App und Watch schreiben den Stand (`PlanGlance`) in die
@@ -113,7 +116,8 @@ TestFlight-App – kein manuelles Signieren, kein eigener Mac im Alltag.
 2. **App-IDs registrieren** (developer.apple.com/account → Certificates,
    Identifiers & Profiles → Identifiers → +), explizit (keine Wildcards), mit
    aktivierter HealthKit-Capability:
-   - `com.kellner.SwimInstructor`
+   - `com.kellner.SwimInstructor` (zusätzlich *Sign In with Apple* für die Anmeldung in der App, danach Workflow
+     "Profile erneuern")
    - `com.kellner.SwimInstructor.watchkitapp`
 3. **App Store Connect:** neuen App-Eintrag anlegen – Bundle-ID
    `com.kellner.SwimInstructor` (muss exakt zu `project.yml` passen),

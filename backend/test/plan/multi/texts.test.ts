@@ -47,6 +47,8 @@ const SAMPLES: { [K in Sentence]: Parameters<SafetyCatalog[K]> } = {
   poolForWeather: ["Wetter", "Sport"],
   poolForWeatherToday: ["Wetter", "Sport"],
   openWaterForRace: ["Sport"],
+  poolClosedToday: [],
+  poolClosedDay: [],
   noStrengthBeforeGoal: [7],
   noStrength: ["Grund"],
   noStrengthBeforeHard: [],

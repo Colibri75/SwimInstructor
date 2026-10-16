@@ -3,7 +3,7 @@ import { SPORTS } from "../../sports/registry";
 import { STEP_TARGETS } from "../../sports/vocabulary";
 import { MACRO_PHASES } from "../calendar";
 import { INTENSITIES, SESSION_TYPES } from "../vocabulary";
-import { SnapshotSchema } from "../snapshot";
+import { PAIN_AREAS, SnapshotSchema } from "../snapshot";
 import { DATE_PATTERN } from "../calendar";
 
 /**
@@ -189,9 +189,8 @@ const KnownSport = z.string().refine((id) => SPORTS.get(id) !== undefined, { mes
 const Identifier = z.string().regex(/^[a-z][a-z0-9_]{1,39}$/);
 const Amount = z.number().min(0).max(1_000_000);
 
-/** Wo der Athlet nach einer Einheit Beschwerden hatte (Rueckmeldung in der App). */
-export const PAIN_AREAS = ["knee", "shin", "achilles", "foot", "hip", "back", "shoulder", "other"] as const;
-export type PainArea = (typeof PAIN_AREAS)[number];
+export { PAIN_AREAS } from "../snapshot";
+export type { PainArea } from "../snapshot";
 
 /**
  * Was der Athlet in den Tagen vor dem Plan trainiert hat (je Einheit), mit `hard` fuer eine harte Einheit, der gefuehlten

@@ -20,6 +20,14 @@
       "weather_sensitive": false,
       "indoor": null,
       "open_water": {"equipment": "open_water", "display_name": "Freiwasser"},
+      "pool": {"display_name": "Becken", "lap_lengths": [25, 50]},
+      "skills": [
+        {"id": "freestyle", "display_name": "Kraul"},
+        {"id": "breaststroke", "display_name": "Brust"},
+        {"id": "backstroke", "display_name": "Rückenkraul"},
+        {"id": "butterfly", "display_name": "Schmetterling"},
+        {"id": "flip_turn", "display_name": "Rollwende"}
+      ],
       "performance_metrics": [
         {"id": "css_pace_per_100m", "display_name": "CSS-Pace", "unit": "s/100m", "min": 50, "max": 300}
       ],
@@ -41,6 +49,8 @@
       "weather_sensitive": true,
       "indoor": {"equipment": "indoor_trainer", "display_name": "Rolle"},
       "open_water": null,
+      "pool": null,
+      "skills": [],
       "performance_metrics": [
         {"id": "threshold_heart_rate", "display_name": "Schwellenpuls", "unit": "bpm", "min": 100, "max": 215},
         {"id": "threshold_power", "display_name": "Schwellenleistung (FTP)", "unit": "W", "min": 50, "max": 600}
@@ -62,6 +72,8 @@
       "weather_sensitive": true,
       "indoor": {"equipment": "treadmill", "display_name": "Laufband"},
       "open_water": null,
+      "pool": null,
+      "skills": [],
       "performance_metrics": [
         {"id": "threshold_heart_rate", "display_name": "Schwellenpuls", "unit": "bpm", "min": 100, "max": 215},
         {"id": "threshold_pace_per_km", "display_name": "Schwellentempo", "unit": "s/km", "min": 150, "max": 900}

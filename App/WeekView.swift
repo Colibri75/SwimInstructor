@@ -290,7 +290,7 @@ struct WeekView: View {
             }
             .disabled(weekLoader.isLoading || !settings.hasToken)
             if !settings.hasToken || weekLoader.needsConfiguration {
-                Text("Noch kein Server-Token hinterlegt. Trage es im Tab Aktuell unter dem Zahnrad ein.")
+                Text("Melde dich an, damit dein Coach Pläne erstellen kann.")
                     .font(.footnote)
                     .foregroundStyle(.orange)
             }

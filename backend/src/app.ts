@@ -9,6 +9,8 @@ import { SingleUserDirectory, UserDirectory } from "./users";
 export interface AppOptions {
   /** Haengt Routen unter /v1 ein (bereits hinter der Token-Pruefung, der Nutzer steht in `res.locals.user`). */
   registerV1Routes?: (router: Router) => void;
+  /** Oeffentliche Routen unter /v1 vor der Token-Pruefung (Anmeldung). Sie parsen ihren Body selbst. */
+  registerPublicV1Routes?: (router: Router) => void;
   /** Die Nutzer des Servers; ohne Angabe nur der Token aus `API_TOKEN`. */
   users?: UserDirectory;
 }
@@ -18,8 +20,10 @@ const MAX_BODY_SIZE = "100kb";
 export function createApp(config: Config, logger: Logger, options: AppOptions = {}): Express {
   const app = express();
   app.disable("x-powered-by");
-  // Der Server laeuft hinter nginx auf demselben Host: nur dessen X-Forwarded-* vertrauen.
-  app.set("trust proxy", "loopback");
+  // Der Server laeuft hinter dem Reverse-Proxy auf demselben Host: nur dessen X-Forwarded-* vertrauen. Im Container
+  // kommt er ueber das Docker-Netz (Gateway 172.x, "uniquelocal") an, sonst sehen alle Anfragen gleich aus und die
+  // Begrenzung der Anmeldeversuche je IP traefe alle gemeinsam. Der Port ist nur auf localhost veroeffentlicht.
+  app.set("trust proxy", ["loopback", "uniquelocal"]);
 
   app.use(
     pinoHttp({
@@ -46,6 +50,12 @@ export function createApp(config: Config, logger: Logger, options: AppOptions = 
 
   // Oeffentlich: die Datenschutzerklaerung fuer App Store und App (Deutsch und Englisch).
   registerPrivacyRoutes(app, config.privacy);
+
+  if (options.registerPublicV1Routes !== undefined) {
+    const publicV1 = Router();
+    options.registerPublicV1Routes(publicV1);
+    app.use("/v1", publicV1);
+  }
 
   const v1 = Router();
   // Erst Auth, dann Body-Parsing: Unautorisierte Requests kosten keine Parsing-Arbeit.

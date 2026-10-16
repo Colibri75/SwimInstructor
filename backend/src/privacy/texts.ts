@@ -6,7 +6,7 @@
  * Aendert sich, was an den Server oder an Anthropic geht, hier anpassen, `PRIVACY_POLICY_DATE` setzen und in der App
  * `AIDataConsentStore.currentVersion` erhoehen, damit alle neu zustimmen.
  */
-export const PRIVACY_POLICY_DATE = { de: "9. Oktober 2026", en: "9 October 2026" };
+export const PRIVACY_POLICY_DATE = { de: "16. Oktober 2026", en: "16 October 2026" };
 
 export const POLICY_DE = `
 <h1>Datenschutzerklärung für die App PeakSmith</h1>
@@ -38,7 +38,7 @@ Bei Fragen zum Datenschutz und für alle Anträge zu deinen Rechten genügt eine
   hast, und berechnet daraus deine freie Zeit. Titel, Orte und Teilnehmer der Termine bleiben auf dem iPhone.</li>
   <li><strong>Standort</strong> (nur, wenn du „Wetter berücksichtigen“ einschaltest): Die App bestimmt deinen
   ungefähren Ort und rundet ihn auf dem Gerät auf etwa 10 km.</li>
-  <li><strong>Einstellungen und Inhalte der App:</strong> Ziel, Wochenraster, Startniveau, Leistungswerte,
+  <li><strong>Einstellungen und Inhalte der App:</strong> Ziel, Wochenraster, Startniveau, Angaben unter „Über mich“, Leistungswerte,
   Rückmeldungen zu Einheiten, Wünsche und die erhaltenen Pläne liegen im Speicher der App auf dem iPhone und werden
   für Widgets und die Apple Watch zwischen App, Widgets und Watch geteilt. Dein Zugangsschlüssel zum Server liegt im
   Schlüsselbund des iPhones.</li>
@@ -51,7 +51,8 @@ Bei Fragen zum Datenschutz und für alle Anträge zu deinen Rechten genügt eine
 <p>Wenn du dich mit „Mit Apple anmelden“ anmeldest, speichert der Server die von Apple vergebene, nur für diese App
 gültige Nutzerkennung und, falls du sie bei der Anmeldung freigibst, deine E-Mail-Adresse (auch Apples anonyme
 Weiterleitungsadresse) und deinen Namen. Dazu kommt ein Zugangsschlüssel, mit dem die App ihre Anfragen
-ausweist.</p>
+ausweist. Außerdem speichert der Server ein Token von Apple (Refresh-Token), allein um deine Anmeldung mit Apple
+beim Löschen deines Kontos bei Apple widerrufen zu können.</p>
 
 <h3>b) Anfragen für einen Plan (nur mit deiner Einwilligung)</h3>
 <ul>
@@ -60,6 +61,10 @@ ausweist.</p>
   Normalwert (Ruhepuls, HRV) und deine durchschnittliche Schlafdauer; Leistungswerte und Trainingszonen (Maximal-,
   Ruhe- und Schwellenpuls, Schwellenleistung, Schwellentempo); dein Ziel (Art, Strecke, Zielzeit, Datum),
   Wochenraster und selbst angegebenes Startniveau.</li>
+  <li><strong>Angaben unter „Über mich“</strong> (alle freiwillig): Alter in Jahren (aus Apple Health oder deinem
+  Geburtsjahr), Jahre Ausdauersport, Verletzungsgeschichte (Körperregion und ob aktuell, wiederkehrend oder früher),
+  was du in einer Sportart kannst (z. B. Schwimmlagen), Bahnlänge und Wochentage mit Zugang zum Becken, Wunschtag der
+  langen Einheit, Belastung durch Beruf und Familie, Schichtarbeit und deine Vorliebe bei der Intensität.</li>
   <li><strong>Training der letzten Tage</strong> je Einheit: Datum, Sportart, Dauer, Strecke, ob sie hart war,
   gefühlte Anstrengung, Beschwerden (Stärke und Körperregion) und verpasste Einheiten.</li>
   <li><strong>Was du selbst eingibst:</strong> Wünsche für den Tag, Rückmeldungen zum Gesamtplan, Notizen und
@@ -71,7 +76,7 @@ ausweist.</p>
   in Minuten (aus dem Kalender, ohne Termine).</li>
 </ul>
 <p>Nicht übertragen werden einzelne Messwerte aus Apple Health (z. B. Herzfrequenzkurven oder GPS-Strecken),
-Kalendertermine und dein Geburtsdatum. Ruhepuls, HRV, Schlaf, Pulswerte, Beschwerden, Krankheit, Verletzung und
+Kalendertermine und dein Geburtsdatum. Ruhepuls, HRV, Schlaf, Pulswerte, Beschwerden, Krankheit, Verletzungen (auch frühere) und
 Körpergewicht sind <strong>Gesundheitsdaten</strong> im Sinne von Art. 9 DSGVO.</p>
 
 <h3>c) Technische Daten</h3>
@@ -205,7 +210,7 @@ appointed. For any privacy question and to exercise your rights, simply send an 
   calculates your free time. Titles, locations and attendees of your events stay on the iPhone.</li>
   <li><strong>Location</strong> (only if you turn on “Consider weather”): the app determines your approximate location
   and rounds it on the device to about 10 km.</li>
-  <li><strong>App settings and content:</strong> goal, weekly schedule, starting level, performance values, feedback
+  <li><strong>App settings and content:</strong> goal, weekly schedule, starting level, “About me” details, performance values, feedback
   on sessions, wishes and the plans you received are stored in the app's storage on the iPhone and shared between the
   app, its widgets and the Apple Watch. Your access key for the server is stored in the iPhone's keychain.</li>
   <li><strong>Notifications</strong> are scheduled locally on the device. There is no push service and no push
@@ -216,7 +221,8 @@ appointed. For any privacy question and to exercise your rights, simply send an 
 <h3>a) Your account</h3>
 <p>If you use “Sign in with Apple”, the server stores the user identifier Apple issues for this app and, if you share
 them when signing in, your email address (including Apple's private relay address) and your name. In addition, an
-access key identifies the app's requests.</p>
+access key identifies the app's requests. The server also stores a token from Apple (refresh token), solely so that it
+can revoke your Sign in with Apple authorization with Apple when you delete your account.</p>
 
 <h3>b) Plan requests (only with your consent)</h3>
 <ul>
@@ -225,6 +231,10 @@ access key identifies the app's requests.</p>
   rate, HRV) and your average sleep duration; performance values and training zones (maximum, resting and threshold
   heart rate, threshold power, threshold pace); your goal (type, distance, target time, date), weekly schedule and
   self-reported starting level.</li>
+  <li><strong>“About me” details</strong> (all optional): age in years (from Apple Health or your year of birth), years
+  of endurance sport, injury history (body region and whether current, recurring or past), what you can do in a sport
+  (e.g. swim strokes), pool length and weekdays with pool access, preferred day for the long session, stress from work
+  and family, shift work and your intensity preference.</li>
   <li><strong>Recent training</strong> per session: date, sport, duration, distance, whether it was hard, perceived
   effort, discomfort (severity and body region) and missed sessions.</li>
   <li><strong>What you enter yourself:</strong> wishes for the day, feedback on the overall plan, notes and start time
@@ -236,7 +246,7 @@ access key identifies the app's requests.</p>
   minutes (from the calendar, without events).</li>
 </ul>
 <p>Individual readings from Apple Health (e.g. heart rate curves or GPS routes), calendar events and your date of
-birth are not transmitted. Resting heart rate, HRV, sleep, heart rate values, discomfort, illness, injury and body
+birth are not transmitted. Resting heart rate, HRV, sleep, heart rate values, discomfort, illness, injuries (including past ones) and body
 weight are <strong>health data</strong> within the meaning of Art. 9 GDPR.</p>
 
 <h3>c) Technical data</h3>
