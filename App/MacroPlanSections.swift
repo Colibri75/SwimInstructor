@@ -520,7 +520,7 @@ private struct MacroSummitView: View {
                         .stroke(Color.primary.opacity(0.35), style: StrokeStyle(lineWidth: 7, lineCap: .round, lineJoin: .round, dash: [0.1, 14]))
                     if walked.count > 1 {
                         path(walked)
-                            .stroke(Theme.ember, style: StrokeStyle(lineWidth: 7, lineCap: .round, lineJoin: .round))
+                            .stroke(Theme.action, style: StrokeStyle(lineWidth: 7, lineCap: .round, lineJoin: .round))
                     }
                     if let summit = points.last {
                         SummitFlag()
@@ -529,7 +529,7 @@ private struct MacroSummitView: View {
                     }
                     if let here = walked.last {
                         Circle()
-                            .fill(Theme.ember)
+                            .fill(Theme.action)
                             .frame(width: 18, height: 18)
                             .overlay { Circle().stroke(Theme.card, lineWidth: 4) }
                             .position(here)

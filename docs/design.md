@@ -10,20 +10,22 @@ das Training. Entwürfe: Artifact "PeakSmith Design-Entwürfe". Im Code stehen d
 | Funke | `#FFD166` | nur Erfolge: erledigt, Bestwerte, Pausen auf der Watch, Fahne auf dem Gipfel |
 | Gipfel | `#FFFFFF` | Text und Linien auf Nacht |
 
-- Orange ist auf Weiß als Schrift nicht lesbar (etwa 2:1). Im hellen Modus ist der Akzent `#A8540A` (5,1:1), Glut
-  erscheint nur als Fläche mit Navy-Schrift (`EmberButtonStyle`).
+- Im hellen Modus ("Dämmerung hell") übernimmt Nacht-Blau `#22335C` die Rolle von Glut: Akzent (`Theme.accent`),
+  Hauptknöpfe mit weißer Schrift (`Theme.action`/`onAction`, `EmberButtonStyle`) und Weg im Bergprofil. Auf der
+  Tageskarte, die auch hell dunkel ist, ist die Aktionsfläche hellblau `#9DB8F0` (`Theme.actionOnNight`).
 - Sportarten haben eigene Farben aus ihrem Modul (`SportModule.colorRGB`), nie Orange: Schwimmen Türkis, Rad Grün,
   Laufen Violett; im hellen Modus auf 60 % abgedunkelt.
 - Schrift: SF Rounded (`fontDesign(.rounded)`), Zahlen und Titel kräftig.
 - Motiv: der Gipfel-Winkel mit runden Enden (`PeakShape`, `SparkPeak`), der Gesamtplan als Berg
   (`MacroSummitProfile`: Höhe = bis dahin geplantes Training, Gipfel = Ziel).
 - Listen: `themedList()` für den Grund, `cardRows()` für die Zeilen.
-- Heller Modus "Morgennebel": Grund `#DCE2EC` (gedämpftes Blaugrau), Karten `#EFF2F7`, heute/diese Woche `#F2E0D0`,
+- Heller Modus "Morgennebel": Grund `#DCE2EC` (gedämpftes Blaugrau), Karten `#EFF2F7`, heute/diese Woche `#D3DCEC`,
   leere Spur `#C9D2E0`. Kein reines Weiß, damit die App nicht grell wirkt.
 - Hell oder dunkel wählt man unter Einstellungen › Erscheinungsbild (Wie iPhone, Hell, Dunkel; `App/Appearance.swift`).
   Die Watch und die Widgets bleiben dabei, wie sie sind.
 - Darunter schaltet "Farben für Grün-Schwäche" (`Theme.greenWeakKey`) die Statusfarben von Grün/Orange/Rot auf
   Nacht-Blau/Glut/Grau (`Theme.done/caution/missed(greenWeak:)`) und Laufen von Violett auf Beere. Nur iPhone-App.
+  "Abweichend" bleibt dabei auch hell orange (`#A8540A`), weil "erfüllt" schon blau ist.
 
 
 ## Barrierefreiheit (VoiceOver)

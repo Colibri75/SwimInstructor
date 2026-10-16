@@ -319,7 +319,7 @@ struct TodayView: View {
         }
     }
 
-    /// Stand des Tages als Abzeichen: offen in Glut, erledigt in Funke, morgen "Vorschau".
+    /// Stand des Tages als Abzeichen: offen in Glut (hell in hellem Blau), erledigt in Funke, morgen "Vorschau".
     @ViewBuilder
     private func statusBadge(_ entry: PlannedDay) -> some View {
         if showsTomorrow {
@@ -327,7 +327,7 @@ struct TodayView: View {
         } else if todayDone {
             badge(String(localized: "erledigt"), fill: Theme.spark, foreground: Theme.onBright)
         } else if !entry.isRestDay, !entry.isUnavailable, let state = todayStatus?.state {
-            badge(PlanV2Formatting.stateText(state), fill: Theme.ember, foreground: Theme.onBright)
+            badge(PlanV2Formatting.stateText(state), fill: Theme.actionOnNight, foreground: Theme.onBright)
         }
     }
 

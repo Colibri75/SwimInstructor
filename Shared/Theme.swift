@@ -5,8 +5,8 @@ import UIKit
 #endif
 
 /// Farben, Schrift und Formen aus dem Logo (docs/logo): Nacht (Navy) als Grund, Glut (Orange) nur für Aktionen, Funke
-/// (Gelb) nur für Erfolge, Gipfel (Weiß) für Text und Linien. Orange ist auf Weiß als Schrift nicht lesbar (etwa 2:1):
-/// Im hellen Modus ist der Akzent deshalb dunkler, und Glut erscheint nur als Fläche mit Navy-Schrift.
+/// (Gelb) nur für Erfolge, Gipfel (Weiß) für Text und Linien. Im hellen Modus ("Dämmerung hell") übernimmt Nacht-Blau
+/// die Rolle von Glut: Akzent, Knöpfe und Markierungen sind dort blau statt orange.
 enum Theme {
     static let night = Color(rgb: 0x22335C)
     static let ember = Color(rgb: 0xFF9F43)
@@ -14,14 +14,20 @@ enum Theme {
     /// Schrift auf Glut- und Funke-Flächen.
     static let onBright = Color(rgb: 0x22335C)
 
-    /// Akzent für Knöpfe, Links und aktive Tabs: Glut im Dunkeln, hell ein dunkleres Orange (5,1:1 auf den hellen Karten).
-    static let accent = Color.dynamic(light: 0xA8540A, dark: 0xFF9F43)
+    /// Akzent für Links, aktive Tabs und Diagramme: Glut im Dunkeln, hell Nacht-Blau.
+    static let accent = Color.dynamic(light: 0x22335C, dark: 0xFF9F43)
+    /// Fläche der Hauptknöpfe und Markierungen: Glut im Dunkeln, hell Nacht-Blau.
+    static let action = Color.dynamic(light: 0x22335C, dark: 0xFF9F43)
+    /// Schrift auf `action`: hell Weiß, dunkel Navy.
+    static let onAction = Color.dynamic(light: 0xFFFFFF, dark: 0x22335C)
+    /// Aktionsfläche auf der Nacht-Karte (die auch im hellen Modus dunkel ist): hell ein helles Blau, dunkel Glut.
+    static let actionOnNight = Color.dynamic(light: 0x9DB8F0, dark: 0xFF9F43)
     /// Grund hinter Listen: hell gedämpftes Blaugrau ("Morgennebel"), nicht grell.
     static let background = Color.dynamic(light: 0xDCE2EC, dark: 0x18264A)
     /// Karten und Listenzeilen: hell nicht ganz weiß.
     static let card = Color.dynamic(light: 0xEFF2F7, dark: 0x22335C)
-    /// Karte für "heute" und "diese Woche": Karte mit einem Hauch Glut.
-    static let highlightedCard = Color.dynamic(light: 0xF2E0D0, dark: 0x3A3A55)
+    /// Karte für "heute" und "diese Woche": hell ein Hauch Blau, dunkel ein Hauch Glut.
+    static let highlightedCard = Color.dynamic(light: 0xD3DCEC, dark: 0x3A3A55)
     /// Leere Spur von Balken und Ringen.
     static let track = Color.dynamic(light: 0xC9D2E0, dark: 0x33477A)
 
@@ -35,9 +41,10 @@ enum Theme {
         greenWeak ? .dynamic(light: 0x2E4372, dark: 0x6FA8FF) : .green
     }
 
-    /// Status abweichend und Hinweise: Orange, bei Grün-Schwäche Glut.
+    /// Status abweichend und Hinweise: Orange, bei Grün-Schwäche Glut (hell dunkler, damit es als Schrift lesbar bleibt).
+    /// Bleibt orange, auch wenn der helle Akzent blau ist: erfüllt ist bei Grün-Schwäche schon blau.
     static func caution(greenWeak: Bool) -> Color {
-        greenWeak ? accent : .orange
+        greenWeak ? .dynamic(light: 0xA8540A, dark: 0xFF9F43) : .orange
     }
 
     /// Status verpasst: Rot, bei Grün-Schwäche Grau (Rot und Grün sähen gleich aus).
