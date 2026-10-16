@@ -9,8 +9,8 @@ import WatchConnectivity
 ///
 /// Jeder neue Plan landet als Application Context: WatchConnectivity hält davon nur den letzten
 /// Stand vor und liefert ihn, sobald die Watch wieder erreichbar ist. Bittet die Watch aktiv um den
-/// Plan, antwortet das iPhone sofort mit dem, was es hat, und fragt im Hintergrund nach einem
-/// neueren; kommt einer, geht er wieder als Application Context raus.
+/// Plan, antwortet das iPhone sofort mit dem von heute oder sagt, dass er gerade entsteht, und fragt im Hintergrund
+/// nach einem neueren; kommt einer, geht er wieder als Application Context raus.
 @MainActor
 final class PhonePlanSync: NSObject, ObservableObject {
     private let loader: MultiSportTodayLoader
@@ -49,9 +49,10 @@ final class PhonePlanSync: NSObject, ObservableObject {
         }
     }
 
+    /// Ist der Plan hier nicht von heute (die App war seit Tagen nicht offen oder plant gerade), antwortet das iPhone
+    /// "entsteht gerade" statt mit dem alten Plan; der neue kommt danach als Application Context.
     private func answerPlanRequest(_ replyHandler: @escaping ([String: Any]) -> Void) {
-        let reply = loader.response.flatMap { try? PlanSyncCodec.context(for: $0) } ?? [:]
-        replyHandler(reply)
+        replyHandler(PlanSyncCodec.reply(for: loader.response, today: loader.todayKey, canPlan: !loader.needsConfiguration))
         Task { await loader.refreshIfNeeded() }
     }
 }
