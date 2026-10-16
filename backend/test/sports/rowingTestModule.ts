@@ -81,6 +81,8 @@ export const rowingTestSport: SportDefinition = {
     weatherSensitive: false,
     indoor: null,
     openWater: null,
+    pool: null,
+    skills: [],
     canFuelDuringRace: true,
     promptRules: "- Gesteuert über die Schlagzahl (stroke_rate, Schläge pro Minute), Grundlage 18 bis 22."
   }

@@ -24,8 +24,14 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
-/** Ein Schritt im Raster der Sportart; `null`, wenn er weder Strecke noch Dauer hat. */
-export function normalizeStep(raw: StepRaw, sport: SportDefinition, speed: number, available?: ReadonlySet<string>): { step: SessionStep | null; removedEquipment: string[] } {
+/** Raster fuer Strecken eines Schritts: Vielfache von `step`, mindestens `min` (ohne Angabe das der Sportart). */
+export interface StepGrid {
+  readonly step: number;
+  readonly min: number;
+}
+
+/** Ein Schritt im Raster der Sportart (oder `grid`, etwa der Bahnlaenge des Athleten); `null`, wenn er weder Strecke noch Dauer hat. */
+export function normalizeStep(raw: StepRaw, sport: SportDefinition, speed: number, available?: ReadonlySet<string>, grid?: StepGrid): { step: SessionStep | null; removedEquipment: string[] } {
   const planning = sport.planning;
   let measure: "distance" | "duration" = raw.measure;
   let distance = raw.distance_meters;
@@ -50,8 +56,8 @@ export function normalizeStep(raw: StepRaw, sport: SportDefinition, speed: numbe
   let repetitions = Math.max(Math.round(raw.repetitions), 1);
   if (measure === "distance") {
     const raw_ = distance as number;
-    const step = planning.distanceStepMeters;
-    let aligned = clamp(Math.round(raw_ / step) * step, planning.minStepMeters, planning.maxStepMeters);
+    const step = grid?.step ?? planning.distanceStepMeters;
+    let aligned = clamp(Math.round(raw_ / step) * step, grid?.min ?? planning.minStepMeters, planning.maxStepMeters);
     aligned = Math.max(Math.round(aligned / step) * step, step);
     // Wie beim Schwimmen: aus 4 x 25 m werden 2 x 50 m, die Strecke des Schritts bleibt etwa gleich.
     if (aligned !== raw_) repetitions = Math.max(Math.round((repetitions * raw_) / aligned), 1);

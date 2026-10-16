@@ -130,7 +130,8 @@ const positive = (value: number) => Number.isFinite(value) && value > 0;
 /**
  * Planungsangaben: Grenzen ueber 0 und in sich stimmig (kleinste Einheit <= Untergrenze <= Obergrenze, Faktoren ab 1),
  * Startniveau: Anteile von 0 bis 1, Rueckkehr nicht langsamer als die normale Steigerung und hoechstens +50 % pro Woche,
- * Schrittmasse aus den eigenen Massen, eine Testeinheit je Leistungstest und keine fuer unbekannte Tests.
+ * Schrittmasse aus den eigenen Massen, Bahnlaengen ueber 0, Faehigkeiten mit gueltiger Kennung und Namen ohne Doppelte, eine
+ * Testeinheit je Leistungstest und keine fuer unbekannte Tests.
  */
 function validPlanning(sport: SportDefinition): boolean {
   const planning = sport.planning;
@@ -154,6 +155,9 @@ function validPlanning(sport: SportDefinition): boolean {
   if (planning.indoor !== null && (!/^[a-z][a-z0-9_]{1,39}$/.test(planning.indoor.equipment) || planning.indoor.displayName.trim() === "")) return false;
   if (planning.indoor !== null && !planning.weatherSensitive) return false;
   if (planning.openWater !== null && (!/^[a-z][a-z0-9_]{1,39}$/.test(planning.openWater.equipment) || planning.openWater.displayName.trim() === "")) return false;
+  if (planning.pool !== null && (planning.pool.displayName.trim() === "" || planning.pool.lapLengths.length === 0 || !planning.pool.lapLengths.every((length) => Number.isInteger(length) && length > 0))) return false;
+  const skills = planning.skills.map((skill) => skill.id);
+  if (new Set(skills).size !== skills.length || !planning.skills.every((skill) => /^[a-z][a-z0-9_]{1,39}$/.test(skill.id) && skill.displayName.trim() !== "")) return false;
   const tests = sport.performanceTests.map((test) => test.id);
   const templates = Object.keys(planning.testSessions);
   return tests.every((id) => (planning.testSessions[id]?.length ?? 0) > 0) && templates.every((id) => tests.includes(id));

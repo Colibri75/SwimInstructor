@@ -26,6 +26,30 @@ public struct OpenWaterVenue: Equatable, Sendable {
     }
 }
 
+/// Der übliche Ort mit Bahnen (Schwimmen: Becken) und die Bahnlängen, die der Athlet unter "Über mich" wählen kann.
+/// Steht auch in `contracts/sports.json` (`pool`).
+public struct PoolVenue: Equatable, Sendable {
+    public let displayName: String
+    public let lapLengths: [Int]
+
+    public init(displayName: String, lapLengths: [Int]) {
+        self.displayName = displayName
+        self.lapLengths = lapLengths
+    }
+}
+
+/// Etwas, das der Athlet in einer Sportart können kann (Schwimmen: eine Lage, die Rollwende). `id` ist die Kennung des
+/// Servers. Steht auch in `contracts/sports.json` (`skills`).
+public struct SportSkill: Equatable, Sendable, Identifiable {
+    public let id: String
+    public let displayName: String
+
+    public init(id: String, displayName: String) {
+        self.id = id
+        self.displayName = displayName
+    }
+}
+
 /// Alles, was eine Sportart der App beibringt. Der Kern fragt nie "welche Sportart ist das?", sondern
 /// immer das Modul: Eine neue Sportart ist ein neues Modul plus Tests, ohne Änderungen quer durch den Code.
 ///
@@ -71,6 +95,11 @@ public protocol SportModule: Sendable {
     /// Freiwasser statt des üblichen Orts, `nil` sonst. Ein Ziel kann dort stattfinden, dann plant der Server dort
     /// Einheiten, wenn der Athlet Zugang hat. Steht auch in `contracts/sports.json`.
     var openWater: OpenWaterVenue? { get }
+    /// Bahn mit Bahnlängen, `nil` ohne. Mit Angaben unter "Über mich" plant der Server dort nur an den Tagen mit Zugang
+    /// und im Raster der Bahnlänge. Steht auch in `contracts/sports.json`.
+    var pool: PoolVenue? { get }
+    /// Was der Athlet unter "Über mich" ankreuzen kann; der Coach plant nur damit. Steht auch in `contracts/sports.json`.
+    var skills: [SportSkill] { get }
 
     // MARK: Leistungsprofil (T2b)
 
@@ -117,6 +146,8 @@ public extension SportModule {
     var weatherSensitive: Bool { false }
     var indoorEquipment: IndoorEquipment? { nil }
     var openWater: OpenWaterVenue? { nil }
+    var pool: PoolVenue? { nil }
+    var skills: [SportSkill] { [] }
 
     var statistics: [StatisticDefinition] { SportStatistics.derived(for: self) }
 

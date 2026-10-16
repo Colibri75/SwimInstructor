@@ -73,6 +73,8 @@ describe("contracts/sports.json", () => {
       expect(definition?.planning.weatherSensitive).toBe(sport.weather_sensitive);
       expect(definition?.planning.indoor).toEqual(sport.indoor === null ? null : { equipment: sport.indoor.equipment, displayName: sport.indoor.display_name });
       expect(definition?.planning.openWater).toEqual(sport.open_water === null ? null : { equipment: sport.open_water.equipment, displayName: sport.open_water.display_name });
+      expect(definition?.planning.pool).toEqual(sport.pool === null ? null : { displayName: sport.pool.display_name, lapLengths: sport.pool.lap_lengths });
+      expect(definition?.planning.skills).toEqual(sport.skills.map((skill: any) => ({ id: skill.id, displayName: skill.display_name })));
       expect(definition?.performanceMetrics).toEqual(sport.performance_metrics.map(metricOf));
       expect(definition?.performanceTests).toEqual(
         sport.performance_tests.map((test: any) => ({
@@ -96,7 +98,7 @@ function metricOf(metric: any) {
 }
 
 describe("contracts/wire, Snapshot", () => {
-  it.each(["wire/snapshot-v2.json", "wire/snapshot-v2-profile.json", "wire/snapshot-v2-starting-levels.json"])("nimmt %s der App vollstaendig an (kein Feld wird verworfen)", (file) => {
+  it.each(["wire/snapshot-v2.json", "wire/snapshot-v2-profile.json", "wire/snapshot-v2-starting-levels.json", "wire/snapshot-v2-athlete-profile.json"])("nimmt %s der App vollstaendig an (kein Feld wird verworfen)", (file) => {
     const snapshot = contract(file);
     const parsed = SnapshotSchema.safeParse(snapshot);
     expect(parsed.success).toBe(true);
