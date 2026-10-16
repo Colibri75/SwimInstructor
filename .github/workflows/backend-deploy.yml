@@ -17,6 +17,10 @@ concurrency:
   group: backend-deploy
   cancel-in-progress: false
 
+# Der GITHUB_TOKEN braucht nur Lesezugriff aufs Repo; Signierung, TestFlight und Deploy laufen ueber eigene Secrets.
+permissions:
+  contents: read
+
 jobs:
   deploy:
     if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
