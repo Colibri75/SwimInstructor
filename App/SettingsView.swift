@@ -20,6 +20,7 @@ struct SettingsView: View {
     @State private var messageIsError = false
     @State private var isChecking = false
     @State private var showsAdvanced = false
+    @State private var showsConsent = false
     @State private var ownedEquipment: Set<EquipmentItem> = []
     private let equipmentStore = UserDefaultsOwnedEquipmentStore()
     @State private var trainingGoal = TrainingGoal.default
@@ -105,13 +106,14 @@ struct SettingsView: View {
                         }
                     }
 
-                    PrivacySettingsSection()
+                    PrivacySettingsSection(showsConsent: $showsConsent)
 
                     advancedSection
                 }
                 .cardRows()
             }
             .themedList()
+            .modifier(PrivacyConsentSheetModifier(isPresented: $showsConsent))
             .navigationTitle("Einstellungen")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
