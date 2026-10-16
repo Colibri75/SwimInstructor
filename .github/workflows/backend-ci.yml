@@ -55,7 +55,15 @@ jobs:
 
       - name: Image bauen und Container starten
         working-directory: backend
-        run: docker compose up -d --build
+        # Der ECR-Spiegel antwortet den CI-Runnern gelegentlich mit 429; deshalb bis zu 4 Versuche mit Pause.
+        run: |
+          for wait in 0 15 30 60; do
+            sleep "$wait"
+            docker compose build && break
+            [ "$wait" = 60 ] && exit 1
+            echo "Bauen fehlgeschlagen, neuer Versuch"
+          done
+          docker compose up -d
 
       - name: Warten, bis der Container gesund ist
         run: |
