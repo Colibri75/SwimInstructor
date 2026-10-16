@@ -1,4 +1,4 @@
-/* Peaksmith – ko. Schlüssel = deutscher Text im Code, siehe docs/uebersetzungen.md */
+/* PeakSmith – ko. Schlüssel = deutscher Text im Code, siehe docs/uebersetzungen.md */
 "%@ %@ in %lld Einheiten" = "%@ %@ · %lld회 세션";
 "%@ %@ in 1 Einheit" = "%@ %@ · 1회 세션";
 "%@ (optional)" = "%@ (선택)";
@@ -709,7 +709,7 @@
 "Wie sich dein Training auf die Sportarten verteilt. Ziehst du eine hoch, werden die anderen im Verhältnis kleiner; zusammen sind es immer 100 %." = "훈련을 종목별로 어떻게 나눌지 정해요. 하나를 올리면 나머지는 비율대로 줄어들고, 합계는 항상 100%예요.";
 "Wie war's?" = "어땠어요?";
 "Wieder deinem Coach überlassen" = "다시 코치에게 맡기기";
-"Willkommen bei Peaksmith" = "Peaksmith에 오신 걸 환영해요";
+"Willkommen bei PeakSmith" = "PeakSmith에 오신 걸 환영해요";
 "Wird geholt …" = "가져오는 중…";
 "Wo?" = "어디가요?";
 "Woche" = "주";
@@ -820,7 +820,7 @@
 "zu wenig Daten" = "데이터 부족";
 "Ändert Sportart, Kennzahl und Zeitraum." = "종목, 지표, 기간을 바꿔요.";
 "Änderungswünsche an deinen Coach." = "코치에게 보내는 변경 요청.";
-"Öffne Peaksmith für deinen Plan" = "계획을 보려면 Peaksmith를 여세요";
+"Öffne PeakSmith für deinen Plan" = "계획을 보려면 PeakSmith를 여세요";
 "Öffne zuerst den Tab Aktuell, damit die App deinen Zustand aus Health kennt." = "먼저 오늘 탭을 열어 주세요. 그래야 앱이 건강 앱에서 컨디션을 알 수 있어요.";
 "Öffnet die Details." = "상세 정보를 열어요.";
 "Ø %lld" = "평균 %lld";

@@ -1,4 +1,4 @@
-/* Peaksmith – ja. Schlüssel = deutscher Text im Code, siehe docs/uebersetzungen.md */
+/* PeakSmith – ja. Schlüssel = deutscher Text im Code, siehe docs/uebersetzungen.md */
 "%@ %@ in %lld Einheiten" = "%1$@ %2$@（%3$lldセッション）";
 "%@ %@ in 1 Einheit" = "%@ %@（1セッション）";
 "%@ (optional)" = "%@（任意）";
@@ -709,7 +709,7 @@
 "Wie sich dein Training auf die Sportarten verteilt. Ziehst du eine hoch, werden die anderen im Verhältnis kleiner; zusammen sind es immer 100 %." = "トレーニングを種目にどう配分するか。1つを上げると、他はその割合に応じて下がり、合計は常に100 %です。";
 "Wie war's?" = "どうだった？";
 "Wieder deinem Coach überlassen" = "コーチに任せ直す";
-"Willkommen bei Peaksmith" = "Peaksmithへようこそ";
+"Willkommen bei PeakSmith" = "PeakSmithへようこそ";
 "Wird geholt …" = "取得中…";
 "Wo?" = "場所は？";
 "Woche" = "週";
@@ -820,7 +820,7 @@
 "zu wenig Daten" = "データ不足";
 "Ändert Sportart, Kennzahl und Zeitraum." = "種目、指標、期間を変更します。";
 "Änderungswünsche an deinen Coach." = "コーチへの変更リクエスト。";
-"Öffne Peaksmith für deinen Plan" = "Peaksmithを開いてプランを確認";
+"Öffne PeakSmith für deinen Plan" = "PeakSmithを開いてプランを確認";
 "Öffne zuerst den Tab Aktuell, damit die App deinen Zustand aus Health kennt." = "先に「今日」タブを開いて、アプリがヘルスケアから体調を把握できるようにしてください。";
 "Öffnet die Details." = "詳細を開きます。";
 "Ø %lld" = "平均 %lld";

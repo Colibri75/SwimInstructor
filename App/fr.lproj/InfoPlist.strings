@@ -1,5 +1,5 @@
 /* Hinweise der Berechtigungsabfragen, deutsch in Info.plist (docs/uebersetzungen.md) */
-"NSHealthShareUsageDescription" = "Peaksmith lit vos entraînements et vos données de santé dans Santé pour vous créer chaque jour un plan d'entraînement à jour.";
-"NSHealthUpdateUsageDescription" = "Peaksmith enregistre vos entraînements dans Santé.";
-"NSLocationWhenInUseUsageDescription" = "Peaksmith utilise votre position approximative (précise à environ 10 km) uniquement pour la météo, afin que votre plan passe en intérieur en cas d'orage, de tempête ou de verglas.";
-"NSCalendarsFullAccessUsageDescription" = "Peaksmith lit les horaires de vos rendez-vous et planifie moins les jours chargés. Les titres et contenus de vos rendez-vous restent sur l'iPhone.";
+"NSHealthShareUsageDescription" = "PeakSmith lit vos entraînements et vos données de santé dans Santé pour vous créer chaque jour un plan d'entraînement à jour.";
+"NSHealthUpdateUsageDescription" = "PeakSmith enregistre vos entraînements dans Santé.";
+"NSLocationWhenInUseUsageDescription" = "PeakSmith utilise votre position approximative (précise à environ 10 km) uniquement pour la météo, afin que votre plan passe en intérieur en cas d'orage, de tempête ou de verglas.";
+"NSCalendarsFullAccessUsageDescription" = "PeakSmith lit les horaires de vos rendez-vous et planifie moins les jours chargés. Les titres et contenus de vos rendez-vous restent sur l'iPhone.";

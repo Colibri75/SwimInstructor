@@ -43,7 +43,7 @@ previous_fails=0
 
 if curl -fsS -m 10 -o /dev/null "$HEALTH_URL"; then
   if [ "$previous_fails" -ge "$FAILS_BEFORE_ALERT" ]; then
-    notify "Peaksmith: Server wieder erreichbar" "Das Backend antwortet wieder ($HEALTH_URL)."
+    notify "PeakSmith: Server wieder erreichbar" "Das Backend antwortet wieder ($HEALTH_URL)."
   fi
   echo 0 > "$STATE_FILE"
   exit 0
@@ -53,6 +53,6 @@ fails=$((previous_fails + 1))
 echo "$fails" > "$STATE_FILE"
 if [ "$fails" -eq "$FAILS_BEFORE_ALERT" ]; then
   status=$(docker inspect --format '{{.State.Status}}/{{if .State.Health}}{{.State.Health.Status}}{{end}}' swiminstructor-backend 2>/dev/null || echo "kein Container")
-  notify "Peaksmith: Server antwortet nicht" "Health-Check $HEALTH_URL schlägt seit $fails Läufen fehl (Container: $status)."
+  notify "PeakSmith: Server antwortet nicht" "Health-Check $HEALTH_URL schlägt seit $fails Läufen fehl (Container: $status)."
 fi
 exit 1

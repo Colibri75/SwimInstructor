@@ -58,7 +58,7 @@ export class Alerter {
     this.recent = [...this.recent.filter((entry) => Date.parse(entry.at) > now - HOUR_MS), event];
 
     if (this.costToday >= this.options.dailyCostUsd) {
-      this.send(`cost:${today}`, Infinity, "Peaksmith: Tageskosten", `Heute schon $${this.costToday.toFixed(2)} für Pläne (Schwelle $${this.options.dailyCostUsd.toFixed(2)}).`);
+      this.send(`cost:${today}`, Infinity, "PeakSmith: Tageskosten", `Heute schon $${this.costToday.toFixed(2)} für Pläne (Schwelle $${this.options.dailyCostUsd.toFixed(2)}).`);
     }
 
     // Budget und Konfiguration haben eigene Alarme; hier zaehlen nur Ausfaelle von Claude und der Sicherheitsschicht.
@@ -68,15 +68,15 @@ export class Alerter {
     const rate = failures.length / this.recent.length;
     if (failures.length >= this.options.failuresPerHour && rate >= this.options.failureRate) {
       const reasons = countReasons(failures);
-      this.send("failures", 3 * HOUR_MS, "Peaksmith: Pläne fallen aus", `${failures.length} von ${this.recent.length} Anfragen der letzten Stunde ohne frischen Plan (${reasons}).`);
+      this.send("failures", 3 * HOUR_MS, "PeakSmith: Pläne fallen aus", `${failures.length} von ${this.recent.length} Anfragen der letzten Stunde ohne frischen Plan (${reasons}).`);
     }
 
     if ((event.outcome === "failed" || event.outcome === "fallback") && event.reason !== undefined) {
       if (CONFIG_REASONS.has(event.reason)) {
-        this.send(`config:${event.reason}`, 6 * HOUR_MS, "Peaksmith: Konfigurationsfehler", `Plan-Anfrage scheiterte mit "${event.reason}". Bitte ANTHROPIC_API_KEY und Server-Log prüfen.`);
+        this.send(`config:${event.reason}`, 6 * HOUR_MS, "PeakSmith: Konfigurationsfehler", `Plan-Anfrage scheiterte mit "${event.reason}". Bitte ANTHROPIC_API_KEY und Server-Log prüfen.`);
       }
       if (event.reason === "budget_exceeded") {
-        this.send(`budget:${event.user}:${today}`, Infinity, "Peaksmith: Budget erschöpft", `Nutzer "${event.user}" hat das Aufrufbudget erreicht; es gibt bis auf Weiteres nur gespeicherte Pläne.`);
+        this.send(`budget:${event.user}:${today}`, Infinity, "PeakSmith: Budget erschöpft", `Nutzer "${event.user}" hat das Aufrufbudget erreicht; es gibt bis auf Weiteres nur gespeicherte Pläne.`);
       }
     }
   }

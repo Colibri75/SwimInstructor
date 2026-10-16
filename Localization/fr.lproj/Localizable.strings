@@ -1,4 +1,4 @@
-/* Peaksmith – fr. Schlüssel = deutscher Text im Code, siehe docs/uebersetzungen.md */
+/* PeakSmith – fr. Schlüssel = deutscher Text im Code, siehe docs/uebersetzungen.md */
 "%@ %@ in %lld Einheiten" = "%@ %@ en %lld séances";
 "%@ %@ in 1 Einheit" = "%@ %@ en 1 séance";
 "%@ (optional)" = "%@ (facultatif)";
@@ -709,7 +709,7 @@
 "Wie sich dein Training auf die Sportarten verteilt. Ziehst du eine hoch, werden die anderen im Verhältnis kleiner; zusammen sind es immer 100 %." = "Comment ton entraînement se répartit entre les sports. Si tu en augmentes un, les autres diminuent proportionnellement ; le total fait toujours 100 %.";
 "Wie war's?" = "C’était comment ?";
 "Wieder deinem Coach überlassen" = "Rendre la main à ton coach";
-"Willkommen bei Peaksmith" = "Bienvenue dans Peaksmith";
+"Willkommen bei PeakSmith" = "Bienvenue dans PeakSmith";
 "Wird geholt …" = "Récupération…";
 "Wo?" = "Où ?";
 "Woche" = "Semaine";
@@ -820,7 +820,7 @@
 "zu wenig Daten" = "pas assez de données";
 "Ändert Sportart, Kennzahl und Zeitraum." = "Change le sport, l’indicateur et la période.";
 "Änderungswünsche an deinen Coach." = "Demandes de modification à ton coach.";
-"Öffne Peaksmith für deinen Plan" = "Ouvre Peaksmith pour voir ton plan";
+"Öffne PeakSmith für deinen Plan" = "Ouvre PeakSmith pour voir ton plan";
 "Öffne zuerst den Tab Aktuell, damit die App deinen Zustand aus Health kennt." = "Ouvre d’abord l’onglet Aujourd’hui pour que l’app connaisse ta forme grâce à Santé.";
 "Öffnet die Details." = "Ouvre le détail.";
 "Ø %lld" = "Ø %lld";
