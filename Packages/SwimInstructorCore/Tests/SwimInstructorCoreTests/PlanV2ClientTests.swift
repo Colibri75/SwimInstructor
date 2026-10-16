@@ -156,6 +156,31 @@ final class PlanV2ClientTests: XCTestCase {
         XCTAssertNil(body["regenerate"])
     }
 
+    func testBackgroundDayPlanRequestMatchesTheNormalOneAndItsAnswerDecodes() async throws {
+        let answer = try Self.contract("plan-v2-today-response.json")
+        let transport = StubTransport(status: 200, body: answer)
+        let request = DayPlanV2Request(snapshot: TestFixtures.snapshot, wishes: "Kurz", dayPlan: DayTargetV2(focus: nil, sessions: []))
+        let fetched = try await makeClient(transport).fetchDayPlanV2(request)
+
+        let prepared = try await makeClient(transport).dayPlanV2URLRequest(request)
+
+        XCTAssertEqual(transport.requests.count, 1, "nur vorbereitet, nicht gesendet")
+        XCTAssertEqual(prepared.url, transport.requests.first?.url)
+        XCTAssertEqual(prepared.httpMethod, "POST")
+        XCTAssertEqual(prepared.value(forHTTPHeaderField: "Authorization"), "Bearer geheim")
+        XCTAssertEqual(NSDictionary(dictionary: try Self.body(prepared)), NSDictionary(dictionary: try Self.body(transport.requests.first)))
+        XCTAssertEqual(try PlanAPIClient.decodeDayPlanV2(data: Data(answer.utf8), statusCode: 200), fetched)
+        XCTAssertThrowsError(try PlanAPIClient.decodeDayPlanV2(data: Data(), statusCode: 401)) { error in
+            XCTAssertEqual(error as? PlanAPIError, .unauthorized)
+        }
+    }
+
+    func testBackgroundDayPlanRequestNeedsConsent() async {
+        let client = PlanAPIClient(configuration: configuration, transport: StubTransport(status: 200, body: "{}"), consentGate: PlanConsentGate(allows: { false }))
+        let error = await Self.failure { try await client.dayPlanV2URLRequest(DayPlanV2Request(snapshot: TestFixtures.snapshot)) }
+        XCTAssertEqual(error as? PlanAPIError, .consentRequired)
+    }
+
     func testDayPlanFallbackAnswerDecodes() async throws {
         let transport = StubTransport(status: 200, body: try Self.contract("plan-v2-today-fallback-response.json"))
 

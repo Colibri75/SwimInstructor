@@ -237,6 +237,24 @@ final class MultiSportTodayLoaderTests: XCTestCase {
         XCTAssertEqual(cache.stored?.plan.isRestDay, true)
     }
 
+    func testARestDayNeedsNoCallOnOpenButTheButtonStillAsks() async throws {
+        let rest = DayTargetV2(focus: "Ruhetag", sessions: [])
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        let loader = makeLoader(dayTarget: { rest }, provider: provider)
+
+        await loader.refreshIfNeeded()
+        XCTAssertEqual(provider.calls, 0)
+        XCTAssertEqual(loader.response?.plan.isRestDay, true)
+        XCTAssertTrue(loader.hasFreshPlanForToday)
+        XCTAssertTrue(loader.matchesTodayTarget)
+
+        await loader.refreshIfNeeded()
+        XCTAssertEqual(provider.calls, 0, "auch beim nächsten Öffnen nicht")
+
+        await loader.refresh()
+        XCTAssertEqual(provider.calls, 1, "Plan neu erstellen fragt deinen Coach")
+    }
+
     func testANewDayPlanIsHandedToTheWeekAndKeepsMatching() async throws {
         let swim = DayTargetV2(focus: "Technik", sessions: [DayTargetV2.Session(sport: .swim, sessionType: .technique, intensity: .easy, amount: 1_500, focus: "Technik")])
         let adopted = DayTargetV2(focus: "Technik + Locker", sessions: [
@@ -356,6 +374,69 @@ final class MultiSportTodayLoaderTests: XCTestCase {
         XCTAssertEqual(shownWhilePreparing, preview, "Heute steht schon da, während die 14 Tage abgestimmt werden")
         XCTAssertEqual(loader.response, preview)
         XCTAssertEqual(provider.calls, 0)
+    }
+
+    // MARK: - Heute vorab im Hintergrund
+
+    func testTodayAheadAsksForTodayWithTheTargetAndBecomesTodaysPlanOnOpen() async throws {
+        let target = DayTargetV2(focus: "Locker", sessions: [DayTargetV2.Session(sport: .run, sessionType: .endurance, intensity: .easy, amount: 30, focus: "Locker")])
+        let previews = MemoryPreviews()
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        let loader = makeLoader(
+            wishes: MemoryWishes(["2026-09-30": "Kurz bitte"]),
+            dayTarget: { target },
+            equipment: { ["Paddles"] },
+            previewStore: previews,
+            provider: provider
+        )
+        XCTAssertNil(loader.todayAheadRequest(), "ohne gelesenes Health keine Anfrage")
+        await loader.readHealth()
+
+        let ahead = try XCTUnwrap(loader.todayAheadRequest())
+        XCTAssertNil(ahead.request.date, "heute, nicht als Vorschau")
+        XCTAssertFalse(ahead.request.regenerate)
+        XCTAssertEqual(ahead.request.dayPlan, target)
+        XCTAssertEqual(ahead.request.wishes, "Kurz bitte")
+        XCTAssertEqual(ahead.request.equipment, ["Paddles"])
+        XCTAssertEqual(ahead.target, target)
+
+        XCTAssertTrue(loader.acceptTodayAhead(TodayLoaderV2Data.response(), target: target))
+        XCTAssertEqual(loader.dayPlan(on: "2026-09-30")?.date, "2026-09-30", "Widget und Mitteilung sehen den Plan schon")
+        XCTAssertEqual(previews.stored.map(\.date), ["2026-09-30"])
+        XCTAssertTrue(loader.isTodayLocked)
+        XCTAssertNil(loader.todayAheadRequest(), "nur einmal je Tag")
+
+        await loader.refreshIfNeeded()
+        XCTAssertEqual(provider.calls, 0, "beim Öffnen keine neue Anfrage")
+        XCTAssertEqual(loader.response?.date, "2026-09-30")
+    }
+
+    func testTodayAheadIsDroppedWhenItNoLongerFits() async throws {
+        let run = DayTargetV2(focus: "Locker", sessions: [DayTargetV2.Session(sport: .run, sessionType: .endurance, intensity: .easy, amount: 30, focus: "Locker")])
+        let bike = DayTargetV2(focus: "Rad", sessions: [DayTargetV2.Session(sport: .bike, sessionType: .endurance, intensity: .easy, amount: 60, focus: "Rad")])
+        var target: DayTargetV2? = run
+        let loader = makeLoader(dayTarget: { target }, previewStore: MemoryPreviews(), provider: CountingProvider(.success(TodayLoaderV2Data.response())))
+
+        XCTAssertFalse(loader.acceptTodayAhead(TodayLoaderV2Data.response(date: "2026-09-29"), target: run), "Antwort von gestern")
+        XCTAssertFalse(loader.acceptTodayAhead(TodayLoaderV2Data.response(source: .fallback), target: run), "Ersatzplan")
+        target = bike
+        XCTAssertFalse(loader.acceptTodayAhead(TodayLoaderV2Data.response(), target: run), "Vorgabe inzwischen geändert")
+        XCTAssertNil(loader.dayPlan(on: "2026-09-30"))
+    }
+
+    func testTodayAheadIsNotNeededOnARestDayOrWithAPlan() async throws {
+        let run = DayTargetV2(focus: "Locker", sessions: [DayTargetV2.Session(sport: .run, sessionType: .endurance, intensity: .easy, amount: 30, focus: "Locker")])
+        var target: DayTargetV2? = DayTargetV2(focus: "Ruhe", sessions: [])
+        let provider = CountingProvider(.success(TodayLoaderV2Data.response()))
+        let loader = makeLoader(dayTarget: { target }, provider: provider)
+        await loader.readHealth()
+        XCTAssertNil(loader.todayAheadRequest(), "Ruhetag")
+
+        target = run
+        await loader.refreshIfNeeded()
+        XCTAssertEqual(provider.calls, 1)
+        XCTAssertNil(loader.todayAheadRequest(), "heute schon geplant")
+        XCTAssertFalse(loader.acceptTodayAhead(TodayLoaderV2Data.response(), target: run), "ersetzt keinen geöffneten Plan")
     }
 
     func testANewPlanRequestIgnoresThePreview() async throws {

@@ -183,13 +183,7 @@ public final class MultiSportTodayLoader: ObservableObject {
     /// Watch dasselbe zeigen. Ein Tag ohne Einheiten (Ruhetag, keine Zeit) braucht keinen Claude-Aufruf.
     public func syncWithTodayTarget() async {
         guard !matchesTodayTarget, !isLoading, let reading else { return }
-        let target = dayTarget()
-        if let target, target.sessions.isEmpty, (target.extras ?? []).isEmpty {
-            var rest = DayPlanV2Response(
-                source: .cache, date: todayKey, generatedAt: now(), stale: false,
-                plan: DayPlanV2(rationale: String(localized: "Heute ist laut Plan kein Training vorgesehen. Erhol dich gut."), sessions: [])
-            )
-            rest.requestedTarget = target
+        if let rest = restDayPlan() {
             show(rest)
             return
         }
@@ -208,8 +202,12 @@ public final class MultiSportTodayLoader: ObservableObject {
         let today = todayKey
         if date == today {
             // Nach einer Änderung im Plan-Tab gilt der alte Plan nicht mehr, bis der neue da ist.
-            guard let response, response.date == today, matchesTodayTarget else { return nil }
-            return response
+            if let response, response.date == today {
+                return matchesTodayTarget ? response : nil
+            }
+            // Noch nicht geöffnet: der vorab geholte Plan (Vorabend oder heute früh im Hintergrund).
+            guard let preview = previews[today], preview.requestedTarget == dayTarget() else { return nil }
+            return preview
         }
         if date < today { return planHistory.last { $0.date == date } }
         guard let preview = previews[date], preview.requestedTarget == targetOn(date) else { return nil }
@@ -256,6 +254,43 @@ public final class MultiSportTodayLoader: ObservableObject {
         } catch {
             previewError = (date, error.localizedDescription)
         }
+    }
+
+    // MARK: - Heute vorab im Hintergrund
+
+    /// Die Anfrage für den Plan von heute, bevor die App geöffnet wird (im Hintergrund, mit dem frisch gelesenen Zustand
+    /// samt der letzten Nacht), und die Vorgabe der 14 Tage, zu der sie gehört. `nil`, wenn es nichts zu holen gibt:
+    /// Heute hat keine Einheiten, es gibt schon einen Plan oder eine Vorschau für heute, oder Health ist nicht gelesen.
+    /// Die 14 Tage stimmt erst das Öffnen neu ab; ein fester Tag bleibt dabei stehen (`isTodayLocked`).
+    public func todayAheadRequest() -> (request: DayPlanV2Request, target: DayTargetV2)? {
+        let today = todayKey
+        guard let reading, !hasFreshPlanForToday, previews[today] == nil else { return nil }
+        guard let target = dayTarget(), !target.sessions.isEmpty else { return nil }
+        let request = DayPlanV2Request(
+            snapshot: reading.snapshot,
+            wishes: wishStore?.wish(for: today),
+            dayPlan: target,
+            equipment: equipment(),
+            recentTraining: recentTraining(reading),
+            testSettings: testSettings(),
+            extras: extras()
+        )
+        return (request, target)
+    }
+
+    /// Übernimmt den im Hintergrund geholten Plan von heute. Er wartet wie eine Vorschau und wird beim Öffnen ohne
+    /// Anfrage der Tagesplan. Verworfen wird er, wenn er nicht von heute ist, ein Ersatzplan ist, die Vorgabe sich
+    /// inzwischen geändert hat oder heute schon ein Plan da ist. `true`, wenn er übernommen wurde.
+    @discardableResult
+    public func acceptTodayAhead(_ plan: DayPlanV2Response, target: DayTargetV2) -> Bool {
+        let today = todayKey
+        guard plan.date == today, plan.source != .fallback, target == dayTarget(), !hasFreshPlanForToday, previews[today] == nil else { return false }
+        var ahead = plan
+        ahead.requestedTarget = target
+        previews = previews.filter { $0.key >= today }
+        previews[today] = ahead
+        try? previewStore?.save(previews.values.sorted { $0.date < $1.date })
+        return true
     }
 
     private static func components(_ isoDay: String) -> DateComponents {
@@ -307,8 +342,25 @@ public final class MultiSportTodayLoader: ObservableObject {
         wish = todaysWish ?? ""
 
         if !force, adoptTodaysPreview() { return }
+        // Ruhetag laut Plan: Dafür braucht es deinen Coach nicht. Nur der Knopf oder ein Wunsch fragt ihn trotzdem.
+        if !force, let rest = restDayPlan() {
+            show(rest)
+            return
+        }
 
         await fetchPlan(provider: provider, reading: reading, regenerate: regenerate)
+    }
+
+    /// Der Plan für einen Ruhetag ohne Aufruf an den Coach, `nil`, wenn heute laut Vorgabe der 14 Tage trainiert wird
+    /// (oder es keine Vorgabe gibt).
+    private func restDayPlan() -> DayPlanV2Response? {
+        guard let target = dayTarget(), target.sessions.isEmpty, (target.extras ?? []).isEmpty else { return nil }
+        var rest = DayPlanV2Response(
+            source: .cache, date: todayKey, generatedAt: now(), stale: false,
+            plan: DayPlanV2(rationale: String(localized: "Heute ist laut Plan kein Training vorgesehen. Erhol dich gut."), sessions: [])
+        )
+        rest.requestedTarget = target
+        return rest
     }
 
     /// Die Vorschau von gestern für heute gilt, solange die Vorgabe gleich ist: kein neuer Claude-Aufruf. `true`, wenn sie
