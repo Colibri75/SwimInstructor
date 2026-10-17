@@ -187,6 +187,10 @@ Feld plant der Server wie bisher nur mit Health.
   geschafft hat) und `longest_session` (längste Einheit ohne Probleme), beide in der Einheit der Sportart
   (`plan_unit` in `contracts/sports.json`: Meter beim Schwimmen, Minuten bei Rad und Laufen), dazu `status`
   (`regular`, `short_break` = Pause von 2 bis 8 Wochen, `long_break` = länger, `beginner`) und `reported_at`.
+- Optional `pace`: übliches Tempo in der Einheit von `starting_pace` der Sportart in `contracts/sports.json`
+  (Schwimmen s/100m, Laufen s/km, Rad km/h im Schnitt), im dort genannten Bereich. Optional `best_times`: je Strecke aus
+  `best_time_distances` (Laufen 5000 und 10000 m) höchstens ein Eintrag `{distance_meters, seconds}` mit plausiblem
+  Tempo (`goal_speed`). Die FTP gibt die App nicht hier mit, sondern als selbst eingegebenen Wert im Leistungsprofil.
 - Wie der Server es nutzt (Anteil je Trainingsstand, wie lange es gilt, Rückkehr nach der Pause):
   [`multisport-planning.md`](multisport-planning.md#selbst-angegebenes-startniveau).
 

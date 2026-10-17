@@ -22,6 +22,8 @@ final class ContractTests: XCTestCase {
             let openWater: Indoor?
             let pool: Pool?
             let skills: [Skill]
+            let startingPace: StartingPaceContract?
+            let bestTimeDistances: [Int]
             let performanceMetrics: [Metric]
             let performanceTests: [Test]
         }
@@ -34,6 +36,12 @@ final class ContractTests: XCTestCase {
         struct Pool: Decodable, Equatable {
             let displayName: String
             let lapLengths: [Int]
+        }
+
+        struct StartingPaceContract: Decodable, Equatable {
+            let target: String
+            let min: Double
+            let max: Double
         }
 
         struct Skill: Decodable, Equatable {
@@ -130,6 +138,11 @@ final class ContractTests: XCTestCase {
             XCTAssertEqual(module.openWater.map { SportsContract.Indoor(equipment: $0.id, displayName: $0.displayName) }, sport.openWater, sport.id)
             XCTAssertEqual(module.pool.map { SportsContract.Pool(displayName: $0.displayName, lapLengths: $0.lapLengths) }, sport.pool, sport.id)
             XCTAssertEqual(module.skills.map { SportsContract.Skill(id: $0.id, displayName: $0.displayName) }, sport.skills, sport.id)
+            XCTAssertEqual(
+                module.startingPace.map { SportsContract.StartingPaceContract(target: $0.target.rawValue, min: $0.range.lowerBound, max: $0.range.upperBound) },
+                sport.startingPace, sport.id
+            )
+            XCTAssertEqual(module.bestTimeDistances, sport.bestTimeDistances, sport.id)
             XCTAssertEqual(module.performanceMetrics.map { SportsContract.Metric($0) }, sport.performanceMetrics, sport.id)
             XCTAssertEqual(module.performanceTests.map { SportsContract.Test($0) }, sport.performanceTests, sport.id)
         }
@@ -222,8 +235,11 @@ final class ContractTests: XCTestCase {
         // Wie die App sie anlegt: Schwimmen nach kurzer Pause, Laufen regelmäßig, zwei Tage vor dem Snapshot angegeben.
         let reportedAt = ISO8601DateFormatter().date(from: "2026-09-28T18:00:00Z")!
         XCTAssertEqual(snapshot.startingLevels, [
-            StartingLevel(sport: .swim, weeklyAmount: 6000, longestSession: 2500, status: .shortBreak, reportedAt: reportedAt),
-            StartingLevel(sport: .run, weeklyAmount: 180, longestSession: 90, status: .regular, reportedAt: reportedAt)
+            StartingLevel(sport: .swim, weeklyAmount: 6000, longestSession: 2500, status: .shortBreak, reportedAt: reportedAt, pace: 125),
+            StartingLevel(
+                sport: .run, weeklyAmount: 180, longestSession: 90, status: .regular, reportedAt: reportedAt,
+                pace: 330, bestTimes: [StartingLevel.BestTime(distanceMeters: 10_000, seconds: 3000)]
+            )
         ])
         // Ohne Startniveau ist es genau der Snapshot v2.
         let plain = try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: RepoPaths.contractData("wire/snapshot-v2.json"))

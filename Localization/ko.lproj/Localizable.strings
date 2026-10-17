@@ -335,7 +335,12 @@
 "Gespeichert." = "저장됐어요.";
 "Gesperrt bis %@." = "%@까지 잠겨 있어요.";
 "Getestete und von dir eingetragene Werte samt Verlauf gehen verloren." = "테스트로 측정하거나 직접 입력한 값과 그 기록이 모두 사라져요.";
-"Gib an, was du zurzeit schaffst oder vor einer Pause geschafft hast. Der Plan rechnet mit dem höheren Wert aus Health und deiner Angabe. Nach einer Pause zählt nur ein Teil davon, beim Laufen vorsichtiger als beim Schwimmen und Radfahren. Gilt ab dem nächsten Plan." = "지금 할 수 있는 수준이나 휴식 전에 할 수 있었던 수준을 입력하세요. 계획은 건강 앱 데이터와 입력값 중 더 높은 값을 사용해요. 휴식 후에는 일부만 반영하며, 달리기는 수영과 사이클보다 더 신중하게 반영해요. 다음 계획부터 적용돼요.";
+"Gib an, was du zurzeit schaffst oder vor einer Pause geschafft hast. Der Plan rechnet mit dem höheren Wert aus Health und deiner Angabe. Nach einer Pause zählt nur ein Teil davon, beim Laufen vorsichtiger als beim Schwimmen und Radfahren. Tempo, Bestzeit und FTP sind freiwillig; dein Coach richtet danach das Tempo der Einheiten, bis ein Test oder ein Wert im Leistungsprofil vorliegt. Gilt ab dem nächsten Plan." = "지금 할 수 있는 수준이나 휴식 전에 할 수 있었던 수준을 입력하세요. 계획은 건강 앱 데이터와 입력값 중 더 높은 값을 사용해요. 휴식 후에는 일부만 반영하며, 달리기는 수영과 사이클보다 더 신중하게 반영해요. 페이스, 최고 기록, FTP는 선택 사항이에요. 테스트나 퍼포먼스 프로필 값이 생기기 전까지 코치가 이를 바탕으로 훈련 페이스를 정해요. 다음 계획부터 적용돼요.";
+"Durchschnittstempo" = "평균 속도";
+"Übliches Tempo" = "평소 페이스";
+"Bestzeit %@" = "최고 기록 %@";
+"FTP, falls bekannt" = "FTP(알고 있다면)";
+"Dieser Wert passt nicht, Beispiel: %@" = "이 값은 맞지 않습니다. 예: %@";
 "Gilt bis %@. Danach zählt nur noch, was Health aufzeichnet; eine Änderung verlängert sie." = "%@까지 유효해요. 그 후에는 건강 앱 기록만 반영돼요. 변경하면 연장돼요.";
 "Gilt nur für heute. Dein Coach berücksichtigt ihn, soweit er in die Sicherheitsgrenzen passt (Umfang, Intensität, Ruhetag). Er wird beim Tippen gespeichert und gilt für jeden neuen Plan des Tages. Steht er nach dem Erstellen über dem Plan, ist er beim Server angekommen." = "오늘만 적용돼요. 코치는 안전 한도(볼륨, 강도, 휴식일) 안에서 이를 반영해요. 입력하는 동안 저장되고, 오늘 만드는 모든 새 계획에 적용돼요. 계획을 만든 후 계획 위에 표시되면 서버에 전달된 거예요.";
 "Gleich geht's los" = "곧 시작해요";

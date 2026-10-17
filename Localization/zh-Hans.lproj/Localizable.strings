@@ -335,7 +335,12 @@
 "Gespeichert." = "已保存。";
 "Gesperrt bis %@." = "锁定至 %@。";
 "Getestete und von dir eingetragene Werte samt Verlauf gehen verloren." = "测试得出和你填写的数值以及历史记录都会丢失。";
-"Gib an, was du zurzeit schaffst oder vor einer Pause geschafft hast. Der Plan rechnet mit dem höheren Wert aus Health und deiner Angabe. Nach einer Pause zählt nur ein Teil davon, beim Laufen vorsichtiger als beim Schwimmen und Radfahren. Gilt ab dem nächsten Plan." = "填写你目前能完成的量，或中断前能完成的量。计划会采用“健康”数据和你的填写中较高的那个。中断之后只计入其中一部分，跑步比游泳和骑行更保守。从下一个计划起生效。";
+"Gib an, was du zurzeit schaffst oder vor einer Pause geschafft hast. Der Plan rechnet mit dem höheren Wert aus Health und deiner Angabe. Nach einer Pause zählt nur ein Teil davon, beim Laufen vorsichtiger als beim Schwimmen und Radfahren. Tempo, Bestzeit und FTP sind freiwillig; dein Coach richtet danach das Tempo der Einheiten, bis ein Test oder ein Wert im Leistungsprofil vorliegt. Gilt ab dem nächsten Plan." = "填写你目前能完成的量，或中断前能完成的量。计划会采用“健康”数据和你的填写中较高的那个。中断之后只计入其中一部分，跑步比游泳和骑行更保守。配速、最佳成绩和 FTP 均为选填；在有测试或表现档案中的数值之前，你的教练会据此设定训练配速。从下一个计划起生效。";
+"Durchschnittstempo" = "平均速度";
+"Übliches Tempo" = "常用配速";
+"Bestzeit %@" = "最佳成绩 %@";
+"FTP, falls bekannt" = "FTP（如已知）";
+"Dieser Wert passt nicht, Beispiel: %@" = "该数值不合适，例如：%@";
 "Gilt bis %@. Danach zählt nur noch, was Health aufzeichnet; eine Änderung verlängert sie." = "有效期至 %@。之后只计入“健康”记录的数据；更改一次即可延长。";
 "Gilt nur für heute. Dein Coach berücksichtigt ihn, soweit er in die Sicherheitsgrenzen passt (Umfang, Intensität, Ruhetag). Er wird beim Tippen gespeichert und gilt für jeden neuen Plan des Tages. Steht er nach dem Erstellen über dem Plan, ist er beim Server angekommen." = "仅限今天。你的教练会在安全范围内（训练量、强度、休息日）考虑它。输入时会自动保存，并适用于当天的每个新计划。生成计划后若它显示在计划上方，就说明服务器已收到。";
 "Gleich geht's los" = "马上开始";

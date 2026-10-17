@@ -335,7 +335,12 @@
 "Gespeichert." = "सेव हुआ।";
 "Gesperrt bis %@." = "%@ तक लॉक।";
 "Getestete und von dir eingetragene Werte samt Verlauf gehen verloren." = "टेस्ट किए गए और आपके डाले गए मान, इतिहास समेत, हट जाएँगे।";
-"Gib an, was du zurzeit schaffst oder vor einer Pause geschafft hast. Der Plan rechnet mit dem höheren Wert aus Health und deiner Angabe. Nach einer Pause zählt nur ein Teil davon, beim Laufen vorsichtiger als beim Schwimmen und Radfahren. Gilt ab dem nächsten Plan." = "बताएँ कि आप अभी कितना कर पाते हैं या ब्रेक से पहले कितना कर पाते थे। प्लान Health और आपकी जानकारी में से बड़े मान को लेता है। ब्रेक के बाद इसका सिर्फ़ एक हिस्सा गिना जाता है, दौड़ने में तैराकी और साइकिलिंग से ज़्यादा सावधानी से। अगले प्लान से लागू।";
+"Gib an, was du zurzeit schaffst oder vor einer Pause geschafft hast. Der Plan rechnet mit dem höheren Wert aus Health und deiner Angabe. Nach einer Pause zählt nur ein Teil davon, beim Laufen vorsichtiger als beim Schwimmen und Radfahren. Tempo, Bestzeit und FTP sind freiwillig; dein Coach richtet danach das Tempo der Einheiten, bis ein Test oder ein Wert im Leistungsprofil vorliegt. Gilt ab dem nächsten Plan." = "बताएँ कि आप अभी कितना कर पाते हैं या ब्रेक से पहले कितना कर पाते थे। प्लान Health और आपकी जानकारी में से बड़े मान को लेता है। ब्रेक के बाद इसका सिर्फ़ एक हिस्सा गिना जाता है, दौड़ने में तैराकी और साइकिलिंग से ज़्यादा सावधानी से। पेस, सबसे अच्छा समय और FTP वैकल्पिक हैं; जब तक कोई टेस्ट या परफ़ॉर्मेंस प्रोफ़ाइल में कोई मान न हो, तुम्हारा कोच इन्हीं से सेशन की पेस तय करता है। अगले प्लान से लागू।";
+"Durchschnittstempo" = "औसत गति";
+"Übliches Tempo" = "सामान्य पेस";
+"Bestzeit %@" = "सबसे अच्छा समय %@";
+"FTP, falls bekannt" = "FTP, अगर पता हो";
+"Dieser Wert passt nicht, Beispiel: %@" = "यह मान सही नहीं है, उदाहरण: %@";
 "Gilt bis %@. Danach zählt nur noch, was Health aufzeichnet; eine Änderung verlängert sie." = "%@ तक लागू। उसके बाद सिर्फ़ वही गिना जाएगा जो Health रिकॉर्ड करता है; बदलाव करने पर यह आगे बढ़ जाएगी।";
 "Gilt nur für heute. Dein Coach berücksichtigt ihn, soweit er in die Sicherheitsgrenzen passt (Umfang, Intensität, Ruhetag). Er wird beim Tippen gespeichert und gilt für jeden neuen Plan des Tages. Steht er nach dem Erstellen über dem Plan, ist er beim Server angekommen." = "सिर्फ़ आज के लिए। आपका कोच इसे वहाँ तक ध्यान में रखता है जहाँ तक यह सुरक्षा सीमाओं (वॉल्यूम, इंटेंसिटी, आराम का दिन) में आता है। यह टाइप करते समय सेव होता है और दिन के हर नए प्लान पर लागू होता है। प्लान बनने के बाद अगर यह प्लान के ऊपर दिखे, तो यह सर्वर तक पहुँच गया है।";
 "Gleich geht's los" = "बस शुरू होने वाला है";

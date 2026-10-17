@@ -31,6 +31,9 @@ public struct RunModule: SportModule {
     public let planUnit = PlanUnit.minutes
     /// Knapp 6:00 pro km.
     public let typicalSpeedMetersPerSecond: Double = 2.8
+    /// Übliches Tempo pro km und eine Bestzeit über 5 oder 10 km beim Startniveau.
+    public let startingPace: StartingPace? = StartingPace(target: .pacePerKilometer, range: 150...900)
+    public let bestTimeDistances = [5000, 10_000]
     /// Der Koppellauf direkt nach dem Rad (Wechsel 2).
     public let brickAfter: [SportID] = [.bike]
     public let weatherSensitive = true

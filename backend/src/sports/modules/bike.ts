@@ -80,7 +80,9 @@ export const bike: SportDefinition = {
     // Wie beim Schwimmen (Praxiswert).
     startingLevel: {
       factors: { regular: 1, short_break: 0.7, long_break: 0.5 },
-      returnGrowthFactor: 1.2
+      returnGrowthFactor: 1.2,
+      pace: { target: "speed", min: 8, max: 60 },
+      bestTimeDistances: []
     },
     // 25 km/h.
     typicalSpeedMetersPerSecond: 7,

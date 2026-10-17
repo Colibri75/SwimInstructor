@@ -335,7 +335,12 @@
 "Gespeichert." = "Guardado.";
 "Gesperrt bis %@." = "Bloqueado hasta el %@.";
 "Getestete und von dir eingetragene Werte samt Verlauf gehen verloren." = "Se perderán los valores de tests y los introducidos por ti, junto con su historial.";
-"Gib an, was du zurzeit schaffst oder vor einer Pause geschafft hast. Der Plan rechnet mit dem höheren Wert aus Health und deiner Angabe. Nach einer Pause zählt nur ein Teil davon, beim Laufen vorsichtiger als beim Schwimmen und Radfahren. Gilt ab dem nächsten Plan." = "Indica lo que eres capaz de hacer ahora o lo que hacías antes de una pausa. El plan usa el valor más alto entre Salud y tu dato. Tras una pausa solo cuenta una parte, con más prudencia en la carrera que en la natación y el ciclismo. Se aplica a partir del próximo plan.";
+"Gib an, was du zurzeit schaffst oder vor einer Pause geschafft hast. Der Plan rechnet mit dem höheren Wert aus Health und deiner Angabe. Nach einer Pause zählt nur ein Teil davon, beim Laufen vorsichtiger als beim Schwimmen und Radfahren. Tempo, Bestzeit und FTP sind freiwillig; dein Coach richtet danach das Tempo der Einheiten, bis ein Test oder ein Wert im Leistungsprofil vorliegt. Gilt ab dem nächsten Plan." = "Indica lo que eres capaz de hacer ahora o lo que hacías antes de una pausa. El plan usa el valor más alto entre Salud y tu dato. Tras una pausa solo cuenta una parte, con más prudencia en la carrera que en la natación y el ciclismo. El ritmo, la mejor marca y el FTP son opcionales; tu coach los usa para fijar el ritmo de las sesiones hasta que haya un test o un valor en el perfil de rendimiento. Se aplica a partir del próximo plan.";
+"Durchschnittstempo" = "Velocidad media";
+"Übliches Tempo" = "Ritmo habitual";
+"Bestzeit %@" = "Mejor marca %@";
+"FTP, falls bekannt" = "FTP, si lo sabes";
+"Dieser Wert passt nicht, Beispiel: %@" = "Este valor no encaja, ejemplo: %@";
 "Gilt bis %@. Danach zählt nur noch, was Health aufzeichnet; eine Änderung verlängert sie." = "Válido hasta el %@. Después solo cuenta lo que registra Salud; un cambio lo prolonga.";
 "Gilt nur für heute. Dein Coach berücksichtigt ihn, soweit er in die Sicherheitsgrenzen passt (Umfang, Intensität, Ruhetag). Er wird beim Tippen gespeichert und gilt für jeden neuen Plan des Tages. Steht er nach dem Erstellen über dem Plan, ist er beim Server angekommen." = "Solo vale para hoy. Tu coach lo tiene en cuenta mientras encaje en los límites de seguridad (volumen, intensidad, día de descanso). Se guarda al escribir y vale para cada nuevo plan del día. Si aparece encima del plan después de crearlo, ha llegado al servidor.";
 "Gleich geht's los" = "Ya casi empezamos";

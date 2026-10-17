@@ -259,14 +259,38 @@ const PerformanceSchema = z
 /**
  * Startniveau, das der Athlet selbst angibt (P1): Wochenumfang und laengste Einheit, die er zurzeit schafft (oder vor
  * der Pause geschafft hat), in der Einheit der Sportart (`plan_unit`: Meter oder Minuten), dazu sein Trainingsstand.
+ * Optional sein uebliches Tempo (`pace` in der Einheit von `starting_pace` der Sportart: s/100m, s/km oder km/h) und
+ * aktuelle Bestzeiten ueber Strecken aus `best_time_distances`.
  */
-const StartingLevelSchema = z.object({
-  sport: sportId,
-  weekly_amount: z.number().min(0).max(1_000_000),
-  longest_session: z.number().min(0).max(1_000_000),
-  status: z.enum(["regular", "short_break", "long_break", "beginner"]),
-  reported_at: z.iso.datetime()
-});
+const StartingLevelSchema = z
+  .object({
+    sport: sportId,
+    weekly_amount: z.number().min(0).max(1_000_000),
+    longest_session: z.number().min(0).max(1_000_000),
+    status: z.enum(["regular", "short_break", "long_break", "beginner"]),
+    reported_at: z.iso.datetime(),
+    pace: z.number().positive().max(100_000).optional(),
+    best_times: z
+      .array(z.object({ distance_meters: z.number().int().positive().max(1_000_000), seconds: z.number().positive().max(86_400) }))
+      .max(8)
+      .optional()
+  })
+  .superRefine((level, ctx) => {
+    const sport = SPORTS.get(level.sport);
+    if (sport === undefined) return;
+    const pace = sport.planning.startingLevel.pace;
+    if (level.pace !== undefined && (pace === null || level.pace < pace.min || level.pace > pace.max)) {
+      ctx.addIssue({ code: "custom", path: ["pace"], message: "Tempo passt nicht zur Sportart" });
+    }
+    const distances = (level.best_times ?? []).map((best) => best.distance_meters);
+    if (new Set(distances).size !== distances.length) ctx.addIssue({ code: "custom", path: ["best_times"], message: "Strecke doppelt" });
+    (level.best_times ?? []).forEach((best, index) => {
+      const speed = best.distance_meters / best.seconds;
+      if (!sport.planning.startingLevel.bestTimeDistances.includes(best.distance_meters) || speed < sport.goalSpeed.minMetersPerSecond || speed > sport.goalSpeed.maxMetersPerSecond) {
+        ctx.addIssue({ code: "custom", path: ["best_times", index], message: "Bestzeit passt nicht zur Sportart" });
+      }
+    });
+  });
 
 /** Koerperstellen fuer Beschwerden nach einer Einheit und fuer die Verletzungsgeschichte im Athletenprofil. */
 export const PAIN_AREAS = ["knee", "shin", "achilles", "foot", "hip", "back", "shoulder", "other"] as const;

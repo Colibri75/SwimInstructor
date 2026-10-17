@@ -335,7 +335,12 @@
 "Gespeichert." = "Salvo.";
 "Gesperrt bis %@." = "Bloqueado até %@.";
 "Getestete und von dir eingetragene Werte samt Verlauf gehen verloren." = "Os valores testados e inseridos por você, incluindo o histórico, serão perdidos.";
-"Gib an, was du zurzeit schaffst oder vor einer Pause geschafft hast. Der Plan rechnet mit dem höheren Wert aus Health und deiner Angabe. Nach einer Pause zählt nur ein Teil davon, beim Laufen vorsichtiger als beim Schwimmen und Radfahren. Gilt ab dem nächsten Plan." = "Informe o que você consegue fazer atualmente ou conseguia antes de uma pausa. O plano usa o maior valor entre o Saúde e a sua informação. Depois de uma pausa, só uma parte conta, com mais cautela na corrida do que na natação e no ciclismo. Vale a partir do próximo plano.";
+"Gib an, was du zurzeit schaffst oder vor einer Pause geschafft hast. Der Plan rechnet mit dem höheren Wert aus Health und deiner Angabe. Nach einer Pause zählt nur ein Teil davon, beim Laufen vorsichtiger als beim Schwimmen und Radfahren. Tempo, Bestzeit und FTP sind freiwillig; dein Coach richtet danach das Tempo der Einheiten, bis ein Test oder ein Wert im Leistungsprofil vorliegt. Gilt ab dem nächsten Plan." = "Informe o que você consegue fazer atualmente ou conseguia antes de uma pausa. O plano usa o maior valor entre o Saúde e a sua informação. Depois de uma pausa, só uma parte conta, com mais cautela na corrida do que na natação e no ciclismo. Ritmo, melhor tempo e FTP são opcionais; seu coach usa esses dados para definir o ritmo dos treinos até haver um teste ou um valor no perfil de desempenho. Vale a partir do próximo plano.";
+"Durchschnittstempo" = "Velocidade média";
+"Übliches Tempo" = "Ritmo habitual";
+"Bestzeit %@" = "Melhor tempo %@";
+"FTP, falls bekannt" = "FTP, se souber";
+"Dieser Wert passt nicht, Beispiel: %@" = "Este valor não serve, exemplo: %@";
 "Gilt bis %@. Danach zählt nur noch, was Health aufzeichnet; eine Änderung verlängert sie." = "Vale até %@. Depois, só conta o que o Saúde registra; uma alteração prolonga a validade.";
 "Gilt nur für heute. Dein Coach berücksichtigt ihn, soweit er in die Sicherheitsgrenzen passt (Umfang, Intensität, Ruhetag). Er wird beim Tippen gespeichert und gilt für jeden neuen Plan des Tages. Steht er nach dem Erstellen über dem Plan, ist er beim Server angekommen." = "Vale só para hoje. Seu coach considera o pedido desde que caiba nos limites de segurança (volume, intensidade, dia de descanso). Ele é salvo enquanto você digita e vale para todo novo plano do dia. Se aparecer acima do plano depois de criado, chegou ao servidor.";
 "Gleich geht's los" = "Já vai começar";

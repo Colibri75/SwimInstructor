@@ -74,6 +74,8 @@ describe("contracts/sports.json", () => {
       expect(definition?.planning.indoor).toEqual(sport.indoor === null ? null : { equipment: sport.indoor.equipment, displayName: sport.indoor.display_name });
       expect(definition?.planning.openWater).toEqual(sport.open_water === null ? null : { equipment: sport.open_water.equipment, displayName: sport.open_water.display_name });
       expect(definition?.planning.pool).toEqual(sport.pool === null ? null : { displayName: sport.pool.display_name, lapLengths: sport.pool.lap_lengths });
+      expect(definition?.planning.startingLevel.pace).toEqual(sport.starting_pace);
+      expect(definition?.planning.startingLevel.bestTimeDistances).toEqual(sport.best_time_distances);
       expect(definition?.planning.skills).toEqual(sport.skills.map((skill: any) => ({ id: skill.id, displayName: skill.display_name })));
       expect(definition?.performanceMetrics).toEqual(sport.performance_metrics.map(metricOf));
       expect(definition?.performanceTests).toEqual(

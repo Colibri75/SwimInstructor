@@ -86,6 +86,10 @@ es keinen Wiedereinstieg aus der Lücke in Health; die Angabe ersetzt ihn.
 - Die Nutzernachricht von Tag, Woche und Gesamtplan nennt Angabe, geltenden Anteil und die Werte aus Health; Claude
   soll in der Begründung sagen, dass der Plan von der Angabe ausgeht.
 - Die Anteile sind Praxiswerte (Modul: `planning.startingLevel`), im Betatest justieren.
+- Tempo und Bestzeiten (`pace`, `best_times`) nennt die Nutzernachricht ebenfalls, solange die Angabe gilt, auch bei
+  Einsteigern. Claude richtet danach die Tempo-Ziele, bis ein bestätigter Leistungswert vorliegt. Ohne Tempo aus Health
+  rechnet der Server Meter und Minuten mit dem angegebenen Tempo um statt mit dem typischen der Sportart. Die FTP
+  trägt die App beim Startniveau direkt als eigenen Wert ins Leistungsprofil ein.
 
 Beispiel: 6000 m pro Woche und 2500 m am Stück angegeben, Pause 2 bis 8 Wochen, Health zeigt 570 m pro Woche. Der
 Plan rechnet mit 4200 m pro Woche und 1750 m längster Einheit: Eine Einheit darf bis 2150 m lang sein (1750 × 1,25,

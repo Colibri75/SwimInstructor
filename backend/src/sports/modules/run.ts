@@ -108,7 +108,9 @@ export const run: SportDefinition = {
     // (Wiedereinstieg wie ohne Angabe); zurueck nur mit den ueblichen 10 % pro Woche.
     startingLevel: {
       factors: { regular: 1, short_break: 0.5, long_break: 0 },
-      returnGrowthFactor: 1.1
+      returnGrowthFactor: 1.1,
+      pace: { target: "pace_per_km", min: 150, max: 900 },
+      bestTimeDistances: [5000, 10000]
     },
     // 6:00 pro km.
     typicalSpeedMetersPerSecond: 2.8,
