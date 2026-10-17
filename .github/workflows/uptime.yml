@@ -1,0 +1,99 @@
+name: Erreichbarkeit
+
+# Prüft von außen (aus GitHub heraus, nicht vom Server selbst), ob https://api.peak-smith.com antwortet und ob das
+# HTTPS-Zertifikat noch lange genug gilt. Fällt der ganze Server aus, kann er sich nicht selbst melden; das hier schon.
+# Bei einem Problem öffnet der Lauf ein Issue (GitHub schickt dir dazu eine Mail und eine Mitteilung in der GitHub-App)
+# und schließt es wieder, sobald alles in Ordnung ist. Gemeldet wird nur beim Wechsel, nicht bei jedem Lauf.
+# Optional zusätzlich als Push: Repo-Secret ALERT_WEBHOOK_URL (z. B. https://ntfy.sh/<geheimes-thema>) und bei Bedarf
+# ALERT_WEBHOOK_FORMAT (ntfy, slack, discord, json), wie beim Server (docs/backend-deploy.md, Abschnitt "Alarme").
+# GitHub startet geplante Läufe nicht auf die Minute genau; Verzögerungen von einigen Minuten sind normal.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      HEALTH_URL: https://api.peak-smith.com/health
+      HOST: api.peak-smith.com
+      # Caddy erneuert das Zertifikat etwa 30 Tage vor Ablauf; gilt es nur noch so viele Tage, klemmt die Erneuerung.
+      CERT_WARN_DAYS: "14"
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+      ALERT_WEBHOOK_FORMAT: ${{ secrets.ALERT_WEBHOOK_FORMAT }}
+    steps:
+      - name: Server und Zertifikat prüfen
+        run: |
+          set -uo pipefail
+
+          notify() {
+            local title="$1" message="$2" format="$ALERT_WEBHOOK_FORMAT"
+            [ -n "$ALERT_WEBHOOK_URL" ] || return 0
+            if [ -z "$format" ]; then
+              case "$ALERT_WEBHOOK_URL" in *ntfy*) format=ntfy ;; *) format=json ;; esac
+            fi
+            case "$format" in
+              ntfy) curl -fsS -m 10 -o /dev/null -H "Title: $title" -H "Tags: warning" -d "$message" "$ALERT_WEBHOOK_URL" ;;
+              slack) curl -fsS -m 10 -o /dev/null -H 'Content-Type: application/json' -d "$(jq -n --arg t "*$title*"$'\n'"$message" '{text: $t}')" "$ALERT_WEBHOOK_URL" ;;
+              discord) curl -fsS -m 10 -o /dev/null -H 'Content-Type: application/json' -d "$(jq -n --arg t "**$title**"$'\n'"$message" '{content: $t}')" "$ALERT_WEBHOOK_URL" ;;
+              *) curl -fsS -m 10 -o /dev/null -H 'Content-Type: application/json' -d "$(jq -n --arg t "$title" --arg m "$message" '{title: $t, message: $m}')" "$ALERT_WEBHOOK_URL" ;;
+            esac || echo "::warning::Push-Meldung fehlgeschlagen"
+          }
+
+          # Öffnet das Issue mit diesem Titel, falls noch keins offen ist (problem gesetzt), oder schließt es (problem leer).
+          report() {
+            local title="$1" problem="$2" open
+            open="$(gh issue list --state open --search "\"$title\" in:title" --json number,title --jq ".[] | select(.title == \"$title\") | .number" | head -n1)"
+            if [ -n "$problem" ]; then
+              echo "::error::$title: $problem"
+              if [ -z "$open" ]; then
+                gh issue create --title "$title" --body "$problem"$'\n\n'"Gefunden von der Überwachung (Workflow \"Erreichbarkeit\"). Das Issue schließt sich von selbst, sobald alles wieder in Ordnung ist." >/dev/null
+                notify "$title" "$problem"
+              fi
+            elif [ -n "$open" ]; then
+              gh issue close "$open" --comment "Wieder in Ordnung ($(date -u '+%d.%m.%Y %H:%M') UTC)." >/dev/null
+              notify "$title: wieder in Ordnung" "$HOST antwortet wieder normal."
+            fi
+          }
+
+          # Drei Versuche über etwa eine Minute: ein Deploy startet den Container neu und braucht rund 10 Sekunden.
+          down=""
+          for attempt in 1 2 3; do
+            if body="$(curl -sS -m 20 --fail "$HEALTH_URL" 2>&1)" && printf '%s' "$body" | grep -q '"status":"ok"'; then
+              down=""
+              break
+            fi
+            down="$HEALTH_URL antwortet nicht wie erwartet (3 Versuche in etwa einer Minute). Letzte Antwort: ${body:0:300}"
+            [ "$attempt" -lt 3 ] && sleep 25
+          done
+          report "Server nicht erreichbar" "$down"
+
+          cert=""
+          if [ -z "$down" ]; then
+            end="$(echo | openssl s_client -servername "$HOST" -connect "$HOST:443" 2>/dev/null | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)"
+            if [ -n "$end" ]; then
+              days=$(( ( $(date -d "$end" +%s) - $(date +%s) ) / 86400 ))
+              echo "Zertifikat gilt noch $days Tage (bis $end)."
+              if [ "$days" -lt "$CERT_WARN_DAYS" ]; then
+                cert="Das HTTPS-Zertifikat von $HOST läuft in $days Tagen ab ($end). Caddy hätte es längst erneuern sollen; Logs: docker logs caddy."
+              fi
+            else
+              echo "::warning::Zertifikat konnte nicht gelesen werden."
+            fi
+            report "Zertifikat läuft bald ab" "$cert"
+          fi
+          # Der Lauf bleibt auch bei einem Problem grün: gemeldet wird über das Issue, sonst käme alle 10 Minuten eine
+          # Fehler-Mail von GitHub.
