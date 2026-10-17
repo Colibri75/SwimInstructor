@@ -489,6 +489,21 @@ einmal, wenn er wieder da ist (`crontab -e` als root):
 */5 * * * * /opt/stack/swiminstructor/backend/deploy/healthcheck.sh >/dev/null 2>&1
 ```
 
+### Erreichbarkeit von außen (GitHub)
+
+Fällt der ganze Server aus (VPS, Caddy, DNS), meldet weder der Container noch `healthcheck.sh` etwas. Dafür ruft der
+Workflow `.github/workflows/uptime.yml` alle 10 Minuten `https://api.peak-smith.com/health` aus GitHub heraus auf
+und prüft, ob das HTTPS-Zertifikat noch mindestens 14 Tage gilt. Bei einem Problem öffnet er ein Issue
+„Server nicht erreichbar“ bzw. „Zertifikat läuft bald ab“ (GitHub schickt dazu Mail und Push in der GitHub-App) und
+schließt es, sobald alles wieder in Ordnung ist. Einrichten musst du nichts.
+
+Zusätzlich als Push aufs iPhone: das Repo-Secret `ALERT_WEBHOOK_URL` setzen (dieselbe ntfy-URL wie oben, unter
+GitHub › Settings › Secrets and variables › Actions), bei Slack oder Discord auch `ALERT_WEBHOOK_FORMAT`. Gemeldet wird
+nur beim Ausfall und bei der Erholung. Von Hand prüfen: Actions › Erreichbarkeit › Run workflow.
+
+GitHub startet geplante Läufe nicht minutengenau; ein Ausfall fällt also nach 10 bis etwa 30 Minuten auf. Wer es
+schneller braucht, nimmt zusätzlich einen Uptime-Monitor (unten).
+
 ### Weitere Dienste
 
 Der Container startet nach einem Absturz von selbst neu (`restart: unless-stopped`), und Docker
