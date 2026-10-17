@@ -15,7 +15,7 @@ import { MultiPlanService } from "./plan/multi/service";
 import { DayPlanStoreV2, FileDayPlanStoreV2 } from "./plan/multi/store";
 import { FileUsageLog, UsageEvent } from "./usage";
 import { OpenMeteoProvider } from "./plan/weather";
-import { FileUserDirectory, userDataDir, USERS_FILE } from "./users";
+import { FileUserDirectory, isAdminUser, userDataDir, USERS_FILE } from "./users";
 
 let config: Config;
 try {
@@ -48,6 +48,7 @@ const generator =
 // Budgets ueber alle Plaene (jeder kostet einen Claude-Aufruf): eines je Nutzer und eines fuer den ganzen Server.
 const budget = new GenerationBudget(config.maxGenerationsTotalPerHour, config.maxGenerationsTotalPerDay);
 const userBudgets = new UserBudgets(config.maxGenerationsPerHour, config.maxGenerationsPerDay);
+const adminBudgets = new UserBudgets(config.maxGenerationsAdminPerHour, config.maxGenerationsAdminPerDay);
 
 // Alarme (optional) bekommen jedes Ereignis der Nutzung.
 const listeners: Array<(event: UsageEvent) => void> = [];
@@ -82,11 +83,15 @@ const storeFor = (user: string): DayPlanStoreV2 => {
   return store;
 };
 
+const usersFile = path.join(config.dataDir, USERS_FILE);
 const planService = new MultiPlanService({
   generator,
   store: storeFor,
   budget,
   userBudgets,
+  adminBudgets,
+  // Vor jedem Claude-Aufruf frisch aus users.json, damit ein neuer Admin sofort gilt (der Aufruf kostet ohnehin Sekunden).
+  isAdmin: (user) => isAdminUser(usersFile, user),
   usage,
   // Wetter nur, wenn die App einen Ort schickt (Einstellung "Wetter berücksichtigen").
   weather: new OpenMeteoProvider(config.planTimezone),
@@ -96,7 +101,6 @@ const planService = new MultiPlanService({
 
 const users = new FileUserDirectory(config.apiToken, config.dataDir, (message) => logger.error(message));
 const registerPlanRoutes = multiRoutes(planService);
-const usersFile = path.join(config.dataDir, USERS_FILE);
 const registerAdminRoutes = adminRoutes({ usage, usersFile, timezone: config.planTimezone });
 // Mit Apple anmelden: neue Nutzer in users.json, ihre Daten wie alle anderen unter users/<kennung>.
 const accountDeps: AccountDeps = {

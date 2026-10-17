@@ -354,7 +354,7 @@ In der App meldet man sich mit „Mit Apple anmelden" an, ohne Token von Hand. S
    Server nicht mehr. Ein Token von Hand und der Besitzer-Token bleiben gültig (die ändert nur die CLI).
 
 Für Apple-Nutzer gelten dieselben Budgets wie für alle (`PLAN_MAX_GENERATIONS_PER_*` je Nutzer, `…_TOTAL_…` für den
-Server). Anmeldeversuche sind je IP auf 20 pro Minute begrenzt (Antwort 429). `DELETE /v1/account` (mit Token)
+Server; Admins haben `…_ADMIN_…` und zählen nicht gegen den Server). Anmeldeversuche sind je IP auf 20 pro Minute begrenzt (Antwort 429). `DELETE /v1/account` (mit Token)
 löscht den eigenen Eintrag in `users.json` und den Ordner `/data/users/<kennung>/`; das verlangt Apple für Apps mit
 Konten (in der App: *Einstellungen → Konto → Konto löschen*). Der Besitzer kann sich so nicht löschen (409).
 Vorher widerruft der Server die Anmeldung mit Apple (siehe „Widerruf bei Apple beim Konto-Löschen").
@@ -439,7 +439,9 @@ docker exec swiminstructor-backend node dist/cli/users.js remove anna
 Der Server liest `users.json` bei Änderungen selbst neu, ein Neustart ist nicht nötig. In der Datei steht nur der
 SHA-256 jedes Tokens. Den Token trägt die Person in der App unter *Einstellungen → Erweitert* ein. Über alle Nutzer
 zusammen gilt zusätzlich eine Kostenbremse für den ganzen Server (`PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR`, Standard
-15, und `PLAN_MAX_GENERATIONS_TOTAL_PER_DAY`, Standard 60). Admin-Rechte für weitere Nutzer gibt `add … --admin`.
+30, und `PLAN_MAX_GENERATIONS_TOTAL_PER_DAY`, Standard 120). Admins zählen nicht dagegen, sondern haben ein eigenes
+Budget (`PLAN_MAX_GENERATIONS_ADMIN_PER_HOUR`, Standard 10, `…_ADMIN_PER_DAY`, Standard 20), damit andere Nutzer sie
+nicht aussperren. Admin-Rechte für weitere Nutzer gibt `add … --admin`.
 
 ## Monitoring
 

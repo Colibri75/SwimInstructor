@@ -11,7 +11,9 @@ const logger = createLogger(testConfig);
 const goodDay = () => dayPlan([session("swim", { steps: [swimStep(300, { name: "Einschwimmen" }), swimStep(400), swimStep(150, { name: "Ausschwimmen" })] })]);
 const goodWeek = () => weekPlan([[weekSession("swim", 800)], [weekSession("bike", 45)], [], [weekSession("run", 20)], [weekSession("swim", 1500)], [], [weekSession("bike", 60)]]);
 
-function setup(options: { complete?: jest.Mock; budget?: GenerationBudget; userBudgets?: UserBudgets } = {}) {
+function setup(
+  options: { complete?: jest.Mock; budget?: GenerationBudget; userBudgets?: UserBudgets; adminBudgets?: UserBudgets; isAdmin?: (user: string) => boolean } = {}
+) {
   const stores = new Map<string, MemoryDayPlanStoreV2>();
   const storeFor = (user: string): DayPlanStoreV2 => {
     if (!stores.has(user)) stores.set(user, new MemoryDayPlanStoreV2());
@@ -24,6 +26,8 @@ function setup(options: { complete?: jest.Mock; budget?: GenerationBudget; userB
     store: storeFor,
     budget: options.budget ?? new GenerationBudget(100, 100),
     userBudgets: options.userBudgets,
+    adminBudgets: options.adminBudgets,
+    isAdmin: options.isAdmin,
     usage: { record: (event) => recorded.push(event) },
     logger,
     timezone: "Europe/Berlin",
@@ -78,6 +82,39 @@ describe("Plan v2: Nutzer getrennt", () => {
 
     expect(userBudgets.for("ben").available()).toBe(true);
     expect([1, 2, 3, 4, 5].every(() => userBudgets.for("ben").tryConsume())).toBe(true);
+  });
+});
+
+describe("Plan v2: Admins und Server-Budget", () => {
+  it("laesst Admins planen, auch wenn andere das Server-Budget aufgebraucht haben", async () => {
+    const budget = new GenerationBudget(1, 1);
+    const { service } = setup({ budget, userBudgets: new UserBudgets(5, 5), adminBudgets: new UserBudgets(5, 5), isAdmin: (user) => user === "owner" });
+
+    await service.planDay({ user: "anna", snapshot: multiSnapshot() });
+    await expect(service.planDay({ user: "ben", snapshot: multiSnapshot() })).rejects.toEqual(new PlanUnavailableError("budget_exceeded"));
+    const owner = await service.planDay({ user: "owner", snapshot: multiSnapshot() });
+
+    expect(owner.source).toBe("claude");
+    // Der Admin hat das Server-Budget nicht verbraucht (es war schon leer) und zaehlt auch spaeter nicht dagegen.
+    expect(budget.available()).toBe(false);
+  });
+
+  it("begrenzt Admins mit ihrem eigenen Budget", async () => {
+    const { service } = setup({ userBudgets: new UserBudgets(5, 5), adminBudgets: new UserBudgets(1, 1), isAdmin: () => true });
+
+    await service.planDay({ user: "owner", snapshot: multiSnapshot() });
+    const again = await service.planDay({ user: "owner", snapshot: multiSnapshot(), regenerate: true });
+
+    expect(again.fallbackReason).toBe("budget_exceeded");
+  });
+
+  it("zaehlt Admins ohne Budget je Nutzer gegen das Server-Budget", async () => {
+    const budget = new GenerationBudget(1, 1);
+    const { service } = setup({ budget, isAdmin: () => true });
+
+    await service.planDay({ user: "owner", snapshot: multiSnapshot() });
+
+    expect(budget.available()).toBe(false);
   });
 });
 

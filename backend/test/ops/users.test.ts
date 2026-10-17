@@ -8,6 +8,7 @@ import { createLogger } from "../../src/logger";
 import {
   addUser,
   FileUserDirectory,
+  isAdminUser,
   OWNER_ID,
   readUsers,
   removeUser,
@@ -145,5 +146,25 @@ describe("Nutzer: Kommandozeile", () => {
     expect(run(["rotate"], dir, print)).toBe(1);
     expect(run(["unbekannt"], dir, print)).toBe(2);
     expect(run([], dir, print)).toBe(0);
+  });
+});
+
+describe("isAdminUser", () => {
+  it("kennt den Besitzer und Admins aus users.json, gesperrte und unbekannte nicht", () => {
+    const file = path.join(tempDir(), USERS_FILE);
+    addUser(file, "anna", { admin: true });
+    addUser(file, "ben");
+    addUser(file, "cleo", { admin: true });
+    setUserDisabled(file, "cleo", true);
+
+    expect([OWNER_ID, "anna", "ben", "cleo", "dora"].map((id) => isAdminUser(file, id))).toEqual([true, true, false, false, false]);
+  });
+
+  it("zaehlt bei kaputter Datei nur den Besitzer", () => {
+    const file = path.join(tempDir(), USERS_FILE);
+    writeFileSync(file, "{kaputt");
+
+    expect(isAdminUser(file, OWNER_ID)).toBe(true);
+    expect(isAdminUser(file, "anna")).toBe(false);
   });
 });

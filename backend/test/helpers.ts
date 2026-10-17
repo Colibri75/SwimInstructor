@@ -22,6 +22,8 @@ export const testConfig: Config = {
   planTimezone: "Europe/Berlin",
   maxGenerationsPerHour: 5,
   maxGenerationsPerDay: 20,
+  maxGenerationsAdminPerHour: 10,
+  maxGenerationsAdminPerDay: 20,
   maxGenerationsTotalPerHour: 15,
   maxGenerationsTotalPerDay: 60,
   alerts: undefined,

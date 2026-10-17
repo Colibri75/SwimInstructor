@@ -67,6 +67,12 @@ export interface MultiServiceDeps {
   budget: GenerationBudget;
   /** Zusaetzlich ein Budget je Nutzer, damit einer nicht das der anderen aufbraucht. */
   userBudgets?: UserBudgets;
+  /**
+   * Admins (der Besitzer und Nutzer mit `admin`) zaehlen nicht gegen das Budget des ganzen Servers, damit andere Nutzer
+   * sie nicht aussperren koennen. Sie haben dafuer ein eigenes Budget je Nutzer (`adminBudgets`, sonst `userBudgets`).
+   */
+  isAdmin?: (user: string) => boolean;
+  adminBudgets?: UserBudgets;
   /** Nimmt jede Anfrage mit Ergebnis, Token und Dauer auf (Monitoring). */
   usage?: UsageRecorder;
   /** Wettervorhersage; ohne sie (oder ohne Ort in der Anfrage) wird ohne Wetter geplant. */
@@ -535,7 +541,9 @@ export class MultiPlanService {
   ): Promise<{ data: z.infer<S>; meta: GeneratedPlan }> {
     const { generator, budget, userBudgets, logger } = this.deps;
     if (generator === null) throw new PlanUnavailableError("not_configured");
-    const budgets = userBudgets === undefined ? [budget] : [budget, userBudgets.for(user)];
+    const admin = this.deps.isAdmin?.(user) === true;
+    const ownBudget = (admin ? (this.deps.adminBudgets ?? userBudgets) : userBudgets)?.for(user);
+    const budgets = [...(admin && ownBudget !== undefined ? [] : [budget]), ...(ownBudget === undefined ? [] : [ownBudget])];
     if (!GenerationBudget.tryConsumeAll(budgets)) {
       logger.warn({ kind, user }, "plan v2 budget exceeded");
       throw new PlanUnavailableError("budget_exceeded");

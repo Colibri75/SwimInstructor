@@ -60,6 +60,9 @@ export interface Config {
   /** Aufrufbudget je Nutzer. */
   maxGenerationsPerHour: number;
   maxGenerationsPerDay: number;
+  /** Aufrufbudget je Admin (Besitzer und Nutzer mit `admin`); Admins zaehlen nicht gegen das Budget des Servers. */
+  maxGenerationsAdminPerHour: number;
+  maxGenerationsAdminPerDay: number;
   /** Aufrufbudget des ganzen Servers ueber alle Nutzer (Kostenbremse). */
   maxGenerationsTotalPerHour: number;
   maxGenerationsTotalPerDay: number;
@@ -103,10 +106,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     claudeServerFallback: parseBoolean("PLAN_SERVER_FALLBACK", env.PLAN_SERVER_FALLBACK, true),
     dataDir: env.DATA_DIR?.trim() || "./data",
     planTimezone: parseTimezone(env.PLAN_TIMEZONE),
-    maxGenerationsPerHour: parseInteger("PLAN_MAX_GENERATIONS_PER_HOUR", env.PLAN_MAX_GENERATIONS_PER_HOUR, 10, 1, 1_000),
-    maxGenerationsPerDay: parseInteger("PLAN_MAX_GENERATIONS_PER_DAY", env.PLAN_MAX_GENERATIONS_PER_DAY, 20, 1, 10_000),
-    maxGenerationsTotalPerHour: parseInteger("PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR", env.PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR, 15, 1, 10_000),
-    maxGenerationsTotalPerDay: parseInteger("PLAN_MAX_GENERATIONS_TOTAL_PER_DAY", env.PLAN_MAX_GENERATIONS_TOTAL_PER_DAY, 60, 1, 100_000),
+    maxGenerationsPerHour: parseInteger("PLAN_MAX_GENERATIONS_PER_HOUR", env.PLAN_MAX_GENERATIONS_PER_HOUR, 4, 1, 1_000),
+    maxGenerationsPerDay: parseInteger("PLAN_MAX_GENERATIONS_PER_DAY", env.PLAN_MAX_GENERATIONS_PER_DAY, 8, 1, 10_000),
+    maxGenerationsAdminPerHour: parseInteger("PLAN_MAX_GENERATIONS_ADMIN_PER_HOUR", env.PLAN_MAX_GENERATIONS_ADMIN_PER_HOUR, 10, 1, 1_000),
+    maxGenerationsAdminPerDay: parseInteger("PLAN_MAX_GENERATIONS_ADMIN_PER_DAY", env.PLAN_MAX_GENERATIONS_ADMIN_PER_DAY, 20, 1, 10_000),
+    maxGenerationsTotalPerHour: parseInteger("PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR", env.PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR, 30, 1, 10_000),
+    maxGenerationsTotalPerDay: parseInteger("PLAN_MAX_GENERATIONS_TOTAL_PER_DAY", env.PLAN_MAX_GENERATIONS_TOTAL_PER_DAY, 120, 1, 100_000),
     alerts: parseAlerts(env),
     privacy: {
       name: env.PRIVACY_CONTACT_NAME?.trim() || PRIVACY_DEFAULTS.name,
