@@ -2,7 +2,7 @@ import SwiftUI
 import SwimInstructorCore
 
 /// Hauptnavigation der iPhone-App: Heute, Plan (Gesamtplan und nächste 14 Tage), Dashboard, Verlauf. Beim ersten
-/// Start kommt davor die Einrichtung (Ziel, Wochenraster, Startniveau); danach geht es zum Plan, der dann entsteht.
+/// Start kommt davor die Einrichtung (Ziel, Wochenraster, Startniveau) mit dem Ladebildschirm, bis die Pläne stehen.
 struct RootView: View {
     private enum Tab {
         case today, week, dashboard, history
@@ -26,11 +26,15 @@ struct RootView: View {
             if onboardingDone {
                 tabs
             } else {
-                OnboardingView {
+                OnboardingView(
+                    buildsPlan: onboardingStore.isPlanRequested,
+                    onPlanRequested: { onboardingStore.setPlanRequested($0) }
+                ) {
                     onboardingStore.complete()
-                    selection = .week
+                    onboardingStore.setPlanRequested(false)
+                    // Die Pläne sind fertig (oder bewusst übersprungen): weiter mit dem Training von heute.
+                    selection = .today
                     onboardingDone = true
-                    // Gesamtplan und 14 Tage zum neuen Ziel; der Plan-Tab liest Health nur, wenn noch nichts gelesen ist.
                     Task { await loader.refreshIfNeeded() }
                 }
             }

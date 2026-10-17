@@ -32,4 +32,15 @@ final class OnboardingStoreTests: XCTestCase {
         store.complete()
         XCTAssertTrue(store.isCompleted)
     }
+
+    func testPlanRequestSurvivesARestartUntilCleared() throws {
+        let defaults = try defaults()
+        let store = UserDefaultsOnboardingStore(defaults: defaults)
+        XCTAssertFalse(store.isPlanRequested)
+        store.setPlanRequested(true)
+        XCTAssertTrue(UserDefaultsOnboardingStore(defaults: defaults).isPlanRequested)
+        XCTAssertFalse(store.isCompleted)
+        store.setPlanRequested(false)
+        XCTAssertFalse(UserDefaultsOnboardingStore(defaults: defaults).isPlanRequested)
+    }
 }

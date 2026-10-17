@@ -28,6 +28,7 @@ struct StartingLevelView: View {
         .navigationTitle("Startniveau")
         .navigationBarTitleDisplayMode(.inline)
         .swipeClosesKeyboard()
+        .keyboardDoneButton()
         .onAppear {
             levels = store.levels()
             goalSports = UserDefaultsTrainingGoalStore().goal().emphasis.filter { $0.percent > 0 }.map(\.sport)
@@ -84,6 +85,8 @@ struct StartingLevelView: View {
                 TextField(title, value: value, format: .number)
                     .keyboardType(.numberPad)
                     .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: 110)
+                    .inputField()
                 Text(unit == .meters ? "m" : "min")
                     .foregroundStyle(.secondary)
             }

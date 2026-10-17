@@ -30,6 +30,8 @@ enum Theme {
     static let highlightedCard = Color.dynamic(light: 0xD3DCEC, dark: 0x3A3A55)
     /// Leere Spur von Balken und Ringen.
     static let track = Color.dynamic(light: 0xC9D2E0, dark: 0x33477A)
+    /// Eingabefeld in einer Karte: hell Weiß, dunkel der Grund, damit es sich von der Karte abhebt.
+    static let field = Color.dynamic(light: 0xFFFFFF, dark: 0x18264A)
 
     // MARK: Grün-Schwäche
 

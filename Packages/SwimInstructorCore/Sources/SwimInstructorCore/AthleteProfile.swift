@@ -17,7 +17,7 @@ public enum InjuryStatus: String, Codable, Sendable, CaseIterable, Identifiable 
     }
 }
 
-/// Belastung durch Beruf und Familie. Raw-Werte: `athlete_profile.life_stress`.
+/// Stress im Alltag durch Beruf, Familie, wenig Schlaf. Raw-Werte: `athlete_profile.life_stress`.
 public enum LifeStress: String, Codable, Sendable, CaseIterable, Identifiable {
     case low
     case normal
@@ -44,9 +44,9 @@ public enum IntensityPreference: String, Codable, Sendable, CaseIterable, Identi
 
     public var title: String {
         switch self {
-        case .easy: return String(localized: "Lieber locker")
+        case .easy: return String(localized: "Lieber wenige")
         case .balanced: return String(localized: "Ausgewogen")
-        case .intense: return String(localized: "Lieber knackig")
+        case .intense: return String(localized: "Gern mehr")
         }
     }
 }

@@ -70,6 +70,7 @@ struct GoalAssistantView: View {
         .themedList()
         .navigationTitle("Mein Ziel")
         .swipeClosesKeyboard()
+        .keyboardDoneButton()
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             // Auch nach der Rückkehr aus dem Wochenraster.
@@ -174,6 +175,8 @@ struct GoalAssistantView: View {
                         TextField("Strecke", value: kilometersBinding(sport), format: .number.precision(.fractionLength(0...3)))
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
+                            .frame(maxWidth: 110)
+                            .inputField()
                         Text("km")
                     }
                 }
@@ -189,12 +192,14 @@ struct GoalAssistantView: View {
                             TextField("h", value: timePartBinding(sport, hours: true), format: .number)
                                 .keyboardType(.numberPad)
                                 .multilineTextAlignment(.trailing)
-                                .frame(maxWidth: 50)
+                                .frame(width: 44)
+                                .inputField(minWidth: 0)
                             Text("h")
                             TextField("min", value: timePartBinding(sport, hours: false), format: .number)
                                 .keyboardType(.numberPad)
                                 .multilineTextAlignment(.trailing)
-                                .frame(maxWidth: 50)
+                                .frame(width: 44)
+                                .inputField(minWidth: 0)
                             Text("min")
                         }
                     }

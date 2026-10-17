@@ -66,6 +66,7 @@ struct TestResultSheet: View {
             .themedList()
             .navigationTitle(test?.displayName ?? String(localized: "Testergebnis"))
             .swipeClosesKeyboard()
+            .keyboardDoneButton()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -112,6 +113,7 @@ struct TestResultSheet: View {
                         .keyboardType(PlanV2Formatting.isTimeUnit(input.unit) ? .numbersAndPunctuation : .decimalPad)
                         .multilineTextAlignment(.trailing)
                         .frame(maxWidth: 120)
+                        .inputField()
                 }
             }
             DatePicker("Gemacht am", selection: $measuredAt, in: ...Date(), displayedComponents: .date)
