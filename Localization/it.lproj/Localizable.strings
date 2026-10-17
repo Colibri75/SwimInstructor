@@ -137,7 +137,6 @@
 "Bergauf" = "Salita";
 "Beschwerden" = "Fastidi";
 "Bis einschließlich" = "Fino al (incluso)";
-"Bis zu diesem Tag plant die App. Danach legst du einfach einen neuen Zeitraum fest." = "L'app pianifica fino a questo giorno. Dopo, basta che imposti un nuovo periodo.";
 "Bis zum Ziel" = "All'obiettivo";
 "Bisher %@" = "Finora %@";
 "Bitte ein Token eingeben." = "Inserisci un token.";
@@ -297,7 +296,6 @@
 "Fertig" = "Fine";
 "Fertig eingerichtet" = "Configurazione completata";
 "Fit werden und bleiben" = "Mettersi e restare in forma";
-"Fitness: %@, bis %@" = "Forma fisica: %@, fino al %@";
 "Flossen" = "Pinne";
 "Fortschreibung" = "Aggiornamento del piano";
 "Fr" = "Ven";
@@ -496,7 +494,6 @@
 "Ohne Health-Daten kann kein Plan erstellt werden." = "Senza i dati di Salute non è possibile creare un piano.";
 "Ohne Kalenderzugriff zählt die freie Zeit nicht. Erlaube ihn in den Einstellungen des iPhones unter Datenschutz > Kalender." = "Senza accesso al calendario il tempo libero non viene considerato. Consentilo nelle Impostazioni dell'iPhone in Privacy > Calendari.";
 "Ohne Ortsfreigabe gibt es kein Wetter. Erlaube sie in den Einstellungen des iPhones unter Datenschutz > Ortungsdienste." = "Senza accesso alla posizione non c'è meteo. Consentilo nelle Impostazioni dell'iPhone in Privacy > Localizzazione.";
-"Ohne Zieltag: Der Plan steigert bis zu deiner Zeit im Wochenraster und hält sie dann." = "Senza giorno obiettivo: il piano aumenta fino al tuo tempo nella griglia settimanale e poi lo mantiene.";
 "Ort" = "Luogo";
 "Pace (4 Wochen)" = "Ritmo (4 settimane)";
 "Pace pro 100 m" = "Ritmo per 100 m";
@@ -527,7 +524,6 @@
 "Plan ohne Wunsch neu erstellen" = "Ricrea piano senza desiderio";
 "Plan vom %@. Öffne die iPhone-App für den Plan von heute." = "Piano del %@. Apri l'app per iPhone per il piano di oggi.";
 "Planen" = "Pianifica";
-"Planen bis" = "Pianifica fino al";
 "Planung" = "Pianificazione";
 "Plus fügt den Bereich unten wieder an." = "Il più riaggiunge la sezione in fondo.";
 "Pro Woche" = "A settimana";
@@ -729,7 +725,6 @@
 "Zeit 400 m" = "Tempo 400 m";
 "Zeit über eine Strecke" = "Tempo su una distanza";
 "Zeitraum" = "Periodo";
-"Zeitraum und Training" = "Periodo e allenamento";
 "Ziehen ändert die Reihenfolge. Minus blendet einen Bereich aus. Bereiche mit Schloss gehören zum Tab und lassen sich nur verschieben." = "Trascina per cambiare l'ordine. Il meno nasconde una sezione. Le sezioni con il lucchetto fanno parte della scheda e possono solo essere spostate.";
 "Ziel" = "Obiettivo";
 "Ziel am %@, noch %lld Wochen" = "Obiettivo il %@, mancano %lld settimane";
@@ -739,7 +734,6 @@
 "Zielpace %@: noch %lld s pro 100 m zu langsam." = "Ritmo obiettivo %@: ancora %lld s per 100 m troppo lento.";
 "Zielspezifisch" = "Specifico per l'obiettivo";
 "Zieltag" = "Giorno dell'obiettivo";
-"Zieltag und Training" = "Giorno dell'obiettivo e allenamento";
 "Zielwoche" = "Settimana dell'obiettivo";
 "Zielzeit" = "Tempo obiettivo";
 "Zone %lld" = "Zona %lld";
@@ -960,3 +954,10 @@
 "Lieber wenige" = "Meglio poche";
 "Gern mehr" = "Volentieri di più";
 "Lässt sich jederzeit in den Einstellungen ändern." = "Puoi cambiarlo quando vuoi nelle impostazioni.";
+"Fitness: %@" = "Forma fisica: %@";
+"Ohne Zieltag und ohne Ende: Der Plan steigert bis zu deiner Zeit im Wochenraster, hält sie mit Entlastungswochen und Tests und wird alle 2 Wochen fortgeschrieben." = "Senza giorno obiettivo e senza fine: il piano aumenta fino al tuo tempo nella griglia settimanale, lo mantiene con settimane di scarico e test e viene aggiornato ogni 2 settimane.";
+"Dein Zieltag ist vorbei" = "Il tuo giorno obiettivo è passato";
+"Glückwunsch! Wie geht es weiter? Setz dir ein neues Ziel oder bleib einfach fit. Ohne Antwort geht es nach einer Woche Erholung mit „Fit werden und bleiben“ weiter." = "Complimenti! E adesso? Fissa un nuovo obiettivo o resta semplicemente in forma. Se non rispondi, dopo una settimana di recupero si continua con «Mettersi e restare in forma».";
+"Neues Ziel setzen" = "Fissa un nuovo obiettivo";
+"Fit bleiben" = "Restare in forma";
+"Fit werden und bleiben, ohne Ende" = "Mettersi e restare in forma, senza fine";

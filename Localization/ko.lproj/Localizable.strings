@@ -137,7 +137,6 @@
 "Bergauf" = "오르막";
 "Beschwerden" = "통증";
 "Bis einschließlich" = "종료일(포함)";
-"Bis zu diesem Tag plant die App. Danach legst du einfach einen neuen Zeitraum fest." = "앱은 이 날까지 계획해요. 그 후에는 새 기간을 정하면 돼요.";
 "Bis zum Ziel" = "목표까지";
 "Bisher %@" = "이전 %@";
 "Bitte ein Token eingeben." = "토큰을 입력해 주세요.";
@@ -297,7 +296,6 @@
 "Fertig" = "완료";
 "Fertig eingerichtet" = "설정 완료";
 "Fit werden und bleiben" = "건강해지고 유지하기";
-"Fitness: %@, bis %@" = "피트니스: %@, %@까지";
 "Flossen" = "핀";
 "Fortschreibung" = "계획 업데이트";
 "Fr" = "금";
@@ -496,7 +494,6 @@
 "Ohne Health-Daten kann kein Plan erstellt werden." = "건강 데이터 없이는 계획을 만들 수 없어요.";
 "Ohne Kalenderzugriff zählt die freie Zeit nicht. Erlaube ihn in den Einstellungen des iPhones unter Datenschutz > Kalender." = "캘린더 접근 권한이 없으면 빈 시간을 반영하지 않아요. iPhone 설정 > 개인정보 보호 > 캘린더에서 허용하세요.";
 "Ohne Ortsfreigabe gibt es kein Wetter. Erlaube sie in den Einstellungen des iPhones unter Datenschutz > Ortungsdienste." = "위치 접근 권한이 없으면 날씨를 쓸 수 없어요. iPhone 설정 > 개인정보 보호 > 위치 서비스에서 허용하세요.";
-"Ohne Zieltag: Der Plan steigert bis zu deiner Zeit im Wochenraster und hält sie dann." = "목표일 없음: 계획은 주간 일정의 시간까지 늘린 후 그 수준을 유지해요.";
 "Ort" = "장소";
 "Pace (4 Wochen)" = "페이스(4주)";
 "Pace pro 100 m" = "100 m당 페이스";
@@ -527,7 +524,6 @@
 "Plan ohne Wunsch neu erstellen" = "희망 사항 없이 계획 새로 만들기";
 "Plan vom %@. Öffne die iPhone-App für den Plan von heute." = "%@의 계획. 오늘 계획은 iPhone 앱을 열어 확인하세요.";
 "Planen" = "계획하기";
-"Planen bis" = "계획 종료일";
 "Planung" = "계획 설정";
 "Plus fügt den Bereich unten wieder an." = "+를 누르면 섹션이 아래에 다시 추가돼요.";
 "Pro Woche" = "주당";
@@ -729,7 +725,6 @@
 "Zeit 400 m" = "400 m 기록";
 "Zeit über eine Strecke" = "거리 기록";
 "Zeitraum" = "기간";
-"Zeitraum und Training" = "기간과 훈련";
 "Ziehen ändert die Reihenfolge. Minus blendet einen Bereich aus. Bereiche mit Schloss gehören zum Tab und lassen sich nur verschieben." = "드래그하면 순서가 바뀌어요. -를 누르면 섹션이 숨겨져요. 자물쇠가 있는 섹션은 탭에 속해 있어서 이동만 할 수 있어요.";
 "Ziel" = "목표";
 "Ziel am %@, noch %lld Wochen" = "목표일 %@, %lld주 남음";
@@ -739,7 +734,6 @@
 "Zielpace %@: noch %lld s pro 100 m zu langsam." = "목표 페이스 %@: 100 m당 %lld초 더 빨라야 해요.";
 "Zielspezifisch" = "목표 특화";
 "Zieltag" = "목표일";
-"Zieltag und Training" = "목표일과 훈련";
 "Zielwoche" = "목표 주";
 "Zielzeit" = "목표 시간";
 "Zone %lld" = "영역 %lld";
@@ -960,3 +954,10 @@
 "Lieber wenige" = "적게";
 "Gern mehr" = "많아도 좋아요";
 "Lässt sich jederzeit in den Einstellungen ändern." = "설정에서 언제든지 바꿀 수 있어요.";
+"Fitness: %@" = "피트니스: %@";
+"Ohne Zieltag und ohne Ende: Der Plan steigert bis zu deiner Zeit im Wochenraster, hält sie mit Entlastungswochen und Tests und wird alle 2 Wochen fortgeschrieben." = "목표일도 끝도 없음: 계획은 주간 일정의 시간까지 늘리고, 회복 주와 테스트로 유지하며, 2주마다 업데이트돼요.";
+"Dein Zieltag ist vorbei" = "목표일이 지났어요";
+"Glückwunsch! Wie geht es weiter? Setz dir ein neues Ziel oder bleib einfach fit. Ohne Antwort geht es nach einer Woche Erholung mit „Fit werden und bleiben“ weiter." = "축하해요! 이제 어떻게 할까요? 새 목표를 정하거나 그냥 건강을 유지하세요. 답하지 않으면 일주일 회복 후 ‘건강해지고 유지하기’로 계속돼요.";
+"Neues Ziel setzen" = "새 목표 정하기";
+"Fit bleiben" = "건강 유지하기";
+"Fit werden und bleiben, ohne Ende" = "건강해지고 유지하기, 끝 없음";

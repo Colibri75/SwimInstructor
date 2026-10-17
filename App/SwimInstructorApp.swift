@@ -40,8 +40,10 @@ struct SwimInstructorApp: App {
             vitalsRepository: HealthKitDailyVitalsRepository(),
             // Das Gesamtziel aus den Einstellungen, bei jedem Durchlauf neu gelesen (Snapshot v2). Ein vorgemerktes Ziel
             // wird davor übernommen, sobald die Sperre vorbei ist, damit Snapshot und Gesamtplan zum selben Ziel gehören.
+            // Eine Woche nach dem Zieltag ohne neues Ziel geht es mit "Fit werden und bleiben" weiter.
             trainingGoalProvider: {
                 goalStore.applyPendingIfDue(now: Date())
+                goalStore.continueWithFitnessIfDue(now: Date())
                 return goalStore.goal()
             },
             // Leistungswerte und Zonen: bestätigte aus dem Profil, sonst aus Health geschätzt.

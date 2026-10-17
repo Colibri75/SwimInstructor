@@ -137,7 +137,6 @@
 "Bergauf" = "Subida";
 "Beschwerden" = "Dores";
 "Bis einschließlich" = "Até (inclusive)";
-"Bis zu diesem Tag plant die App. Danach legst du einfach einen neuen Zeitraum fest." = "O app planeja até este dia. Depois, é só definir um novo período.";
 "Bis zum Ziel" = "Até o objetivo";
 "Bisher %@" = "Antes: %@";
 "Bitte ein Token eingeben." = "Digite um token.";
@@ -297,7 +296,6 @@
 "Fertig" = "OK";
 "Fertig eingerichtet" = "Tudo configurado";
 "Fit werden und bleiben" = "Entrar e ficar em forma";
-"Fitness: %@, bis %@" = "Condicionamento: %@, até %@";
 "Flossen" = "Nadadeiras";
 "Fortschreibung" = "Atualização do plano";
 "Fr" = "Sex";
@@ -496,7 +494,6 @@
 "Ohne Health-Daten kann kein Plan erstellt werden." = "Sem dados do Saúde não é possível criar um plano.";
 "Ohne Kalenderzugriff zählt die freie Zeit nicht. Erlaube ihn in den Einstellungen des iPhones unter Datenschutz > Kalender." = "Sem acesso ao calendário, o tempo livre não é considerado. Permita-o nos Ajustes do iPhone em Privacidade > Calendários.";
 "Ohne Ortsfreigabe gibt es kein Wetter. Erlaube sie in den Einstellungen des iPhones unter Datenschutz > Ortungsdienste." = "Sem acesso à localização não há clima. Permita-o nos Ajustes do iPhone em Privacidade > Serviços de Localização.";
-"Ohne Zieltag: Der Plan steigert bis zu deiner Zeit im Wochenraster und hält sie dann." = "Sem dia do objetivo: o plano aumenta até o seu tempo na grade semanal e depois o mantém.";
 "Ort" = "Local";
 "Pace (4 Wochen)" = "Pace (4 semanas)";
 "Pace pro 100 m" = "Pace por 100 m";
@@ -527,7 +524,6 @@
 "Plan ohne Wunsch neu erstellen" = "Recriar plano sem pedido";
 "Plan vom %@. Öffne die iPhone-App für den Plan von heute." = "Plano de %@. Abra o app no iPhone para ver o plano de hoje.";
 "Planen" = "Planejar";
-"Planen bis" = "Planejar até";
 "Planung" = "Planejamento";
 "Plus fügt den Bereich unten wieder an." = "O botão de mais adiciona a seção de volta no final.";
 "Pro Woche" = "Por semana";
@@ -729,7 +725,6 @@
 "Zeit 400 m" = "Tempo 400 m";
 "Zeit über eine Strecke" = "Tempo numa distância";
 "Zeitraum" = "Período";
-"Zeitraum und Training" = "Período e treino";
 "Ziehen ändert die Reihenfolge. Minus blendet einen Bereich aus. Bereiche mit Schloss gehören zum Tab und lassen sich nur verschieben." = "Arraste para mudar a ordem. O botão de menos oculta uma seção. Seções com cadeado fazem parte da aba e só podem ser movidas.";
 "Ziel" = "Objetivo";
 "Ziel am %@, noch %lld Wochen" = "Objetivo em %@, faltam %lld semanas";
@@ -739,7 +734,6 @@
 "Zielpace %@: noch %lld s pro 100 m zu langsam." = "Pace-alvo %@: ainda %lld s por 100 m mais lento.";
 "Zielspezifisch" = "Específica";
 "Zieltag" = "Dia do objetivo";
-"Zieltag und Training" = "Dia do objetivo e treino";
 "Zielwoche" = "Semana do objetivo";
 "Zielzeit" = "Tempo-alvo";
 "Zone %lld" = "Zona %lld";
@@ -960,3 +954,10 @@
 "Lieber wenige" = "Prefiro poucos";
 "Gern mehr" = "Gosto de mais";
 "Lässt sich jederzeit in den Einstellungen ändern." = "Você pode mudar isso a qualquer momento nos ajustes.";
+"Fitness: %@" = "Condicionamento: %@";
+"Ohne Zieltag und ohne Ende: Der Plan steigert bis zu deiner Zeit im Wochenraster, hält sie mit Entlastungswochen und Tests und wird alle 2 Wochen fortgeschrieben." = "Sem dia do objetivo e sem fim: o plano aumenta até o seu tempo na grade semanal, mantém com semanas de recuperação e testes e é atualizado a cada 2 semanas.";
+"Dein Zieltag ist vorbei" = "Seu dia do objetivo já passou";
+"Glückwunsch! Wie geht es weiter? Setz dir ein neues Ziel oder bleib einfach fit. Ohne Antwort geht es nach einer Woche Erholung mit „Fit werden und bleiben“ weiter." = "Parabéns! E agora? Defina um novo objetivo ou simplesmente continue em forma. Se você não responder, depois de uma semana de recuperação o plano segue com “Entrar e ficar em forma”.";
+"Neues Ziel setzen" = "Definir novo objetivo";
+"Fit bleiben" = "Continuar em forma";
+"Fit werden und bleiben, ohne Ende" = "Entrar e ficar em forma, sem fim";

@@ -137,7 +137,6 @@
 "Bergauf" = "Montée";
 "Beschwerden" = "Douleurs";
 "Bis einschließlich" = "Jusqu’au (inclus)";
-"Bis zu diesem Tag plant die App. Danach legst du einfach einen neuen Zeitraum fest." = "L’app planifie jusqu’à ce jour. Ensuite, il te suffit de définir une nouvelle période.";
 "Bis zum Ziel" = "Jusqu’à l’objectif";
 "Bisher %@" = "Jusqu’ici %@";
 "Bitte ein Token eingeben." = "Saisis un jeton.";
@@ -297,7 +296,6 @@
 "Fertig" = "Terminé";
 "Fertig eingerichtet" = "Configuration terminée";
 "Fit werden und bleiben" = "Se mettre en forme et le rester";
-"Fitness: %@, bis %@" = "Forme : %@, jusqu’au %@";
 "Flossen" = "Palmes";
 "Fortschreibung" = "Mise à jour du plan";
 "Fr" = "Ven";
@@ -496,7 +494,6 @@
 "Ohne Health-Daten kann kein Plan erstellt werden." = "Sans données Santé, aucun plan ne peut être créé.";
 "Ohne Kalenderzugriff zählt die freie Zeit nicht. Erlaube ihn in den Einstellungen des iPhones unter Datenschutz > Kalender." = "Sans accès au calendrier, le temps libre n’est pas pris en compte. Autorise-le dans les Réglages de l’iPhone, sous Confidentialité > Calendriers.";
 "Ohne Ortsfreigabe gibt es kein Wetter. Erlaube sie in den Einstellungen des iPhones unter Datenschutz > Ortungsdienste." = "Sans accès à la position, pas de météo. Autorise-le dans les Réglages de l’iPhone, sous Confidentialité > Service de localisation.";
-"Ohne Zieltag: Der Plan steigert bis zu deiner Zeit im Wochenraster und hält sie dann." = "Sans date d’objectif : le plan progresse jusqu’au temps de ta grille hebdomadaire, puis s’y maintient.";
 "Ort" = "Lieu";
 "Pace (4 Wochen)" = "Allure (4 semaines)";
 "Pace pro 100 m" = "Allure /100 m";
@@ -527,7 +524,6 @@
 "Plan ohne Wunsch neu erstellen" = "Recréer le plan sans souhait";
 "Plan vom %@. Öffne die iPhone-App für den Plan von heute." = "Plan du %@. Ouvre l’app sur l’iPhone pour le plan du jour.";
 "Planen" = "Planification";
-"Planen bis" = "Planifier jusqu’au";
 "Planung" = "Planification";
 "Plus fügt den Bereich unten wieder an." = "Le bouton plus rajoute la section en bas.";
 "Pro Woche" = "Par semaine";
@@ -729,7 +725,6 @@
 "Zeit 400 m" = "Temps 400 m";
 "Zeit über eine Strecke" = "Temps sur une distance";
 "Zeitraum" = "Période";
-"Zeitraum und Training" = "Période et entraînement";
 "Ziehen ändert die Reihenfolge. Minus blendet einen Bereich aus. Bereiche mit Schloss gehören zum Tab und lassen sich nur verschieben." = "Fais glisser pour changer l’ordre. Le moins masque une section. Les sections avec un cadenas font partie de l’onglet et peuvent seulement être déplacées.";
 "Ziel" = "Objectif";
 "Ziel am %@, noch %lld Wochen" = "Objectif le %@, encore %lld semaines";
@@ -739,7 +734,6 @@
 "Zielpace %@: noch %lld s pro 100 m zu langsam." = "Allure cible %@ : encore %lld s /100 m trop lent.";
 "Zielspezifisch" = "Spécifique";
 "Zieltag" = "Jour J";
-"Zieltag und Training" = "Jour J et entraînement";
 "Zielwoche" = "Semaine de l’objectif";
 "Zielzeit" = "Temps visé";
 "Zone %lld" = "Zone %lld";
@@ -960,3 +954,10 @@
 "Lieber wenige" = "Plutôt peu";
 "Gern mehr" = "Volontiers plus";
 "Lässt sich jederzeit in den Einstellungen ändern." = "Modifiable à tout moment dans les réglages.";
+"Fitness: %@" = "Forme : %@";
+"Ohne Zieltag und ohne Ende: Der Plan steigert bis zu deiner Zeit im Wochenraster, hält sie mit Entlastungswochen und Tests und wird alle 2 Wochen fortgeschrieben." = "Sans date d’objectif ni fin : le plan progresse jusqu’au temps de ta grille hebdomadaire, le maintient avec des semaines de récupération et des tests, et il est mis à jour toutes les 2 semaines.";
+"Dein Zieltag ist vorbei" = "Ton jour d’objectif est passé";
+"Glückwunsch! Wie geht es weiter? Setz dir ein neues Ziel oder bleib einfach fit. Ohne Antwort geht es nach einer Woche Erholung mit „Fit werden und bleiben“ weiter." = "Félicitations ! Et maintenant ? Fixe-toi un nouvel objectif ou reste simplement en forme. Sans réponse, tu continues avec « Se mettre en forme et le rester » après une semaine de récupération.";
+"Neues Ziel setzen" = "Fixer un nouvel objectif";
+"Fit bleiben" = "Rester en forme";
+"Fit werden und bleiben, ohne Ende" = "Se mettre en forme et le rester, sans fin";

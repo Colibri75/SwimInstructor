@@ -137,7 +137,6 @@
 "Bergauf" = "चढ़ाई";
 "Beschwerden" = "दर्द";
 "Bis einschließlich" = "तक (शामिल)";
-"Bis zu diesem Tag plant die App. Danach legst du einfach einen neuen Zeitraum fest." = "ऐप इस दिन तक प्लान करता है। उसके बाद आप बस एक नई अवधि तय कर दें।";
 "Bis zum Ziel" = "लक्ष्य तक";
 "Bisher %@" = "अब तक %@";
 "Bitte ein Token eingeben." = "कृपया एक टोकन डालें।";
@@ -297,7 +296,6 @@
 "Fertig" = "हो गया";
 "Fertig eingerichtet" = "सेटअप पूरा";
 "Fit werden und bleiben" = "फ़िट बनें और रहें";
-"Fitness: %@, bis %@" = "फ़िटनेस: %@, %@ तक";
 "Flossen" = "फ़िन्स";
 "Fortschreibung" = "प्लान अपडेट";
 "Fr" = "शुक्र";
@@ -496,7 +494,6 @@
 "Ohne Health-Daten kann kein Plan erstellt werden." = "Health डेटा के बिना प्लान नहीं बन सकता।";
 "Ohne Kalenderzugriff zählt die freie Zeit nicht. Erlaube ihn in den Einstellungen des iPhones unter Datenschutz > Kalender." = "कैलेंडर एक्सेस के बिना ख़ाली समय नहीं गिना जाता। iPhone की सेटिंग्स में गोपनीयता > कैलेंडर में इसकी अनुमति दें।";
 "Ohne Ortsfreigabe gibt es kein Wetter. Erlaube sie in den Einstellungen des iPhones unter Datenschutz > Ortungsdienste." = "लोकेशन की अनुमति के बिना मौसम नहीं मिलेगा। iPhone की सेटिंग्स में गोपनीयता > लोकेशन सर्विसेज़ में इसकी अनुमति दें।";
-"Ohne Zieltag: Der Plan steigert bis zu deiner Zeit im Wochenraster und hält sie dann." = "बिना लक्ष्य दिन: प्लान आपके साप्ताहिक शेड्यूल के समय तक बढ़ता है और फिर उसे बनाए रखता है।";
 "Ort" = "जगह";
 "Pace (4 Wochen)" = "पेस (4 सप्ताह)";
 "Pace pro 100 m" = "पेस प्रति 100 m";
@@ -527,7 +524,6 @@
 "Plan ohne Wunsch neu erstellen" = "बिना इच्छा के प्लान फिर से बनाएँ";
 "Plan vom %@. Öffne die iPhone-App für den Plan von heute." = "%@ का प्लान। आज के प्लान के लिए iPhone ऐप खोलें।";
 "Planen" = "प्लानिंग";
-"Planen bis" = "कब तक प्लान करें";
 "Planung" = "प्लानिंग";
 "Plus fügt den Bereich unten wieder an." = "प्लस से सेक्शन फिर से नीचे जुड़ जाता है।";
 "Pro Woche" = "प्रति सप्ताह";
@@ -729,7 +725,6 @@
 "Zeit 400 m" = "400 m का समय";
 "Zeit über eine Strecke" = "किसी दूरी पर समय";
 "Zeitraum" = "अवधि";
-"Zeitraum und Training" = "अवधि और ट्रेनिंग";
 "Ziehen ändert die Reihenfolge. Minus blendet einen Bereich aus. Bereiche mit Schloss gehören zum Tab und lassen sich nur verschieben." = "खींचने से क्रम बदलता है। माइनस से सेक्शन छिप जाता है। ताले वाले सेक्शन टैब का हिस्सा हैं और सिर्फ़ खिसकाए जा सकते हैं।";
 "Ziel" = "लक्ष्य";
 "Ziel am %@, noch %lld Wochen" = "लक्ष्य %1$@ को, %2$lld सप्ताह बाकी";
@@ -739,7 +734,6 @@
 "Zielpace %@: noch %lld s pro 100 m zu langsam." = "लक्ष्य पेस %@: अभी प्रति 100 m %lld s धीमे।";
 "Zielspezifisch" = "लक्ष्य-विशेष";
 "Zieltag" = "लक्ष्य दिन";
-"Zieltag und Training" = "लक्ष्य दिन और ट्रेनिंग";
 "Zielwoche" = "लक्ष्य सप्ताह";
 "Zielzeit" = "लक्ष्य समय";
 "Zone %lld" = "ज़ोन %lld";
@@ -960,3 +954,10 @@
 "Lieber wenige" = "कम ही ठीक";
 "Gern mehr" = "ज़्यादा भी ठीक";
 "Lässt sich jederzeit in den Einstellungen ändern." = "इसे आप कभी भी सेटिंग्स में बदल सकते हैं।";
+"Fitness: %@" = "फ़िटनेस: %@";
+"Ohne Zieltag und ohne Ende: Der Plan steigert bis zu deiner Zeit im Wochenraster, hält sie mit Entlastungswochen und Tests und wird alle 2 Wochen fortgeschrieben." = "न लक्ष्य दिन, न अंत: प्लान आपके साप्ताहिक शेड्यूल के समय तक बढ़ता है, रिकवरी हफ़्तों और टेस्ट के साथ उसे बनाए रखता है, और हर 2 हफ़्ते में अपडेट होता है।";
+"Dein Zieltag ist vorbei" = "आपका लक्ष्य दिन बीत गया";
+"Glückwunsch! Wie geht es weiter? Setz dir ein neues Ziel oder bleib einfach fit. Ohne Antwort geht es nach einer Woche Erholung mit „Fit werden und bleiben“ weiter." = "बधाई हो! अब आगे क्या? नया लक्ष्य तय करें या बस फ़िट बने रहें। जवाब न देने पर एक हफ़्ते की रिकवरी के बाद “फ़िट बनें और रहें” के साथ आगे बढ़ेंगे।";
+"Neues Ziel setzen" = "नया लक्ष्य तय करें";
+"Fit bleiben" = "फ़िट बने रहें";
+"Fit werden und bleiben, ohne Ende" = "फ़िट बनें और रहें, बिना अंत";

@@ -137,7 +137,6 @@
 "Bergauf" = "上り";
 "Beschwerden" = "痛み";
 "Bis einschließlich" = "終了日（この日を含む）";
-"Bis zu diesem Tag plant die App. Danach legst du einfach einen neuen Zeitraum fest." = "この日までアプリがプランを作成します。その後は新しい期間を設定するだけです。";
 "Bis zum Ziel" = "目標まで";
 "Bisher %@" = "これまで %@";
 "Bitte ein Token eingeben." = "トークンを入力してください。";
@@ -297,7 +296,6 @@
 "Fertig" = "完了";
 "Fertig eingerichtet" = "セットアップ完了";
 "Fit werden und bleiben" = "健康になって維持する";
-"Fitness: %@, bis %@" = "フィットネス：%@、%@まで";
 "Flossen" = "フィン";
 "Fortschreibung" = "プラン更新";
 "Fr" = "金";
@@ -496,7 +494,6 @@
 "Ohne Health-Daten kann kein Plan erstellt werden." = "ヘルスケアのデータがないとプランを作成できません。";
 "Ohne Kalenderzugriff zählt die freie Zeit nicht. Erlaube ihn in den Einstellungen des iPhones unter Datenschutz > Kalender." = "カレンダーへのアクセスがないと空き時間が考慮されません。iPhoneの「設定」>「プライバシー」>「カレンダー」で許可してください。";
 "Ohne Ortsfreigabe gibt es kein Wetter. Erlaube sie in den Einstellungen des iPhones unter Datenschutz > Ortungsdienste." = "位置情報の許可がないと天気を取得できません。iPhoneの「設定」>「プライバシー」>「位置情報サービス」で許可してください。";
-"Ohne Zieltag: Der Plan steigert bis zu deiner Zeit im Wochenraster und hält sie dann." = "目標日なし：プランは週間スケジュールの時間まで段階的に増やし、その後維持します。";
 "Ort" = "場所";
 "Pace (4 Wochen)" = "ペース（4週間）";
 "Pace pro 100 m" = "100 mあたりのペース";
@@ -527,7 +524,6 @@
 "Plan ohne Wunsch neu erstellen" = "リクエストなしでプランを作り直す";
 "Plan vom %@. Öffne die iPhone-App für den Plan von heute." = "%@のプランです。今日のプランはiPhoneアプリを開いてください。";
 "Planen" = "計画";
-"Planen bis" = "計画終了日";
 "Planung" = "プランニング";
 "Plus fügt den Bereich unten wieder an." = "プラスで、セクションを下に再び追加します。";
 "Pro Woche" = "週あたり";
@@ -729,7 +725,6 @@
 "Zeit 400 m" = "400 mのタイム";
 "Zeit über eine Strecke" = "距離のタイム";
 "Zeitraum" = "期間";
-"Zeitraum und Training" = "期間とトレーニング";
 "Ziehen ändert die Reihenfolge. Minus blendet einen Bereich aus. Bereiche mit Schloss gehören zum Tab und lassen sich nur verschieben." = "ドラッグで並べ替え、マイナスでセクションを非表示にします。鍵付きのセクションはタブに固定されており、移動のみできます。";
 "Ziel" = "目標";
 "Ziel am %@, noch %lld Wochen" = "目標日 %@、あと%lld週間";
@@ -739,7 +734,6 @@
 "Zielpace %@: noch %lld s pro 100 m zu langsam." = "目標ペース%@：あと100 mあたり%lld秒遅れています。";
 "Zielspezifisch" = "目標特化期";
 "Zieltag" = "目標日";
-"Zieltag und Training" = "目標日とトレーニング";
 "Zielwoche" = "目標週";
 "Zielzeit" = "目標タイム";
 "Zone %lld" = "ゾーン %lld";
@@ -960,3 +954,10 @@
 "Lieber wenige" = "少なめがいい";
 "Gern mehr" = "多めでもいい";
 "Lässt sich jederzeit in den Einstellungen ändern." = "設定でいつでも変更できます。";
+"Fitness: %@" = "フィットネス：%@";
+"Ohne Zieltag und ohne Ende: Der Plan steigert bis zu deiner Zeit im Wochenraster, hält sie mit Entlastungswochen und Tests und wird alle 2 Wochen fortgeschrieben." = "目標日も終わりもありません：プランは週間スケジュールの時間まで段階的に増やし、回復週とテストを入れながら維持し、2週間ごとに更新されます。";
+"Dein Zieltag ist vorbei" = "目標日が過ぎました";
+"Glückwunsch! Wie geht es weiter? Setz dir ein neues Ziel oder bleib einfach fit. Ohne Antwort geht es nach einer Woche Erholung mit „Fit werden und bleiben“ weiter." = "おめでとうございます！次はどうしますか？新しい目標を設定するか、このまま健康を維持しましょう。回答がない場合は、1週間の回復の後「健康になって維持する」で続けます。";
+"Neues Ziel setzen" = "新しい目標を設定";
+"Fit bleiben" = "健康を維持する";
+"Fit werden und bleiben, ohne Ende" = "健康になって維持する（終わりなし）";

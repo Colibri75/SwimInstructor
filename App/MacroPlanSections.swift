@@ -160,6 +160,7 @@ private struct ActualWeekRow: View {
                     plan: plan,
                     currentWeek: macroLoader.currentWeek,
                     weeksLeft: macroLoader.weeksUntilGoal,
+                    openEnded: macroLoader.isOpenEnded,
                     currentWeekStart: macroLoader.currentWeekStart
                 )
                 if !macroLoader.isCurrent {
@@ -409,6 +410,8 @@ private struct MacroOverview: View {
     let plan: MacroPlanV2
     let currentWeek: MacroWeekV2?
     let weeksLeft: Int
+    /// Fitnessziel: kein Zieltag, der Plan läuft weiter.
+    let openEnded: Bool
     let currentWeekStart: String
 
     private let registry = SportRegistry.standard
@@ -416,8 +419,14 @@ private struct MacroOverview: View {
     var body: some View {
         MacroSummitView(profile: MacroSummitProfile(plan: plan, currentWeekStart: currentWeekStart), weeks: plan.weeks.count)
         VStack(alignment: .leading, spacing: 6) {
-            Text("Ziel am \(PlanFormatting.germanDate(plan.goalDay)), noch \(weeksLeft) Wochen")
-                .font(.headline)
+            Group {
+                if openEnded {
+                    Text("Fit werden und bleiben, ohne Ende")
+                } else {
+                    Text("Ziel am \(PlanFormatting.germanDate(plan.goalDay)), noch \(weeksLeft) Wochen")
+                }
+            }
+            .font(.headline)
             if let currentWeek {
                 Text(thisWeekText(currentWeek))
                     .font(.subheadline)

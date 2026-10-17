@@ -137,7 +137,6 @@
 "Bergauf" = "上坡";
 "Beschwerden" = "不适";
 "Bis einschließlich" = "截至（含当天）";
-"Bis zu diesem Tag plant die App. Danach legst du einfach einen neuen Zeitraum fest." = "App 会规划到这一天。之后你再设定新的时间段即可。";
 "Bis zum Ziel" = "距离目标";
 "Bisher %@" = "此前 %@";
 "Bitte ein Token eingeben." = "请输入令牌。";
@@ -297,7 +296,6 @@
 "Fertig" = "完成";
 "Fertig eingerichtet" = "设置完成";
 "Fit werden und bleiben" = "变得健康并保持";
-"Fitness: %@, bis %@" = "健身：%@，至 %@";
 "Flossen" = "脚蹼";
 "Fortschreibung" = "计划更新";
 "Fr" = "周五";
@@ -496,7 +494,6 @@
 "Ohne Health-Daten kann kein Plan erstellt werden." = "没有“健康”数据就无法生成计划。";
 "Ohne Kalenderzugriff zählt die freie Zeit nicht. Erlaube ihn in den Einstellungen des iPhones unter Datenschutz > Kalender." = "没有日历访问权限，就无法计算空闲时间。请在 iPhone 的“设置”>“隐私”>“日历”中允许访问。";
 "Ohne Ortsfreigabe gibt es kein Wetter. Erlaube sie in den Einstellungen des iPhones unter Datenschutz > Ortungsdienste." = "没有位置权限就无法获取天气。请在 iPhone 的“设置”>“隐私”>“定位服务”中允许访问。";
-"Ohne Zieltag: Der Plan steigert bis zu deiner Zeit im Wochenraster und hält sie dann." = "没有目标日期：计划会逐步增加到你每周安排中的时间，然后保持。";
 "Ort" = "地点";
 "Pace (4 Wochen)" = "配速（4 周）";
 "Pace pro 100 m" = "每 100 m 配速";
@@ -527,7 +524,6 @@
 "Plan ohne Wunsch neu erstellen" = "不按意愿重新生成计划";
 "Plan vom %@. Öffne die iPhone-App für den Plan von heute." = "%@ 的计划。请打开 iPhone App 获取今天的计划。";
 "Planen" = "规划";
-"Planen bis" = "规划至";
 "Planung" = "规划";
 "Plus fügt den Bereich unten wieder an." = "轻点加号可将板块重新添加到底部。";
 "Pro Woche" = "每周";
@@ -729,7 +725,6 @@
 "Zeit 400 m" = "400 m 用时";
 "Zeit über eine Strecke" = "距离用时";
 "Zeitraum" = "时间范围";
-"Zeitraum und Training" = "时间段和训练";
 "Ziehen ändert die Reihenfolge. Minus blendet einen Bereich aus. Bereiche mit Schloss gehören zum Tab und lassen sich nur verschieben." = "拖动可更改顺序。减号可隐藏板块。带锁的板块属于该标签页，只能移动位置。";
 "Ziel" = "目标";
 "Ziel am %@, noch %lld Wochen" = "目标日期 %@，还有 %lld 周";
@@ -739,7 +734,6 @@
 "Zielpace %@: noch %lld s pro 100 m zu langsam." = "目标配速 %@：每 100 m 还慢 %lld s。";
 "Zielspezifisch" = "专项期";
 "Zieltag" = "目标日";
-"Zieltag und Training" = "目标日和训练";
 "Zielwoche" = "目标周";
 "Zielzeit" = "目标时间";
 "Zone %lld" = "%lld 区";
@@ -960,3 +954,10 @@
 "Lieber wenige" = "少一些";
 "Gern mehr" = "多一些也好";
 "Lässt sich jederzeit in den Einstellungen ändern." = "随时可以在设置中更改。";
+"Fitness: %@" = "健身：%@";
+"Ohne Zieltag und ohne Ende: Der Plan steigert bis zu deiner Zeit im Wochenraster, hält sie mit Entlastungswochen und Tests und wird alle 2 Wochen fortgeschrieben." = "没有目标日期，也没有结束：计划会逐步增加到你每周安排中的时间，通过恢复周和测试保持，并每 2 周更新一次。";
+"Dein Zieltag ist vorbei" = "你的目标日已经过去";
+"Glückwunsch! Wie geht es weiter? Setz dir ein neues Ziel oder bleib einfach fit. Ohne Antwort geht es nach einer Woche Erholung mit „Fit werden und bleiben“ weiter." = "恭喜！接下来呢？设定一个新目标，或者只是保持健康。如果你不回答，恢复一周后会自动继续“变得健康并保持”。";
+"Neues Ziel setzen" = "设定新目标";
+"Fit bleiben" = "保持健康";
+"Fit werden und bleiben, ohne Ende" = "变得健康并保持，没有结束";

@@ -19,6 +19,10 @@ struct TodayView: View {
     @State private var feedbackWorkout: Workout?
     /// Nach erledigtem Training trotzdem heute zeigen.
     @State private var showsToday = false
+    /// Das Gesamtziel, bei jedem Erscheinen neu gelesen (für die Frage nach dem Zieltag).
+    @State private var goal: TrainingGoal?
+
+    private let goalStore: TrainingGoalStoring = UserDefaultsTrainingGoalStore()
 
     private let onShowWeek: () -> Void
     private let progress = MultiSportWeekProgressCalculator()
@@ -52,6 +56,8 @@ struct TodayView: View {
     var body: some View {
         NavigationStack {
             List {
+                goalOverSection
+                    .cardRows()
                 // Reihenfolge und Auswahl der Bereiche: "Bereiche anpassen" unten in der Liste.
                 ForEach(layouts.visible(.today)) { section in
                     todaySection(section.id)
@@ -59,6 +65,8 @@ struct TodayView: View {
                 CustomizeSectionsRow(screen: .today)
             }
             .themedList()
+            // Auch beim Zurückkommen aus "Neues Ziel setzen".
+            .onAppear { goal = goalStore.goal() }
             .navigationTitle("Aktuell")
             .swipeClosesKeyboard()
             .settingsToolbar(isPresented: $showsSettings)
@@ -90,6 +98,7 @@ struct TodayView: View {
         .onChange(of: scenePhase) { _, phase in
             // Über Nacht offen gelassen: beim Zurückkommen den Plan für den neuen Tag holen.
             if phase == .active {
+                goal = goalStore.goal()
                 Task { await loader.refreshIfNeeded() }
             }
         }
@@ -131,6 +140,36 @@ struct TodayView: View {
             }
         default:
             EmptyView()
+        }
+    }
+
+    // MARK: - Nach dem Zieltag
+
+    /// Ab dem Tag nach dem Zieltag: neues Ziel oder fit bleiben. Ohne Antwort geht es nach der Erholung von selbst mit
+    /// "Fit werden und bleiben" weiter (`continueWithFitnessIfDue`).
+    @ViewBuilder
+    private var goalOverSection: some View {
+        if let goal, goal.isOver(now: Date()) {
+            Section {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Dein Zieltag ist vorbei")
+                        .font(.headline)
+                    Text("Glückwunsch! Wie geht es weiter? Setz dir ein neues Ziel oder bleib einfach fit. Ohne Antwort geht es nach einer Woche Erholung mit „Fit werden und bleiben“ weiter.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.vertical, 4)
+                NavigationLink("Neues Ziel setzen") {
+                    GoalAssistantView(store: goalStore)
+                }
+                Button("Fit bleiben") {
+                    if goalStore.apply(goal.fitnessFollowUp, now: Date()) == .newGoal {
+                        Task { await loader.refreshIfNeeded() }
+                    }
+                    self.goal = goalStore.goal()
+                }
+            }
         }
     }
 

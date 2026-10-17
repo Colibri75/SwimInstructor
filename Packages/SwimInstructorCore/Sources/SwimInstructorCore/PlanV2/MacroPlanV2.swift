@@ -258,14 +258,15 @@ public struct MacroPlanV2Response: Decodable, Equatable, Sendable {
 public extension TrainingGoal {
     /// Kennzeichnet das Ziel mit allem, was den Gesamtplan bestimmt (Zielart, Disziplinen, Zieltag, Schwerpunkte).
     /// Ein Gesamtplan v2 gilt nur für genau dieses Ziel. Trainingstage und Stunden gehören seit P2 nicht dazu: Sie
-    /// kommen aus dem Wochenraster, und der gilt ab der nächsten Abstimmung der Woche, ohne neuen Gesamtplan.
+    /// kommen aus dem Wochenraster, und der gilt ab der nächsten Abstimmung der Woche, ohne neuen Gesamtplan. Ein
+    /// Fitnessziel hat keinen Zieltag.
     func planKey(calendar: Calendar = .current) -> String {
         let disciplines = self.disciplines.map { discipline -> String in
             let duration = discipline.targetDurationSeconds.map { String(Int($0)) } ?? "-"
             return "\(discipline.sport.rawValue):\(Int(discipline.distanceMeters)):\(duration)"
         }.joined(separator: ",")
         let emphasis = self.emphasis.map { "\($0.sport.rawValue):\($0.percent)" }.joined(separator: ",")
-        let day = PlanFormatting.isoDay(targetDate, calendar: calendar)
+        let day = kind == .fitness ? "-" : PlanFormatting.isoDay(targetDate, calendar: calendar)
         return "\(kind.rawValue)|\(disciplines)|\(day)|\(emphasis)"
     }
 }

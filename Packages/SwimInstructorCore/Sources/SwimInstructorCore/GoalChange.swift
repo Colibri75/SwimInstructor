@@ -24,6 +24,7 @@ public extension TrainingGoal {
         let oldDistances = Dictionary(disciplines.map { ($0.sport, $0.distanceMeters) }, uniquingKeysWith: { first, _ in first })
         let newDistances = Dictionary(new.disciplines.map { ($0.sport, $0.distanceMeters) }, uniquingKeysWith: { first, _ in first })
         if oldDistances != newDistances { return .newGoal }
+        guard kind != .fitness else { return .fineTuning }
         let shift = calendar.dateComponents([.day], from: calendar.startOfDay(for: targetDate), to: calendar.startOfDay(for: new.targetDate)).day ?? 0
         if abs(shift) > Self.newGoalDayShiftDays { return .newGoal }
         return .fineTuning

@@ -1,9 +1,9 @@
 import SwiftUI
 import SwimInstructorCore
 
-/// Ziel-Assistent: Zielart wählen (Wettkampf, Zeit, Strecke, Fitness), beim Wettkampf auf Wunsch eine Vorlage
-/// (Triathlon-Distanzen, Lauf, Schwimmen, Rad), dann Disziplinen mit Strecke und Zielzeit, Zieltag und der
-/// Schwerpunkt je Sportart. Die Trainingszeit kommt aus dem Wochenraster.
+/// Ziel-Assistent: Zielart wählen (Wettkampf, Zeit, Strecke, Fitness) und gleich darunter den Zieltag (Fitness hat
+/// keinen), beim Wettkampf auf Wunsch eine Vorlage (Triathlon-Distanzen, Lauf, Schwimmen, Rad), dann Disziplinen mit
+/// Strecke und Zielzeit und der Schwerpunkt je Sportart. Die Trainingszeit kommt aus dem Wochenraster.
 ///
 /// In der Einrichtung wird ein gültiges Ziel sofort gespeichert. In den Einstellungen ist es ein Entwurf (P3): Die
 /// Ansicht zeigt, was mit dem Gesamtplan passiert, und erst "Übernehmen" ändert das Ziel. Ein neues Ziel geht höchstens
@@ -58,7 +58,9 @@ struct GoalAssistantView: View {
                     sportsSection
                 }
                 emphasisSection
-                trainingSection
+                if showsSchedule {
+                    scheduleSection
+                }
                 if mode == .settings {
                     applySection
                 } else {
@@ -99,6 +101,9 @@ struct GoalAssistantView: View {
                 ForEach(GoalKind.allCases) { kind in
                     Text(kind.title).tag(kind)
                 }
+            }
+            if goal.kind.hasDisciplines {
+                DatePicker(dateTitle, selection: targetDayBinding, in: Date()..., displayedComponents: .date)
             }
         } footer: {
             Text(goal.kind.explanation)
@@ -292,22 +297,15 @@ struct GoalAssistantView: View {
         )
     }
 
-    private var trainingSection: some View {
+    private var scheduleSection: some View {
         Section {
-            DatePicker(dateTitle, selection: targetDayBinding, in: Date()..., displayedComponents: .date)
-            if showsSchedule {
-                NavigationLink {
-                    WeeklyScheduleView(store: scheduleStore, goalStore: store)
-                } label: {
-                    LabeledContent("Wochenraster", value: scheduleSummary)
-                }
+            NavigationLink {
+                WeeklyScheduleView(store: scheduleStore, goalStore: store)
+            } label: {
+                LabeledContent("Wochenraster", value: scheduleSummary)
             }
         } header: {
-            Text(goal.kind == .fitness ? "Zeitraum und Training" : "Zieltag und Training")
-        } footer: {
-            if goal.kind == .fitness {
-                Text("Bis zu diesem Tag plant die App. Danach legst du einfach einen neuen Zeitraum fest.")
-            }
+            Text("Training")
         }
     }
 
@@ -315,8 +313,7 @@ struct GoalAssistantView: View {
         switch goal.kind {
         case .race: return String(localized: "Wettkampftag")
         case .time: return String(localized: "Tag des Versuchs")
-        case .distance: return String(localized: "Zieltag")
-        case .fitness: return String(localized: "Planen bis")
+        case .distance, .fitness: return String(localized: "Zieltag")
         }
     }
 

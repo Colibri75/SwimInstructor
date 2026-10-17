@@ -137,7 +137,6 @@
 "Bergauf" = "Desnivel";
 "Beschwerden" = "Molestias";
 "Bis einschließlich" = "Hasta (incluido)";
-"Bis zu diesem Tag plant die App. Danach legst du einfach einen neuen Zeitraum fest." = "La app planifica hasta este día. Después, simplemente defines un nuevo periodo.";
 "Bis zum Ziel" = "Hasta el objetivo";
 "Bisher %@" = "Antes: %@";
 "Bitte ein Token eingeben." = "Introduce un token.";
@@ -297,7 +296,6 @@
 "Fertig" = "Listo";
 "Fertig eingerichtet" = "Configuración completada";
 "Fit werden und bleiben" = "Ponerse en forma y mantenerse";
-"Fitness: %@, bis %@" = "Forma física: %@, hasta %@";
 "Flossen" = "Aletas";
 "Fortschreibung" = "Actualización del plan";
 "Fr" = "Vi";
@@ -496,7 +494,6 @@
 "Ohne Health-Daten kann kein Plan erstellt werden." = "Sin datos de Salud no se puede crear ningún plan.";
 "Ohne Kalenderzugriff zählt die freie Zeit nicht. Erlaube ihn in den Einstellungen des iPhones unter Datenschutz > Kalender." = "Sin acceso al calendario, el tiempo libre no se tiene en cuenta. Permítelo en los Ajustes del iPhone, en Privacidad > Calendarios.";
 "Ohne Ortsfreigabe gibt es kein Wetter. Erlaube sie in den Einstellungen des iPhones unter Datenschutz > Ortungsdienste." = "Sin acceso a la ubicación no hay datos del tiempo. Permítelo en los Ajustes del iPhone, en Privacidad > Localización.";
-"Ohne Zieltag: Der Plan steigert bis zu deiner Zeit im Wochenraster und hält sie dann." = "Sin día objetivo: el plan aumenta hasta tu tiempo de la plantilla semanal y luego lo mantiene.";
 "Ort" = "Lugar";
 "Pace (4 Wochen)" = "Ritmo (4 semanas)";
 "Pace pro 100 m" = "Ritmo por 100 m";
@@ -527,7 +524,6 @@
 "Plan ohne Wunsch neu erstellen" = "Crear plan de nuevo sin deseo";
 "Plan vom %@. Öffne die iPhone-App für den Plan von heute." = "Plan del %@. Abre la app del iPhone para ver el plan de hoy.";
 "Planen" = "Planificar";
-"Planen bis" = "Planificar hasta";
 "Planung" = "Planificación";
 "Plus fügt den Bereich unten wieder an." = "El botón más vuelve a añadir la sección al final.";
 "Pro Woche" = "Por semana";
@@ -729,7 +725,6 @@
 "Zeit 400 m" = "Tiempo 400 m";
 "Zeit über eine Strecke" = "Tiempo en una distancia";
 "Zeitraum" = "Periodo";
-"Zeitraum und Training" = "Periodo y entrenamiento";
 "Ziehen ändert die Reihenfolge. Minus blendet einen Bereich aus. Bereiche mit Schloss gehören zum Tab und lassen sich nur verschieben." = "Al arrastrar cambias el orden. El signo menos oculta una sección. Las secciones con candado pertenecen a la pestaña y solo se pueden mover.";
 "Ziel" = "Objetivo";
 "Ziel am %@, noch %lld Wochen" = "Objetivo el %@, faltan %lld semanas";
@@ -739,7 +734,6 @@
 "Zielpace %@: noch %lld s pro 100 m zu langsam." = "Ritmo objetivo %@: aún %lld s por 100 m demasiado lento.";
 "Zielspezifisch" = "Específica";
 "Zieltag" = "Día del objetivo";
-"Zieltag und Training" = "Día del objetivo y entrenamiento";
 "Zielwoche" = "Semana del objetivo";
 "Zielzeit" = "Tiempo objetivo";
 "Zone %lld" = "Zona %lld";
@@ -960,3 +954,10 @@
 "Lieber wenige" = "Mejor pocas";
 "Gern mehr" = "Con gusto más";
 "Lässt sich jederzeit in den Einstellungen ändern." = "Puedes cambiarlo cuando quieras en Ajustes.";
+"Fitness: %@" = "Forma física: %@";
+"Ohne Zieltag und ohne Ende: Der Plan steigert bis zu deiner Zeit im Wochenraster, hält sie mit Entlastungswochen und Tests und wird alle 2 Wochen fortgeschrieben." = "Sin día objetivo y sin final: el plan aumenta hasta tu tiempo de la plantilla semanal, lo mantiene con semanas de descarga y tests, y se actualiza cada 2 semanas.";
+"Dein Zieltag ist vorbei" = "Tu día objetivo ha pasado";
+"Glückwunsch! Wie geht es weiter? Setz dir ein neues Ziel oder bleib einfach fit. Ohne Antwort geht es nach einer Woche Erholung mit „Fit werden und bleiben“ weiter." = "¡Enhorabuena! ¿Y ahora qué? Ponte un nuevo objetivo o simplemente mantente en forma. Si no respondes, después de una semana de recuperación seguirás con «Ponerse en forma y mantenerse».";
+"Neues Ziel setzen" = "Fijar un nuevo objetivo";
+"Fit bleiben" = "Mantenerme en forma";
+"Fit werden und bleiben, ohne Ende" = "Ponerse en forma y mantenerse, sin final";
