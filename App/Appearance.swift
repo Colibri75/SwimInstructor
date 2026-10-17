@@ -1,12 +1,15 @@
 import SwiftUI
 import UIKit
 
-/// Hell oder dunkel, in den Einstellungen wählbar: wie das iPhone, immer hell (Morgennebel) oder immer dunkel (Nacht).
+/// Hell oder dunkel, in der Einrichtung und den Einstellungen wählbar: immer dunkel (Nacht), immer hell (Morgennebel)
+/// oder wie das iPhone.
 enum Appearance: String, CaseIterable, Identifiable {
-    case system, light, dark
+    case dark, light, system
 
     /// Schlüssel in den UserDefaults (`@AppStorage`).
     static let storageKey = "appearance"
+    /// Ohne eigene Wahl: das dunkle Blau aus dem Logo (Steffens Wunsch 17.10.2026). Eine gespeicherte Wahl bleibt.
+    static let standard = Appearance.dark
 
     var id: String { rawValue }
 
