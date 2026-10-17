@@ -65,8 +65,10 @@ describe("loadConfig: Claude und Plan", () => {
       claudeServerFallback: true,
       dataDir: "./data",
       planTimezone: "Europe/Berlin",
-      maxGenerationsPerHour: 10,
-      maxGenerationsPerDay: 20
+      maxGenerationsPerHour: 4,
+      maxGenerationsPerDay: 8,
+      maxGenerationsAdminPerHour: 10,
+      maxGenerationsAdminPerDay: 20
     });
   });
 
@@ -144,8 +146,8 @@ describe("loadConfig: Nutzer-Budget und Alarme", () => {
   it("hat ein Gesamtbudget fuer den Server und ohne Webhook keine Alarme", () => {
     const config = loadConfig({ API_TOKEN: validToken });
 
-    expect(config.maxGenerationsTotalPerHour).toBe(15);
-    expect(config.maxGenerationsTotalPerDay).toBe(60);
+    expect(config.maxGenerationsTotalPerHour).toBe(30);
+    expect(config.maxGenerationsTotalPerDay).toBe(120);
     expect(config.alerts).toBeUndefined();
   });
 
@@ -176,6 +178,7 @@ describe("loadConfig: Nutzer-Budget und Alarme", () => {
     expect(() => loadConfig({ API_TOKEN: validToken, ALERT_WEBHOOK_URL: "https://example.test", ALERT_WEBHOOK_FORMAT: "teams" })).toThrow("ALERT_WEBHOOK_FORMAT");
     expect(() => loadConfig({ API_TOKEN: validToken, ALERT_WEBHOOK_URL: "https://example.test", ALERT_FAILURE_RATE: "2" })).toThrow("ALERT_FAILURE_RATE");
     expect(() => loadConfig({ API_TOKEN: validToken, PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR: "0" })).toThrow("PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR");
+    expect(() => loadConfig({ API_TOKEN: validToken, PLAN_MAX_GENERATIONS_ADMIN_PER_DAY: "0" })).toThrow("PLAN_MAX_GENERATIONS_ADMIN_PER_DAY");
   });
 
   it("liest Bundle-IDs und Anmelderegel fuer Mit Apple anmelden", () => {

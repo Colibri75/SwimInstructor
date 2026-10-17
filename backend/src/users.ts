@@ -334,6 +334,16 @@ export function setAppleRefreshToken(file: string, id: string, refreshToken: str
   return true;
 }
 
+/** Ob der Nutzer Admin ist: der Besitzer immer, sonst laut `users.json` (gesperrt oder unlesbar: nein). */
+export function isAdminUser(file: string, id: string): boolean {
+  if (id === OWNER_ID) return true;
+  try {
+    return readUsers(file).some((entry) => entry.id === id && entry.admin === true && entry.disabled !== true);
+  } catch {
+    return false;
+  }
+}
+
 /** Datenordner eines Nutzers: der Besitzer im Datenverzeichnis selbst (wie vor der Nutzertrennung), alle anderen darunter. */
 export function userDataDir(dataDir: string, userId: string): string {
   return userId === OWNER_ID ? dataDir : path.join(dataDir, "users", userId);

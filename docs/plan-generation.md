@@ -53,9 +53,11 @@ Text zusammenpassen. Was nicht mehr zu retten ist, blockt sie (`sanity_blocked`)
 
 ## Kostenbremse
 
-Der Server ruft Claude je Nutzer höchstens 10-mal pro Stunde und 20-mal pro Tag auf (`PLAN_MAX_GENERATIONS_PER_HOUR`,
-`PLAN_MAX_GENERATIONS_PER_DAY`), über alle Nutzer höchstens 15-mal pro Stunde und 60-mal pro Tag
-(`PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR`, `_TOTAL_PER_DAY`); alle Pläne zählen zusammen. Darüber liefert er den letzten gültigen Tagesplan
+Der Server ruft Claude je Nutzer höchstens 4-mal pro Stunde und 8-mal pro Tag auf (`PLAN_MAX_GENERATIONS_PER_HOUR`,
+`PLAN_MAX_GENERATIONS_PER_DAY`), über alle Nutzer höchstens 30-mal pro Stunde und 120-mal pro Tag
+(`PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR`, `_TOTAL_PER_DAY`); alle Pläne zählen zusammen. Admins (der Besitzer und Nutzer
+mit `admin`) zählen nicht gegen das Budget des Servers, damit andere Nutzer sie nicht aussperren; sie haben ein eigenes
+Budget von 10 pro Stunde und 20 pro Tag (`PLAN_MAX_GENERATIONS_ADMIN_PER_HOUR`, `_ADMIN_PER_DAY`). Darüber liefert er den letzten gültigen Tagesplan
 (`fallback_reason: budget_exceeded`) bzw. 503. Ein durchgesickerter Token kann so nur begrenzt Kosten erzeugen. Der
 Zähler liegt im Speicher und beginnt nach einem Neustart neu. Zusätzlich wird derselbe Zustand am selben Tag nur einmal
 geplant (Cache), außer die Anfrage verlangt `regenerate`.
@@ -111,10 +113,12 @@ Datenschutz. Die Datenschutzerklärung liefert der Server unter `/datenschutz` u
 | `PLAN_SERVER_FALLBACK` | `true` | Bei Ablehnung durch Claudes Sicherheitsklassifikatoren automatisch ein anderes Modell versuchen |
 | `DATA_DIR` | `./data` (im Container `/data`) | Letzter Tagesplan (`latest-plan-v2.json`, weitere Nutzer unter `users/<kennung>/`), Nutzer (`users.json`), Nutzung (`metrics/`) |
 | `PLAN_TIMEZONE` | `Europe/Berlin` | Zeitzone für "heute" |
-| `PLAN_MAX_GENERATIONS_PER_HOUR` | `10` | Kostenbremse je Nutzer |
-| `PLAN_MAX_GENERATIONS_PER_DAY` | `20` | Kostenbremse je Nutzer |
-| `PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR` | `15` | Kostenbremse des ganzen Servers |
-| `PLAN_MAX_GENERATIONS_TOTAL_PER_DAY` | `60` | Kostenbremse des ganzen Servers |
+| `PLAN_MAX_GENERATIONS_PER_HOUR` | `4` | Kostenbremse je Nutzer |
+| `PLAN_MAX_GENERATIONS_PER_DAY` | `8` | Kostenbremse je Nutzer |
+| `PLAN_MAX_GENERATIONS_ADMIN_PER_HOUR` | `10` | Kostenbremse je Admin (zählt nicht gegen den Server) |
+| `PLAN_MAX_GENERATIONS_ADMIN_PER_DAY` | `20` | Kostenbremse je Admin (zählt nicht gegen den Server) |
+| `PLAN_MAX_GENERATIONS_TOTAL_PER_HOUR` | `30` | Kostenbremse des ganzen Servers (ohne Admins) |
+| `PLAN_MAX_GENERATIONS_TOTAL_PER_DAY` | `120` | Kostenbremse des ganzen Servers (ohne Admins) |
 | `ALERT_WEBHOOK_URL` und weitere `ALERT_*` | (leer) | Alarme, siehe [backend-deploy.md](backend-deploy.md#alarme) |
 
 ## Bewertung der Pläne
