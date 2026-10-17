@@ -188,10 +188,18 @@ struct OnboardingView: View {
         // Erst die Tastatur schließen: Eine Zahl im Feld gilt erst, wenn das Feld den Fokus verliert.
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         guard var next = Step(rawValue: step.rawValue + offset) else { return }
-        // Wer schon zugestimmt hat, sieht die Einwilligung nicht noch einmal.
-        if next == .consent, consent.isGranted, let skipped = Step(rawValue: next.rawValue + offset) {
+        // Wer schon zugestimmt hat oder angemeldet ist, sieht diese Schritte nicht noch einmal.
+        while isAlreadyDone(next), let skipped = Step(rawValue: next.rawValue + offset) {
             next = skipped
         }
         step = next
+    }
+
+    private func isAlreadyDone(_ candidate: Step) -> Bool {
+        switch candidate {
+        case .consent: return consent.isGranted
+        case .account: return settings.hasToken
+        default: return false
+        }
     }
 }
