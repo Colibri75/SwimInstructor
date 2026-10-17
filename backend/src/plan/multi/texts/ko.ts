@@ -127,6 +127,10 @@ export const ko: SafetyCatalog = {
   testBlackout: (days) => `목표 전 마지막 ${days}일은 테스트 없음`,
   reportedPause: (kind) => `알린 휴식(${kind})`,
   afterReportedPause: (kind, until) => `알린 휴식(${kind}) 후 ${until}까지 가볍게만`,
+  secondaryRaceDay: () => "오늘은 보조 대회",
+  beforeSecondaryRace: (date) => `${date} 보조 대회: 직전에는 줄이기`,
+  afterSecondaryRace: (date) => `${date} 보조 대회 후 회복`,
+  testNearSecondaryRace: (date) => `${date} 보조 대회 전후에는 테스트 없음`,
   pauseKinds: { sick: "아픔", injury: "부상", vacation: "휴가", other: "기타" },
 
   thunderstorm: () => "뇌우 예보",

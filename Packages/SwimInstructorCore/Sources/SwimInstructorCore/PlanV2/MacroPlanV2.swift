@@ -267,6 +267,12 @@ public extension TrainingGoal {
         }.joined(separator: ",")
         let emphasis = self.emphasis.map { "\($0.sport.rawValue):\($0.percent)" }.joined(separator: ",")
         let day = kind == .fitness ? "-" : PlanFormatting.isoDay(targetDate, calendar: calendar)
-        return "\(kind.rawValue)|\(disciplines)|\(day)|\(emphasis)"
+        let key = "\(kind.rawValue)|\(disciplines)|\(day)|\(emphasis)"
+        guard !secondaryRaces.isEmpty else { return key }
+        // Nebenwettkämpfe ändern den Gesamtplan nur fein (siehe `change(to:)`).
+        let races = secondaryRaces.map { race in
+            "\(PlanFormatting.isoDay(race.date, calendar: calendar)):\(race.priority.rawValue):" + race.disciplines.map { "\($0.sport.rawValue):\(Int($0.distanceMeters))" }.joined(separator: "+")
+        }
+        return key + "|" + races.joined(separator: ",")
     }
 }

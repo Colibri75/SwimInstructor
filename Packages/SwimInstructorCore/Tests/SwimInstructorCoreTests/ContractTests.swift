@@ -246,6 +246,23 @@ final class ContractTests: XCTestCase {
         XCTAssertEqual(plain.withReportedPause(snapshot.reportedPause), snapshot)
     }
 
+    func testSnapshotV2WithSecondaryRacesRoundTripsWithoutLosingFields() throws {
+        let data = try RepoPaths.contractData("wire/snapshot-v2-secondary-races.json")
+        let snapshot = try AthleteStateSnapshot.jsonDecoder().decode(AthleteStateSnapshot.self, from: data)
+        let reencoded = try AthleteStateSnapshot.jsonEncoder().encode(snapshot)
+
+        XCTAssertEqual(try JSONKeyPaths.of(reencoded), try JSONKeyPaths.of(data))
+        // Wie die App sie aus dem gespeicherten Ziel anlegt.
+        let day = { (iso: String) in AthleteGoal.targetDate(onDayOf: TestFixtures.utc.date(from: DateComponents(
+            year: Int(iso.prefix(4))!, month: Int(iso.dropFirst(5).prefix(2))!, day: Int(iso.suffix(2))!, hour: 12
+        ))!, calendar: TestFixtures.utc) }
+        let races = [
+            SecondaryRace(date: day("2026-10-03"), priority: .b, disciplines: [.init(sport: "run", distanceMeters: 10_000)]),
+            SecondaryRace(date: day("2026-11-15"), priority: .c, disciplines: [.init(sport: "swim", distanceMeters: 1_500), .init(sport: "run", distanceMeters: 5_000)])
+        ]
+        XCTAssertEqual(snapshot.trainingGoal?.secondaryRaces, races.map { AthleteStateSnapshot.SecondaryRaceSummary($0, calendar: TestFixtures.utc) })
+    }
+
     // MARK: - Was die App heute auf dem Gerät speichert
 
     func testStoredTrainingGoalLoads() throws {

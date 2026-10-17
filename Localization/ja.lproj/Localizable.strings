@@ -961,3 +961,16 @@
 "Neues Ziel setzen" = "新しい目標を設定";
 "Fit bleiben" = "健康を維持する";
 "Fit werden und bleiben, ohne Ende" = "健康になって維持する（終わりなし）";
+"Wettkämpfe" = "レース";
+"Weitere Wettkämpfe" = "その他のレース";
+"Wettkampf hinzufügen" = "レースを追加";
+"Wettkämpfe, die du nebenbei machst. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen." = "ついでに出るレースです。レース当日はコーチがトレーニングを入れず、前後の日は軽めになります。左にスワイプで削除。";
+"Kleinere Wettkämpfe auf dem Weg zum Ziel. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen." = "目標までの道のりにある小さなレースです。レース当日はコーチがトレーニングを入れず、前後の日は軽めになります。左にスワイプで削除。";
+"Mit kurzem Zuspitzen" = "短いテーパーあり";
+"Als harte Einheit" = "ハードな練習として";
+"Die 3 Tage davor trainierst du weniger, die 2 Tage danach nur locker." = "直前の3日間は練習を減らし、その後の2日間は軽めだけにします。";
+"Der Wettkampf zählt wie eine harte Einheit, der Tag davor und danach bleiben ruhiger." = "レースはハードな練習として数え、前日と翌日は軽めになります。";
+"Ein Nebenwettkampf braucht mindestens eine Disziplin." = "サブレースには少なくとも1つの種目が必要です。";
+"Höchstens %lld weitere Wettkämpfe." = "その他のレースは最大%lld件です。";
+"An einem Tag geht nur ein Wettkampf." = "1日に入れられるレースは1つだけです。";
+"Ein weiterer Wettkampf kann nicht am Zieltag sein." = "その他のレースを目標日に入れることはできません。";

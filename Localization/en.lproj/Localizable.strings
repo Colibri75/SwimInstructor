@@ -961,3 +961,16 @@
 "Neues Ziel setzen" = "Set a new goal";
 "Fit bleiben" = "Stay fit";
 "Fit werden und bleiben, ohne Ende" = "Get fit and stay fit, no end date";
+"Wettkämpfe" = "Races";
+"Weitere Wettkämpfe" = "Other races";
+"Wettkampf hinzufügen" = "Add race";
+"Wettkämpfe, die du nebenbei machst. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen." = "Races you do on the side. On race day your coach plans no training, and the days before and after stay calmer. Swipe left to remove.";
+"Kleinere Wettkämpfe auf dem Weg zum Ziel. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen." = "Smaller races on the way to your goal. On race day your coach plans no training, and the days before and after stay calmer. Swipe left to remove.";
+"Mit kurzem Zuspitzen" = "With a short taper";
+"Als harte Einheit" = "As a hard session";
+"Die 3 Tage davor trainierst du weniger, die 2 Tage danach nur locker." = "You train less in the 3 days before and only easy in the 2 days after.";
+"Der Wettkampf zählt wie eine harte Einheit, der Tag davor und danach bleiben ruhiger." = "The race counts as a hard session; the day before and after stay calmer.";
+"Ein Nebenwettkampf braucht mindestens eine Disziplin." = "A secondary race needs at least one discipline.";
+"Höchstens %lld weitere Wettkämpfe." = "At most %lld other races.";
+"An einem Tag geht nur ein Wettkampf." = "Only one race per day.";
+"Ein weiterer Wettkampf kann nicht am Zieltag sein." = "Another race can’t be on your goal day.";

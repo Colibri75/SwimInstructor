@@ -961,3 +961,16 @@
 "Neues Ziel setzen" = "Fijar un nuevo objetivo";
 "Fit bleiben" = "Mantenerme en forma";
 "Fit werden und bleiben, ohne Ende" = "Ponerse en forma y mantenerse, sin final";
+"Wettkämpfe" = "Competiciones";
+"Weitere Wettkämpfe" = "Otras competiciones";
+"Wettkampf hinzufügen" = "Añadir competición";
+"Wettkämpfe, die du nebenbei machst. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen." = "Competiciones que haces aparte. El día de la competición tu entrenador no planifica entrenamiento, y los días de antes y después son más tranquilos. Desliza a la izquierda para eliminar.";
+"Kleinere Wettkämpfe auf dem Weg zum Ziel. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen." = "Competiciones más pequeñas camino de tu objetivo. El día de la competición tu entrenador no planifica entrenamiento, y los días de antes y después son más tranquilos. Desliza a la izquierda para eliminar.";
+"Mit kurzem Zuspitzen" = "Con una puesta a punto corta";
+"Als harte Einheit" = "Como sesión dura";
+"Die 3 Tage davor trainierst du weniger, die 2 Tage danach nur locker." = "Los 3 días anteriores entrenas menos y los 2 días posteriores solo suave.";
+"Der Wettkampf zählt wie eine harte Einheit, der Tag davor und danach bleiben ruhiger." = "La competición cuenta como una sesión dura; el día anterior y el siguiente son más tranquilos.";
+"Ein Nebenwettkampf braucht mindestens eine Disziplin." = "Una competición secundaria necesita al menos una disciplina.";
+"Höchstens %lld weitere Wettkämpfe." = "Como máximo %lld competiciones más.";
+"An einem Tag geht nur ein Wettkampf." = "Solo una competición por día.";
+"Ein weiterer Wettkampf kann nicht am Zieltag sein." = "Otra competición no puede ser el día de tu objetivo.";

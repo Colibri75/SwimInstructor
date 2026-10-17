@@ -115,6 +115,10 @@ export const hi: SafetyCatalog = {
   testBlackout: (days) => `लक्ष्य से पहले के आख़िरी ${days} दिनों में टेस्ट नहीं`,
   reportedPause: (kind) => `बताया गया ब्रेक (${kind})`,
   afterReportedPause: (kind, until) => `बताए गए ब्रेक (${kind}) के बाद ${until} तक सिर्फ़ हल्का`,
+  secondaryRaceDay: () => "आज सहायक रेस",
+  beforeSecondaryRace: (date) => `${date} को सहायक रेस: ठीक पहले कम`,
+  afterSecondaryRace: (date) => `${date} की सहायक रेस के बाद रिकवरी`,
+  testNearSecondaryRace: (date) => `${date} की सहायक रेस के आसपास कोई टेस्ट नहीं`,
   pauseKinds: { sick: "बीमार", injury: "चोट", vacation: "छुट्टी", other: "अन्य" },
 
   thunderstorm: () => "आँधी-तूफ़ान का पूर्वानुमान",

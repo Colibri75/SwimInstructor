@@ -227,6 +227,14 @@ export interface SafetyCatalog {
   reportedPause(kind: string): string;
   /** "nach gemeldeter Pause (krank) bis 24.10. nur locker" */
   afterReportedPause(kind: string, until: string): string;
+  /** "Nebenwettkampf heute": Grund für einen Tag ohne geplantes Training */
+  secondaryRaceDay(): string;
+  /** "Nebenwettkampf am 15.11.: kurz vorher weniger" */
+  beforeSecondaryRace(date: string): string;
+  /** "Erholung nach dem Nebenwettkampf am 15.11." */
+  afterSecondaryRace(date: string): string;
+  /** "kein Test rund um den Nebenwettkampf am 15.11." */
+  testNearSecondaryRace(date: string): string;
   /** Art der gemeldeten Pause (sick, injury, vacation, other), passend in die Klammer oben. */
   pauseKinds: Record<string, string>;
 

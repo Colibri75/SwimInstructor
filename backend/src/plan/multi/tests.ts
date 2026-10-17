@@ -6,6 +6,7 @@ import { SnapshotV2 } from "../snapshot";
 import { addDays } from "../calendar";
 import { goalDayOf, MULTI_RULES, SportLimitsNow, sportLimits } from "./limits";
 import { isFitnessGoal } from "./schedule";
+import { secondaryRaces } from "./secondaryRaces";
 import { TestSettings } from "./schemas";
 import { emphasisOf, formatAmount, isConfirmed, plannedSports, stateOf } from "./sports";
 import { intensityText, say, testText, Text } from "./texts";
@@ -154,7 +155,7 @@ export function fitsToday(snapshot: SnapshotV2, sport: SportDefinition, test: Pe
  * Woche, in der noch mindestens drei Tage bleiben), sonst nach dem Intervall. Der erste Test ist ohne tragfaehige
  * Grundlage oder im Wiedereinstieg der ohne Vollbelastung; koennte der Athlet ihn heute nicht machen, fruehestens in
  * der naechsten Woche. Danach alle `interval_weeks` Wochen den bevorzugten Test, bevorzugt in einer Entlastungswoche.
- * Nie beim Zuspitzen, in der Zielwoche oder in den letzten 14 Tagen davor, nur in Wochen mit
+ * Nie beim Zuspitzen, in der Zielwoche, in den letzten 14 Tagen davor oder in einer Woche mit B-Nebenwettkampf, nur in Wochen mit
  * Training in der Sportart, hoechstens zwei Tests je Woche (Sportarten mit groesserem Schwerpunkt zuerst).
  */
 export function scheduleMacroTests(snapshot: SnapshotV2, weeks: readonly TestWeek[], today: string, settings?: TestSettings): Map<string, ScheduledTest[]> {
@@ -172,9 +173,11 @@ export function scheduleMacroTests(snapshot: SnapshotV2, weeks: readonly TestWee
       const end = addDays(week.week_start, 6);
       const phaseOk = week.phase === "base" || week.phase === "specific" || week.phase === "maintain";
       const beforeBlackout = week.phase === "maintain" || fitness || daysBetween(end, goalDay) > MULTI_RULES.testBlackoutDays;
+      const raceWeek = secondaryRaces(snapshot).some((race) => race.priority === "b" && race.date >= week.week_start && race.date <= end);
       return (
         phaseOk &&
         beforeBlackout &&
+        !raceWeek &&
         end >= addDays(today, 2) &&
         (week.amounts.get(sport.id) ?? 0) > 0 &&
         (result.get(week.week_start)?.length ?? 0) < MULTI_RULES.maxTestsPerWeek
