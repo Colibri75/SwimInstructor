@@ -154,14 +154,26 @@ final class TrainingGoalTests: XCTestCase {
         XCTAssertEqual(try JSONDecoder().decode(TrainingGoal.self, from: JSONEncoder().encode(fitness)), fitness)
     }
 
-    func testFitnessGoalHasNoDisciplinesAndAHorizon() throws {
+    func testFitnessGoalHasNoDisciplinesAndARollingHorizon() throws {
         let fitness = olympic().settingKind(.fitness, now: now)
         XCTAssertEqual(fitness.kind, .fitness)
         XCTAssertTrue(fitness.disciplines.isEmpty)
         XCTAssertNil(fitness.template)
         XCTAssertEqual(fitness.sports, [.swim, .bike, .run])
-        XCTAssertEqual(fitness.targetDate, AthleteGoal.targetDate(onDayOf: now.addingTimeInterval(26 * 7 * 86_400)))
+        // Kein Ende: geplant wird immer 12 Wochen ab heute, auch wenn der gespeicherte Tag vorbei ist.
+        XCTAssertEqual(
+            fitness.planningDate(now: now, calendar: TestFixtures.utc),
+            AthleteGoal.targetDate(onDayOf: now.addingTimeInterval(12 * 7 * 86_400), calendar: TestFixtures.utc)
+        )
+        let later = now.addingTimeInterval(400 * 86_400)
+        XCTAssertEqual(
+            fitness.planningDate(now: later, calendar: TestFixtures.utc),
+            AthleteGoal.targetDate(onDayOf: later.addingTimeInterval(12 * 7 * 86_400), calendar: TestFixtures.utc)
+        )
         XCTAssertNil(fitness.problem(now: now, calendar: TestFixtures.utc))
+        XCTAssertNil(fitness.problem(now: later, calendar: TestFixtures.utc))
+        XCTAssertFalse(fitness.isOver(now: later, calendar: TestFixtures.utc))
+        XCTAssertEqual(olympic().planningDate(now: now, calendar: TestFixtures.utc), future)
 
         var withDiscipline = fitness
         withDiscipline.disciplines = [.init(sport: .run, distanceMeters: 5000)]
@@ -173,6 +185,24 @@ final class TrainingGoalTests: XCTestCase {
         XCTAssertEqual(back.disciplines.map(\.sport), [.bike])
         XCTAssertEqual(back.targetDate, fitness.targetDate)
         XCTAssertNil(back.problem())
+
+        // Liegt der gespeicherte Tag nicht in der Zukunft, bekommt das neue Ziel einen Tag in 12 Wochen.
+        let stale = fitness.settingKind(.race, now: later)
+        XCTAssertGreaterThan(stale.targetDate, later)
+        XCTAssertNil(stale.problem(now: later))
+    }
+
+    func testRaceIsOverAfterItsDayAndContinuesAsFitness() {
+        let race = olympic()
+        XCTAssertFalse(race.isOver(now: future, calendar: TestFixtures.utc))
+        XCTAssertTrue(race.isOver(now: future.addingTimeInterval(86_400), calendar: TestFixtures.utc))
+        let followUp = race.fitnessFollowUp
+        XCTAssertEqual(followUp.kind, .fitness)
+        XCTAssertTrue(followUp.disciplines.isEmpty)
+        XCTAssertEqual(followUp.sports, race.sports)
+        XCTAssertEqual(followUp.emphasis, race.emphasis)
+        XCTAssertEqual(followUp.weeklyHours, race.weeklyHours)
+        XCTAssertNil(followUp.problem(now: future.addingTimeInterval(86_400), calendar: TestFixtures.utc))
     }
 
     func testTimeGoalNeedsTimesAndDistanceGoalDropsThem() {
@@ -209,7 +239,6 @@ final class TrainingGoalTests: XCTestCase {
 
     func testFitnessSummary() {
         let fitness = olympic().settingKind(.fitness, now: now).settingSport(.swim, included: false)
-        let day = PlanFormatting.germanDate(PlanFormatting.isoDay(fitness.targetDate, calendar: TestFixtures.utc))
-        XCTAssertEqual(PlanFormatting.goalSummary(fitness, calendar: TestFixtures.utc), "Fitness: Radfahren, Laufen, bis \(day)")
+        XCTAssertEqual(PlanFormatting.goalSummary(fitness, calendar: TestFixtures.utc), "Fitness: Radfahren, Laufen")
     }
 }

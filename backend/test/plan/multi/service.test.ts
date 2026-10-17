@@ -482,6 +482,18 @@ describe("MultiPlanService.planMacro", () => {
     expect(user).toContain(`Erstelle den Gesamtplan bis zum Zieltag ${GOAL_DAY}. Heute ist ${TODAY}.`);
   });
 
+  it("plant ein Fitnessziel mindestens 12 Wochen voraus, auch mit vergangenem Ende einer aelteren App", async () => {
+    const complete = jest.fn().mockResolvedValue(generated(asBlocks(macroPlan(macroWeekStarts(TODAY, "2026-12-23"), () => ({ swim: 3000, bike: 90, run: 30 })))));
+    const { service } = setup({ complete });
+    const snapshot = multiSnapshot({ daysUntilGoal: -10, goal: { kind: "fitness", disciplines: [], template: undefined } });
+
+    const result = await service.planMacro({ snapshot, today: TODAY });
+
+    expect(result.goalDay).toBe("2026-12-23");
+    expect(result.plan.weeks).toHaveLength(13);
+    expect(new Set(result.plan.weeks.map((week) => week.phase))).toEqual(new Set(["base"]));
+  });
+
   it("rechnet Claudes Abschnitte in die Wochen bis zum Zieltag um", async () => {
     const block = (weeks: number, swim: [number, number, number | null], deloadLast: boolean) => ({
       weeks,

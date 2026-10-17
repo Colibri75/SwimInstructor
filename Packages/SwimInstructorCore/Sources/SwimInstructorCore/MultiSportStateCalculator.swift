@@ -41,8 +41,8 @@ public struct MultiSportStateCalculator: Sendable {
             trainingGoal: AthleteStateSnapshot.TrainingGoalSummary(
                 template: goal.template,
                 kind: goal.kind,
-                targetDate: goal.targetDate,
-                daysUntilGoal: max(0, dayDistance(from: now, to: goal.targetDate)),
+                targetDate: goal.planningDate(now: now, calendar: calendar),
+                daysUntilGoal: max(0, dayDistance(from: now, to: goal.planningDate(now: now, calendar: calendar))),
                 trainingDaysPerWeek: goal.trainingDaysPerWeek,
                 weeklyHours: goal.weeklyHours,
                 disciplines: goal.disciplines,

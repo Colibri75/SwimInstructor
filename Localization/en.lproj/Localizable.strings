@@ -137,7 +137,6 @@
 "Bergauf" = "Uphill";
 "Beschwerden" = "Pain";
 "Bis einschließlich" = "Through";
-"Bis zu diesem Tag plant die App. Danach legst du einfach einen neuen Zeitraum fest." = "The app plans up to this day. After that, simply set a new period.";
 "Bis zum Ziel" = "Until the goal";
 "Bisher %@" = "Previously %@";
 "Bitte ein Token eingeben." = "Please enter a token.";
@@ -297,7 +296,6 @@
 "Fertig" = "Done";
 "Fertig eingerichtet" = "All set up";
 "Fit werden und bleiben" = "Get fit and stay fit";
-"Fitness: %@, bis %@" = "Fitness: %@, until %@";
 "Flossen" = "Fins";
 "Fortschreibung" = "Plan update";
 "Fr" = "Fri";
@@ -496,7 +494,6 @@
 "Ohne Health-Daten kann kein Plan erstellt werden." = "A plan can't be created without Health data.";
 "Ohne Kalenderzugriff zählt die freie Zeit nicht. Erlaube ihn in den Einstellungen des iPhones unter Datenschutz > Kalender." = "Without calendar access, free time isn't taken into account. Allow it in your iPhone's Settings under Privacy > Calendars.";
 "Ohne Ortsfreigabe gibt es kein Wetter. Erlaube sie in den Einstellungen des iPhones unter Datenschutz > Ortungsdienste." = "Without location access, there's no weather. Allow it in your iPhone's Settings under Privacy > Location Services.";
-"Ohne Zieltag: Der Plan steigert bis zu deiner Zeit im Wochenraster und hält sie dann." = "No goal date: the plan builds up to your time in the weekly schedule and then maintains it.";
 "Ort" = "Location";
 "Pace (4 Wochen)" = "Pace (4 weeks)";
 "Pace pro 100 m" = "Pace per 100 m";
@@ -527,7 +524,6 @@
 "Plan ohne Wunsch neu erstellen" = "Recreate plan without request";
 "Plan vom %@. Öffne die iPhone-App für den Plan von heute." = "Plan from %@. Open the iPhone app for today's plan.";
 "Planen" = "Plan";
-"Planen bis" = "Plan until";
 "Planung" = "Planning";
 "Plus fügt den Bereich unten wieder an." = "Plus adds the section back at the bottom.";
 "Pro Woche" = "Per week";
@@ -729,7 +725,6 @@
 "Zeit 400 m" = "Time 400 m";
 "Zeit über eine Strecke" = "Time over a distance";
 "Zeitraum" = "Period";
-"Zeitraum und Training" = "Period and training";
 "Ziehen ändert die Reihenfolge. Minus blendet einen Bereich aus. Bereiche mit Schloss gehören zum Tab und lassen sich nur verschieben." = "Drag to reorder. Minus hides a section. Sections with a lock belong to the tab and can only be moved.";
 "Ziel" = "Goal";
 "Ziel am %@, noch %lld Wochen" = "Goal on %@, %lld weeks to go";
@@ -739,7 +734,6 @@
 "Zielpace %@: noch %lld s pro 100 m zu langsam." = "Target pace %@: still %lld s per 100 m too slow.";
 "Zielspezifisch" = "Goal-specific";
 "Zieltag" = "Goal date";
-"Zieltag und Training" = "Goal date and training";
 "Zielwoche" = "Goal week";
 "Zielzeit" = "Target time";
 "Zone %lld" = "Zone %lld";
@@ -960,3 +954,10 @@
 "Lieber wenige" = "Rather few";
 "Gern mehr" = "Happy with more";
 "Lässt sich jederzeit in den Einstellungen ändern." = "You can change this any time in Settings.";
+"Fitness: %@" = "Fitness: %@";
+"Ohne Zieltag und ohne Ende: Der Plan steigert bis zu deiner Zeit im Wochenraster, hält sie mit Entlastungswochen und Tests und wird alle 2 Wochen fortgeschrieben." = "No goal date and no end: the plan builds up to your time in the weekly schedule, maintains it with recovery weeks and tests, and is updated every 2 weeks.";
+"Dein Zieltag ist vorbei" = "Your goal day is over";
+"Glückwunsch! Wie geht es weiter? Setz dir ein neues Ziel oder bleib einfach fit. Ohne Antwort geht es nach einer Woche Erholung mit „Fit werden und bleiben“ weiter." = "Congratulations! What’s next? Set a new goal or simply stay fit. If you don’t answer, you’ll continue with “Get fit and stay fit” after a week of recovery.";
+"Neues Ziel setzen" = "Set a new goal";
+"Fit bleiben" = "Stay fit";
+"Fit werden und bleiben, ohne Ende" = "Get fit and stay fit, no end date";

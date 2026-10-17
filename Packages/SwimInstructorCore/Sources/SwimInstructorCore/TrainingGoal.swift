@@ -8,7 +8,8 @@ public enum GoalKind: String, Codable, Sendable, CaseIterable, Identifiable {
     case time
     /// Eine Strecke am Stück schaffen, ohne Wettkampf und ohne Zielzeit.
     case distance
-    /// Fit werden und bleiben: keine Disziplin, kein Wettkampf, der Zieltag ist nur das Ende des Planungszeitraums.
+    /// Fit werden und bleiben: keine Disziplin, kein Wettkampf, kein Zieltag und kein Ende. Geplant wird immer
+    /// `TrainingGoal.fitnessHorizonWeeks` Wochen voraus, jede Fortschreibung verlängert den Plan.
     case fitness
 
     public var id: String { rawValue }
@@ -27,7 +28,7 @@ public enum GoalKind: String, Codable, Sendable, CaseIterable, Identifiable {
         case .race: return String(localized: "Ein Wettkampf an einem festen Tag, je Disziplin mit Zielzeit oder nur ankommen.")
         case .time: return String(localized: "Eine Zeit über eine Strecke ohne Wettkampf, z. B. 1500 m Kraul unter 30 Minuten. Am Zieltag steht ein eigener Versuch.")
         case .distance: return String(localized: "Eine Strecke am Stück schaffen, z. B. 3000 m schwimmen oder 10 km laufen, ohne Wettkampf.")
-        case .fitness: return String(localized: "Ohne Zieltag: Der Plan steigert bis zu deiner Zeit im Wochenraster und hält sie dann.")
+        case .fitness: return String(localized: "Ohne Zieltag und ohne Ende: Der Plan steigert bis zu deiner Zeit im Wochenraster, hält sie mit Entlastungswochen und Tests und wird alle 2 Wochen fortgeschrieben.")
         }
     }
 
@@ -98,8 +99,8 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
     /// Fehlt in Zielen von vor P2: dann ein Wettkampf.
     public var kind: GoalKind
     public var disciplines: [Discipline]
-    /// Mittag (Berlin) des Zieltags, siehe `AthleteGoal.targetDate(onDayOf:)`. Bei einem Fitnessziel das Ende des
-    /// Planungszeitraums.
+    /// Mittag (Berlin) des Zieltags, siehe `AthleteGoal.targetDate(onDayOf:)`. Ein Fitnessziel hat keinen: Der Wert
+    /// bleibt gespeichert, zählt aber nicht (siehe `planningDate(now:)`).
     public var targetDate: Date
     /// Seit P2 aus dem Wochenraster (`WeeklySchedule.applied(to:)`).
     public var trainingDaysPerWeek: Int
@@ -145,8 +146,34 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
     public static let trainingDaysRange: ClosedRange<Int> = 1...7
     public static let weeklyHoursRange: ClosedRange<Double> = 1...30
     public static let maximumDisciplines = 8
-    /// So weit reicht der Planungszeitraum eines neuen Fitnessziels.
-    public static let fitnessHorizonWeeks = 26
+    /// So weit plant ein Fitnessziel voraus; der Zeitraum wandert jeden Tag mit.
+    public static let fitnessHorizonWeeks = 12
+    /// So viele Tage nach dem Zieltag geht es ohne neues Ziel von selbst mit "Fit werden und bleiben" weiter.
+    public static let recoveryDaysAfterGoal = 7
+
+    /// Der Tag, bis zu dem geplant wird: der Zieltag, bei einem Fitnessziel `fitnessHorizonWeeks` Wochen ab `now`.
+    public func planningDate(now: Date, calendar: Calendar = .current) -> Date {
+        guard kind == .fitness else { return targetDate }
+        let horizon = calendar.date(byAdding: .day, value: Self.fitnessHorizonWeeks * 7, to: now) ?? now
+        return AthleteGoal.targetDate(onDayOf: horizon, calendar: calendar)
+    }
+
+    /// Der Zieltag ist vorbei (nie bei einem Fitnessziel).
+    public func isOver(now: Date, calendar: Calendar = .current) -> Bool {
+        kind != .fitness && calendar.startOfDay(for: targetDate) < calendar.startOfDay(for: now)
+    }
+
+    /// Nach dem Zieltag: fit bleiben mit denselben Sportarten, Schwerpunkten und Trainingszeiten.
+    public var fitnessFollowUp: TrainingGoal {
+        TrainingGoal(
+            kind: .fitness,
+            disciplines: [],
+            targetDate: targetDate,
+            trainingDaysPerWeek: trainingDaysPerWeek,
+            weeklyHours: weeklyHours,
+            emphasis: emphasis.filter { $0.percent > 0 }
+        )
+    }
 
     /// Der Anteil einer Sportart am Training (0, wenn sie nicht vorkommt).
     public func percent(for sport: SportID) -> Int {
@@ -203,10 +230,11 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
         return nil
     }
 
-    /// Wie `problem(registry:)`, dazu muss der Zieltag nach heute liegen (beim Einstellen eines neuen Ziels).
+    /// Wie `problem(registry:)`, dazu muss der Zieltag nach heute liegen (beim Einstellen eines neuen Ziels). Ein
+    /// Fitnessziel hat keinen Zieltag.
     public func problem(now: Date, calendar: Calendar = .current, registry: SportRegistry = .standard) -> String? {
         if let problem = problem(registry: registry) { return problem }
-        guard calendar.startOfDay(for: targetDate) > calendar.startOfDay(for: now) else {
+        guard kind == .fitness || calendar.startOfDay(for: targetDate) > calendar.startOfDay(for: now) else {
             return String(localized: "Der Zieltag muss in der Zukunft liegen.")
         }
         return nil
@@ -219,9 +247,9 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
         emphasis.filter { $0.percent > 0 }.map(\.sport).sorted { order(of: $0) < order(of: $1) }
     }
 
-    /// Wechselt die Zielart. Ein Fitnessziel verliert die Disziplinen und läuft `fitnessHorizonWeeks` Wochen ab `now`;
-    /// ein Ziel mit Disziplinen bekommt, falls es keine hat, eine für die Sportart mit dem größten Schwerpunkt.
-    /// "Strecke schaffen" hat keine Zielzeiten.
+    /// Wechselt die Zielart. Ein Fitnessziel verliert die Disziplinen; ein Ziel mit Disziplinen bekommt, falls es keine
+    /// hat, eine für die Sportart mit dem größten Schwerpunkt, und einen Zieltag `fitnessHorizonWeeks` Wochen ab `now`,
+    /// falls der bisherige nicht in der Zukunft liegt. "Strecke schaffen" hat keine Zielzeiten.
     public func settingKind(_ newKind: GoalKind, now: Date) -> TrainingGoal {
         var copy = self
         copy.kind = newKind
@@ -233,11 +261,11 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
             if newKind == .distance {
                 copy.disciplines = copy.disciplines.map { Discipline(sport: $0.sport, distanceMeters: $0.distanceMeters, openWater: $0.openWater) }
             }
+            if Calendar.current.startOfDay(for: copy.targetDate) <= Calendar.current.startOfDay(for: now) {
+                copy.targetDate = copy.fitnessFollowUp.planningDate(now: now)
+            }
         } else {
             copy.disciplines = []
-            if kind.hasDisciplines {
-                copy.targetDate = AthleteGoal.targetDate(onDayOf: now.addingTimeInterval(TimeInterval(Self.fitnessHorizonWeeks * 7 * 86_400)))
-            }
         }
         return copy
     }

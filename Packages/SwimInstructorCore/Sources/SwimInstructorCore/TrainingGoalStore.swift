@@ -24,6 +24,19 @@ public protocol TrainingGoalStoring {
     @discardableResult func applyPendingIfDue(now: Date) -> Bool
 }
 
+public extension TrainingGoalStoring {
+    /// `recoveryDaysAfterGoal` Tage nach dem Zieltag ohne neues Ziel: weiter mit "Fit werden und bleiben" (dieselben
+    /// Sportarten und Schwerpunkte). `true`, wenn gewechselt wurde.
+    @discardableResult
+    func continueWithFitnessIfDue(now: Date, calendar: Calendar = .current) -> Bool {
+        let current = goal()
+        guard current.isOver(now: now, calendar: calendar), pendingGoal() == nil,
+              let end = calendar.date(byAdding: .day, value: TrainingGoal.recoveryDaysAfterGoal, to: calendar.startOfDay(for: current.targetDate)),
+              calendar.startOfDay(for: now) >= end else { return false }
+        return apply(current.fitnessFollowUp, now: now) == .newGoal
+    }
+}
+
 public struct UserDefaultsTrainingGoalStore: TrainingGoalStoring {
     static let storageKey = "settings.trainingGoal"
     static let versionKey = "settings.trainingGoal.version"
@@ -75,7 +88,7 @@ public struct UserDefaultsTrainingGoalStore: TrainingGoalStoring {
     public func lockedUntil(now: Date) -> Date? {
         guard let appliedAt = defaults.object(forKey: Self.appliedAtKey) as? Date else { return nil }
         // Ist der Zieltag vorbei, geht ein neues Ziel sofort.
-        guard calendar.startOfDay(for: goal().targetDate) >= calendar.startOfDay(for: now) else { return nil }
+        guard !goal().isOver(now: now, calendar: calendar) else { return nil }
         guard let end = calendar.date(byAdding: .day, value: Self.lockDays, to: appliedAt), end > now else { return nil }
         return end
     }

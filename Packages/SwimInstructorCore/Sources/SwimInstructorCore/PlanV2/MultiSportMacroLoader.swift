@@ -100,6 +100,9 @@ public final class MultiSportMacroLoader: ObservableObject {
         return result
     }
 
+    /// Ein Fitnessziel: kein Zieltag, der Plan läuft ohne Ende weiter.
+    public var isOpenEnded: Bool { goal().kind == .fitness }
+
     /// Wochen bis zum Zieltag (angebrochene zählen), 0 danach.
     public var weeksUntilGoal: Int {
         guard let plan, let goalDate = weekCalendar.date(from: plan.goalDay), let today = weekCalendar.date(from: todayKey) else { return 0 }

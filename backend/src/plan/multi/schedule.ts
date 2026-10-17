@@ -11,7 +11,10 @@ export function goalKind(snapshot: SnapshotV2): GoalKind {
   return snapshot.training_goal.kind ?? "race";
 }
 
-/** Fit werden und bleiben: kein Wettkampf, kein Zuspitzen, der Zieltag ist nur das Ende des Planungszeitraums. */
+/** So weit plant ein Fitnessziel mindestens voraus (wie die App: 12 Wochen); jede Fortschreibung verlaengert den Plan. */
+export const FITNESS_HORIZON_DAYS = 84;
+
+/** Fit werden und bleiben: kein Wettkampf, kein Zuspitzen, kein Zieltag und kein Ende. */
 export function isFitnessGoal(snapshot: SnapshotV2): boolean {
   return goalKind(snapshot) === "fitness";
 }

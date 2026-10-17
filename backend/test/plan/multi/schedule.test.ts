@@ -152,23 +152,26 @@ describe("Wochenraster", () => {
 });
 
 describe("Fitnessziel", () => {
-  it("hat kein Zuspitzen, keine Zielwoche und keine Testsperre vor dem Ende", () => {
+  it("hat kein Zuspitzen, keine Zielwoche, keine Testsperre und kein Ende", () => {
     const snapshot = fitness(20);
     expect(taperWeeks(snapshot)).toBe(0);
     const weeks = macroWeekStarts(TODAY, "2026-10-20");
     expect(weeks.map((week) => phaseOf(snapshot, week, TODAY))).toEqual(weeks.map(() => "base"));
     expect(testBlackoutReason(snapshot, "2026-10-19")).toBeNull();
-    expect(phaseOf(fitness(-3), "2026-09-28", TODAY)).toBe("maintain");
+    // Auch wenn eine aeltere App ein vergangenes Ende schickt: weiter Aufbau, nie "erhaltend".
+    expect(phaseOf(fitness(-3), "2026-09-28", TODAY)).toBe("base");
   });
 
-  it("plant den Gesamtplan ohne Zuspitzen bis zum Ende des Planungszeitraums", () => {
+  it("plant den Gesamtplan ohne Zuspitzen und ohne Ende", () => {
     const snapshot = fitness();
     const goalDay = "2027-03-31";
     const weeks = macroWeekStarts(TODAY, goalDay);
     const message = buildMacroUserMessageV2(snapshot, { today: TODAY, goalDay, weeks });
-    expect(message).toContain(`Erstelle den Gesamtplan bis zum Ende des Planungszeitraums am ${goalDay}.`);
+    expect(message).toContain(`Erstelle den Gesamtplan für die nächsten Wochen bis ${goalDay} (ein Fitnessziel hat kein Ende, jede Fortschreibung verlängert den Plan).`);
+    expect(message).toContain("- Kein Zieltag und kein Ende: Der Plan läuft offen weiter und wird alle 2 Wochen fortgeschrieben und verlängert.");
+    expect(message).not.toContain("bis zur Zielwoche");
     expect(message).toContain("- Zielart: fit werden und bleiben, ohne Wettkampf und ohne Zuspitzen.");
-    expect(message).toContain("Kein Zuspitzen: steigere bis zu den Wochenminuten unten und halte sie dann.");
+    expect(message).toContain("Kein Zuspitzen: steigere bis zu den Wochenminuten unten und halte sie dann, mit Entlastungswochen und etwas Abwechslung.");
     expect(message).not.toContain("Zuspitzen: je Sportart");
     expect(message).not.toContain(": taper");
 

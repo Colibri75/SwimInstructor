@@ -473,14 +473,12 @@ export function multiPhase(weekStart: string, goalDay: string, today: string, ta
 }
 
 /**
- * Phase einer Woche fuer das Ziel des Snapshots. Ein Fitnessziel hat kein Zuspitzen und keine Zielwoche: Bis zum Ende
- * des Planungszeitraums ist jede Woche Aufbau (mit dem Ziel, den Wochenumfang des Wochenrasters zu erreichen und zu
- * halten), danach erhaltend.
+ * Phase einer Woche fuer das Ziel des Snapshots. Ein Fitnessziel hat kein Zuspitzen, keine Zielwoche und kein Ende:
+ * Jede Woche ist Aufbau (mit dem Ziel, den Wochenumfang des Wochenrasters zu erreichen und zu halten).
  */
 export function phaseOf(snapshot: SnapshotV2, weekStart: string, today: string): MacroPhase {
-  const goalDay = goalDayOf(snapshot);
-  if (isFitnessGoal(snapshot)) return goalDay < today ? "maintain" : "base";
-  return multiPhase(weekStart, goalDay, today, taperWeeks(snapshot));
+  if (isFitnessGoal(snapshot)) return "base";
+  return multiPhase(weekStart, goalDayOf(snapshot), today, taperWeeks(snapshot));
 }
 
 export function goalDayOf(snapshot: SnapshotV2): string {

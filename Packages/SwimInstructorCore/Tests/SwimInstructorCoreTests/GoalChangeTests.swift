@@ -143,4 +143,40 @@ final class GoalChangeTests: XCTestCase {
         store.resetGoal()
         XCTAssertEqual(store.goalVersion, version + 2)
     }
+
+    // MARK: - Fitness ohne Ende und nach dem Zieltag
+
+    func testFitnessGoalIgnoresItsStoredDay() {
+        let fitness = olympic().settingKind(.fitness, now: now)
+        var shifted = fitness
+        shifted.targetDate = fitness.targetDate.addingTimeInterval(200 * 86_400)
+        XCTAssertEqual(fitness.planKey(calendar: calendar), shifted.planKey(calendar: calendar))
+        XCTAssertEqual(fitness.change(to: shifted, calendar: calendar), .none)
+    }
+
+    func testContinuesWithFitnessAWeekAfterTheGoalDay() throws {
+        let store = try store()
+        let race = store.goal()
+        let version = store.goalVersion
+        let dayAfter = race.targetDate.addingTimeInterval(86_400)
+        XCTAssertFalse(store.continueWithFitnessIfDue(now: dayAfter, calendar: calendar), "Erst Erholung, dann fit bleiben")
+        XCTAssertEqual(store.goal(), race)
+        XCTAssertNil(store.lockedUntil(now: dayAfter), "Nach dem Zieltag geht ein neues Ziel sofort")
+
+        let weekAfter = race.targetDate.addingTimeInterval(7 * 86_400)
+        XCTAssertTrue(store.continueWithFitnessIfDue(now: weekAfter, calendar: calendar))
+        XCTAssertEqual(store.goal().kind, .fitness)
+        XCTAssertEqual(store.goal().emphasis, race.emphasis)
+        XCTAssertEqual(store.goalVersion, version + 1)
+        // Ein Fitnessziel läuft ohne Ende weiter.
+        XCTAssertFalse(store.continueWithFitnessIfDue(now: weekAfter.addingTimeInterval(400 * 86_400), calendar: calendar))
+    }
+
+    func testAPendingGoalWinsOverFitness() throws {
+        let store = try store()
+        let race = store.goal()
+        store.setPendingGoal(olympic(daysAhead: 300))
+        XCTAssertFalse(store.continueWithFitnessIfDue(now: race.targetDate.addingTimeInterval(8 * 86_400), calendar: calendar))
+        XCTAssertEqual(store.goal().kind, .race)
+    }
 }

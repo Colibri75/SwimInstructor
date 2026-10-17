@@ -137,7 +137,6 @@
 "Bergauf" = "Bergauf";
 "Beschwerden" = "Beschwerden";
 "Bis einschließlich" = "Bis einschließlich";
-"Bis zu diesem Tag plant die App. Danach legst du einfach einen neuen Zeitraum fest." = "Bis zu diesem Tag plant die App. Danach legst du einfach einen neuen Zeitraum fest.";
 "Bis zum Ziel" = "Bis zum Ziel";
 "Bisher %@" = "Bisher %@";
 "Bitte ein Token eingeben." = "Bitte ein Token eingeben.";
@@ -297,7 +296,6 @@
 "Fertig" = "Fertig";
 "Fertig eingerichtet" = "Fertig eingerichtet";
 "Fit werden und bleiben" = "Fit werden und bleiben";
-"Fitness: %@, bis %@" = "Fitness: %@, bis %@";
 "Flossen" = "Flossen";
 "Fortschreibung" = "Fortschreibung";
 "Fr" = "Fr";
@@ -496,7 +494,6 @@
 "Ohne Health-Daten kann kein Plan erstellt werden." = "Ohne Health-Daten kann kein Plan erstellt werden.";
 "Ohne Kalenderzugriff zählt die freie Zeit nicht. Erlaube ihn in den Einstellungen des iPhones unter Datenschutz > Kalender." = "Ohne Kalenderzugriff zählt die freie Zeit nicht. Erlaube ihn in den Einstellungen des iPhones unter Datenschutz > Kalender.";
 "Ohne Ortsfreigabe gibt es kein Wetter. Erlaube sie in den Einstellungen des iPhones unter Datenschutz > Ortungsdienste." = "Ohne Ortsfreigabe gibt es kein Wetter. Erlaube sie in den Einstellungen des iPhones unter Datenschutz > Ortungsdienste.";
-"Ohne Zieltag: Der Plan steigert bis zu deiner Zeit im Wochenraster und hält sie dann." = "Ohne Zieltag: Der Plan steigert bis zu deiner Zeit im Wochenraster und hält sie dann.";
 "Ort" = "Ort";
 "Pace (4 Wochen)" = "Pace (4 Wochen)";
 "Pace pro 100 m" = "Pace pro 100 m";
@@ -527,7 +524,6 @@
 "Plan ohne Wunsch neu erstellen" = "Plan ohne Wunsch neu erstellen";
 "Plan vom %@. Öffne die iPhone-App für den Plan von heute." = "Plan vom %@. Öffne die iPhone-App für den Plan von heute.";
 "Planen" = "Planen";
-"Planen bis" = "Planen bis";
 "Planung" = "Planung";
 "Plus fügt den Bereich unten wieder an." = "Plus fügt den Bereich unten wieder an.";
 "Pro Woche" = "Pro Woche";
@@ -729,7 +725,6 @@
 "Zeit 400 m" = "Zeit 400 m";
 "Zeit über eine Strecke" = "Zeit über eine Strecke";
 "Zeitraum" = "Zeitraum";
-"Zeitraum und Training" = "Zeitraum und Training";
 "Ziehen ändert die Reihenfolge. Minus blendet einen Bereich aus. Bereiche mit Schloss gehören zum Tab und lassen sich nur verschieben." = "Ziehen ändert die Reihenfolge. Minus blendet einen Bereich aus. Bereiche mit Schloss gehören zum Tab und lassen sich nur verschieben.";
 "Ziel" = "Ziel";
 "Ziel am %@, noch %lld Wochen" = "Ziel am %@, noch %lld Wochen";
@@ -739,7 +734,6 @@
 "Zielpace %@: noch %lld s pro 100 m zu langsam." = "Zielpace %@: noch %lld s pro 100 m zu langsam.";
 "Zielspezifisch" = "Zielspezifisch";
 "Zieltag" = "Zieltag";
-"Zieltag und Training" = "Zieltag und Training";
 "Zielwoche" = "Zielwoche";
 "Zielzeit" = "Zielzeit";
 "Zone %lld" = "Zone %lld";
@@ -960,3 +954,10 @@
 "Lieber wenige" = "Lieber wenige";
 "Gern mehr" = "Gern mehr";
 "Lässt sich jederzeit in den Einstellungen ändern." = "Lässt sich jederzeit in den Einstellungen ändern.";
+"Fitness: %@" = "Fitness: %@";
+"Ohne Zieltag und ohne Ende: Der Plan steigert bis zu deiner Zeit im Wochenraster, hält sie mit Entlastungswochen und Tests und wird alle 2 Wochen fortgeschrieben." = "Ohne Zieltag und ohne Ende: Der Plan steigert bis zu deiner Zeit im Wochenraster, hält sie mit Entlastungswochen und Tests und wird alle 2 Wochen fortgeschrieben.";
+"Dein Zieltag ist vorbei" = "Dein Zieltag ist vorbei";
+"Glückwunsch! Wie geht es weiter? Setz dir ein neues Ziel oder bleib einfach fit. Ohne Antwort geht es nach einer Woche Erholung mit „Fit werden und bleiben“ weiter." = "Glückwunsch! Wie geht es weiter? Setz dir ein neues Ziel oder bleib einfach fit. Ohne Antwort geht es nach einer Woche Erholung mit „Fit werden und bleiben“ weiter.";
+"Neues Ziel setzen" = "Neues Ziel setzen";
+"Fit bleiben" = "Fit bleiben";
+"Fit werden und bleiben, ohne Ende" = "Fit werden und bleiben, ohne Ende";

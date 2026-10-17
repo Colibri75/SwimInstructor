@@ -6,13 +6,14 @@ import { UsageOutcome, UsageRecorder } from "../../usage";
 import { GenerationBudget, UserBudgets } from "../budget";
 import { FallbackReason, PlanGenerationError, PlanRequestError, PlanUnavailableError } from "../errors";
 import { CallOptions, GeneratedPlan, StructuredGenerator } from "../generator";
-import { daysBetween, localDate, macroWeekStarts, windowDates } from "../calendar";
+import { addDays, daysBetween, localDate, macroWeekStarts, windowDates } from "../calendar";
 import { buildRaceUserMessage, RACE_SYSTEM_PROMPT, RacePlan, RacePlanSchema, sanitizeRace } from "./race";
 import { SnapshotV2 } from "../snapshot";
 import { inLanguage, Language } from "../language";
 import { DayOptionsV2, DayPlanV2, sanitizeDayV2 } from "./daySanity";
 import { DayWeather, roundLocation, WeatherProvider } from "../weather";
 import { goalDayOf, MULTI_RULES } from "./limits";
+import { FITNESS_HORIZON_DAYS, isFitnessGoal } from "./schedule";
 import { expandMacroBlocks, MacroContextV2, MacroPlanV2, sanitizeMacroV2 } from "./macroSanity";
 import {
   buildDayUserMessageV2,
@@ -675,8 +676,12 @@ export class MultiPlanService {
   }
 }
 
+/** Ein Fitnessziel hat kein Ende: geplant wird mindestens `FITNESS_HORIZON_DAYS` voraus, auch wenn eine aeltere App ein
+ * festes, vielleicht schon vergangenes Ende schickt. */
 function macroContext(snapshot: SnapshotV2, today: string, testSettings?: TestSettings, language?: Language): MacroContextV2 {
-  const goalDay = goalDayOf(snapshot);
+  const sent = goalDayOf(snapshot);
+  const horizon = addDays(today, FITNESS_HORIZON_DAYS);
+  const goalDay = isFitnessGoal(snapshot) && sent < horizon ? horizon : sent;
   return { today, goalDay, weeks: macroWeekStarts(today, goalDay), ...(testSettings !== undefined ? { testSettings } : {}), ...(language !== undefined ? { language } : {}) };
 }
 
