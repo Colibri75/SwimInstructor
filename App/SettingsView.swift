@@ -34,7 +34,7 @@ struct SettingsView: View {
     @State private var planning = PlanningPreferences.standard
     private let planningStore = UserDefaultsPlanningPreferencesStore()
     @State private var indoorOwned: Set<String> = []
-    @AppStorage(Appearance.storageKey) private var appearance = Appearance.system
+    @AppStorage(Appearance.storageKey) private var appearance = Appearance.standard
     @AppStorage(Theme.greenWeakKey) private var greenWeak = false
     private let indoorStore = UserDefaultsIndoorEquipmentStore()
 

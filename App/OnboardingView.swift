@@ -20,6 +20,7 @@ struct OnboardingView: View {
 
     @State private var step: Step
     @State private var goalIsValid = true
+    @AppStorage(Appearance.storageKey) private var appearance = Appearance.standard
 
     /// - Parameter buildsPlan: gleich mit dem Ladebildschirm anfangen (die App wurde beendet, während die Pläne entstanden).
     init(buildsPlan: Bool = false, onPlanRequested: @escaping (Bool) -> Void = { _ in }, onFinish: @escaping () -> Void) {
@@ -98,6 +99,20 @@ struct OnboardingView: View {
             Text("In vier Schritten zu deinem Plan: Ziel festlegen, deine Trainingstage eintragen, angeben, wo du gerade stehst, und ein paar freiwillige Fragen zu dir. Danach rechnet die App den Gesamtplan bis zu deinem Ziel.")
             Text("Zuerst fragt die App nach Apple Health. Daraus liest sie dein bisheriges Training, damit der Plan dort anfängt, wo du stehst.")
                 .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Erscheinungsbild")
+                    .font(.headline)
+                Picker("Farbschema", selection: $appearance) {
+                    ForEach(Appearance.allCases) { option in
+                        Text(option.title).tag(option)
+                    }
+                }
+                .pickerStyle(.segmented)
+                Text("Lässt sich jederzeit in den Einstellungen ändern.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.top, 8)
             Spacer()
             Button {
                 Task { await loader.readHealth() }

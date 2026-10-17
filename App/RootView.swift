@@ -14,7 +14,7 @@ struct RootView: View {
     private let onboardingStore: OnboardingStoring
     @State private var selection = Tab.today
     @State private var onboardingDone: Bool
-    @AppStorage(Appearance.storageKey) private var appearance = Appearance.system
+    @AppStorage(Appearance.storageKey) private var appearance = Appearance.standard
 
     init(onboardingStore: OnboardingStoring = UserDefaultsOnboardingStore()) {
         self.onboardingStore = onboardingStore
