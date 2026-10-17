@@ -116,6 +116,10 @@ export const it: SafetyCatalog = {
   testBlackout: (days) => `nessun test negli ultimi ${days} giorni prima dell'obiettivo`,
   reportedPause: (kind) => `pausa segnalata (${kind})`,
   afterReportedPause: (kind, until) => `solo facile fino al ${until} dopo la pausa segnalata (${kind})`,
+  secondaryRaceDay: () => "gara secondaria oggi",
+  beforeSecondaryRace: (date) => `gara secondaria il ${date}: meno subito prima`,
+  afterSecondaryRace: (date) => `recupero dopo la gara secondaria del ${date}`,
+  testNearSecondaryRace: (date) => `nessun test intorno alla gara secondaria del ${date}`,
   pauseKinds: { sick: "malattia", injury: "infortunio", vacation: "vacanza", other: "altro" },
 
   thunderstorm: () => "temporali previsti",

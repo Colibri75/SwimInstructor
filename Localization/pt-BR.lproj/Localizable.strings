@@ -961,3 +961,16 @@
 "Neues Ziel setzen" = "Definir novo objetivo";
 "Fit bleiben" = "Continuar em forma";
 "Fit werden und bleiben, ohne Ende" = "Entrar e ficar em forma, sem fim";
+"Wettkämpfe" = "Provas";
+"Weitere Wettkämpfe" = "Outras provas";
+"Wettkampf hinzufügen" = "Adicionar prova";
+"Wettkämpfe, die du nebenbei machst. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen." = "Provas que você faz por fora. No dia da prova seu coach não planeja treino, e os dias antes e depois ficam mais tranquilos. Deslize para a esquerda para remover.";
+"Kleinere Wettkämpfe auf dem Weg zum Ziel. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen." = "Provas menores no caminho até o seu objetivo. No dia da prova seu coach não planeja treino, e os dias antes e depois ficam mais tranquilos. Deslize para a esquerda para remover.";
+"Mit kurzem Zuspitzen" = "Com polimento curto";
+"Als harte Einheit" = "Como treino forte";
+"Die 3 Tage davor trainierst du weniger, die 2 Tage danach nur locker." = "Nos 3 dias antes você treina menos e nos 2 dias depois só leve.";
+"Der Wettkampf zählt wie eine harte Einheit, der Tag davor und danach bleiben ruhiger." = "A prova conta como um treino forte; o dia antes e o dia depois ficam mais tranquilos.";
+"Ein Nebenwettkampf braucht mindestens eine Disziplin." = "Uma prova secundária precisa de pelo menos uma disciplina.";
+"Höchstens %lld weitere Wettkämpfe." = "No máximo %lld outras provas.";
+"An einem Tag geht nur ein Wettkampf." = "Só uma prova por dia.";
+"Ein weiterer Wettkampf kann nicht am Zieltag sein." = "Outra prova não pode ser no dia do seu objetivo.";

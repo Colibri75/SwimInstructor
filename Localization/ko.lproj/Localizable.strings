@@ -961,3 +961,16 @@
 "Neues Ziel setzen" = "새 목표 정하기";
 "Fit bleiben" = "건강 유지하기";
 "Fit werden und bleiben, ohne Ende" = "건강해지고 유지하기, 끝 없음";
+"Wettkämpfe" = "대회";
+"Weitere Wettkämpfe" = "다른 대회";
+"Wettkampf hinzufügen" = "대회 추가";
+"Wettkämpfe, die du nebenbei machst. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen." = "따로 나가는 대회예요. 대회 당일에는 코치가 훈련을 잡지 않고, 전후 며칠은 가볍게 해요. 왼쪽으로 밀어 삭제하세요.";
+"Kleinere Wettkämpfe auf dem Weg zum Ziel. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen." = "목표로 가는 길의 작은 대회예요. 대회 당일에는 코치가 훈련을 잡지 않고, 전후 며칠은 가볍게 해요. 왼쪽으로 밀어 삭제하세요.";
+"Mit kurzem Zuspitzen" = "짧은 테이퍼 포함";
+"Als harte Einheit" = "강한 훈련으로";
+"Die 3 Tage davor trainierst du weniger, die 2 Tage danach nur locker." = "대회 전 3일은 훈련을 줄이고, 대회 후 2일은 가볍게만 해요.";
+"Der Wettkampf zählt wie eine harte Einheit, der Tag davor und danach bleiben ruhiger." = "대회를 강한 훈련 한 번으로 치고, 전날과 다음 날은 가볍게 해요.";
+"Ein Nebenwettkampf braucht mindestens eine Disziplin." = "보조 대회에는 종목이 하나 이상 필요해요.";
+"Höchstens %lld weitere Wettkämpfe." = "다른 대회는 최대 %lld개예요.";
+"An einem Tag geht nur ein Wettkampf." = "하루에 대회는 하나만 가능해요.";
+"Ein weiterer Wettkampf kann nicht am Zieltag sein." = "다른 대회는 목표일에 넣을 수 없어요.";

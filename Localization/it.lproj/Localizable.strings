@@ -961,3 +961,16 @@
 "Neues Ziel setzen" = "Fissa un nuovo obiettivo";
 "Fit bleiben" = "Restare in forma";
 "Fit werden und bleiben, ohne Ende" = "Mettersi e restare in forma, senza fine";
+"Wettkämpfe" = "Gare";
+"Weitere Wettkämpfe" = "Altre gare";
+"Wettkampf hinzufügen" = "Aggiungi gara";
+"Wettkämpfe, die du nebenbei machst. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen." = "Gare che fai a parte. Il giorno della gara il tuo coach non pianifica allenamenti, e i giorni prima e dopo restano più tranquilli. Scorri a sinistra per rimuovere.";
+"Kleinere Wettkämpfe auf dem Weg zum Ziel. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen." = "Gare più piccole sulla strada verso il tuo obiettivo. Il giorno della gara il tuo coach non pianifica allenamenti, e i giorni prima e dopo restano più tranquilli. Scorri a sinistra per rimuovere.";
+"Mit kurzem Zuspitzen" = "Con un breve scarico";
+"Als harte Einheit" = "Come seduta dura";
+"Die 3 Tage davor trainierst du weniger, die 2 Tage danach nur locker." = "Nei 3 giorni prima ti alleni meno e nei 2 giorni dopo solo leggero.";
+"Der Wettkampf zählt wie eine harte Einheit, der Tag davor und danach bleiben ruhiger." = "La gara conta come una seduta dura; il giorno prima e quello dopo restano più tranquilli.";
+"Ein Nebenwettkampf braucht mindestens eine Disziplin." = "Una gara secondaria richiede almeno una disciplina.";
+"Höchstens %lld weitere Wettkämpfe." = "Al massimo %lld altre gare.";
+"An einem Tag geht nur ein Wettkampf." = "Una sola gara al giorno.";
+"Ein weiterer Wettkampf kann nicht am Zieltag sein." = "Un'altra gara non può essere nel giorno del tuo obiettivo.";

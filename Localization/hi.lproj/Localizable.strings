@@ -961,3 +961,16 @@
 "Neues Ziel setzen" = "नया लक्ष्य तय करें";
 "Fit bleiben" = "फ़िट बने रहें";
 "Fit werden und bleiben, ohne Ende" = "फ़िट बनें और रहें, बिना अंत";
+"Wettkämpfe" = "रेस";
+"Weitere Wettkämpfe" = "दूसरी रेस";
+"Wettkampf hinzufügen" = "रेस जोड़ें";
+"Wettkämpfe, die du nebenbei machst. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen." = "वे रेस जो आप साथ में करते हैं। रेस वाले दिन आपका कोच ट्रेनिंग नहीं रखता, और पहले-बाद के दिन हल्के रहते हैं। हटाने के लिए बाईं ओर स्वाइप करें।";
+"Kleinere Wettkämpfe auf dem Weg zum Ziel. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen." = "लक्ष्य के रास्ते की छोटी रेस। रेस वाले दिन आपका कोच ट्रेनिंग नहीं रखता, और पहले-बाद के दिन हल्के रहते हैं। हटाने के लिए बाईं ओर स्वाइप करें।";
+"Mit kurzem Zuspitzen" = "छोटे टेपर के साथ";
+"Als harte Einheit" = "कठिन सेशन की तरह";
+"Die 3 Tage davor trainierst du weniger, die 2 Tage danach nur locker." = "पहले के 3 दिन कम ट्रेनिंग, बाद के 2 दिन सिर्फ़ हल्की।";
+"Der Wettkampf zählt wie eine harte Einheit, der Tag davor und danach bleiben ruhiger." = "रेस एक कठिन सेशन की तरह गिनी जाती है; एक दिन पहले और बाद हल्का रहता है।";
+"Ein Nebenwettkampf braucht mindestens eine Disziplin." = "सहायक रेस में कम से कम एक डिसिप्लिन होना चाहिए।";
+"Höchstens %lld weitere Wettkämpfe." = "ज़्यादा से ज़्यादा %lld दूसरी रेस।";
+"An einem Tag geht nur ein Wettkampf." = "एक दिन में सिर्फ़ एक रेस।";
+"Ein weiterer Wettkampf kann nicht am Zieltag sein." = "दूसरी रेस लक्ष्य वाले दिन नहीं हो सकती।";

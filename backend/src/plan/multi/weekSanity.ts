@@ -2,6 +2,7 @@ import { LimitUnit, SportDefinition } from "../../sports/types";
 import { Intensity, SessionType } from "../vocabulary";
 import { SnapshotV2 } from "../snapshot";
 import { addDays } from "../calendar";
+import { secondaryRaceOn, secondaryRaceRestriction, secondaryRaceTestReason } from "./secondaryRaces";
 import { afterPauseRestriction, dayLimits, DayLimitsV2, dayMinutesCap, hardOn, lower, MULTI_RULES, painRestriction, RANK, recentBefore, reportedPauseReason, sportLimits, SportLimitsNow, testBlackoutReason } from "./limits";
 import { Availability, FixedDay, MacroWeekTargetV2, MissedSession, MultiWeekPlanRaw, RecentTraining, ReplanReason, Supplements, TestSettings, WeekSessionRaw } from "./schemas";
 import { DayWeather, severeWeather } from "../weather";
@@ -266,7 +267,7 @@ function sanitizeBlock(input: MultiWeekPlanRaw, snapshot: SnapshotV2, context: W
     if (pinned.has(date)) return { date, focus: "", sessions: [], extras: [] };
     // 2. Gemeldete Pause, keine Zeit (auch laut Kalender) oder Ruhetag laut Wochenraster: Ruhetag. An einem Tag mit
     // fester Sportart nur diese.
-    const paused = reportedPauseReason(snapshot, date);
+    const paused = reportedPauseReason(snapshot, date) ?? (secondaryRaceOn(snapshot, date) !== undefined ? say("secondaryRaceDay") : null);
     if (paused !== null) {
       if (sessions.length > 0 || extras.length > 0) notes.push(onDay(date, say("forcedRest", paused)));
       return { date, focus: "Ruhetag", sessions: [], extras: [] };
@@ -307,6 +308,7 @@ function sanitizeBlock(input: MultiWeekPlanRaw, snapshot: SnapshotV2, context: W
       day.sessions
         .flatMap((draft) => applyPain(draft, day.date, reports, notes))
         .map((draft) => applyAfterPause(draft, day.date, snapshot, notes))
+        .map((draft) => applyNearSecondaryRace(draft, day.date, snapshot, notes))
         .flatMap((draft) => limitSession(draft, day.date, notes))
         .map((draft) => placeIndoor(draft, day.date, context, notes))
         .map((draft) => placeOpenWater(draft, day.date, context, notes))
@@ -471,6 +473,25 @@ function applyAfterPause(draft: Draft, date: string, snapshot: SnapshotV2, notes
   if (after === null || draft.session_type === "test" || RANK[draft.intensity] <= RANK.easy) return draft;
   notes.push(onDay(date, say("lowered", sportText(draft.sport.id), intensityText("easy"), after.reason)));
   return soften(draft, "easy");
+}
+
+/** Rund um einen Nebenwettkampf: kurz davor weniger und hoechstens mittel, danach locker (Tests regelt `placeTests`). */
+function applyNearSecondaryRace(draft: Draft, date: string, snapshot: SnapshotV2, notes: Text[]): Draft {
+  const near = secondaryRaceRestriction(snapshot, date);
+  if (near === null || draft.session_type === "test") return draft;
+  let result = draft;
+  if (RANK[result.intensity] > RANK[near.maxIntensity]) {
+    notes.push(onDay(date, say("lowered", sportText(result.sport.id), intensityText(near.maxIntensity), near.reason)));
+    result = soften(result, near.maxIntensity);
+  }
+  if (near.amountFactor < 1) {
+    const cap = floorAmount(result.sport, result.limits.sessionCap * near.amountFactor);
+    if (result.amount > cap) {
+      notes.push(onDay(date, say("cut", sportText(result.sport.id), formatAmount(result.sport, result.amount), formatAmount(result.sport, cap), near.reason)));
+      result = { ...result, amount: cap };
+    }
+  }
+  return result;
 }
 
 /**
@@ -735,7 +756,7 @@ function moveTest(
     if (pinned.has(target.date)) continue;
     const swap = target.sessions.find((draft) => draft.sport.id === test.sport.id && draft.test === null && !isHard(draft) && !draft.brick);
     if (swap === undefined || test.brick) continue;
-    if (testBlackoutReason(snapshot, target.date) !== null) continue;
+    if (testBlackoutReason(snapshot, target.date) !== null || secondaryRaceTestReason(snapshot, target.date) !== null) continue;
     if (target.sessions.some((draft) => draft !== swap && (isHard(draft) || draft.test !== null))) continue;
     if (testAt(at - 1) || testAt(at + 1)) continue;
     if (isHard(test) && (hardAt(at - 1) || hardAt(at + 1))) continue;
@@ -795,6 +816,7 @@ function placeTests(days: DraftDay[], snapshot: SnapshotV2, context: WeekContext
       const blocked =
         (context.testSettings?.offer === false ? say("testsOff") : null) ??
         testBlackoutReason(snapshot, day.date) ??
+        secondaryRaceTestReason(snapshot, day.date) ??
         (afterPauseRestriction(snapshot, day.date)?.reason ?? null) ??
         (isToday ? (week.today?.testBlockedReason ?? null) : null) ??
         (testToday ? say("oneTestPerDay") : null) ??

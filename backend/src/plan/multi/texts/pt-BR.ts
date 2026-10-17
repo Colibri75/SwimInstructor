@@ -116,6 +116,10 @@ export const ptBR: SafetyCatalog = {
   testBlackout: (days) => `sem teste nos últimos ${days} dias antes do objetivo`,
   reportedPause: (kind) => `pausa informada (${kind})`,
   afterReportedPause: (kind, until) => `só leve até ${until} após a pausa informada (${kind})`,
+  secondaryRaceDay: () => "prova secundária hoje",
+  beforeSecondaryRace: (date) => `prova secundária em ${date}: menos logo antes`,
+  afterSecondaryRace: (date) => `recuperação após a prova secundária de ${date}`,
+  testNearSecondaryRace: (date) => `sem teste perto da prova secundária de ${date}`,
   pauseKinds: { sick: "doença", injury: "lesão", vacation: "férias", other: "outra" },
 
   thunderstorm: () => "previsão de tempestade com raios",

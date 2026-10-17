@@ -115,6 +115,10 @@ export const ja: SafetyCatalog = {
   testBlackout: (days) => `目標前の最後の${days}日間はテストなし`,
   reportedPause: (kind) => `報告された休止（${kind}）`,
   afterReportedPause: (kind, until) => `報告された休止（${kind}）の後、${until}まで軽めのみ`,
+  secondaryRaceDay: () => "今日はサブレース",
+  beforeSecondaryRace: (date) => `${date}にサブレース：直前は量を減らす`,
+  afterSecondaryRace: (date) => `${date}のサブレース後の回復`,
+  testNearSecondaryRace: (date) => `${date}のサブレース前後はテストなし`,
   pauseKinds: { sick: "体調不良", injury: "けが", vacation: "休暇", other: "その他" },
 
   thunderstorm: () => "雷雨の予報",

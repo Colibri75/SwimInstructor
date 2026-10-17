@@ -115,6 +115,10 @@ export const zhHans: SafetyCatalog = {
   testBlackout: (days) => `目标前最后 ${days} 天不做测试`,
   reportedPause: (kind) => `已报告的暂停（${kind}）`,
   afterReportedPause: (kind, until) => `已报告的暂停（${kind}）后至 ${until} 只练轻松`,
+  secondaryRaceDay: () => "今天是次要比赛",
+  beforeSecondaryRace: (date) => `${date} 有次要比赛：赛前减量`,
+  afterSecondaryRace: (date) => `${date} 次要比赛后的恢复`,
+  testNearSecondaryRace: (date) => `${date} 次要比赛前后不安排测试`,
   pauseKinds: { sick: "生病", injury: "受伤", vacation: "休假", other: "其他" },
 
   thunderstorm: () => "预报有雷雨",

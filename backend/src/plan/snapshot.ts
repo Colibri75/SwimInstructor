@@ -81,6 +81,24 @@ const ScheduleDaySchema = z.object({
   sport: sportId.optional()
 });
 
+/**
+ * Nebenwettkaempfe neben dem Ziel (hoechstens 5): `b` mit kurzem Zuspitzen davor und lockeren Tagen danach, `c` zaehlt
+ * wie eine harte Einheit. Der Hauptwettkampf bleibt das Ziel (`target_date`).
+ */
+export const SECONDARY_RACE_PRIORITIES = ["b", "c"] as const;
+export const MAX_SECONDARY_RACES = 5;
+
+const SecondaryRaceSchema = z
+  .object({
+    date: z.string().refine(isRealDate, { message: "kein gültiges Datum" }),
+    priority: z.enum(SECONDARY_RACE_PRIORITIES),
+    disciplines: z.array(z.object({ sport: sportId, distance_meters: z.number().min(25).max(1_000_000) })).min(1).max(8)
+  })
+  .refine((race) => new Set(race.disciplines.map((discipline) => discipline.sport)).size === race.disciplines.length, {
+    message: "Sportart doppelt",
+    path: ["disciplines"]
+  });
+
 const TrainingGoalSchema = z
   .object({
     /** Vorlage, aus der das Ziel stammt (z. B. "triathlon_olympic"); fehlt bei einem eigenen Ziel. */
@@ -103,7 +121,8 @@ const TrainingGoalSchema = z
       )
       .max(8),
     emphasis: z.array(z.object({ sport: sportId, percent: z.number().int().min(0).max(100) })).min(1).max(16),
-    weekly_schedule: z.array(ScheduleDaySchema).length(7).optional()
+    weekly_schedule: z.array(ScheduleDaySchema).length(7).optional(),
+    secondary_races: z.array(SecondaryRaceSchema).max(MAX_SECONDARY_RACES).optional()
   })
   .superRefine((goal, ctx) => {
     if (goal.kind === "fitness" && goal.disciplines.length > 0) {
@@ -119,6 +138,11 @@ const TrainingGoalSchema = z
       goal.weekly_schedule.forEach((day, index) => {
         if (day.trains && day.max_minutes < 15) ctx.addIssue({ code: "custom", path: ["weekly_schedule", index, "max_minutes"], message: "Trainingstag unter 15 min" });
       });
+    }
+    const raceDays = (goal.secondary_races ?? []).map((race) => race.date);
+    if (new Set(raceDays).size !== raceDays.length) ctx.addIssue({ code: "custom", path: ["secondary_races"], message: "Tag doppelt" });
+    if (goal.kind !== "fitness" && raceDays.includes(goal.target_date.slice(0, 10))) {
+      ctx.addIssue({ code: "custom", path: ["secondary_races"], message: "Nebenwettkampf am Zieltag" });
     }
     const emphasisSports = goal.emphasis.map((entry) => entry.sport);
     if (new Set(emphasisSports).size !== emphasisSports.length) {
@@ -337,6 +361,7 @@ export const SnapshotSchema = z
 export type SnapshotV2 = z.infer<typeof SnapshotSchema>;
 export type TrainingGoal = SnapshotV2["training_goal"];
 export type ScheduleDay = NonNullable<TrainingGoal["weekly_schedule"]>[number];
+export type SecondaryRace = NonNullable<TrainingGoal["secondary_races"]>[number];
 export type SportState = SnapshotV2["sports"][number];
 export type Performance = NonNullable<SnapshotV2["performance"]>;
 export type StartingLevel = NonNullable<SnapshotV2["starting_levels"]>[number];

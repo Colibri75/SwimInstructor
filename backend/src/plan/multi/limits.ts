@@ -6,6 +6,7 @@ import { addDays } from "../calendar";
 import { PainArea, RecentTraining } from "./schemas";
 import { fixedSport, isFitnessGoal, scheduleDay, weeklyMinutes } from "./schedule";
 import { CATALOGS, dateText, say, sportText, Text } from "./texts";
+import { secondaryRaceOn, secondaryRaceRestriction, secondaryRaceTestReason } from "./secondaryRaces";
 import { floorAmount, formatAmount, plannedSports, raceAmount, raceSeconds, stateAmounts, stateOf, trainingSpeed } from "./sports";
 
 /**
@@ -364,7 +365,7 @@ export function recentBefore(sport: SportDefinition, recent: readonly RecentTrai
  * Vorschau (`preview`) die Einheiten aus `recent` in den sechs Tagen davor.
  */
 export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly RecentTraining[] = [], preview = false): DayLimitsV2 {
-  const restReason = reportedPauseReason(snapshot, today) ?? (snapshot.flags.includes("overreaching_risk")
+  const restReason = reportedPauseReason(snapshot, today) ?? (secondaryRaceOn(snapshot, today) !== undefined ? say("secondaryRaceDay") : null) ?? (snapshot.flags.includes("overreaching_risk")
     ? say("overreaching")
     : scheduleDay(snapshot, today)?.trains === false
       ? say("scheduleRest")
@@ -380,6 +381,8 @@ export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly 
   };
   const afterPause = afterPauseRestriction(snapshot, today);
   if (afterPause !== null) cap("easy", afterPause.reason);
+  const nearRace = secondaryRaceRestriction(snapshot, today);
+  if (nearRace !== null) cap(nearRace.maxIntensity, nearRace.reason);
   if (poor) cap("easy", say("recoveryPoor"));
   else if (snapshot.recovery.status === "moderate") cap("moderate", say("recoveryModerate"));
   const hardDaysAgo = snapshot.load.days_since_last_hard_session;
@@ -396,6 +399,7 @@ export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly 
     const lastSeven = preview ? recentBefore(sport, recent, today) : limits.lastSeven;
     let maxAmount = Math.min(limits.sessionCap, limits.weeklyCap - lastSeven);
     if (poor) maxAmount *= MULTI_RULES.recoveryPoorFactor;
+    if (nearRace !== null) maxAmount *= nearRace.amountFactor;
     const pain = painRestriction(recent, sport.id, today);
     if (pain !== null) maxAmount *= pain.amountFactor;
     maxAmount = floorAmount(sport, Math.max(maxAmount, 0));
@@ -432,7 +436,7 @@ export function dayLimits(snapshot: SnapshotV2, today: string, recent: readonly 
   }
 
   const maxMinutes = Math.round(dayMinutesCap(snapshot, today) * (poor ? MULTI_RULES.recoveryPoorFactor : 1));
-  const testBlockedReason = restReason ?? afterPause?.reason ?? testBlackoutReason(snapshot, today);
+  const testBlockedReason = restReason ?? afterPause?.reason ?? testBlackoutReason(snapshot, today) ?? secondaryRaceTestReason(snapshot, today);
   return { restReason, maxIntensity, intensityReasons, maxMinutes, sports, testBlockedReason };
 }
 

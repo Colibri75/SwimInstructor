@@ -57,6 +57,7 @@ struct GoalAssistantView: View {
                 } else {
                     sportsSection
                 }
+                secondaryRacesSection
                 emphasisSection
                 if showsSchedule {
                     scheduleSection
@@ -273,6 +274,45 @@ struct GoalAssistantView: View {
         )
     }
 
+    // MARK: - Weitere Wettkämpfe
+
+    private var secondaryRacesSection: some View {
+        Section {
+            ForEach($goal.secondaryRaces) { $race in
+                NavigationLink {
+                    SecondaryRaceEditor(race: $race)
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(race.date.formatted(.dateTime.day().month().year().locale(AppLocale.current)))
+                        Text(race.summary() + " · " + race.priority.title)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .onDelete { offsets in goal.secondaryRaces.remove(atOffsets: offsets) }
+            if goal.secondaryRaces.count < SecondaryRace.maximumCount {
+                Button {
+                    goal.secondaryRaces.append(goal.newSecondaryRace(now: Date()))
+                } label: {
+                    Label("Wettkampf hinzufügen", systemImage: "plus")
+                }
+            }
+        } header: {
+            if goal.kind == .fitness {
+                Text("Wettkämpfe")
+            } else {
+                Text("Weitere Wettkämpfe")
+            }
+        } footer: {
+            if goal.kind == .fitness {
+                Text("Wettkämpfe, die du nebenbei machst. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen.")
+            } else {
+                Text("Kleinere Wettkämpfe auf dem Weg zum Ziel. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen.")
+            }
+        }
+    }
+
     // MARK: - Schwerpunkte und Trainingszeit
 
     private var emphasisSection: some View {
@@ -414,5 +454,89 @@ struct GoalAssistantView: View {
 
     private static func day(_ date: Date) -> String {
         date.formatted(.dateTime.day().month(.wide).locale(AppLocale.current))
+    }
+}
+
+// MARK: - Ein weiterer Wettkampf
+
+/// Tag, Art (mit kurzem Zuspitzen oder als harte Einheit) und die Sportarten mit Strecke eines Nebenwettkampfs.
+private struct SecondaryRaceEditor: View {
+    @Binding var race: SecondaryRace
+
+    private let sports = SportRegistry.standard
+
+    var body: some View {
+        Form {
+            Group {
+                Section {
+                    DatePicker("Wettkampftag", selection: dayBinding, in: Date()..., displayedComponents: .date)
+                    Picker("Art", selection: $race.priority) {
+                        ForEach(SecondaryRace.Priority.allCases) { priority in
+                            Text(priority.title).tag(priority)
+                        }
+                    }
+                } footer: {
+                    Text(race.priority.explanation)
+                }
+                ForEach(sports.ids, id: \.self) { sport in
+                    Section {
+                        Toggle(isOn: disciplineBinding(sport)) {
+                            Label(sports.displayName(for: sport), systemImage: sports.symbolName(for: sport))
+                        }
+                        if race.discipline(for: sport) != nil {
+                            LabeledContent("Strecke") {
+                                HStack {
+                                    TextField("Strecke", value: kilometersBinding(sport), format: .number.precision(.fractionLength(0...3)))
+                                        .keyboardType(.decimalPad)
+                                        .multilineTextAlignment(.trailing)
+                                        .frame(maxWidth: 110)
+                                        .inputField()
+                                    Text("km")
+                                }
+                            }
+                        }
+                    }
+                }
+                if let problem = race.problem() {
+                    Section {
+                        Text(problem)
+                            .foregroundStyle(.red)
+                    }
+                }
+            }
+            .cardRows()
+        }
+        .themedList()
+        .navigationTitle("Wettkampf")
+        .navigationBarTitleDisplayMode(.inline)
+        .swipeClosesKeyboard()
+        .keyboardDoneButton()
+    }
+
+    private var dayBinding: Binding<Date> {
+        Binding(
+            get: { race.date },
+            set: { race.date = AthleteGoal.targetDate(onDayOf: $0) }
+        )
+    }
+
+    private func disciplineBinding(_ sport: SportID) -> Binding<Bool> {
+        Binding(
+            get: { race.discipline(for: sport) != nil },
+            set: { isOn in
+                race = race.settingDiscipline(isOn ? TrainingGoal.Discipline(sport: sport, distanceMeters: 5_000) : nil, for: sport)
+            }
+        )
+    }
+
+    private func kilometersBinding(_ sport: SportID) -> Binding<Double> {
+        Binding(
+            get: { (race.discipline(for: sport)?.distanceMeters ?? 0) / 1000 },
+            set: { kilometers in
+                guard var discipline = race.discipline(for: sport) else { return }
+                discipline.distanceMeters = (kilometers * 1000).rounded()
+                race = race.settingDiscipline(discipline, for: sport)
+            }
+        )
     }
 }

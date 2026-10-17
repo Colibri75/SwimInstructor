@@ -961,3 +961,16 @@
 "Neues Ziel setzen" = "Fixer un nouvel objectif";
 "Fit bleiben" = "Rester en forme";
 "Fit werden und bleiben, ohne Ende" = "Se mettre en forme et le rester, sans fin";
+"Wettkämpfe" = "Courses";
+"Weitere Wettkämpfe" = "Autres courses";
+"Wettkampf hinzufügen" = "Ajouter une course";
+"Wettkämpfe, die du nebenbei machst. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen." = "Les courses que tu fais à côté. Le jour de la course, ton coach ne prévoit pas d’entraînement, et les jours avant et après restent plus calmes. Balaye vers la gauche pour supprimer.";
+"Kleinere Wettkämpfe auf dem Weg zum Ziel. Am Tag selbst plant dein Coach kein Training, davor und danach ruhiger. Zum Entfernen nach links wischen." = "De plus petites courses sur le chemin de ton objectif. Le jour de la course, ton coach ne prévoit pas d’entraînement, et les jours avant et après restent plus calmes. Balaye vers la gauche pour supprimer.";
+"Mit kurzem Zuspitzen" = "Avec un court affûtage";
+"Als harte Einheit" = "Comme une séance difficile";
+"Die 3 Tage davor trainierst du weniger, die 2 Tage danach nur locker." = "Tu t’entraînes moins les 3 jours avant et seulement facile les 2 jours après.";
+"Der Wettkampf zählt wie eine harte Einheit, der Tag davor und danach bleiben ruhiger." = "La course compte comme une séance difficile ; la veille et le lendemain restent plus calmes.";
+"Ein Nebenwettkampf braucht mindestens eine Disziplin." = "Une course secondaire a besoin d’au moins une discipline.";
+"Höchstens %lld weitere Wettkämpfe." = "Au maximum %lld autres courses.";
+"An einem Tag geht nur ein Wettkampf." = "Une seule course par jour.";
+"Ein weiterer Wettkampf kann nicht am Zieltag sein." = "Une autre course ne peut pas avoir lieu le jour de ton objectif.";

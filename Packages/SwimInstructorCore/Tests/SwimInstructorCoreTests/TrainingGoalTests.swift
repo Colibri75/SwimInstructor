@@ -241,4 +241,52 @@ final class TrainingGoalTests: XCTestCase {
         let fitness = olympic().settingKind(.fitness, now: now).settingSport(.swim, included: false)
         XCTAssertEqual(PlanFormatting.goalSummary(fitness, calendar: TestFixtures.utc), "Fitness: Radfahren, Laufen")
     }
+
+    // MARK: - Weitere Wettkämpfe
+
+    func testSecondaryRacesAreValidatedAndDecodeFromOlderGoals() throws {
+        let race = olympic().newSecondaryRace(now: now, calendar: TestFixtures.utc)
+        XCTAssertEqual(race.priority, .b)
+        XCTAssertEqual(race.disciplines.map(\.sport), [.swim])
+        XCTAssertLessThan(race.date, future)
+        XCTAssertGreaterThan(race.date, now)
+
+        var goal = olympic()
+        goal.secondaryRaces = [race]
+        XCTAssertNil(goal.problem(now: now, calendar: TestFixtures.utc))
+        XCTAssertEqual(try JSONDecoder().decode(TrainingGoal.self, from: JSONEncoder().encode(goal)), goal)
+        // Ziele von davor haben keine.
+        XCTAssertEqual(try JSONDecoder().decode(TrainingGoal.self, from: RepoPaths.contractData("app-storage/training-goal.json")).secondaryRaces, [])
+
+        // Der zweite neue liegt nicht am selben Tag.
+        let second = goal.newSecondaryRace(now: now, calendar: TestFixtures.utc)
+        XCTAssertNotEqual(PlanFormatting.isoDay(second.date), PlanFormatting.isoDay(race.date))
+
+        XCTAssertEqual(problem { $0.secondaryRaces = [race, race] }, "An einem Tag geht nur ein Wettkampf.")
+        XCTAssertEqual(problem { $0.secondaryRaces = [SecondaryRace(date: $0.targetDate, disciplines: race.disciplines)] }, "Ein weiterer Wettkampf kann nicht am Zieltag sein.")
+        XCTAssertEqual(problem { $0.secondaryRaces = [SecondaryRace(date: race.date, disciplines: [])] }, "Ein Nebenwettkampf braucht mindestens eine Disziplin.")
+        XCTAssertEqual(
+            problem { $0.secondaryRaces = [SecondaryRace(date: race.date, disciplines: [.init(sport: .run, distanceMeters: 50)])] },
+            "Laufen: Die Strecke muss zwischen 100 m und 500 km liegen."
+        )
+        XCTAssertEqual(
+            problem { goal in goal.secondaryRaces = (1...6).map { SecondaryRace(date: race.date.addingTimeInterval(TimeInterval($0 * 86_400)), disciplines: race.disciplines) } },
+            "Höchstens 5 weitere Wettkämpfe."
+        )
+    }
+
+    func testSecondaryRacesAreFineTuningAndKeepTheLastDiscipline() {
+        let race = SecondaryRace(date: now.addingTimeInterval(20 * 86_400), disciplines: [.init(sport: .run, distanceMeters: 10_000)])
+        var goal = olympic()
+        goal.secondaryRaces = [race]
+        XCTAssertEqual(olympic().change(to: goal, calendar: TestFixtures.utc), .fineTuning)
+        XCTAssertNotEqual(olympic().planKey(calendar: TestFixtures.utc), goal.planKey(calendar: TestFixtures.utc))
+        XCTAssertEqual(goal.fitnessFollowUp.secondaryRaces, [race])
+
+        XCTAssertEqual(race.settingDiscipline(nil, for: .run), race, "Die letzte Disziplin bleibt")
+        let both = race.settingDiscipline(.init(sport: .swim, distanceMeters: 1_500), for: .swim)
+        XCTAssertEqual(both.disciplines.map(\.sport), [.swim, .run])
+        XCTAssertEqual(both.summary(), "Schwimmen 1.500 m, Laufen 10,0 km")
+        XCTAssertEqual(both.settingDiscipline(nil, for: .run).disciplines.map(\.sport), [.swim])
+    }
 }

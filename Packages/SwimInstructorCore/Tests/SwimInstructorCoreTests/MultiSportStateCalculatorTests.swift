@@ -133,4 +133,20 @@ final class MultiSportStateCalculatorTests: XCTestCase {
         // Session-RPE aus dem Puls: Reserve (120 - 50) / 140 = 0,5 → Anstrengung 3 → 60 × 3 / 4 = 45.
         XCTAssertEqual(sports[2].loadLastSevenDays, 45)
     }
+
+    func testSendsSecondaryRacesFromTwoDaysAgoSortedByDate() throws {
+        var olympic = goal("triathlon_olympic")
+        let day = { (offset: Int) in AthleteGoal.targetDate(onDayOf: self.now.addingTimeInterval(TimeInterval(offset * 86_400)), calendar: TestFixtures.utc) }
+        olympic.secondaryRaces = [
+            SecondaryRace(date: day(20), priority: .c, disciplines: [.init(sport: .run, distanceMeters: 5_000)]),
+            SecondaryRace(date: day(-3), disciplines: [.init(sport: .run, distanceMeters: 10_000)]),
+            SecondaryRace(date: day(-2), disciplines: [.init(sport: .swim, distanceMeters: 1_500)])
+        ]
+        let races = try XCTUnwrap(extend([], goal: olympic).trainingGoal?.secondaryRaces)
+        XCTAssertEqual(races.map(\.date), ["2026-09-28", "2026-10-20"])
+        XCTAssertEqual(races.map(\.priority), [.b, .c])
+        XCTAssertEqual(races.last?.disciplines, [.init(sport: .run, distanceMeters: 5_000)])
+
+        XCTAssertNil(extend([], goal: goal("triathlon_olympic")).trainingGoal?.secondaryRaces)
+    }
 }

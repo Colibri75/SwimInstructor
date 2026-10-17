@@ -47,11 +47,21 @@ public struct MultiSportStateCalculator: Sendable {
                 weeklyHours: goal.weeklyHours,
                 disciplines: goal.disciplines,
                 emphasis: goal.emphasis,
-                weeklySchedule: schedule?.days
+                weeklySchedule: schedule?.days,
+                secondaryRaces: secondaryRaceSummaries(goal, now: now)
             ),
             sports: sports,
             totalLoad: totalLoad(sessions: dated)
         )
+    }
+
+    /// Nebenwettkämpfe ab `SecondaryRace.recoveryDays` Tagen vor heute (die Tage danach sind noch gebremst), nach Datum.
+    private func secondaryRaceSummaries(_ goal: TrainingGoal, now: Date) -> [AthleteStateSnapshot.SecondaryRaceSummary]? {
+        let races = goal.secondaryRaces
+            .filter { dayDistance(from: now, to: $0.date) >= -SecondaryRace.recoveryDays }
+            .sorted { $0.date < $1.date }
+            .map { AthleteStateSnapshot.SecondaryRaceSummary($0, calendar: calendar) }
+        return races.isEmpty ? nil : races
     }
 
     private func summary(sport: SportID, sessions: [Dated]) -> AthleteStateSnapshot.SportStateSummary {

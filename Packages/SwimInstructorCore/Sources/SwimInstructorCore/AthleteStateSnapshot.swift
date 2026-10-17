@@ -296,6 +296,8 @@ public extension AthleteStateSnapshot {
         public let emphasis: [TrainingGoal.Emphasis]
         /// Ab P2: der Wochenraster, Montag zuerst. Fehlt ohne Wochenraster.
         public let weeklySchedule: [WeeklySchedule.Day]?
+        /// Nebenwettkämpfe ab zwei Tagen vor heute, nach Datum. Fehlt ohne.
+        public let secondaryRaces: [SecondaryRaceSummary]?
 
         public init(
             template: String?,
@@ -306,7 +308,8 @@ public extension AthleteStateSnapshot {
             weeklyHours: Double,
             disciplines: [TrainingGoal.Discipline],
             emphasis: [TrainingGoal.Emphasis],
-            weeklySchedule: [WeeklySchedule.Day]? = nil
+            weeklySchedule: [WeeklySchedule.Day]? = nil,
+            secondaryRaces: [SecondaryRaceSummary]? = nil
         ) {
             self.template = template
             self.kind = kind
@@ -317,6 +320,38 @@ public extension AthleteStateSnapshot {
             self.disciplines = disciplines
             self.emphasis = emphasis
             self.weeklySchedule = weeklySchedule
+            self.secondaryRaces = secondaryRaces
+        }
+    }
+
+    /// Ein Nebenwettkampf, wie er zum Server geht: Tag (`yyyy-MM-dd`), Art (`b`, `c`), Sportarten mit Strecke.
+    struct SecondaryRaceSummary: Codable, Equatable, Sendable {
+        public struct Discipline: Codable, Equatable, Sendable {
+            public let sport: SportID
+            public let distanceMeters: Double
+
+            public init(sport: SportID, distanceMeters: Double) {
+                self.sport = sport
+                self.distanceMeters = distanceMeters
+            }
+        }
+
+        public let date: String
+        public let priority: SecondaryRace.Priority
+        public let disciplines: [Discipline]
+
+        public init(date: String, priority: SecondaryRace.Priority, disciplines: [Discipline]) {
+            self.date = date
+            self.priority = priority
+            self.disciplines = disciplines
+        }
+
+        public init(_ race: SecondaryRace, calendar: Calendar = .current) {
+            self.init(
+                date: PlanFormatting.isoDay(race.date, calendar: calendar),
+                priority: race.priority,
+                disciplines: race.disciplines.map { Discipline(sport: $0.sport, distanceMeters: $0.distanceMeters) }
+            )
         }
     }
 

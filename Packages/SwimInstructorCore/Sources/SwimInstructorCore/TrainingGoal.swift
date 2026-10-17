@@ -106,6 +106,8 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
     public var trainingDaysPerWeek: Int
     public var weeklyHours: Double
     public var emphasis: [Emphasis]
+    /// Weitere Wettkämpfe neben dem Ziel (höchstens `SecondaryRace.maximumCount`). Fehlt in Zielen von davor.
+    public var secondaryRaces: [SecondaryRace]
 
     public init(
         template: String? = nil,
@@ -114,7 +116,8 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
         targetDate: Date,
         trainingDaysPerWeek: Int,
         weeklyHours: Double,
-        emphasis: [Emphasis]
+        emphasis: [Emphasis],
+        secondaryRaces: [SecondaryRace] = []
     ) {
         self.template = template
         self.kind = kind
@@ -123,10 +126,11 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
         self.trainingDaysPerWeek = trainingDaysPerWeek
         self.weeklyHours = weeklyHours
         self.emphasis = emphasis
+        self.secondaryRaces = secondaryRaces
     }
 
     private enum CodingKeys: String, CodingKey {
-        case template, kind, disciplines, targetDate, trainingDaysPerWeek, weeklyHours, emphasis
+        case template, kind, disciplines, targetDate, trainingDaysPerWeek, weeklyHours, emphasis, secondaryRaces
     }
 
     public init(from decoder: Decoder) throws {
@@ -138,6 +142,7 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
         trainingDaysPerWeek = try container.decode(Int.self, forKey: .trainingDaysPerWeek)
         weeklyHours = try container.decode(Double.self, forKey: .weeklyHours)
         emphasis = try container.decode([Emphasis].self, forKey: .emphasis)
+        secondaryRaces = try container.decodeIfPresent([SecondaryRace].self, forKey: .secondaryRaces) ?? []
     }
 
     // MARK: - Grenzen
@@ -171,7 +176,8 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
             targetDate: targetDate,
             trainingDaysPerWeek: trainingDaysPerWeek,
             weeklyHours: weeklyHours,
-            emphasis: emphasis.filter { $0.percent > 0 }
+            emphasis: emphasis.filter { $0.percent > 0 },
+            secondaryRaces: secondaryRaces
         )
     }
 
@@ -227,7 +233,20 @@ public struct TrainingGoal: Codable, Equatable, Sendable {
             let name = registry.displayName(for: discipline.sport)
             return String(localized: "\(name) gehört zum Ziel und braucht einen Schwerpunkt über 0 %.")
         }
-        return nil
+        return secondaryRaceProblem(registry: registry)
+    }
+
+    /// Die Nebenwettkämpfe: höchstens 5, je Tag einer, nicht am Zieltag, jeder mit gültigen Disziplinen.
+    private func secondaryRaceProblem(registry: SportRegistry) -> String? {
+        guard secondaryRaces.count <= SecondaryRace.maximumCount else {
+            return String(localized: "Höchstens \(SecondaryRace.maximumCount) weitere Wettkämpfe.")
+        }
+        let days = secondaryRaces.map { PlanFormatting.isoDay($0.date) }
+        guard Set(days).count == days.count else { return String(localized: "An einem Tag geht nur ein Wettkampf.") }
+        if kind != .fitness, days.contains(PlanFormatting.isoDay(targetDate)) {
+            return String(localized: "Ein weiterer Wettkampf kann nicht am Zieltag sein.")
+        }
+        return secondaryRaces.lazy.compactMap { $0.problem(registry: registry) }.first
     }
 
     /// Wie `problem(registry:)`, dazu muss der Zieltag nach heute liegen (beim Einstellen eines neuen Ziels). Ein
