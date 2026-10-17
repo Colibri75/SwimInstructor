@@ -34,18 +34,62 @@ public struct StartingLevel: Codable, Equatable, Sendable, Identifiable {
     public var longestSession: Double
     public var status: TrainingStatus
     public var reportedAt: Date
+    /// Übliches Tempo, optional, in der Einheit von `SportModule.startingPace` (s/100m, s/km oder km/h).
+    public var pace: Double?
+    /// Aktuelle Bestzeiten über Strecken aus `SportModule.bestTimeDistances`, je Strecke höchstens eine; `nil` ohne.
+    public var bestTimes: [BestTime]?
+
+    /// Eine Bestzeit: Strecke in Metern und Zeit in Sekunden.
+    public struct BestTime: Codable, Equatable, Sendable {
+        public var distanceMeters: Int
+        public var seconds: Double
+
+        public init(distanceMeters: Int, seconds: Double) {
+            self.distanceMeters = distanceMeters
+            self.seconds = seconds
+        }
+    }
 
     public var id: SportID { sport }
 
     /// So lange gilt eine Angabe, danach zählt nur noch Health. Gegenstück: `MULTI_RULES.startingLevelValidDays`.
     public static let validDays = 28
 
-    public init(sport: SportID, weeklyAmount: Double, longestSession: Double, status: TrainingStatus, reportedAt: Date) {
+    public init(
+        sport: SportID, weeklyAmount: Double, longestSession: Double, status: TrainingStatus, reportedAt: Date,
+        pace: Double? = nil, bestTimes: [BestTime]? = nil
+    ) {
         self.sport = sport
         self.weeklyAmount = weeklyAmount
         self.longestSession = longestSession
         self.status = status
         self.reportedAt = reportedAt
+        self.pace = pace
+        self.bestTimes = bestTimes
+    }
+
+    /// Passen Tempo und Bestzeiten zur Sportart? Tempo im Bereich von `startingPace`, Bestzeiten je einmal über Strecken
+    /// aus `bestTimeDistances` mit plausiblem Tempo (`goalSpeedRange`). Ohne Angabe immer.
+    public func hasValidPace(for module: any SportModule) -> Bool {
+        if let pace, !(module.startingPace?.range.contains(pace) ?? false) { return false }
+        let times = bestTimes ?? []
+        guard Set(times.map(\.distanceMeters)).count == times.count else { return false }
+        return times.allSatisfy { best in
+            module.bestTimeDistances.contains(best.distanceMeters) && best.seconds > 0
+                && module.goalSpeedRange.contains(Double(best.distanceMeters) / best.seconds)
+        }
+    }
+
+    /// Die Bestzeit über eine Strecke, `nil` ohne.
+    public func bestTime(over meters: Int) -> Double? {
+        bestTimes?.first { $0.distanceMeters == meters }?.seconds
+    }
+
+    /// Setzt oder löscht (`nil`) die Bestzeit über eine Strecke; ohne Bestzeit bleibt `bestTimes` `nil`.
+    public mutating func setBestTime(_ seconds: Double?, over meters: Int) {
+        var times = (bestTimes ?? []).filter { $0.distanceMeters != meters }
+        if let seconds { times.append(BestTime(distanceMeters: meters, seconds: seconds)) }
+        bestTimes = times.isEmpty ? nil : times.sorted { $0.distanceMeters < $1.distanceMeters }
     }
 
     /// Bis wann die Angabe gilt.
@@ -113,7 +157,8 @@ public struct UserDefaultsStartingLevelStore: StartingLevelStoring {
     public func setLevel(_ level: StartingLevel) -> Bool {
         guard let module = registry.module(for: level.sport),
               StartingLevel.weeklyRange(for: module.planUnit).contains(level.weeklyAmount),
-              StartingLevel.longestRange(for: module.planUnit).contains(level.longestSession) else { return false }
+              StartingLevel.longestRange(for: module.planUnit).contains(level.longestSession),
+              level.hasValidPace(for: module) else { return false }
         let others = levels().filter { $0.sport != level.sport }
         return save(others + [level])
     }
@@ -180,6 +225,53 @@ public enum StartingLevelFormatting {
             status: .regular,
             reportedAt: now
         )
+    }
+
+    /// Das Tempo zum Anzeigen im Eingabefeld: "2:05" (Pace) oder "27,5" (km/h).
+    public static func paceText(_ value: Double, pace: StartingPace) -> String {
+        guard pace.target == .speed else { return PlanFormatting.pace(value) }
+        return value.formatted(.number.precision(.fractionLength(0...1)).locale(AppLocale.current))
+    }
+
+    /// Liest ein Tempo: "2:05" als Sekunden (Pace) oder "27,5" als km/h. `nil` bei allem anderen.
+    public static func parsePace(_ text: String, pace: StartingPace) -> Double? {
+        let trimmed = text.trimmingCharacters(in: .whitespaces)
+        guard pace.target == .speed else { return PlanV2Formatting.parseTime(trimmed) }
+        guard let value = Double(trimmed.replacingOccurrences(of: ",", with: ".")), value.isFinite else { return nil }
+        return value
+    }
+
+    /// Einheit hinter dem Tempo-Feld: "/100 m", "/km" oder "km/h".
+    public static func paceUnit(_ pace: StartingPace) -> String {
+        switch pace.target {
+        case .pacePerHundredMeters: return "/100 m"
+        case .pacePerKilometer: return "/km"
+        default: return "km/h"
+        }
+    }
+
+    /// Eine Bestzeit zum Anzeigen: 1500 → "25:00", 3930 → "1:05:30".
+    public static func clockText(_ seconds: Double) -> String {
+        let total = max(Int(seconds.rounded()), 0)
+        let hours = total / 3600
+        return hours > 0
+            ? String(format: "%d:%02d:%02d", hours, total % 3600 / 60, total % 60)
+            : String(format: "%d:%02d", total / 60, total % 60)
+    }
+
+    /// Liest "25:00" oder "1:05:30" als Sekunden; `nil` bei allem anderen.
+    public static func parseClock(_ text: String) -> Double? {
+        let parts = text.trimmingCharacters(in: .whitespaces).split(separator: ":", omittingEmptySubsequences: false)
+        guard parts.count == 3 else { return parts.count == 2 ? PlanV2Formatting.parseTime(text) : nil }
+        guard let hours = Int(parts[0]), hours >= 0, parts[1].count == 2, parts[2].count == 2,
+              let minutes = Int(parts[1]), let seconds = Int(parts[2]), (0..<60).contains(minutes), (0..<60).contains(seconds)
+        else { return nil }
+        return Double(hours * 3600 + minutes * 60 + seconds)
+    }
+
+    /// "5 km", "10 km" oder "800 m".
+    public static func distanceText(_ meters: Int) -> String {
+        meters % 1000 == 0 ? "\(meters / 1000) km" : "\(meters) m"
     }
 
     private static func amounts(_ state: AthleteStateSnapshot.SportStateSummary, unit: PlanUnit) -> (Double, Double) {

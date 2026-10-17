@@ -59,7 +59,9 @@ export const rowingTestSport: SportDefinition = {
     // Test-Sportart: Werte wie beim Rad.
     startingLevel: {
       factors: { regular: 1, short_break: 0.7, long_break: 0.5 },
-      returnGrowthFactor: 1.2
+      returnGrowthFactor: 1.2,
+      pace: null,
+      bestTimeDistances: []
     },
     typicalSpeedMetersPerSecond: 3.5,
     stepMeasures: ["duration", "distance"],

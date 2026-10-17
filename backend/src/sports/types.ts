@@ -141,6 +141,13 @@ export interface StartingLevelRules {
   readonly factors: { readonly regular: number; readonly short_break: number; readonly long_break: number };
   /** Gesamtplan: bis zum angegebenen Niveau darf eine Woche so viel mehr haben als die letzte ohne Entlastung. */
   readonly returnGrowthFactor: number;
+  /**
+   * Tempo, das der Athlet dazu angeben kann (`starting_levels[].pace`), als Ziel der Sportart und mit erlaubtem
+   * Bereich: Schwimmen s/100m, Laufen s/km, Rad km/h. `null`: kein Tempo. Steht auch in contracts/sports.json.
+   */
+  readonly pace: { readonly target: "pace_per_100m" | "pace_per_km" | "speed"; readonly min: number; readonly max: number } | null;
+  /** Strecken in Metern, fuer die der Athlet eine Bestzeit angeben kann (`starting_levels[].best_times`). */
+  readonly bestTimeDistances: readonly number[];
 }
 
 export interface SportPlanning {

@@ -137,14 +137,22 @@
       "weekly_amount": 6000,
       "longest_session": 2500,
       "status": "short_break",
-      "reported_at": "2026-09-28T18:00:00Z"
+      "reported_at": "2026-09-28T18:00:00Z",
+      "pace": 125
     },
     {
       "sport": "run",
       "weekly_amount": 180,
       "longest_session": 90,
       "status": "regular",
-      "reported_at": "2026-09-28T18:00:00Z"
+      "reported_at": "2026-09-28T18:00:00Z",
+      "pace": 330,
+      "best_times": [
+        {
+          "distance_meters": 10000,
+          "seconds": 3000
+        }
+      ]
     }
   ]
 }

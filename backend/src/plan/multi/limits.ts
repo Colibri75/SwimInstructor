@@ -1,7 +1,7 @@
 import { SportDefinition, SportStateValues, TrainingStatus } from "../../sports/types";
 import { daysBetween, MacroPhase, mondayOf } from "../calendar";
 import { Intensity } from "../vocabulary";
-import { PauseKind, SnapshotV2 } from "../snapshot";
+import { PauseKind, SnapshotV2, StartingLevel } from "../snapshot";
 import { addDays } from "../calendar";
 import { PainArea, RecentTraining } from "./schemas";
 import { fixedSport, isFitnessGoal, scheduleDay, weeklyMinutes } from "./schedule";
@@ -116,10 +116,8 @@ export interface DeclaredLevel {
  * kein Einsteiger und ein Anteil ueber 0 (beim Laufen zaehlt eine Angabe nach langer Pause nicht).
  */
 export function declaredLevel(snapshot: SnapshotV2, sport: SportDefinition): DeclaredLevel | null {
-  const entry = snapshot.starting_levels?.find((level) => level.sport === sport.id);
+  const entry = currentStartingLevel(snapshot, sport);
   if (entry === undefined || entry.status === "beginner") return null;
-  const ageDays = (Date.parse(snapshot.generated_at) - Date.parse(entry.reported_at)) / 86_400_000;
-  if (!(ageDays >= -1 && ageDays <= MULTI_RULES.startingLevelValidDays)) return null;
   const factor = sport.planning.startingLevel.factors[entry.status];
   if (!(factor > 0)) return null;
   const limits = sport.planning.limits;
@@ -133,6 +131,29 @@ export function declaredLevel(snapshot: SnapshotV2, sport: SportDefinition): Dec
     weekly: reportedWeekly * factor,
     longest: reportedLongest * factor
   };
+}
+
+/** Die Angabe zum Startniveau einer Sportart, solange sie gilt (nicht aelter als `startingLevelValidDays`), auch fuer Einsteiger. */
+export function currentStartingLevel(snapshot: SnapshotV2, sport: SportDefinition): StartingLevel | undefined {
+  const entry = snapshot.starting_levels?.find((level) => level.sport === sport.id);
+  if (entry === undefined) return undefined;
+  const ageDays = (Date.parse(snapshot.generated_at) - Date.parse(entry.reported_at)) / 86_400_000;
+  return ageDays >= -1 && ageDays <= MULTI_RULES.startingLevelValidDays ? entry : undefined;
+}
+
+/** Das angegebene Tempo in m/s, `undefined` ohne gueltige Angabe. */
+export function declaredSpeed(snapshot: SnapshotV2, sport: SportDefinition): number | undefined {
+  const value = currentStartingLevel(snapshot, sport)?.pace;
+  const pace = sport.planning.startingLevel.pace;
+  if (value === undefined || pace === null) return undefined;
+  switch (pace.target) {
+    case "pace_per_100m":
+      return 100 / value;
+    case "pace_per_km":
+      return 1000 / value;
+    case "speed":
+      return value / 3.6;
+  }
 }
 
 /** Die Grenzen einer Sportart nach ihrem Verlauf, alle in der Einheit der Sportart. */
@@ -180,7 +201,7 @@ export function sportLimits(snapshot: SnapshotV2, sport: SportDefinition): Sport
   return {
     sport,
     state,
-    speed: trainingSpeed(sport, state),
+    speed: trainingSpeed(sport, state, declaredSpeed(snapshot, sport)),
     pause,
     sessionCap: floorAmount(sport, sessionCap),
     weeklyCap: floorAmount(sport, weeklyCap),

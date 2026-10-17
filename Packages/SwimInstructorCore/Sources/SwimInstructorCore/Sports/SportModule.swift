@@ -38,6 +38,18 @@ public struct PoolVenue: Equatable, Sendable {
     }
 }
 
+/// Das Tempo, das der Athlet zu seinem Startniveau angeben kann: als Ziel der Sportart (Schwimmen s/100m, Laufen s/km,
+/// Rad km/h) mit erlaubtem Bereich. Steht auch in `contracts/sports.json` (`starting_pace`).
+public struct StartingPace: Equatable, Sendable {
+    public let target: StepTarget
+    public let range: ClosedRange<Double>
+
+    public init(target: StepTarget, range: ClosedRange<Double>) {
+        self.target = target
+        self.range = range
+    }
+}
+
 /// Etwas, das der Athlet in einer Sportart können kann (Schwimmen: eine Lage, die Rollwende). `id` ist die Kennung des
 /// Servers. Steht auch in `contracts/sports.json` (`skills`).
 public struct SportSkill: Equatable, Sendable, Identifiable {
@@ -100,6 +112,11 @@ public protocol SportModule: Sendable {
     var pool: PoolVenue? { get }
     /// Was der Athlet unter "Über mich" ankreuzen kann; der Coach plant nur damit. Steht auch in `contracts/sports.json`.
     var skills: [SportSkill] { get }
+    /// Tempo, das der Athlet beim Startniveau angeben kann, `nil` ohne. Steht auch in `contracts/sports.json`.
+    var startingPace: StartingPace? { get }
+    /// Strecken in Metern, für die der Athlet beim Startniveau eine Bestzeit angeben kann. Steht auch in
+    /// `contracts/sports.json`.
+    var bestTimeDistances: [Int] { get }
 
     // MARK: Leistungsprofil (T2b)
 
@@ -148,6 +165,8 @@ public extension SportModule {
     var openWater: OpenWaterVenue? { nil }
     var pool: PoolVenue? { nil }
     var skills: [SportSkill] { [] }
+    var startingPace: StartingPace? { nil }
+    var bestTimeDistances: [Int] { [] }
 
     var statistics: [StatisticDefinition] { SportStatistics.derived(for: self) }
 

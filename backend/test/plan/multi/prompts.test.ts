@@ -16,6 +16,7 @@ import {
   MULTI_WEEK_SYSTEM_PROMPT,
   performanceSection
 } from "../../../src/plan/multi/prompts";
+import { sportLimits } from "../../../src/plan/multi/limits";
 import { MacroWeekTargetV2 } from "../../../src/plan/multi/schemas";
 import { WeekContextV2 } from "../../../src/plan/multi/weekSanity";
 import { SnapshotV2 } from "../../../src/plan/snapshot";
@@ -601,6 +602,36 @@ describe("Startniveau in den Nutzernachrichten", () => {
 
   it("verlangt im System-Prompt, von der Angabe aus zu planen", () => {
     expect(MULTI_MACRO_SYSTEM_PROMPT).toContain('Hat der Athlet sein Startniveau selbst angegeben (Abschnitt "Startniveau")');
+  });
+
+  it("nennt angegebenes Tempo und Bestzeit, auch fuer Einsteiger", () => {
+    const withPace = multiSnapshot({
+      startingLevels: [
+        { ...startingLevel("swim", 6000, 2500, "regular"), pace: 125 },
+        { ...startingLevel("run", 120, 60, "beginner"), pace: 330, best_times: [{ distance_meters: 5000, seconds: 1800 }, { distance_meters: 10000, seconds: 3930 }] },
+        { ...startingLevel("bike", 180, 90, "regular"), pace: 27.5 }
+      ]
+    });
+    const lines = section(buildDayUserMessageV2({ snapshot: withPace, date: TODAY }), header);
+    expect(lines.find((line) => line.startsWith("- Schwimmen:"))).toContain("Übliches Tempo selbst angegeben: 2:05 pro 100 m.");
+    expect(lines.find((line) => line.startsWith("- Radfahren:"))).toContain("Übliches Tempo selbst angegeben: 27,5 km/h im Schnitt.");
+    expect(lines.find((line) => line.startsWith("- Laufen:"))).toBe(
+      "- Laufen: Übliches Tempo selbst angegeben: 5:30 pro km. Bestzeit über 5 km: 30:00 (6:00 pro km). Bestzeit über 10 km: 1:05:30 (6:33 pro km)."
+    );
+    expect(MULTI_DAY_SYSTEM_PROMPT).toContain("Richte Tempo-Zielwerte danach");
+  });
+
+  it("rechnet ohne Tempo aus Health mit dem angegebenen Tempo um", () => {
+    const withPace = multiSnapshot({
+      sports: { swim: { average_weekly_meters: 0, average_weekly_minutes: 0 } },
+      startingLevels: [{ ...startingLevel("swim", 6000, 2500, "regular"), pace: 125 }]
+    });
+    expect(sportLimits(withPace, SPORTS.get("swim")!).speed).toBeCloseTo(0.8, 5);
+    const faster = multiSnapshot({
+      sports: { swim: { average_weekly_meters: 0, average_weekly_minutes: 0 } },
+      startingLevels: [{ ...startingLevel("swim", 6000, 2500, "regular"), pace: 100 }]
+    });
+    expect(sportLimits(faster, SPORTS.get("swim")!).speed).toBeCloseTo(1, 5);
   });
 });
 

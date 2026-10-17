@@ -147,6 +147,8 @@ function validPlanning(sport: SportDefinition): boolean {
   const factors = [starting.factors.regular, starting.factors.short_break, starting.factors.long_break];
   if (!factors.every((factor) => Number.isFinite(factor) && factor >= 0 && factor <= 1)) return false;
   if (!(starting.returnGrowthFactor >= limits.macroGrowthFactor && starting.returnGrowthFactor <= 1.5)) return false;
+  if (starting.pace !== null && (!sport.targets.includes(starting.pace.target) || !(starting.pace.min > 0 && starting.pace.min < starting.pace.max))) return false;
+  if (new Set(starting.bestTimeDistances).size !== starting.bestTimeDistances.length || !starting.bestTimeDistances.every((meters) => Number.isInteger(meters) && meters > 0)) return false;
   if (!positive(planning.typicalSpeedMetersPerSecond)) return false;
   if (planning.stepMeasures.length === 0 || !planning.stepMeasures.every((measure) => sport.measures.includes(measure))) return false;
   if (![planning.distanceStepMeters, planning.minStepMeters, planning.minStepSeconds].every(positive)) return false;

@@ -32,6 +32,8 @@ public struct BikeModule: SportModule {
     public let planUnit = PlanUnit.minutes
     /// 25 km/h.
     public let typicalSpeedMetersPerSecond: Double = 7
+    /// Durchschnittstempo in km/h beim Startniveau.
+    public let startingPace: StartingPace? = StartingPace(target: .speed, range: 8...60)
     /// Koppeltraining Schwimmen und direkt danach Rad (Wechsel 1).
     public let brickAfter: [SportID] = [.swim]
     public let weatherSensitive = true

@@ -71,7 +71,7 @@ describe("Snapshot v2 mit Startniveau", () => {
 
   it("lehnt eine Sportart mit zwei Angaben ab", () => {
     const snapshot = withLevels();
-    snapshot.starting_levels[1].sport = "swim";
+    snapshot.starting_levels[1] = { ...snapshot.starting_levels[0] };
     expect(issues(snapshot)).toEqual(["starting_levels: Sportart doppelt"]);
   });
 
@@ -84,6 +84,30 @@ describe("Snapshot v2 mit Startniveau", () => {
       "starting_levels.0.weekly_amount: Too small: expected number to be >=0",
       "starting_levels.0.status: Invalid option: expected one of \"regular\"|\"short_break\"|\"long_break\"|\"beginner\"",
       "starting_levels.2.sport: unbekannte Sportart"
+    ]);
+  });
+});
+
+describe("Snapshot v2 mit Tempo und Bestzeit im Startniveau", () => {
+  const withLevels = (): any => JSON.parse(readFileSync(path.join(__dirname, "../../../contracts/wire/snapshot-v2-starting-levels.json"), "utf8"));
+
+  it("nimmt Tempo je Sportart im erlaubten Bereich und Bestzeiten ueber 5 und 10 km an", () => {
+    const snapshot = withLevels();
+    snapshot.starting_levels.push({ ...snapshot.starting_levels[1], sport: "bike", pace: 28.5, best_times: undefined });
+    snapshot.starting_levels[1].best_times.push({ distance_meters: 5000, seconds: 1500 });
+    expect(issues(snapshot)).toEqual([]);
+  });
+
+  it("lehnt Tempo ausserhalb des Bereichs der Sportart und fremde oder unplausible Bestzeiten ab", () => {
+    const snapshot = withLevels();
+    snapshot.starting_levels[0].pace = 20;
+    snapshot.starting_levels[0].best_times = [{ distance_meters: 1000, seconds: 900 }];
+    snapshot.starting_levels[1].best_times = [{ distance_meters: 5000, seconds: 1500 }, { distance_meters: 10000, seconds: 600 }, { distance_meters: 5000, seconds: 1600 }];
+    expect(issues(snapshot)).toEqual([
+      "starting_levels.0.pace: Tempo passt nicht zur Sportart",
+      "starting_levels.0.best_times.0: Bestzeit passt nicht zur Sportart",
+      "starting_levels.1.best_times: Strecke doppelt",
+      "starting_levels.1.best_times.1: Bestzeit passt nicht zur Sportart"
     ]);
   });
 });

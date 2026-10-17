@@ -66,14 +66,14 @@ export function planningContext(snapshot: SnapshotV2, sport: SportDefinition): S
 
 /**
  * Trainingstempo in m/s (inklusive Pausen) aus den letzten 4 Wochen. Ohne Verlauf oder bei einem unplausiblen Wert
- * (Tippfehler in Health) das typische Tempo der Sportart.
+ * (Tippfehler in Health) das selbst angegebene Tempo, sonst das typische Tempo der Sportart.
  */
-export function trainingSpeed(sport: SportDefinition, state: SportStateValues): number {
+export function trainingSpeed(sport: SportDefinition, state: SportStateValues, declared?: number): number {
   if (state.average_weekly_meters > 0 && state.average_weekly_minutes > 0) {
     const speed = state.average_weekly_meters / (state.average_weekly_minutes * 60);
     if (speed >= sport.goalSpeed.minMetersPerSecond / 2 && speed <= sport.goalSpeed.maxMetersPerSecond) return speed;
   }
-  return sport.planning.typicalSpeedMetersPerSecond;
+  return declared ?? sport.planning.typicalSpeedMetersPerSecond;
 }
 
 /** Ein Umfang in der Einheit der Sportart (Meter oder Minuten) als Minuten. */

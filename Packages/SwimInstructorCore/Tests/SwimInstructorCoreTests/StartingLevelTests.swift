@@ -40,6 +40,62 @@ final class StartingLevelTests: XCTestCase {
         XCTAssertEqual(store.levels(), [])
     }
 
+    func testStoreKeepsPaceAndBestTimeOnlyWhenTheyFitTheSport() {
+        let store = makeStore()
+        var run = level(.run, 180, 90)
+        run.pace = 330
+        run.setBestTime(3000, over: 10_000)
+        run.setBestTime(1450, over: 5000)
+        XCTAssertTrue(store.setLevel(run))
+        XCTAssertEqual(store.levels().first?.bestTime(over: 10_000), 3000)
+        XCTAssertEqual(store.levels().first?.bestTimes?.map(\.distanceMeters), [5000, 10_000])
+        XCTAssertEqual(store.levels().first?.pace, 330)
+
+        var swim = level(.swim, 6000, 2500)
+        swim.pace = 20
+        XCTAssertFalse(store.setLevel(swim), "unter 1:00 pro 100 m")
+        swim.pace = 125
+        swim.setBestTime(3000, over: 10_000)
+        XCTAssertFalse(store.setLevel(swim), "Schwimmen hat keine Bestzeit")
+        run.setBestTime(600, over: 10_000)
+        XCTAssertFalse(store.setLevel(run), "10 km in 10 Minuten")
+        run.setBestTime(nil, over: 10_000)
+        run.setBestTime(nil, over: 5000)
+        XCTAssertNil(run.bestTimes)
+        var bike = level(.bike, 180, 90)
+        bike.pace = 27.5
+        XCTAssertTrue(store.setLevel(bike))
+    }
+
+    func testOldStoredLevelsWithoutPaceStillLoad() throws {
+        let suite = "StartingLevelTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        let old = #"[{"sport":"swim","weeklyAmount":6000,"longestSession":2500,"status":"regular","reportedAt":0}]"#
+        defaults.set(Data(old.utf8), forKey: UserDefaultsStartingLevelStore.storageKey)
+        let levels = UserDefaultsStartingLevelStore(defaults: defaults).levels()
+        XCTAssertEqual(levels.count, 1)
+        XCTAssertNil(levels.first?.pace)
+        XCTAssertNil(levels.first?.bestTimes)
+    }
+
+    func testPaceAndClockTextsRoundTrip() throws {
+        let swim = try XCTUnwrap(SwimModule().startingPace)
+        let bike = try XCTUnwrap(BikeModule().startingPace)
+        XCTAssertEqual(StartingLevelFormatting.paceText(125, pace: swim), "2:05")
+        XCTAssertEqual(StartingLevelFormatting.parsePace("2:05", pace: swim), 125)
+        XCTAssertEqual(StartingLevelFormatting.parsePace("27,5", pace: bike), 27.5)
+        XCTAssertEqual(StartingLevelFormatting.parsePace("27.5", pace: bike), 27.5)
+        XCTAssertNil(StartingLevelFormatting.parsePace("2:5", pace: swim))
+        XCTAssertEqual(StartingLevelFormatting.paceUnit(swim), "/100 m")
+        XCTAssertEqual(StartingLevelFormatting.paceUnit(bike), "km/h")
+        XCTAssertEqual(StartingLevelFormatting.clockText(1500), "25:00")
+        XCTAssertEqual(StartingLevelFormatting.clockText(3930), "1:05:30")
+        XCTAssertEqual(StartingLevelFormatting.parseClock("1:05:30"), 3930)
+        XCTAssertEqual(StartingLevelFormatting.parseClock("50:00"), 3000)
+        XCTAssertNil(StartingLevelFormatting.parseClock("1:5:30"))
+        XCTAssertEqual(StartingLevelFormatting.distanceText(10_000), "10 km")
+    }
+
     func testALevelIsValidFor28Days() {
         XCTAssertTrue(level(.swim, 6000, 2500, daysAgo: 27).isValid(now: now))
         XCTAssertTrue(level(.swim, 6000, 2500, daysAgo: 28).isValid(now: now))

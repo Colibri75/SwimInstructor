@@ -335,7 +335,12 @@
 "Gespeichert." = "Salvato.";
 "Gesperrt bis %@." = "Bloccato fino al %@.";
 "Getestete und von dir eingetragene Werte samt Verlauf gehen verloren." = "I valori testati e inseriti da te, con il relativo storico, andranno persi.";
-"Gib an, was du zurzeit schaffst oder vor einer Pause geschafft hast. Der Plan rechnet mit dem höheren Wert aus Health und deiner Angabe. Nach einer Pause zählt nur ein Teil davon, beim Laufen vorsichtiger als beim Schwimmen und Radfahren. Gilt ab dem nächsten Plan." = "Indica cosa riesci a fare attualmente o riuscivi a fare prima di una pausa. Il piano usa il valore più alto tra Salute e il tuo dato. Dopo una pausa ne conta solo una parte, con più prudenza nella corsa che nel nuoto e nel ciclismo. Vale dal prossimo piano.";
+"Gib an, was du zurzeit schaffst oder vor einer Pause geschafft hast. Der Plan rechnet mit dem höheren Wert aus Health und deiner Angabe. Nach einer Pause zählt nur ein Teil davon, beim Laufen vorsichtiger als beim Schwimmen und Radfahren. Tempo, Bestzeit und FTP sind freiwillig; dein Coach richtet danach das Tempo der Einheiten, bis ein Test oder ein Wert im Leistungsprofil vorliegt. Gilt ab dem nächsten Plan." = "Indica cosa riesci a fare attualmente o riuscivi a fare prima di una pausa. Il piano usa il valore più alto tra Salute e il tuo dato. Dopo una pausa ne conta solo una parte, con più prudenza nella corsa che nel nuoto e nel ciclismo. Passo, miglior tempo e FTP sono facoltativi; il tuo coach li usa per impostare il ritmo delle sessioni finché non ci sono un test o un valore nel profilo di prestazione. Vale dal prossimo piano.";
+"Durchschnittstempo" = "Velocità media";
+"Übliches Tempo" = "Passo abituale";
+"Bestzeit %@" = "Miglior tempo %@";
+"FTP, falls bekannt" = "FTP, se la conosci";
+"Dieser Wert passt nicht, Beispiel: %@" = "Questo valore non va bene, esempio: %@";
 "Gilt bis %@. Danach zählt nur noch, was Health aufzeichnet; eine Änderung verlängert sie." = "Vale fino al %@. Dopo conta solo ciò che registra Salute; una modifica lo prolunga.";
 "Gilt nur für heute. Dein Coach berücksichtigt ihn, soweit er in die Sicherheitsgrenzen passt (Umfang, Intensität, Ruhetag). Er wird beim Tippen gespeichert und gilt für jeden neuen Plan des Tages. Steht er nach dem Erstellen über dem Plan, ist er beim Server angekommen." = "Vale solo per oggi. Il tuo coach ne tiene conto nei limiti di sicurezza (volume, intensità, giorno di riposo). Viene salvato mentre scrivi e vale per ogni nuovo piano del giorno. Se dopo la creazione appare sopra il piano, è arrivato al server.";
 "Gleich geht's los" = "Si parte tra poco";

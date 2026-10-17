@@ -36,6 +36,8 @@ public struct SwimModule: SportModule {
     public let planUnit = PlanUnit.meters
     /// 2:05 pro 100 m inklusive Pausen.
     public let typicalSpeedMetersPerSecond: Double = 0.8
+    /// Übliches Tempo pro 100 m beim Startniveau.
+    public let startingPace: StartingPace? = StartingPace(target: .pacePerHundredMeters, range: 60...300)
     public let openWater: OpenWaterVenue? = OpenWaterVenue(id: "open_water", displayName: String(localized: "Freiwasser"), locationID: RecordingLocation.openWater.id)
     public let pool: PoolVenue? = PoolVenue(displayName: String(localized: "Becken"), lapLengths: PoolLength.presets)
     public let skills: [SportSkill] = [

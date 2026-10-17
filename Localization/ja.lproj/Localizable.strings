@@ -335,7 +335,12 @@
 "Gespeichert." = "保存しました。";
 "Gesperrt bis %@." = "%@までロック中。";
 "Getestete und von dir eingetragene Werte samt Verlauf gehen verloren." = "テストの値と自分で入力した値が、履歴ごと失われます。";
-"Gib an, was du zurzeit schaffst oder vor einer Pause geschafft hast. Der Plan rechnet mit dem höheren Wert aus Health und deiner Angabe. Nach einer Pause zählt nur ein Teil davon, beim Laufen vorsichtiger als beim Schwimmen und Radfahren. Gilt ab dem nächsten Plan." = "現在できること、または休止前にできていたことを入力してください。プランはヘルスケアのデータと入力値のうち高いほうで計算します。休止後はその一部だけを考慮し、ランはスイムやバイクより慎重に扱います。次のプランから適用されます。";
+"Gib an, was du zurzeit schaffst oder vor einer Pause geschafft hast. Der Plan rechnet mit dem höheren Wert aus Health und deiner Angabe. Nach einer Pause zählt nur ein Teil davon, beim Laufen vorsichtiger als beim Schwimmen und Radfahren. Tempo, Bestzeit und FTP sind freiwillig; dein Coach richtet danach das Tempo der Einheiten, bis ein Test oder ein Wert im Leistungsprofil vorliegt. Gilt ab dem nächsten Plan." = "現在できること、または休止前にできていたことを入力してください。プランはヘルスケアのデータと入力値のうち高いほうで計算します。休止後はその一部だけを考慮し、ランはスイムやバイクより慎重に扱います。ペース、ベストタイム、FTP は任意です。テストやパフォーマンスプロフィールの値が揃うまで、コーチがこれをもとにトレーニングのペースを決めます。次のプランから適用されます。";
+"Durchschnittstempo" = "平均速度";
+"Übliches Tempo" = "普段のペース";
+"Bestzeit %@" = "ベストタイム %@";
+"FTP, falls bekannt" = "FTP（わかる場合）";
+"Dieser Wert passt nicht, Beispiel: %@" = "この値は使えません。例：%@";
 "Gilt bis %@. Danach zählt nur noch, was Health aufzeichnet; eine Änderung verlängert sie." = "%@まで有効。その後はヘルスケアの記録だけが反映されます。変更すると延長されます。";
 "Gilt nur für heute. Dein Coach berücksichtigt ihn, soweit er in die Sicherheitsgrenzen passt (Umfang, Intensität, Ruhetag). Er wird beim Tippen gespeichert und gilt für jeden neuen Plan des Tages. Steht er nach dem Erstellen über dem Plan, ist er beim Server angekommen." = "今日だけ有効です。安全上の上限（ボリューム、強度、休養日）の範囲内でコーチが考慮します。入力すると保存され、その日の新しいプランすべてに適用されます。作成後にプランの上に表示されていれば、サーバーに届いています。";
 "Gleich geht's los" = "まもなくスタート";

@@ -335,7 +335,12 @@
 "Gespeichert." = "Saved.";
 "Gesperrt bis %@." = "Locked until %@.";
 "Getestete und von dir eingetragene Werte samt Verlauf gehen verloren." = "Tested values and values you entered, including their history, will be lost.";
-"Gib an, was du zurzeit schaffst oder vor einer Pause geschafft hast. Der Plan rechnet mit dem höheren Wert aus Health und deiner Angabe. Nach einer Pause zählt nur ein Teil davon, beim Laufen vorsichtiger als beim Schwimmen und Radfahren. Gilt ab dem nächsten Plan." = "Enter what you can currently do or could do before a break. The plan uses the higher value from Health and your entry. After a break, only part of it counts, more cautiously for running than for swimming and cycling. Applies from the next plan.";
+"Gib an, was du zurzeit schaffst oder vor einer Pause geschafft hast. Der Plan rechnet mit dem höheren Wert aus Health und deiner Angabe. Nach einer Pause zählt nur ein Teil davon, beim Laufen vorsichtiger als beim Schwimmen und Radfahren. Tempo, Bestzeit und FTP sind freiwillig; dein Coach richtet danach das Tempo der Einheiten, bis ein Test oder ein Wert im Leistungsprofil vorliegt. Gilt ab dem nächsten Plan." = "Enter what you can currently do or could do before a break. The plan uses the higher value from Health and your entry. After a break, only part of it counts, more cautiously for running than for swimming and cycling. Pace, best time and FTP are optional; your coach uses them to set the pace of your sessions until a test or a value in your performance profile is available. Applies from the next plan.";
+"Durchschnittstempo" = "Average speed";
+"Übliches Tempo" = "Usual pace";
+"Bestzeit %@" = "Best time %@";
+"FTP, falls bekannt" = "FTP, if known";
+"Dieser Wert passt nicht, Beispiel: %@" = "This value doesn’t fit, example: %@";
 "Gilt bis %@. Danach zählt nur noch, was Health aufzeichnet; eine Änderung verlängert sie." = "Valid until %@. After that, only what Health records counts; making a change extends it.";
 "Gilt nur für heute. Dein Coach berücksichtigt ihn, soweit er in die Sicherheitsgrenzen passt (Umfang, Intensität, Ruhetag). Er wird beim Tippen gespeichert und gilt für jeden neuen Plan des Tages. Steht er nach dem Erstellen über dem Plan, ist er beim Server angekommen." = "Applies to today only. Your coach takes it into account as far as it fits within the safety limits (volume, intensity, rest day). It's saved as you type and applies to every new plan for the day. If it appears above the plan after it's created, it has reached the server.";
 "Gleich geht's los" = "Starting soon";
