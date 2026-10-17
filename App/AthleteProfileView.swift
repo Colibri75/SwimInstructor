@@ -210,14 +210,14 @@ struct AthleteProfileView: View {
 
     private var everydaySection: some View {
         Section {
-            Picker("Belastung durch Beruf und Familie", selection: update(\.lifeStress)) {
+            Picker("Stress im Alltag", selection: update(\.lifeStress)) {
                 Text("Keine Angabe").tag(LifeStress?.none)
                 ForEach(LifeStress.allCases) { level in
                     Text(level.title).tag(Optional(level))
                 }
             }
             Toggle("Schichtarbeit", isOn: update(\.shiftWork))
-            Picker("Intensität", selection: update(\.intensityPreference)) {
+            Picker("Harte Einheiten", selection: update(\.intensityPreference)) {
                 Text("Keine Angabe").tag(IntensityPreference?.none)
                 ForEach(IntensityPreference.allCases) { preference in
                     Text(preference.title).tag(Optional(preference))
@@ -226,7 +226,7 @@ struct AthleteProfileView: View {
         } header: {
             Text("Alltag")
         } footer: {
-            Text("Bei viel Stress oder Schichtarbeit plant dein Coach höchstens einen harten Tag pro Woche. Die Intensität verschiebt, wie viel vom erlaubten harten Anteil er nutzt; rund 80 Prozent bleiben immer locker.")
+            Text("Stress im Alltag: wie sehr dich Beruf, Familie oder wenig Schlaf gerade fordern. Ist es viel oder arbeitest du in Schichten, plant dein Coach höchstens einen harten Tag pro Woche. Harte Einheiten: ob du lieber ruhig trainierst oder gern mehr Intervalle und Tempo hast. Rund 80 Prozent bleiben immer locker.")
         }
     }
 

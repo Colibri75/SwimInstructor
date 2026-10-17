@@ -221,6 +221,7 @@ struct ProfileEntryDetailView: View {
         .themedList()
         .navigationTitle(entry?.definition.displayName ?? String(localized: "Leistungswert"))
         .swipeClosesKeyboard()
+        .keyboardDoneButton()
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -230,6 +231,7 @@ struct ProfileEntryDetailView: View {
             HStack {
                 TextField(isTime ? "m:ss" : definition.unit, text: $text)
                     .keyboardType(isTime ? .numbersAndPunctuation : .decimalPad)
+                    .inputField()
                 Button("Speichern") {
                     let trimmed = text.trimmingCharacters(in: .whitespaces)
                     let value = isTime ? PlanV2Formatting.parseTime(trimmed) : Double(trimmed.replacingOccurrences(of: ",", with: "."))
