@@ -1,12 +1,19 @@
 name: Backend CI
 
+# Arbeits-Branches laufen nur ueber ihren PR, nicht zusaetzlich bei jedem Push (spart Minuten im privaten Repo).
 on:
   push:
-    branches: [main, "claude/**"]
+    branches: [main]
     paths: ["backend/**", "contracts/**", ".github/workflows/backend-ci.yml"]
   pull_request:
     branches: [main]
     paths: ["backend/**", "contracts/**", ".github/workflows/backend-ci.yml"]
+
+# Ein neuer Commit im PR bricht den noch laufenden Lauf des alten Commits ab; auf main laeuft jeder Lauf zu Ende,
+# denn danach startet das Deploy.
+concurrency:
+  group: backend-ci-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # Der GITHUB_TOKEN braucht nur Lesezugriff aufs Repo; Signierung, TestFlight und Deploy laufen ueber eigene Secrets.
 permissions:

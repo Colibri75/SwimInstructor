@@ -1,9 +1,11 @@
 name: iOS CI/CD
 
 # Backend, Doku und Markdown loesen keinen (teuren) macOS-Lauf und keinen TestFlight-Build aus.
+# Arbeits-Branches laufen nur ueber ihren PR, nicht zusaetzlich bei jedem Push: Das sparte im privaten Repo
+# den doppelten macOS-Lauf pro Commit (macOS-Minuten zaehlen dort zehnfach).
 on:
   push:
-    branches: [main, "claude/**"]
+    branches: [main]
     paths-ignore:
       - "backend/**"
       - "docs/**"
@@ -16,6 +18,12 @@ on:
       - "docs/**"
       - "**.md"
       - ".github/workflows/backend-ci.yml"
+
+# Ein neuer Commit im PR bricht den noch laufenden Test des alten Commits ab. Auf main laeuft jeder Lauf zu Ende,
+# denn jeder Merge liefert einen TestFlight-Build aus.
+concurrency:
+  group: ios-ci-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # Der GITHUB_TOKEN braucht nur Lesezugriff aufs Repo; Signierung, TestFlight und Deploy laufen ueber eigene Secrets.
 permissions:

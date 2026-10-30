@@ -232,7 +232,7 @@ cd backend && npm run typecheck && npm test   # Server, lokal
 git status                                    # nur die acht Dateien oben
 ```
 
-Die App-Tests laufen in der CI (Push auf einen `claude/**`-Branch oder ein PR) oder auf einem Mac mit
+Die App-Tests laufen in der CI (bei jedem PR und auf `main`) oder auf einem Mac mit
 `bundle exec fastlane test`: Package-Tests, Sport-Coverage und die Builds von App und Watch.
 
 ## Ausliefern
