@@ -168,6 +168,8 @@ Push auf `main`: Tests → Build → Sign → TestFlight-Upload.
 - Öffentliches Repo: GitHub Actions inkl. macOS-Runner kostenlos.
 - Privates Repo: 2.000 Freiminuten/Monat, macOS zählt mit Faktor 10 (~200
   echte macOS-Minuten gratis), danach 0,062$/Minute (Stand 01/2026).
+- Damit es im privaten Repo sparsam bleibt, laufen Arbeits-Branches nur über ihren PR (nicht zusätzlich bei jedem
+  Push), und ein neuer Commit im PR bricht den alten Lauf ab. Auf `main` läuft jeder Lauf zu Ende.
 
 ### Tests
 
