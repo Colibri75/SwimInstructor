@@ -5,6 +5,9 @@ import SwimInstructorCore
 /// keinen), beim Wettkampf auf Wunsch eine Vorlage (Triathlon-Distanzen, Lauf, Schwimmen, Rad), dann Disziplinen mit
 /// Strecke und Zielzeit und der Schwerpunkt je Sportart. Die Trainingszeit kommt aus dem Wochenraster.
 ///
+/// Jeder weitere Wettkampf öffnet dieselbe Ansicht mit Tag, Vorlage und Disziplinen (`GoalDetailSections.swift`);
+/// statt der Zielart wählt man dort, ob er Hauptziel, mit kurzem Zuspitzen oder als harte Einheit zählt.
+///
 /// In der Einrichtung wird ein gültiges Ziel sofort gespeichert. In den Einstellungen ist es ein Entwurf (P3): Die
 /// Ansicht zeigt, was mit dem Gesamtplan passiert, und erst "Übernehmen" ändert das Ziel. Ein neues Ziel geht höchstens
 /// alle 7 Tage; in der Sperre lässt es sich vormerken und wird an ihrem Ende übernommen.
@@ -48,11 +51,16 @@ struct GoalAssistantView: View {
             Group {
                 kindSection
                 if goal.kind == .race {
-                    templateSection
+                    GoalTemplateSection(
+                        selection: goal.template,
+                        ownTitle: "Eigenes Ziel",
+                        footer: "Die Vorlage füllt Disziplinen, Strecken und Schwerpunkte vor. Danach kannst du alles ändern.",
+                        choose: chooseTemplate
+                    )
                 }
                 if goal.kind.hasDisciplines {
-                    ForEach(sports.ids, id: \.self) { sport in
-                        disciplineSection(sport)
+                    DisciplineSections(disciplines: goal.disciplines, offersTargetTime: goal.kind != .distance) { discipline, sport in
+                        goal = goal.settingDiscipline(discipline, for: sport)
                     }
                 } else {
                     sportsSection
@@ -106,6 +114,8 @@ struct GoalAssistantView: View {
             if goal.kind.hasDisciplines {
                 DatePicker(dateTitle, selection: targetDayBinding, in: Date()..., displayedComponents: .date)
             }
+        } header: {
+            Text("Hauptziel")
         } footer: {
             Text(goal.kind.explanation)
         }
@@ -142,145 +152,24 @@ struct GoalAssistantView: View {
 
     // MARK: - Vorlage
 
-    private var templateSection: some View {
-        Section {
-            Picker("Vorlage", selection: templateBinding) {
-                Text("Eigenes Ziel").tag(String?.none)
-                ForEach(GoalTemplate.all) { template in
-                    Text(template.displayName).tag(Optional(template.id))
-                }
-            }
-        } footer: {
-            Text("Die Vorlage füllt Disziplinen, Strecken und Schwerpunkte vor. Danach kannst du alles ändern.")
+    /// Die Vorlage füllt Disziplinen und Schwerpunkte; Zieltag, Trainingszeit und weitere Wettkämpfe bleiben.
+    private func chooseTemplate(_ template: GoalTemplate?) {
+        guard let template else {
+            goal.template = nil
+            return
         }
-    }
-
-    private var templateBinding: Binding<String?> {
-        Binding(
-            get: { goal.template },
-            set: { id in
-                guard let template = GoalTemplate.template(id: id) else {
-                    goal.template = nil
-                    return
-                }
-                goal = template.goal(targetDate: goal.targetDate, trainingDaysPerWeek: goal.trainingDaysPerWeek, weeklyHours: goal.weeklyHours)
-            }
-        )
-    }
-
-    // MARK: - Disziplinen
-
-    private func disciplineSection(_ sport: SportID) -> some View {
-        Section {
-            Toggle(isOn: disciplineBinding(sport)) {
-                Label(sports.displayName(for: sport), systemImage: sports.symbolName(for: sport))
-            }
-            if let discipline = goal.discipline(for: sport) {
-                LabeledContent("Strecke") {
-                    HStack {
-                        TextField("Strecke", value: kilometersBinding(sport), format: .number.precision(.fractionLength(0...3)))
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(maxWidth: 110)
-                            .inputField()
-                        Text("km")
-                    }
-                }
-                if let venue = sports.module(for: sport)?.openWater {
-                    Toggle("Im \(venue.displayName)", isOn: openWaterBinding(sport))
-                }
-                if goal.kind != .distance {
-                    Toggle("Zielzeit", isOn: hasTimeBinding(sport))
-                }
-                if discipline.targetDurationSeconds != nil {
-                    LabeledContent("Zeit") {
-                        HStack {
-                            TextField("h", value: timePartBinding(sport, hours: true), format: .number)
-                                .keyboardType(.numberPad)
-                                .multilineTextAlignment(.trailing)
-                                .frame(width: 44)
-                                .inputField(minWidth: 0)
-                            Text("h")
-                            TextField("min", value: timePartBinding(sport, hours: false), format: .number)
-                                .keyboardType(.numberPad)
-                                .multilineTextAlignment(.trailing)
-                                .frame(width: 44)
-                                .inputField(minWidth: 0)
-                            Text("min")
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private func disciplineBinding(_ sport: SportID) -> Binding<Bool> {
-        Binding(
-            get: { goal.discipline(for: sport) != nil },
-            set: { isOn in
-                goal = goal.settingDiscipline(isOn ? TrainingGoal.Discipline(sport: sport, distanceMeters: 5_000) : nil, for: sport)
-            }
-        )
-    }
-
-    private func kilometersBinding(_ sport: SportID) -> Binding<Double> {
-        Binding(
-            get: { (goal.discipline(for: sport)?.distanceMeters ?? 0) / 1000 },
-            set: { kilometers in
-                guard var discipline = goal.discipline(for: sport) else { return }
-                discipline.distanceMeters = (kilometers * 1000).rounded()
-                goal = goal.settingDiscipline(discipline, for: sport)
-            }
-        )
-    }
-
-    /// Im Freiwasser: Der Plan bringt Einheiten dorthin (mit Zugang) oder Elemente davon ins Becken.
-    private func openWaterBinding(_ sport: SportID) -> Binding<Bool> {
-        Binding(
-            get: { goal.discipline(for: sport)?.openWater ?? false },
-            set: { isOn in
-                guard var discipline = goal.discipline(for: sport) else { return }
-                discipline.openWater = isOn
-                goal = goal.settingDiscipline(discipline, for: sport)
-            }
-        )
-    }
-
-    private func hasTimeBinding(_ sport: SportID) -> Binding<Bool> {
-        Binding(
-            get: { goal.discipline(for: sport)?.targetDurationSeconds != nil },
-            set: { isOn in
-                guard var discipline = goal.discipline(for: sport) else { return }
-                discipline.targetDurationSeconds = isOn ? 3600 : nil
-                goal = goal.settingDiscipline(discipline, for: sport)
-            }
-        )
-    }
-
-    private func timePartBinding(_ sport: SportID, hours: Bool) -> Binding<Int> {
-        Binding(
-            get: {
-                let total = Int(goal.discipline(for: sport)?.targetDurationSeconds ?? 0) / 60
-                return hours ? total / 60 : total % 60
-            },
-            set: { value in
-                guard var discipline = goal.discipline(for: sport) else { return }
-                let total = Int(discipline.targetDurationSeconds ?? 0) / 60
-                let newHours = hours ? max(0, value) : total / 60
-                let newMinutes = hours ? total % 60 : min(max(0, value), 59)
-                discipline.targetDurationSeconds = TimeInterval((newHours * 60 + newMinutes) * 60)
-                goal = goal.settingDiscipline(discipline, for: sport)
-            }
-        )
+        var filled = template.goal(targetDate: goal.targetDate, trainingDaysPerWeek: goal.trainingDaysPerWeek, weeklyHours: goal.weeklyHours)
+        filled.secondaryRaces = goal.secondaryRaces
+        goal = filled
     }
 
     // MARK: - Weitere Wettkämpfe
 
     private var secondaryRacesSection: some View {
         Section {
-            ForEach($goal.secondaryRaces) { $race in
+            ForEach(goal.secondaryRaces) { race in
                 NavigationLink {
-                    SecondaryRaceEditor(race: $race)
+                    SecondaryRaceEditor(goal: $goal, raceID: race.id)
                 } label: {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(race.date.formatted(.dateTime.day().month().year().locale(AppLocale.current)))
@@ -459,48 +348,69 @@ struct GoalAssistantView: View {
 
 // MARK: - Ein weiterer Wettkampf
 
-/// Tag, Art (mit kurzem Zuspitzen oder als harte Einheit) und die Sportarten mit Strecke eines Nebenwettkampfs.
+/// Ein weiterer Wettkampf in derselben Ansicht wie das Hauptziel: Art und Tag, Vorlage, je Sportart Strecke,
+/// Freiwasser und Zielzeit. Als Art lässt er sich auch zum Hauptziel machen; das bisherige Ziel wird dann, wenn es
+/// ein Wettkampf oder ein anderes Ziel mit Tag ist, ein weiterer Wettkampf mit kurzem Zuspitzen.
 private struct SecondaryRaceEditor: View {
-    @Binding var race: SecondaryRace
+    @Binding var goal: TrainingGoal
+    let raceID: SecondaryRace.ID
 
-    private let sports = SportRegistry.standard
+    @Environment(\.dismiss) private var dismiss
+
+    /// Art des Wettkampfs in der Auswahl: Hauptziel oder eine Art von `SecondaryRace.Priority`.
+    private enum Role: Hashable {
+        case main
+        case secondary(SecondaryRace.Priority)
+    }
+
+    private var race: SecondaryRace? {
+        goal.secondaryRaces.first { $0.id == raceID }
+    }
 
     var body: some View {
         Form {
             Group {
-                Section {
-                    DatePicker("Wettkampftag", selection: dayBinding, in: Date()..., displayedComponents: .date)
-                    Picker("Art", selection: $race.priority) {
-                        ForEach(SecondaryRace.Priority.allCases) { priority in
-                            Text(priority.title).tag(priority)
-                        }
-                    }
-                } footer: {
-                    Text(race.priority.explanation)
-                }
-                ForEach(sports.ids, id: \.self) { sport in
+                if let race {
                     Section {
-                        Toggle(isOn: disciplineBinding(sport)) {
-                            Label(sports.displayName(for: sport), systemImage: sports.symbolName(for: sport))
+                        Picker("Art", selection: roleBinding(race)) {
+                            Text("Hauptziel").tag(Role.main)
+                            ForEach(SecondaryRace.Priority.allCases) { priority in
+                                Text(priority.title).tag(Role.secondary(priority))
+                            }
                         }
-                        if race.discipline(for: sport) != nil {
-                            LabeledContent("Strecke") {
-                                HStack {
-                                    TextField("Strecke", value: kilometersBinding(sport), format: .number.precision(.fractionLength(0...3)))
-                                        .keyboardType(.decimalPad)
-                                        .multilineTextAlignment(.trailing)
-                                        .frame(maxWidth: 110)
-                                        .inputField()
-                                    Text("km")
-                                }
+                        DatePicker("Wettkampftag", selection: dayBinding(race), in: Date()..., displayedComponents: .date)
+                    } header: {
+                        Text("Weiterer Wettkampf")
+                    } footer: {
+                        Text(race.priority.explanation + " " + String(localized: "Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen."))
+                    }
+                    GoalTemplateSection(
+                        selection: race.template,
+                        ownTitle: "Eigener Wettkampf",
+                        footer: "Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern."
+                    ) { template in
+                        change { race in
+                            if let template {
+                                race = race.applyingTemplate(template)
+                            } else {
+                                race.template = nil
                             }
                         }
                     }
-                }
-                if let problem = race.problem() {
+                    DisciplineSections(disciplines: race.disciplines) { discipline, sport in
+                        change { $0 = $0.settingDiscipline(discipline, for: sport) }
+                    }
+                    if let problem = race.problem() {
+                        Section {
+                            Text(problem)
+                                .foregroundStyle(.red)
+                        }
+                    }
                     Section {
-                        Text(problem)
-                            .foregroundStyle(.red)
+                        Button("Wettkampf entfernen", role: .destructive) {
+                            goal.secondaryRaces.removeAll { $0.id == raceID }
+                            dismiss()
+                        }
                     }
                 }
             }
@@ -513,30 +423,30 @@ private struct SecondaryRaceEditor: View {
         .keyboardDoneButton()
     }
 
-    private var dayBinding: Binding<Date> {
+    private func change(_ body: (inout SecondaryRace) -> Void) {
+        guard let index = goal.secondaryRaces.firstIndex(where: { $0.id == raceID }) else { return }
+        body(&goal.secondaryRaces[index])
+    }
+
+    private func roleBinding(_ race: SecondaryRace) -> Binding<Role> {
+        Binding(
+            get: { .secondary(race.priority) },
+            set: { role in
+                switch role {
+                case .main:
+                    goal = goal.promotingSecondaryRace(raceID, now: Date())
+                    dismiss()
+                case .secondary(let priority):
+                    change { $0.priority = priority }
+                }
+            }
+        )
+    }
+
+    private func dayBinding(_ race: SecondaryRace) -> Binding<Date> {
         Binding(
             get: { race.date },
-            set: { race.date = AthleteGoal.targetDate(onDayOf: $0) }
-        )
-    }
-
-    private func disciplineBinding(_ sport: SportID) -> Binding<Bool> {
-        Binding(
-            get: { race.discipline(for: sport) != nil },
-            set: { isOn in
-                race = race.settingDiscipline(isOn ? TrainingGoal.Discipline(sport: sport, distanceMeters: 5_000) : nil, for: sport)
-            }
-        )
-    }
-
-    private func kilometersBinding(_ sport: SportID) -> Binding<Double> {
-        Binding(
-            get: { (race.discipline(for: sport)?.distanceMeters ?? 0) / 1000 },
-            set: { kilometers in
-                guard var discipline = race.discipline(for: sport) else { return }
-                discipline.distanceMeters = (kilometers * 1000).rounded()
-                race = race.settingDiscipline(discipline, for: sport)
-            }
+            set: { day in change { $0.date = AthleteGoal.targetDate(onDayOf: day) } }
         )
     }
 }

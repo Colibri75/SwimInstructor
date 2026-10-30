@@ -122,7 +122,8 @@
         "disciplines": [
           {
             "sport": "run",
-            "distance_meters": 10000
+            "distance_meters": 10000,
+            "target_duration_seconds": 3000
           }
         ]
       },
@@ -132,7 +133,8 @@
         "disciplines": [
           {
             "sport": "swim",
-            "distance_meters": 1500
+            "distance_meters": 1500,
+            "open_water": true
           },
           {
             "sport": "run",

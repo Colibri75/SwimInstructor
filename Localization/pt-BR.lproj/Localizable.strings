@@ -979,3 +979,9 @@
 "Höchstens %lld weitere Wettkämpfe." = "No máximo %lld outras provas.";
 "An einem Tag geht nur ein Wettkampf." = "Só uma prova por dia.";
 "Ein weiterer Wettkampf kann nicht am Zieltag sein." = "Outra prova não pode ser no dia do seu objetivo.";
+"Hauptziel" = "Objetivo principal";
+"Weiterer Wettkampf" = "Outra prova";
+"Eigener Wettkampf" = "Prova própria";
+"Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "O modelo preenche modalidades e distâncias. Depois você pode alterar tudo.";
+"Wettkampf entfernen" = "Remover prova";
+"Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "Como objetivo principal, ela troca de lugar com seu objetivo: um objetivo anterior com data passa a ser outra prova com polimento curto.";

@@ -979,3 +979,9 @@
 "Höchstens %lld weitere Wettkämpfe." = "다른 대회는 최대 %lld개예요.";
 "An einem Tag geht nur ein Wettkampf." = "하루에 대회는 하나만 가능해요.";
 "Ein weiterer Wettkampf kann nicht am Zieltag sein." = "다른 대회는 목표일에 넣을 수 없어요.";
+"Hauptziel" = "주요 목표";
+"Weiterer Wettkampf" = "다른 대회";
+"Eigener Wettkampf" = "나만의 대회";
+"Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "템플릿이 종목과 거리를 미리 채워 줘요. 그다음 모두 바꿀 수 있어요.";
+"Wettkampf entfernen" = "대회 삭제";
+"Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "주요 목표로 정하면 지금 목표와 자리가 바뀌어요. 날짜가 있는 이전 목표는 짧은 테이퍼 포함 다른 대회가 돼요.";

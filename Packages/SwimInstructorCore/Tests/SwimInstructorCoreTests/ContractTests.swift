@@ -273,8 +273,8 @@ final class ContractTests: XCTestCase {
             year: Int(iso.prefix(4))!, month: Int(iso.dropFirst(5).prefix(2))!, day: Int(iso.suffix(2))!, hour: 12
         ))!, calendar: TestFixtures.utc) }
         let races = [
-            SecondaryRace(date: day("2026-10-03"), priority: .b, disciplines: [.init(sport: "run", distanceMeters: 10_000)]),
-            SecondaryRace(date: day("2026-11-15"), priority: .c, disciplines: [.init(sport: "swim", distanceMeters: 1_500), .init(sport: "run", distanceMeters: 5_000)])
+            SecondaryRace(date: day("2026-10-03"), priority: .b, disciplines: [.init(sport: "run", distanceMeters: 10_000, targetDurationSeconds: 3_000)]),
+            SecondaryRace(date: day("2026-11-15"), priority: .c, disciplines: [.init(sport: "swim", distanceMeters: 1_500, openWater: true), .init(sport: "run", distanceMeters: 5_000)])
         ]
         XCTAssertEqual(snapshot.trainingGoal?.secondaryRaces, races.map { AthleteStateSnapshot.SecondaryRaceSummary($0, calendar: TestFixtures.utc) })
     }

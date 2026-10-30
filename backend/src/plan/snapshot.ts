@@ -92,7 +92,19 @@ const SecondaryRaceSchema = z
   .object({
     date: z.string().refine(isRealDate, { message: "kein gültiges Datum" }),
     priority: z.enum(SECONDARY_RACE_PRIORITIES),
-    disciplines: z.array(z.object({ sport: sportId, distance_meters: z.number().min(25).max(1_000_000) })).min(1).max(8)
+    disciplines: z
+      .array(
+        z.object({
+          sport: sportId,
+          distance_meters: z.number().min(25).max(1_000_000),
+          /** Zielzeit, wie beim Ziel; fehlt ohne. */
+          target_duration_seconds: z.number().min(60).max(1_000_000).optional(),
+          /** Im Freiwasser; steht nur drin, wenn ja. */
+          open_water: z.boolean().optional()
+        })
+      )
+      .min(1)
+      .max(8)
   })
   .refine((race) => new Set(race.disciplines.map((discipline) => discipline.sport)).size === race.disciplines.length, {
     message: "Sportart doppelt",

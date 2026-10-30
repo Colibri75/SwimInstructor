@@ -979,3 +979,9 @@
 "Höchstens %lld weitere Wettkämpfe." = "その他のレースは最大%lld件です。";
 "An einem Tag geht nur ein Wettkampf." = "1日に入れられるレースは1つだけです。";
 "Ein weiterer Wettkampf kann nicht am Zieltag sein." = "その他のレースを目標日に入れることはできません。";
+"Hauptziel" = "メイン目標";
+"Weiterer Wettkampf" = "その他のレース";
+"Eigener Wettkampf" = "カスタムレース";
+"Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "テンプレートで種目と距離があらかじめ入力されます。その後すべて変更できます。";
+"Wettkampf entfernen" = "レースを削除";
+"Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "メイン目標にすると今の目標と入れ替わります。日付のある以前の目標は、短いテーパーありのその他のレースになります。";

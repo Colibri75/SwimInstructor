@@ -979,3 +979,9 @@
 "Höchstens %lld weitere Wettkämpfe." = "Como máximo %lld competiciones más.";
 "An einem Tag geht nur ein Wettkampf." = "Solo una competición por día.";
 "Ein weiterer Wettkampf kann nicht am Zieltag sein." = "Otra competición no puede ser el día de tu objetivo.";
+"Hauptziel" = "Objetivo principal";
+"Weiterer Wettkampf" = "Otra competición";
+"Eigener Wettkampf" = "Competición propia";
+"Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "La plantilla rellena de antemano disciplinas y distancias. Después puedes cambiarlo todo.";
+"Wettkampf entfernen" = "Eliminar competición";
+"Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "Como objetivo principal se intercambia con tu objetivo: un objetivo anterior con fecha pasa a ser otra competición con una puesta a punto corta.";

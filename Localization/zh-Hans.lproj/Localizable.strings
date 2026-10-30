@@ -979,3 +979,9 @@
 "Höchstens %lld weitere Wettkämpfe." = "最多 %lld 场其他比赛。";
 "An einem Tag geht nur ein Wettkampf." = "每天只能有一场比赛。";
 "Ein weiterer Wettkampf kann nicht am Zieltag sein." = "其他比赛不能安排在目标日。";
+"Hauptziel" = "主要目标";
+"Weiterer Wettkampf" = "其他比赛";
+"Eigener Wettkampf" = "自定比赛";
+"Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "模板会预先填好项目和距离。之后你可以随意修改。";
+"Wettkampf entfernen" = "移除比赛";
+"Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "设为主要目标后，它会与你的目标互换：之前有日期的目标会变成一场短期减量的其他比赛。";

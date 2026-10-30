@@ -324,15 +324,22 @@ public extension AthleteStateSnapshot {
         }
     }
 
-    /// Ein Nebenwettkampf, wie er zum Server geht: Tag (`yyyy-MM-dd`), Art (`b`, `c`), Sportarten mit Strecke.
+    /// Ein Nebenwettkampf, wie er zum Server geht: Tag (`yyyy-MM-dd`), Art (`b`, `c`), Sportarten mit Strecke und, wenn
+    /// eingestellt, Zielzeit und Freiwasser.
     struct SecondaryRaceSummary: Codable, Equatable, Sendable {
         public struct Discipline: Codable, Equatable, Sendable {
             public let sport: SportID
             public let distanceMeters: Double
+            /// Fehlt ohne Zielzeit.
+            public let targetDurationSeconds: TimeInterval?
+            /// Steht nur drin, wenn ja.
+            public let openWater: Bool?
 
-            public init(sport: SportID, distanceMeters: Double) {
+            public init(sport: SportID, distanceMeters: Double, targetDurationSeconds: TimeInterval? = nil, openWater: Bool? = nil) {
                 self.sport = sport
                 self.distanceMeters = distanceMeters
+                self.targetDurationSeconds = targetDurationSeconds
+                self.openWater = openWater
             }
         }
 
@@ -350,7 +357,9 @@ public extension AthleteStateSnapshot {
             self.init(
                 date: PlanFormatting.isoDay(race.date, calendar: calendar),
                 priority: race.priority,
-                disciplines: race.disciplines.map { Discipline(sport: $0.sport, distanceMeters: $0.distanceMeters) }
+                disciplines: race.disciplines.map {
+                    Discipline(sport: $0.sport, distanceMeters: $0.distanceMeters, targetDurationSeconds: $0.targetDurationSeconds, openWater: $0.openWater ? true : nil)
+                }
             )
         }
     }

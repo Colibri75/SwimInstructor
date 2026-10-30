@@ -83,6 +83,13 @@ describe("Nebenwettkaempfe", () => {
     expect(goalSectionV2(snapshot, TODAY)).toContain(
       "- Nebenwettkämpfe (das Ziel oben bleibt der Hauptwettkampf): 2026-10-03 (B, kurz zuspitzen): Laufen 10,0 km; 2026-11-15 (C, wie eine harte Einheit): Laufen 10,0 km."
     );
+    // Mit Zielzeit und im Freiwasser wie beim Ziel.
+    const detailed = withRaces([
+      { date: "2026-10-03", priority: "b", disciplines: [{ sport: "swim", distance_meters: 1500, open_water: true }, { sport: "run", distance_meters: 10_000, target_duration_seconds: 3000 }] }
+    ]);
+    expect(SnapshotSchema.safeParse(detailed).success).toBe(true);
+    expect(goalSectionV2(detailed, TODAY)).toContain("2026-10-03 (B, kurz zuspitzen): Schwimmen 1500 m im ");
+    expect(goalSectionV2(detailed, TODAY)).toMatch(/Laufen 10,0 km in [^;.]+\./);
     const week = buildWeekUserMessageV2({ snapshot, context: { today: TODAY, dates: weekDates(), unavailable: [], recent: [] } });
     expect(week).toContain("- 2026-10-03: 2026-10-03 (B, kurz zuspitzen): Laufen 10,0 km. Keine Einheiten, der Wettkampf ist die Einheit.");
     expect(week).toContain('- 2026-10-04: Erholung nach dem Nebenwettkampf am 03.10., Intensität höchstens "easy", kein Leistungstest.');

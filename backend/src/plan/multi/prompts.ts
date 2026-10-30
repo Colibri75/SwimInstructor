@@ -321,7 +321,12 @@ function scheduleLine(snapshot: SnapshotV2): string {
 
 function secondaryRaceText(race: SecondaryRace): string {
   const kind = race.priority === "b" ? "B, kurz zuspitzen" : "C, wie eine harte Einheit";
-  return `${race.date} (${kind}): ${race.disciplines.map((discipline) => `${sportName(discipline.sport)} ${formatDistance(discipline.distance_meters)}`).join(", ")}`;
+  const disciplines = race.disciplines.map((discipline) => {
+    const time = discipline.target_duration_seconds !== undefined ? ` in ${formatDuration(discipline.target_duration_seconds)}` : "";
+    const venue = discipline.open_water === true ? ` im ${SPORTS.get(discipline.sport)?.planning.openWater?.displayName ?? "Freiwasser"}` : "";
+    return `${sportName(discipline.sport)} ${formatDistance(discipline.distance_meters)}${time}${venue}`;
+  });
+  return `${race.date} (${kind}): ${disciplines.join(", ")}`;
 }
 
 export function goalSectionV2(snapshot: SnapshotV2, today: string): string {
