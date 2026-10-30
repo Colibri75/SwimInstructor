@@ -979,3 +979,9 @@
 "Höchstens %lld weitere Wettkämpfe." = "Al massimo %lld altre gare.";
 "An einem Tag geht nur ein Wettkampf." = "Una sola gara al giorno.";
 "Ein weiterer Wettkampf kann nicht am Zieltag sein." = "Un'altra gara non può essere nel giorno del tuo obiettivo.";
+"Hauptziel" = "Obiettivo principale";
+"Weiterer Wettkampf" = "Altra gara";
+"Eigener Wettkampf" = "Gara personale";
+"Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "Il modello precompila discipline e distanze. Dopo puoi modificare tutto.";
+"Wettkampf entfernen" = "Rimuovi gara";
+"Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "Come obiettivo principale prende il posto del tuo obiettivo: un obiettivo precedente con data diventa allora un'altra gara con un breve scarico.";

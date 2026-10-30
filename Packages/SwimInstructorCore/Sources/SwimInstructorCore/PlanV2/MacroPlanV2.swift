@@ -271,7 +271,11 @@ public extension TrainingGoal {
         guard !secondaryRaces.isEmpty else { return key }
         // Nebenwettkämpfe ändern den Gesamtplan nur fein (siehe `change(to:)`).
         let races = secondaryRaces.map { race in
-            "\(PlanFormatting.isoDay(race.date, calendar: calendar)):\(race.priority.rawValue):" + race.disciplines.map { "\($0.sport.rawValue):\(Int($0.distanceMeters))" }.joined(separator: "+")
+            "\(PlanFormatting.isoDay(race.date, calendar: calendar)):\(race.priority.rawValue):" + race.disciplines.map { discipline in
+                // Zielzeit und Freiwasser nur, wenn gesetzt: Schlüssel von davor bleiben gleich.
+                let duration = discipline.targetDurationSeconds.map { ":\(Int($0))" } ?? ""
+                return "\(discipline.sport.rawValue):\(Int(discipline.distanceMeters))\(duration)\(discipline.openWater ? ":ow" : "")"
+            }.joined(separator: "+")
         }
         return key + "|" + races.joined(separator: ",")
     }

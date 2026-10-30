@@ -979,3 +979,9 @@
 "Höchstens %lld weitere Wettkämpfe." = "Au maximum %lld autres courses.";
 "An einem Tag geht nur ein Wettkampf." = "Une seule course par jour.";
 "Ein weiterer Wettkampf kann nicht am Zieltag sein." = "Une autre course ne peut pas avoir lieu le jour de ton objectif.";
+"Hauptziel" = "Objectif principal";
+"Weiterer Wettkampf" = "Autre course";
+"Eigener Wettkampf" = "Course personnalisée";
+"Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "Le modèle préremplit les disciplines et les distances. Tu peux ensuite tout modifier.";
+"Wettkampf entfernen" = "Supprimer la course";
+"Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "En objectif principal, elle prend la place de ton objectif : un objectif précédent avec une date devient alors une autre course avec un court affûtage.";

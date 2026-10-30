@@ -289,4 +289,68 @@ final class TrainingGoalTests: XCTestCase {
         XCTAssertEqual(both.summary(), "Schwimmen 1.500 m, Laufen 10,0 km")
         XCTAssertEqual(both.settingDiscipline(nil, for: .run).disciplines.map(\.sport), [.swim])
     }
+    func testSecondaryRacesHaveTheSameDetailsAsTheGoal() {
+        let day = now.addingTimeInterval(30 * 86_400)
+        var race = SecondaryRace(date: day, disciplines: [.init(sport: .run, distanceMeters: 10_000)])
+            .applyingTemplate(GoalTemplate.template(id: "triathlon_sprint")!)
+        XCTAssertEqual(race.template, "triathlon_sprint")
+        XCTAssertEqual(race.disciplines.map(\.sport), [.swim, .bike, .run])
+        XCTAssertEqual(race.date, day)
+        XCTAssertNil(race.settingDiscipline(.init(sport: .run, distanceMeters: 5_000, targetDurationSeconds: 1_500), for: .run).template)
+
+        race.disciplines[0].openWater = true
+        race.disciplines[2].targetDurationSeconds = 25 * 60
+        XCTAssertNil(race.problem())
+        race.disciplines[2].targetDurationSeconds = 5 * 60
+        XCTAssertEqual(race.problem(), "Laufen: Strecke und Zielzeit ergeben ein unrealistisches Tempo.")
+        race.disciplines[2].targetDurationSeconds = 25 * 60
+        race.disciplines[2].openWater = true
+        XCTAssertEqual(race.problem(), "Laufen gibt es nicht im Freiwasser.")
+        race.disciplines[2].openWater = false
+
+        // Zielzeit und Freiwasser gehen zum Server und zählen im Planschlüssel.
+        let summary = AthleteStateSnapshot.SecondaryRaceSummary(race, calendar: TestFixtures.utc)
+        XCTAssertEqual(summary.disciplines[0].openWater, true)
+        XCTAssertNil(summary.disciplines[1].openWater)
+        XCTAssertEqual(summary.disciplines[2].targetDurationSeconds, 25 * 60)
+        var goal = olympic()
+        goal.secondaryRaces = [race]
+        var faster = goal
+        faster.secondaryRaces[0].disciplines[2].targetDurationSeconds = 24 * 60
+        XCTAssertNotEqual(goal.planKey(calendar: TestFixtures.utc), faster.planKey(calendar: TestFixtures.utc))
+        XCTAssertEqual(goal.change(to: faster, calendar: TestFixtures.utc), .fineTuning)
+        // Gespeicherte Wettkämpfe von davor haben keine Vorlage.
+        XCTAssertEqual(try JSONDecoder().decode(TrainingGoal.self, from: JSONEncoder().encode(goal)), goal)
+    }
+
+    func testSecondaryRaceBecomesTheMainGoal() {
+        let race = SecondaryRace(date: now.addingTimeInterval(30 * 86_400), priority: .c, disciplines: [.init(sport: .run, distanceMeters: 10_000, targetDurationSeconds: 50 * 60)])
+        var goal = olympic()
+        goal.secondaryRaces = [race]
+
+        let promoted = goal.promotingSecondaryRace(race.id, now: now, calendar: TestFixtures.utc)
+        XCTAssertEqual(promoted.kind, .race)
+        XCTAssertEqual(promoted.targetDate, race.date)
+        XCTAssertEqual(promoted.disciplines, race.disciplines)
+        XCTAssertNil(promoted.template)
+        XCTAssertEqual(promoted.emphasis, goal.emphasis)
+        // Das bisherige Ziel ist jetzt ein weiterer Wettkampf mit kurzem Zuspitzen.
+        XCTAssertEqual(promoted.secondaryRaces.count, 1)
+        XCTAssertEqual(promoted.secondaryRaces[0].date, goal.targetDate)
+        XCTAssertEqual(promoted.secondaryRaces[0].priority, .b)
+        XCTAssertEqual(promoted.secondaryRaces[0].disciplines, goal.disciplines)
+        XCTAssertEqual(promoted.secondaryRaces[0].template, "triathlon_olympic")
+        XCTAssertNil(promoted.problem(now: now, calendar: TestFixtures.utc))
+
+        // Ein Fitnessziel fällt weg; eine neue Sportart bekommt einen Schwerpunkt.
+        var fitness = olympic().settingKind(.fitness, now: now).settingSport(.run, included: false)
+        fitness.secondaryRaces = [race]
+        let fromFitness = fitness.promotingSecondaryRace(race.id, now: now, calendar: TestFixtures.utc)
+        XCTAssertEqual(fromFitness.kind, .race)
+        XCTAssertEqual(fromFitness.secondaryRaces, [])
+        XCTAssertEqual(fromFitness.percent(for: .run), 33)
+        XCTAssertGreaterThan(fromFitness.percent(for: .swim), 0)
+        XCTAssertNil(fromFitness.problem(now: now, calendar: TestFixtures.utc))
+        XCTAssertEqual(goal.promotingSecondaryRace(UUID(), now: now), goal)
+    }
 }

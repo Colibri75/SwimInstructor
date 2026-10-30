@@ -979,3 +979,9 @@
 "Höchstens %lld weitere Wettkämpfe." = "At most %lld other races.";
 "An einem Tag geht nur ein Wettkampf." = "Only one race per day.";
 "Ein weiterer Wettkampf kann nicht am Zieltag sein." = "Another race can’t be on your goal day.";
+"Hauptziel" = "Main goal";
+"Weiterer Wettkampf" = "Other race";
+"Eigener Wettkampf" = "Custom race";
+"Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "The template prefills disciplines and distances. You can change everything afterward.";
+"Wettkampf entfernen" = "Remove race";
+"Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "As main goal it swaps with your goal: a previous goal with a date then becomes another race with a short taper.";

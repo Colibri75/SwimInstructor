@@ -979,3 +979,9 @@
 "Höchstens %lld weitere Wettkämpfe." = "Höchstens %lld weitere Wettkämpfe.";
 "An einem Tag geht nur ein Wettkampf." = "An einem Tag geht nur ein Wettkampf.";
 "Ein weiterer Wettkampf kann nicht am Zieltag sein." = "Ein weiterer Wettkampf kann nicht am Zieltag sein.";
+"Hauptziel" = "Hauptziel";
+"Weiterer Wettkampf" = "Weiterer Wettkampf";
+"Eigener Wettkampf" = "Eigener Wettkampf";
+"Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern.";
+"Wettkampf entfernen" = "Wettkampf entfernen";
+"Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen.";

@@ -3,6 +3,9 @@ import Foundation
 /// Ein Nebenwettkampf neben dem Ziel, z. B. ein 10-km-Lauf auf dem Weg zum Triathlon. Das Ziel bleibt der
 /// Hauptwettkampf; der Coach plant am Tag selbst kein Training und bremst die Tage davor und danach (siehe Server,
 /// `secondaryRaces.ts`). Geht ohne Freitext zum Server (Snapshot v2, `training_goal.secondary_races`).
+///
+/// In der App sieht er aus wie das Ziel: Vorlage, Disziplinen mit Strecke, Freiwasser und Zielzeit. Über
+/// `TrainingGoal.promotingSecondaryRace(_:now:)` wird er selbst zum Hauptziel.
 public struct SecondaryRace: Codable, Equatable, Sendable, Identifiable {
     /// Wie wichtig der Nebenwettkampf ist. Der Raw-Wert geht zum Server und darf nicht umbenannt werden.
     public enum Priority: String, Codable, Sendable, CaseIterable, Identifiable {
@@ -32,14 +35,17 @@ public struct SecondaryRace: Codable, Equatable, Sendable, Identifiable {
     /// Mittag (Berlin) des Wettkampftags, siehe `AthleteGoal.targetDate(onDayOf:)`.
     public var date: Date
     public var priority: Priority
-    /// Sportart und Strecke; Zielzeit und Freiwasser zählen hier nicht.
+    /// Sportart und Strecke, auf Wunsch mit Zielzeit und im Freiwasser.
     public var disciplines: [TrainingGoal.Discipline]
+    /// Kennung der Vorlage, aus der er stammt; `nil` bei einem eigenen Wettkampf. Bleibt in der App.
+    public var template: String?
 
-    public init(id: UUID = UUID(), date: Date, priority: Priority = .b, disciplines: [TrainingGoal.Discipline]) {
+    public init(id: UUID = UUID(), date: Date, priority: Priority = .b, disciplines: [TrainingGoal.Discipline], template: String? = nil) {
         self.id = id
         self.date = date
         self.priority = priority
         self.disciplines = disciplines
+        self.template = template
     }
 
     /// Höchstens so viele Nebenwettkämpfe.
@@ -54,6 +60,7 @@ public struct SecondaryRace: Codable, Equatable, Sendable, Identifiable {
     /// Setzt die Strecke einer Sportart oder nimmt sie heraus (`nil`). Die letzte Disziplin bleibt.
     public func settingDiscipline(_ discipline: TrainingGoal.Discipline?, for sport: SportID, registry: SportRegistry = .standard) -> SecondaryRace {
         var copy = self
+        copy.template = nil
         if let discipline {
             if let index = copy.disciplines.firstIndex(where: { $0.sport == sport }) {
                 copy.disciplines[index] = discipline
@@ -64,6 +71,14 @@ public struct SecondaryRace: Codable, Equatable, Sendable, Identifiable {
         } else if copy.disciplines.count > 1 {
             copy.disciplines.removeAll { $0.sport == sport }
         }
+        return copy
+    }
+
+    /// Übernimmt Disziplinen und Strecken der Vorlage; Tag und Art bleiben.
+    public func applyingTemplate(_ template: GoalTemplate) -> SecondaryRace {
+        var copy = self
+        copy.disciplines = template.disciplines
+        copy.template = template.id
         return copy
     }
 
@@ -79,6 +94,15 @@ public struct SecondaryRace: Codable, Equatable, Sendable, Identifiable {
             guard TrainingGoal.distanceRange.contains(discipline.distanceMeters) else {
                 let name = module.displayName
                 return String(localized: "\(name): Die Strecke muss zwischen 100 m und 500 km liegen.")
+            }
+            if let duration = discipline.targetDurationSeconds,
+               !registry.isPlausibleGoal(sport: discipline.sport, distanceMeters: discipline.distanceMeters, durationSeconds: duration) {
+                let name = module.displayName
+                return String(localized: "\(name): Strecke und Zielzeit ergeben ein unrealistisches Tempo.")
+            }
+            if discipline.openWater, module.openWater == nil {
+                let name = module.displayName
+                return String(localized: "\(name) gibt es nicht im Freiwasser.")
             }
         }
         return nil
@@ -105,5 +129,27 @@ public extension TrainingGoal {
         let discipline = disciplines.first.map { Discipline(sport: $0.sport, distanceMeters: $0.distanceMeters) }
             ?? Discipline(sport: emphasis.max(by: { $0.percent < $1.percent })?.sport ?? SportRegistry.standard.ids[0], distanceMeters: 5_000)
         return SecondaryRace(date: AthleteGoal.targetDate(onDayOf: day, calendar: calendar), disciplines: [discipline])
+    }
+
+    /// Macht einen weiteren Wettkampf zum Hauptziel (Zielart Wettkampf, sein Tag, seine Disziplinen mit Zielzeiten).
+    /// Das bisherige Ziel wird, wenn es Disziplinen hat und sein Tag nach `now` liegt, zum weiteren Wettkampf mit
+    /// kurzem Zuspitzen; ein Fitnessziel fällt weg. Schwerpunkte und die übrigen Wettkämpfe bleiben.
+    func promotingSecondaryRace(_ id: SecondaryRace.ID, now: Date, calendar: Calendar = .current) -> TrainingGoal {
+        guard let race = secondaryRaces.first(where: { $0.id == id }) else { return self }
+        var copy = self
+        copy.secondaryRaces.removeAll { $0.id == id }
+        if kind.hasDisciplines, !disciplines.isEmpty, calendar.startOfDay(for: targetDate) > calendar.startOfDay(for: now) {
+            copy.secondaryRaces.append(SecondaryRace(date: targetDate, priority: .b, disciplines: disciplines, template: template))
+        }
+        // Neue Sportarten bekommen einen gleichen Anteil wie die anderen, die bisherigen bleiben.
+        for discipline in race.disciplines {
+            copy = copy.settingSport(discipline.sport, included: true)
+        }
+        copy.kind = .race
+        copy.targetDate = race.date
+        copy.disciplines = race.disciplines
+        copy.template = race.template
+        copy.secondaryRaces.sort { $0.date < $1.date }
+        return copy
     }
 }

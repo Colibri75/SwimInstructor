@@ -979,3 +979,9 @@
 "Höchstens %lld weitere Wettkämpfe." = "ज़्यादा से ज़्यादा %lld दूसरी रेस।";
 "An einem Tag geht nur ein Wettkampf." = "एक दिन में सिर्फ़ एक रेस।";
 "Ein weiterer Wettkampf kann nicht am Zieltag sein." = "दूसरी रेस लक्ष्य वाले दिन नहीं हो सकती।";
+"Hauptziel" = "मुख्य लक्ष्य";
+"Weiterer Wettkampf" = "दूसरी रेस";
+"Eigener Wettkampf" = "अपनी रेस";
+"Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "टेम्पलेट डिसिप्लिन और दूरियाँ पहले से भर देता है। उसके बाद आप सब कुछ बदल सकते हैं।";
+"Wettkampf entfernen" = "रेस हटाएँ";
+"Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "मुख्य लक्ष्य बनाने पर यह आपके लक्ष्य से जगह बदल लेती है: तारीख वाला पिछला लक्ष्य तब छोटे टेपर के साथ दूसरी रेस बन जाता है।";
