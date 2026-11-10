@@ -12,3 +12,4 @@ ExportOptions.plist
 
 ## macOS
 .DS_Store
+__pycache__/
