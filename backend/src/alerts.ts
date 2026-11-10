@@ -63,7 +63,7 @@ export class Alerter {
 
     // Budget und Konfiguration haben eigene Alarme; hier zaehlen nur Ausfaelle von Claude und der Sicherheitsschicht.
     const failures = this.recent.filter(
-      (entry) => (entry.outcome === "failed" || entry.outcome === "fallback") && !CONFIG_REASONS.has(entry.reason ?? "") && entry.reason !== "budget_exceeded"
+      (entry) => (entry.outcome === "failed" || entry.outcome === "fallback") && !CONFIG_REASONS.has(entry.reason ?? "") && entry.reason !== "budget_exceeded" && entry.reason !== "own_key_rejected"
     );
     const rate = failures.length / this.recent.length;
     if (failures.length >= this.options.failuresPerHour && rate >= this.options.failureRate) {

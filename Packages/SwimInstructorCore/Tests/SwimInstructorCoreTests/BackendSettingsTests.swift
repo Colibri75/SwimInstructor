@@ -15,6 +15,36 @@ final class BackendSettingsTests: XCTestCase {
         defaults.removePersistentDomain(forName: suiteName)
     }
 
+    func testWithoutOwnKeyTheServerKeyIsUsedAndAnOwnKeyGoesIntoTheConfiguration() throws {
+        let ownKeys = InMemorySecretStore()
+        let settings = BackendSettings(defaults: defaults, secrets: InMemorySecretStore(value: "token"), ownKeySecrets: ownKeys)
+        let key = "sk-ant-api03-" + String(repeating: "a", count: 40)
+
+        XCTAssertFalse(settings.hasOwnAPIKey)
+        XCTAssertNil(settings.configuration?.ownAPIKey)
+
+        try settings.saveOwnAPIKey("  \(key)\n")
+        XCTAssertTrue(settings.hasOwnAPIKey)
+        XCTAssertEqual(ownKeys.read(), key)
+        XCTAssertEqual(settings.configuration?.ownAPIKey, key)
+
+        try settings.removeOwnAPIKey()
+        XCTAssertFalse(settings.hasOwnAPIKey)
+        XCTAssertNil(settings.configuration?.ownAPIKey)
+    }
+
+    func testOnlyClaudeKeysAreAccepted() {
+        let settings = BackendSettings(defaults: defaults, secrets: InMemorySecretStore(), ownKeySecrets: InMemorySecretStore())
+
+        XCTAssertThrowsError(try settings.saveOwnAPIKey("sk-proj-" + String(repeating: "a", count: 40))) { error in
+            XCTAssertEqual(error as? BackendSettingsError, .invalidOwnAPIKey)
+        }
+        XCTAssertFalse(settings.hasOwnAPIKey)
+        XCTAssertFalse(BackendSettings.isPlausibleOwnAPIKey("sk-ant-kurz"))
+        XCTAssertFalse(BackendSettings.isPlausibleOwnAPIKey("sk-ant-" + String(repeating: "ä", count: 30)))
+        XCTAssertTrue(BackendSettings.isPlausibleOwnAPIKey("sk-ant-api03-" + String(repeating: "Z9_-", count: 10)))
+    }
+
     func testDefaultsToProductionServerWithoutToken() {
         let settings = BackendSettings(defaults: defaults, secrets: InMemorySecretStore())
 

@@ -494,6 +494,7 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
             }
         case 400:
             let body = try? JSONDecoder().decode(ErrorBody.self, from: data)
+            if body?.error == "invalid_own_key" { throw PlanAPIError.planUnavailable(reason: "invalid_own_key") }
             throw PlanAPIError.invalidRequest(details: body?.details?.map { "\($0.path): \($0.message)" } ?? [])
         case 404:
             throw PlanAPIError.serverOutdated

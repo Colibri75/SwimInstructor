@@ -77,6 +77,8 @@ public enum PlanFormatting {
         switch reason {
         case "budget_exceeded": return String(localized: "Das Stunden- oder Tageslimit für neue Pläne ist erreicht. Versuch es später noch einmal.")
         case "not_configured": return String(localized: "Auf dem Server ist der Coach nicht eingerichtet.")
+        case "own_key_rejected", "invalid_own_key":
+            return String(localized: "Dein eigener Claude-Schlüssel funktioniert nicht. Prüf ihn in den Einstellungen oder entferne ihn, dann plant dein Coach wieder wie gewohnt.")
         case "unreachable", "timeout", "rate_limited", "upstream_error":
             return String(localized: "Dein Coach war gerade nicht erreichbar.")
         case "sanity_blocked": return String(localized: "Der neue Plan hat die Sicherheitsprüfung nicht bestanden.")

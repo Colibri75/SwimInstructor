@@ -985,3 +985,12 @@
 "Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "O modelo preenche modalidades e distâncias. Depois você pode alterar tudo.";
 "Wettkampf entfernen" = "Remover prova";
 "Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "Como objetivo principal, ela troca de lugar com seu objetivo: um objetivo anterior com data passa a ser outra prova com polimento curto.";
+"Das ist kein Claude-API-Schlüssel. Er beginnt mit sk-ant-." = "Isso não é uma chave de API do Claude. Ela começa com sk-ant-.";
+"Dein eigener Claude-Schlüssel funktioniert nicht. Prüf ihn in den Einstellungen oder entferne ihn, dann plant dein Coach wieder wie gewohnt." = "Sua própria chave do Claude não funciona. Verifique-a nos Ajustes ou remova-a, e seu treinador voltará a planejar como de costume.";
+"Eigener Schlüssel aktiv" = "Chave própria ativa";
+"Eigenen Schlüssel entfernen" = "Remover chave própria";
+"sk-ant-…" = "sk-ant-…";
+"Eigenen Schlüssel verwenden" = "Usar chave própria";
+"Claude-Schlüssel" = "Chave do Claude";
+"Deine Pläne laufen über dein Anthropic-Konto, ohne die Stunden- und Tageslimits. Entfernst du den Schlüssel, plant dein Coach wieder mit dem Schlüssel von PeakSmith." = "Seus planos passam pela sua conta Anthropic, sem os limites por hora e por dia. Se você remover a chave, seu treinador volta a planejar com a chave do PeakSmith.";
+"Nicht nötig: Dein Coach plant mit dem Schlüssel von PeakSmith. Wer möchte, kann einen eigenen Claude-API-Schlüssel (console.anthropic.com) eintragen; dann laufen die Pläne über das eigene Anthropic-Konto. Er bleibt im Schlüsselbund dieses iPhones und geht nur mit deinen Plananfragen an den Server, der ihn nicht speichert." = "Não é necessário: seu treinador planeja com a chave do PeakSmith. Se quiser, você pode inserir sua própria chave de API do Claude (console.anthropic.com); assim seus planos passam pela sua própria conta Anthropic. Ela fica nas Chaves deste iPhone e só vai ao servidor com seus pedidos de plano, que não a armazena.";

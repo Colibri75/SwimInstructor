@@ -6,6 +6,7 @@ import { UsageOutcome, UsageRecorder } from "../../usage";
 import { GenerationBudget, UserBudgets } from "../budget";
 import { FallbackReason, PlanGenerationError, PlanRequestError, PlanUnavailableError } from "../errors";
 import { CallOptions, GeneratedPlan, StructuredGenerator } from "../generator";
+import { currentOwnKey } from "../ownKey";
 import { addDays, daysBetween, localDate, macroWeekStarts, windowDates } from "../calendar";
 import { buildRaceUserMessage, RACE_SYSTEM_PROMPT, RacePlan, RacePlanSchema, sanitizeRace } from "./race";
 import { SnapshotV2 } from "../snapshot";
@@ -62,6 +63,11 @@ import { sanitizeWeekV2, WEEK_BLOCK_DAYS, WeekContextV2, WeekPlanV2 } from "./we
 export interface MultiServiceDeps {
   /** `null`, wenn kein ANTHROPIC_API_KEY konfiguriert ist. */
   generator: StructuredGenerator | null;
+  /**
+   * Derselbe Generator mit dem eigenen Claude-Schluessel eines Nutzers (`currentOwnKey`). Ohne diese Angabe plant der
+   * Server immer mit seinem eigenen Schluessel.
+   */
+  generatorFor?: (apiKey: string) => StructuredGenerator;
   /** Der Speicher des letzten Tagesplans: einer fuer alle oder einer je Nutzer. */
   store: DayPlanStoreV2 | ((user: string) => DayPlanStoreV2);
   /** Das Budget des ganzen Servers (Kostenbremse). */
@@ -212,6 +218,8 @@ export interface MacroInputV2 {
 interface Attempt {
   meta?: GeneratedPlan;
   latencyMs?: number;
+  /** Mit dem eigenen Schluessel des Nutzers geplant. */
+  ownKey?: boolean;
 }
 
 export interface RaceInput {
@@ -540,14 +548,20 @@ export class MultiPlanService {
     attempt: Attempt,
     options: CallOptions = {}
   ): Promise<{ data: z.infer<S>; meta: GeneratedPlan }> {
-    const { generator, budget, userBudgets, logger } = this.deps;
+    const { budget, userBudgets, logger } = this.deps;
+    // Eigener Schluessel des Nutzers: sein Konto, seine Kosten, ohne Kostenbremse des Servers. Sonst der des Servers.
+    const ownKey = this.deps.generatorFor !== undefined ? currentOwnKey() : undefined;
+    const generator = ownKey !== undefined && this.deps.generatorFor !== undefined ? this.deps.generatorFor(ownKey) : this.deps.generator;
     if (generator === null) throw new PlanUnavailableError("not_configured");
-    const admin = this.deps.isAdmin?.(user) === true;
-    const ownBudget = (admin ? (this.deps.adminBudgets ?? userBudgets) : userBudgets)?.for(user);
-    const budgets = [...(admin && ownBudget !== undefined ? [] : [budget]), ...(ownBudget === undefined ? [] : [ownBudget])];
-    if (!GenerationBudget.tryConsumeAll(budgets)) {
-      logger.warn({ kind, user }, "plan v2 budget exceeded");
-      throw new PlanUnavailableError("budget_exceeded");
+    attempt.ownKey = ownKey !== undefined;
+    if (ownKey === undefined) {
+      const admin = this.deps.isAdmin?.(user) === true;
+      const ownBudget = (admin ? (this.deps.adminBudgets ?? userBudgets) : userBudgets)?.for(user);
+      const budgets = [...(admin && ownBudget !== undefined ? [] : [budget]), ...(ownBudget === undefined ? [] : [ownBudget])];
+      if (!GenerationBudget.tryConsumeAll(budgets)) {
+        logger.warn({ kind, user }, "plan v2 budget exceeded");
+        throw new PlanUnavailableError("budget_exceeded");
+      }
     }
     const started = Date.now();
     let meta: GeneratedPlan;
@@ -555,9 +569,11 @@ export class MultiPlanService {
       meta = await generator.complete(system, message, schema, options);
     } catch (error) {
       attempt.latencyMs = Date.now() - started;
-      const reason = error instanceof PlanGenerationError ? error.reason : "unknown";
+      const failure = error instanceof PlanGenerationError ? error.reason : "unknown";
+      // Ein abgelehnter eigener Schluessel ist Sache des Nutzers, kein Fehler des Servers.
+      const reason: FallbackReason = attempt.ownKey === true && failure === "auth" ? "own_key_rejected" : failure;
       const level = reason === "auth" || reason === "bad_request" || reason === "unknown" ? "error" : "warn";
-      logger[level]({ err: error, reason, kind, latencyMs: attempt.latencyMs }, "plan v2 generation failed");
+      logger[level]({ err: error, reason, kind, latencyMs: attempt.latencyMs, ownKey: attempt.ownKey }, "plan v2 generation failed");
       throw new PlanUnavailableError(reason);
     }
     attempt.latencyMs = Date.now() - started;
@@ -597,7 +613,8 @@ export class MultiPlanService {
       ...(attempt.meta !== undefined
         ? { model: attempt.meta.model, inputTokens: attempt.meta.usage.inputTokens, outputTokens: attempt.meta.usage.outputTokens }
         : {}),
-      ...(attempt.latencyMs !== undefined ? { latencyMs: attempt.latencyMs } : {})
+      ...(attempt.latencyMs !== undefined ? { latencyMs: attempt.latencyMs } : {}),
+      ...(attempt.ownKey === true ? { ownKey: true } : {})
     });
   }
 

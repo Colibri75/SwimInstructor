@@ -985,3 +985,12 @@
 "Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "模板会预先填好项目和距离。之后你可以随意修改。";
 "Wettkampf entfernen" = "移除比赛";
 "Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "设为主要目标后，它会与你的目标互换：之前有日期的目标会变成一场短期减量的其他比赛。";
+"Das ist kein Claude-API-Schlüssel. Er beginnt mit sk-ant-." = "这不是 Claude API 密钥。它以 sk-ant- 开头。";
+"Dein eigener Claude-Schlüssel funktioniert nicht. Prüf ihn in den Einstellungen oder entferne ihn, dann plant dein Coach wieder wie gewohnt." = "你自己的 Claude 密钥无法使用。请在设置中检查或将其移除，之后教练会照常制定计划。";
+"Eigener Schlüssel aktiv" = "自有密钥已启用";
+"Eigenen Schlüssel entfernen" = "移除自有密钥";
+"sk-ant-…" = "sk-ant-…";
+"Eigenen Schlüssel verwenden" = "使用自有密钥";
+"Claude-Schlüssel" = "Claude 密钥";
+"Deine Pläne laufen über dein Anthropic-Konto, ohne die Stunden- und Tageslimits. Entfernst du den Schlüssel, plant dein Coach wieder mit dem Schlüssel von PeakSmith." = "你的计划通过你的 Anthropic 账户生成，不受每小时和每日次数限制。移除密钥后，教练会再次使用 PeakSmith 的密钥制定计划。";
+"Nicht nötig: Dein Coach plant mit dem Schlüssel von PeakSmith. Wer möchte, kann einen eigenen Claude-API-Schlüssel (console.anthropic.com) eintragen; dann laufen die Pläne über das eigene Anthropic-Konto. Er bleibt im Schlüsselbund dieses iPhones und geht nur mit deinen Plananfragen an den Server, der ihn nicht speichert." = "无需设置：教练使用 PeakSmith 的密钥制定计划。如果愿意，你可以填写自己的 Claude API 密钥（console.anthropic.com），计划将通过你自己的 Anthropic 账户生成。密钥保存在这台 iPhone 的钥匙串中，只会随你的计划请求发送到服务器，服务器不会保存它。";

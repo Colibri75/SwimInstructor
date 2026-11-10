@@ -108,6 +108,8 @@ struct SettingsView: View {
 
                     PrivacySettingsSection(showsConsent: $showsConsent)
 
+                    OwnKeySection()
+
                     advancedSection
                 }
                 .cardRows()

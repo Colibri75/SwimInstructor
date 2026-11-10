@@ -71,11 +71,13 @@ public final class InMemorySecretStore: SecretStoring {
 public enum BackendSettingsError: Error, Equatable, LocalizedError {
     case invalidURL
     case missingToken
+    case invalidOwnAPIKey
 
     public var errorDescription: String? {
         switch self {
         case .invalidURL: return String(localized: "Die Server-Adresse muss mit https:// beginnen.")
         case .missingToken: return String(localized: "Bitte ein Token eingeben.")
+        case .invalidOwnAPIKey: return String(localized: "Das ist kein Claude-API-Schlüssel. Er beginnt mit sk-ant-.")
         }
     }
 }
@@ -91,13 +93,23 @@ public final class BackendSettings: ObservableObject {
     @Published public private(set) var hasToken: Bool
     /// Name des mit Apple angemeldeten Kontos; `nil` ohne Anmeldung oder mit Token von Hand.
     @Published public private(set) var accountName: String?
+    /// Ein eigener Claude-API-Schlüssel ist hinterlegt. Den Wert zeigt die App nie an.
+    @Published public private(set) var hasOwnAPIKey: Bool
 
     private let defaults: UserDefaults
     private let secrets: SecretStoring
+    private let ownKeySecrets: SecretStoring
 
-    public init(defaults: UserDefaults = .standard, secrets: SecretStoring = KeychainSecretStore()) {
+    /// - Parameter ownKeySecrets: Ablage des eigenen Claude-Schlüssels (Schlüsselbund, getrennt vom Token).
+    public init(
+        defaults: UserDefaults = .standard,
+        secrets: SecretStoring = KeychainSecretStore(),
+        ownKeySecrets: SecretStoring = KeychainSecretStore(account: "anthropic-api-key")
+    ) {
         self.defaults = defaults
         self.secrets = secrets
+        self.ownKeySecrets = ownKeySecrets
+        self.hasOwnAPIKey = !(ownKeySecrets.read() ?? "").isEmpty
         var baseURL = defaults.string(forKey: Self.baseURLKey).flatMap(Self.validatedURL)
             ?? BackendConfiguration.defaultBaseURL
         if BackendConfiguration.legacyBaseURLs.contains(baseURL) {
@@ -117,7 +129,34 @@ public final class BackendSettings: ObservableObject {
     /// `nil`, solange kein Token hinterlegt ist.
     public var configuration: BackendConfiguration? {
         guard let token = secrets.read(), !token.isEmpty else { return nil }
-        return BackendConfiguration(baseURL: baseURL, token: token)
+        let ownKey = ownKeySecrets.read().flatMap { $0.isEmpty ? nil : $0 }
+        return BackendConfiguration(baseURL: baseURL, token: token, ownAPIKey: ownKey)
+    }
+
+    // MARK: - Eigener Claude-Schlüssel
+
+    /// Standard: Der Server plant mit seinem eigenen Schlüssel, niemand muss etwas eintragen. Wer selbst zahlen will,
+    /// hinterlegt hier einen eigenen Schlüssel; er bleibt im Schlüsselbund und geht mit jeder Plananfrage an den
+    /// Server, der ihn nur für diese Anfrage nutzt und nicht speichert.
+    public func saveOwnAPIKey(_ key: String) throws {
+        let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard Self.isPlausibleOwnAPIKey(trimmed) else { throw BackendSettingsError.invalidOwnAPIKey }
+        try ownKeySecrets.write(trimmed)
+        hasOwnAPIKey = true
+    }
+
+    /// Zurück zum Schlüssel des Servers.
+    public func removeOwnAPIKey() throws {
+        try ownKeySecrets.delete()
+        hasOwnAPIKey = false
+    }
+
+    /// Wie der Server prüft: "sk-ant-" und mindestens 20 weitere Zeichen aus Buchstaben, Ziffern, "_" und "-".
+    public nonisolated static func isPlausibleOwnAPIKey(_ key: String) -> Bool {
+        guard key.hasPrefix("sk-ant-") else { return false }
+        let rest = key.dropFirst("sk-ant-".count)
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-"))
+        return (20...300).contains(rest.count) && rest.unicodeScalars.allSatisfy { $0.isASCII && allowed.contains($0) }
     }
 
     /// Speichert Adresse und, falls angegeben, ein neues Token. Ein leeres `token` lässt das

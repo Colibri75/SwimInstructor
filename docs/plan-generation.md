@@ -40,6 +40,7 @@ das Zeitlimit des Reverse-Proxys laufen.
 | `sanity_blocked` | Der Plan war so kaputt, dass die Sicherheitsschicht ihn verworfen hat |
 | `budget_exceeded` | Aufrufbudget erschöpft (Kostenbremse, siehe unten) |
 | `not_configured` | Kein `ANTHROPIC_API_KEY` gesetzt |
+| `own_key_rejected` | Anthropic hat den eigenen Schlüssel des Nutzers abgelehnt (ungültig, gesperrt, ohne Guthaben) |
 | `auth` / `bad_request` / `unknown` | Konfigurations- oder Programmfehler, steht als `error` im Server-Log |
 
 ## Sicherheitsschicht
@@ -100,6 +101,19 @@ fragt in der Einrichtung, sonst einmal je Start als Blatt vor der ersten Anfrage
 Datenschutz. Die Datenschutzerklärung liefert der Server unter `/datenschutz` und `/privacy`
 ([backend-deploy.md](backend-deploy.md#datenschutzerklärung)), die App-Store-Angaben stehen in
 [app-store-datenschutz.md](app-store-datenschutz.md).
+
+## Eigener Claude-Schlüssel
+
+Standard für alle Nutzer ist der Schlüssel des Servers (`ANTHROPIC_API_KEY`). Er steht nur in
+`/etc/swiminstructor/backend.env`, nie in einer Antwort, im Log, in der Admin-Route oder in der App.
+
+Wer selbst zahlen will, trägt in der App unter Einstellungen › Claude-Schlüssel einen eigenen Schlüssel ein. Er liegt
+im Schlüsselbund des iPhones und geht mit jeder Plananfrage im Header `X-Anthropic-Api-Key` an den Server
+(`backend/src/plan/ownKey.ts`). Der Server nutzt ihn nur für die Claude-Aufrufe dieser Anfrage und speichert ihn nicht;
+im Log ist der Header geschwärzt. Mit eigenem Schlüssel gilt die Kostenbremse nicht, die Nutzung steht mit
+`ownKey: true` und ohne Kosten in `/v1/admin/usage`. Lehnt Anthropic den Schlüssel ab, kommt `own_key_rejected`
+(kein Rückfall auf den Server-Schlüssel, damit niemand unbemerkt auf fremde Kosten plant); ein Wert, der kein
+Anthropic-Schlüssel sein kann, ergibt 400 `invalid_own_key`.
 
 ## Konfiguration
 

@@ -985,3 +985,12 @@
 "Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "The template prefills disciplines and distances. You can change everything afterward.";
 "Wettkampf entfernen" = "Remove race";
 "Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "As main goal it swaps with your goal: a previous goal with a date then becomes another race with a short taper.";
+"Das ist kein Claude-API-Schlüssel. Er beginnt mit sk-ant-." = "That is not a Claude API key. It starts with sk-ant-.";
+"Dein eigener Claude-Schlüssel funktioniert nicht. Prüf ihn in den Einstellungen oder entferne ihn, dann plant dein Coach wieder wie gewohnt." = "Your own Claude key doesn't work. Check it in Settings or remove it, and your coach will plan as usual again.";
+"Eigener Schlüssel aktiv" = "Own key active";
+"Eigenen Schlüssel entfernen" = "Remove own key";
+"sk-ant-…" = "sk-ant-…";
+"Eigenen Schlüssel verwenden" = "Use own key";
+"Claude-Schlüssel" = "Claude key";
+"Deine Pläne laufen über dein Anthropic-Konto, ohne die Stunden- und Tageslimits. Entfernst du den Schlüssel, plant dein Coach wieder mit dem Schlüssel von PeakSmith." = "Your plans run through your Anthropic account, without the hourly and daily limits. If you remove the key, your coach plans with the PeakSmith key again.";
+"Nicht nötig: Dein Coach plant mit dem Schlüssel von PeakSmith. Wer möchte, kann einen eigenen Claude-API-Schlüssel (console.anthropic.com) eintragen; dann laufen die Pläne über das eigene Anthropic-Konto. Er bleibt im Schlüsselbund dieses iPhones und geht nur mit deinen Plananfragen an den Server, der ihn nicht speichert." = "Not needed: your coach plans with the PeakSmith key. If you like, you can enter your own Claude API key (console.anthropic.com); your plans then run through your own Anthropic account. It stays in this iPhone's keychain and only goes to the server with your plan requests, which doesn't store it.";

@@ -13,7 +13,14 @@ export type GenerationFailure =
   | "unknown";
 
 /** Warum der Service statt eines frischen Plans den letzten gueltigen auslieferte. */
-export type FallbackReason = GenerationFailure | "not_configured" | "budget_exceeded" | "schema_invalid" | "sanity_blocked";
+export type FallbackReason =
+  | GenerationFailure
+  | "not_configured"
+  | "budget_exceeded"
+  | "schema_invalid"
+  | "sanity_blocked"
+  /** Anthropic hat den eigenen Schluessel des Nutzers abgelehnt (ungueltig, gesperrt, ohne Guthaben). */
+  | "own_key_rejected";
 
 export class PlanGenerationError extends Error {
   constructor(

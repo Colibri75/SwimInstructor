@@ -985,3 +985,12 @@
 "Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "La plantilla rellena de antemano disciplinas y distancias. Después puedes cambiarlo todo.";
 "Wettkampf entfernen" = "Eliminar competición";
 "Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "Como objetivo principal se intercambia con tu objetivo: un objetivo anterior con fecha pasa a ser otra competición con una puesta a punto corta.";
+"Das ist kein Claude-API-Schlüssel. Er beginnt mit sk-ant-." = "Esa no es una clave de API de Claude. Empieza por sk-ant-.";
+"Dein eigener Claude-Schlüssel funktioniert nicht. Prüf ihn in den Einstellungen oder entferne ihn, dann plant dein Coach wieder wie gewohnt." = "Tu propia clave de Claude no funciona. Revísala en Ajustes o elimínala, y tu entrenador volverá a planificar como siempre.";
+"Eigener Schlüssel aktiv" = "Clave propia activa";
+"Eigenen Schlüssel entfernen" = "Eliminar clave propia";
+"sk-ant-…" = "sk-ant-…";
+"Eigenen Schlüssel verwenden" = "Usar clave propia";
+"Claude-Schlüssel" = "Clave de Claude";
+"Deine Pläne laufen über dein Anthropic-Konto, ohne die Stunden- und Tageslimits. Entfernst du den Schlüssel, plant dein Coach wieder mit dem Schlüssel von PeakSmith." = "Tus planes se generan con tu cuenta de Anthropic, sin los límites por hora y por día. Si eliminas la clave, tu entrenador vuelve a planificar con la clave de PeakSmith.";
+"Nicht nötig: Dein Coach plant mit dem Schlüssel von PeakSmith. Wer möchte, kann einen eigenen Claude-API-Schlüssel (console.anthropic.com) eintragen; dann laufen die Pläne über das eigene Anthropic-Konto. Er bleibt im Schlüsselbund dieses iPhones und geht nur mit deinen Plananfragen an den Server, der ihn nicht speichert." = "No es necesario: tu entrenador planifica con la clave de PeakSmith. Si quieres, puedes introducir tu propia clave de API de Claude (console.anthropic.com); entonces tus planes se generan con tu propia cuenta de Anthropic. Se queda en el llavero de este iPhone y solo se envía al servidor con tus solicitudes de plan, que no la guarda.";

@@ -23,6 +23,8 @@ export interface UsageEvent {
   outputTokens?: number;
   latencyMs?: number;
   costUsd?: number;
+  /** Mit dem eigenen Claude-Schluessel des Nutzers: Die Kosten traegt er, nicht der Server (`costUsd` fehlt). */
+  ownKey?: boolean;
 }
 
 export type UsageInput = Omit<UsageEvent, "at" | "costUsd">;
@@ -52,7 +54,7 @@ export function withCost(event: UsageInput, at: Date): UsageEvent {
   return {
     at: at.toISOString(),
     ...event,
-    ...(tokens > 0 ? { costUsd: round(estimateCostUsd(event.model, event.inputTokens, event.outputTokens), 6) } : {})
+    ...(tokens > 0 && event.ownKey !== true ? { costUsd: round(estimateCostUsd(event.model, event.inputTokens, event.outputTokens), 6) } : {})
   };
 }
 

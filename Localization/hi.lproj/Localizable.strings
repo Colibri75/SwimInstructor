@@ -985,3 +985,12 @@
 "Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "टेम्पलेट डिसिप्लिन और दूरियाँ पहले से भर देता है। उसके बाद आप सब कुछ बदल सकते हैं।";
 "Wettkampf entfernen" = "रेस हटाएँ";
 "Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "मुख्य लक्ष्य बनाने पर यह आपके लक्ष्य से जगह बदल लेती है: तारीख वाला पिछला लक्ष्य तब छोटे टेपर के साथ दूसरी रेस बन जाता है।";
+"Das ist kein Claude-API-Schlüssel. Er beginnt mit sk-ant-." = "यह Claude API कुंजी नहीं है। यह sk-ant- से शुरू होती है।";
+"Dein eigener Claude-Schlüssel funktioniert nicht. Prüf ihn in den Einstellungen oder entferne ihn, dann plant dein Coach wieder wie gewohnt." = "आपकी अपनी Claude कुंजी काम नहीं कर रही है। इसे सेटिंग्स में जाँचें या हटा दें, फिर आपका कोच पहले की तरह योजना बनाएगा।";
+"Eigener Schlüssel aktiv" = "अपनी कुंजी सक्रिय";
+"Eigenen Schlüssel entfernen" = "अपनी कुंजी हटाएँ";
+"sk-ant-…" = "sk-ant-…";
+"Eigenen Schlüssel verwenden" = "अपनी कुंजी इस्तेमाल करें";
+"Claude-Schlüssel" = "Claude कुंजी";
+"Deine Pläne laufen über dein Anthropic-Konto, ohne die Stunden- und Tageslimits. Entfernst du den Schlüssel, plant dein Coach wieder mit dem Schlüssel von PeakSmith." = "आपकी योजनाएँ आपके Anthropic खाते से बनती हैं, बिना घंटे और दिन की सीमाओं के। कुंजी हटाने पर आपका कोच फिर से PeakSmith की कुंजी से योजना बनाता है।";
+"Nicht nötig: Dein Coach plant mit dem Schlüssel von PeakSmith. Wer möchte, kann einen eigenen Claude-API-Schlüssel (console.anthropic.com) eintragen; dann laufen die Pläne über das eigene Anthropic-Konto. Er bleibt im Schlüsselbund dieses iPhones und geht nur mit deinen Plananfragen an den Server, der ihn nicht speichert." = "ज़रूरी नहीं: आपका कोच PeakSmith की कुंजी से योजना बनाता है। चाहें तो आप अपनी Claude API कुंजी (console.anthropic.com) डाल सकते हैं; तब योजनाएँ आपके अपने Anthropic खाते से बनेंगी। यह इस iPhone के कीचेन में रहती है और केवल आपके योजना अनुरोधों के साथ सर्वर पर जाती है, जो इसे सहेजता नहीं है।";

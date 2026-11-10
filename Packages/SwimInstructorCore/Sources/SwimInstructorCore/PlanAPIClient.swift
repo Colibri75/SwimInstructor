@@ -4,11 +4,17 @@ import Foundation
 public struct BackendConfiguration: Equatable, Sendable {
     public let baseURL: URL
     public let token: String
+    /// Eigener Claude-API-Schlüssel des Nutzers, `nil` ohne: Dann plant der Server mit seinem eigenen Schlüssel.
+    public let ownAPIKey: String?
 
-    public init(baseURL: URL, token: String) {
+    public init(baseURL: URL, token: String, ownAPIKey: String? = nil) {
         self.baseURL = baseURL
         self.token = token
+        self.ownAPIKey = ownAPIKey
     }
+
+    /// Header, in dem der eigene Claude-Schlüssel an den Server geht (er speichert ihn nicht).
+    public static let ownAPIKeyHeader = "X-Anthropic-Api-Key"
 
     /// Der Produktionsserver.
     public static let defaultBaseURL = URL(string: "https://api.peak-smith.com")!
@@ -143,6 +149,10 @@ public struct PlanAPIClient: Sendable {
         var request = URLRequest(url: configuration.baseURL.appendingPathComponent(path))
         request.timeoutInterval = timeout
         request.setValue("Bearer \(configuration.token)", forHTTPHeaderField: "Authorization")
+        if let ownKey = configuration.ownAPIKey, !ownKey.isEmpty {
+            // Mit eigenem Schlüssel plant der Server über das Anthropic-Konto des Nutzers.
+            request.setValue(ownKey, forHTTPHeaderField: BackendConfiguration.ownAPIKeyHeader)
+        }
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         // Der Server schreibt Pläne und Coach-Texte in der Sprache der App (docs/uebersetzungen.md).
         request.setValue(AppLocale.languageCode, forHTTPHeaderField: "X-App-Language")

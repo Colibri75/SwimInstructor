@@ -985,3 +985,12 @@
 "Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "Il modello precompila discipline e distanze. Dopo puoi modificare tutto.";
 "Wettkampf entfernen" = "Rimuovi gara";
 "Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "Come obiettivo principale prende il posto del tuo obiettivo: un obiettivo precedente con data diventa allora un'altra gara con un breve scarico.";
+"Das ist kein Claude-API-Schlüssel. Er beginnt mit sk-ant-." = "Questa non è una chiave API di Claude. Inizia con sk-ant-.";
+"Dein eigener Claude-Schlüssel funktioniert nicht. Prüf ihn in den Einstellungen oder entferne ihn, dann plant dein Coach wieder wie gewohnt." = "La tua chiave Claude non funziona. Controllala nelle Impostazioni o rimuovila, e il tuo coach tornerà a pianificare come al solito.";
+"Eigener Schlüssel aktiv" = "Chiave personale attiva";
+"Eigenen Schlüssel entfernen" = "Rimuovi chiave personale";
+"sk-ant-…" = "sk-ant-…";
+"Eigenen Schlüssel verwenden" = "Usa la mia chiave";
+"Claude-Schlüssel" = "Chiave Claude";
+"Deine Pläne laufen über dein Anthropic-Konto, ohne die Stunden- und Tageslimits. Entfernst du den Schlüssel, plant dein Coach wieder mit dem Schlüssel von PeakSmith." = "I tuoi piani passano dal tuo account Anthropic, senza i limiti orari e giornalieri. Se rimuovi la chiave, il tuo coach torna a pianificare con la chiave di PeakSmith.";
+"Nicht nötig: Dein Coach plant mit dem Schlüssel von PeakSmith. Wer möchte, kann einen eigenen Claude-API-Schlüssel (console.anthropic.com) eintragen; dann laufen die Pläne über das eigene Anthropic-Konto. Er bleibt im Schlüsselbund dieses iPhones und geht nur mit deinen Plananfragen an den Server, der ihn nicht speichert." = "Non necessario: il tuo coach pianifica con la chiave di PeakSmith. Se vuoi, puoi inserire una tua chiave API di Claude (console.anthropic.com); i piani passano allora dal tuo account Anthropic. Resta nel portachiavi di questo iPhone e va al server solo con le tue richieste di piano, che non la salva.";

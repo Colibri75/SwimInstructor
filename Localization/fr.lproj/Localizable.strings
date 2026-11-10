@@ -985,3 +985,12 @@
 "Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "Le modèle préremplit les disciplines et les distances. Tu peux ensuite tout modifier.";
 "Wettkampf entfernen" = "Supprimer la course";
 "Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "En objectif principal, elle prend la place de ton objectif : un objectif précédent avec une date devient alors une autre course avec un court affûtage.";
+"Das ist kein Claude-API-Schlüssel. Er beginnt mit sk-ant-." = "Ce n'est pas une clé API Claude. Elle commence par sk-ant-.";
+"Dein eigener Claude-Schlüssel funktioniert nicht. Prüf ihn in den Einstellungen oder entferne ihn, dann plant dein Coach wieder wie gewohnt." = "Ta propre clé Claude ne fonctionne pas. Vérifie-la dans les réglages ou supprime-la, et ton coach planifiera de nouveau comme d'habitude.";
+"Eigener Schlüssel aktiv" = "Clé personnelle active";
+"Eigenen Schlüssel entfernen" = "Supprimer la clé personnelle";
+"sk-ant-…" = "sk-ant-…";
+"Eigenen Schlüssel verwenden" = "Utiliser ma propre clé";
+"Claude-Schlüssel" = "Clé Claude";
+"Deine Pläne laufen über dein Anthropic-Konto, ohne die Stunden- und Tageslimits. Entfernst du den Schlüssel, plant dein Coach wieder mit dem Schlüssel von PeakSmith." = "Tes plans passent par ton compte Anthropic, sans les limites horaires et journalières. Si tu supprimes la clé, ton coach planifie de nouveau avec la clé de PeakSmith.";
+"Nicht nötig: Dein Coach plant mit dem Schlüssel von PeakSmith. Wer möchte, kann einen eigenen Claude-API-Schlüssel (console.anthropic.com) eintragen; dann laufen die Pläne über das eigene Anthropic-Konto. Er bleibt im Schlüsselbund dieses iPhones und geht nur mit deinen Plananfragen an den Server, der ihn nicht speichert." = "Pas nécessaire : ton coach planifie avec la clé de PeakSmith. Si tu le souhaites, tu peux saisir ta propre clé API Claude (console.anthropic.com) ; tes plans passent alors par ton propre compte Anthropic. Elle reste dans le trousseau de cet iPhone et n'est envoyée au serveur qu'avec tes demandes de plan, qui ne la conserve pas.";

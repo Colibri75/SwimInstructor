@@ -61,6 +61,30 @@ final class PlanAPIClientTests: XCTestCase {
         XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer geheim")
     }
 
+    func testAnOwnKeyGoesAlongInItsOwnHeaderAndOtherwiseNothing() async throws {
+        let key = "sk-ant-api03-" + String(repeating: "a", count: 40)
+        let withKey = StubTransport(status: 200, body: "{}")
+        let without = StubTransport(status: 200, body: "{}")
+
+        try await PlanAPIClient(configuration: BackendConfiguration(baseURL: configuration.baseURL, token: "geheim", ownAPIKey: key), transport: withKey).checkConnection()
+        try await PlanAPIClient(configuration: configuration, transport: without).checkConnection()
+
+        XCTAssertEqual(withKey.requests.first?.value(forHTTPHeaderField: "X-Anthropic-Api-Key"), key)
+        XCTAssertNil(without.requests.first?.value(forHTTPHeaderField: "X-Anthropic-Api-Key"))
+    }
+
+    func testARejectedOwnKeyIsExplained() {
+        for reason in ["own_key_rejected", "invalid_own_key"] {
+            XCTAssertEqual(
+                PlanAPIError.planUnavailable(reason: reason).errorDescription,
+                "Kein neuer Plan: Dein eigener Claude-Schlüssel funktioniert nicht. Prüf ihn in den Einstellungen oder entferne ihn, dann plant dein Coach wieder wie gewohnt."
+            )
+        }
+        XCTAssertThrowsError(try PlanAPIClient.decodeV2(data: Data(#"{"error":"invalid_own_key"}"#.utf8), statusCode: 400) as String) { error in
+            XCTAssertEqual(error as? PlanAPIError, .planUnavailable(reason: "invalid_own_key"))
+        }
+    }
+
     func testCheckConnectionRejectedToken() async {
         let client = PlanAPIClient(configuration: configuration, transport: StubTransport(status: 401, body: "{}"))
         do {

@@ -985,3 +985,12 @@
 "Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "템플릿이 종목과 거리를 미리 채워 줘요. 그다음 모두 바꿀 수 있어요.";
 "Wettkampf entfernen" = "대회 삭제";
 "Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "주요 목표로 정하면 지금 목표와 자리가 바뀌어요. 날짜가 있는 이전 목표는 짧은 테이퍼 포함 다른 대회가 돼요.";
+"Das ist kein Claude-API-Schlüssel. Er beginnt mit sk-ant-." = "Claude API 키가 아닙니다. 키는 sk-ant-로 시작합니다.";
+"Dein eigener Claude-Schlüssel funktioniert nicht. Prüf ihn in den Einstellungen oder entferne ihn, dann plant dein Coach wieder wie gewohnt." = "내 Claude 키가 작동하지 않습니다. 설정에서 확인하거나 삭제하면 코치가 다시 평소처럼 계획을 세웁니다.";
+"Eigener Schlüssel aktiv" = "내 키 사용 중";
+"Eigenen Schlüssel entfernen" = "내 키 삭제";
+"sk-ant-…" = "sk-ant-…";
+"Eigenen Schlüssel verwenden" = "내 키 사용";
+"Claude-Schlüssel" = "Claude 키";
+"Deine Pläne laufen über dein Anthropic-Konto, ohne die Stunden- und Tageslimits. Entfernst du den Schlüssel, plant dein Coach wieder mit dem Schlüssel von PeakSmith." = "계획이 내 Anthropic 계정으로 생성되며 시간당·일일 한도가 적용되지 않습니다. 키를 삭제하면 코치가 다시 PeakSmith 키로 계획을 세웁니다.";
+"Nicht nötig: Dein Coach plant mit dem Schlüssel von PeakSmith. Wer möchte, kann einen eigenen Claude-API-Schlüssel (console.anthropic.com) eintragen; dann laufen die Pläne über das eigene Anthropic-Konto. Er bleibt im Schlüsselbund dieses iPhones und geht nur mit deinen Plananfragen an den Server, der ihn nicht speichert." = "필요하지 않습니다. 코치는 PeakSmith 키로 계획을 세웁니다. 원하면 내 Claude API 키(console.anthropic.com)를 입력할 수 있으며, 그러면 계획이 내 Anthropic 계정으로 생성됩니다. 키는 이 iPhone의 키체인에 저장되고 계획 요청과 함께 서버로만 전송되며, 서버는 이를 저장하지 않습니다.";

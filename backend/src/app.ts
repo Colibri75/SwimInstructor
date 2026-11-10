@@ -3,6 +3,7 @@ import { Logger } from "pino";
 import { pinoHttp } from "pino-http";
 import { currentUser, requireBearerToken } from "./auth";
 import { Config } from "./config";
+import { ownKeyMiddleware } from "./plan/ownKey";
 import { registerPrivacyRoutes } from "./privacy/routes";
 import { SingleUserDirectory, UserDirectory } from "./users";
 
@@ -61,6 +62,8 @@ export function createApp(config: Config, logger: Logger, options: AppOptions = 
   // Erst Auth, dann Body-Parsing: Unautorisierte Requests kosten keine Parsing-Arbeit.
   v1.use(requireBearerToken(options.users ?? new SingleUserDirectory(config.apiToken)));
   v1.use(express.json({ limit: MAX_BODY_SIZE }));
+  // Eigener Claude-Schluessel des Nutzers (optional), nur fuer diese Anfrage.
+  v1.use(ownKeyMiddleware);
   v1.get("/status", (_req, res) => {
     res.json({ status: "authenticated", user: currentUser(res.locals)?.id });
   });

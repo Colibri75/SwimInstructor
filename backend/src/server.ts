@@ -34,16 +34,17 @@ if (config.anthropicApiKey === undefined) {
 if (config.appleRevoke === undefined) {
   logger.warn("APPLE_SIWA_KEY_ID/APPLE_SIWA_PRIVATE_KEY nicht gesetzt: Konto-Löschen widerruft die Anmeldung mit Apple nicht");
 }
-const generator =
-  config.anthropicApiKey === undefined
-    ? null
-    : new ClaudePlanGenerator(new Anthropic({ apiKey: config.anthropicApiKey }), {
-        model: config.claudeModel,
-        effort: config.claudeEffort,
-        timeoutMs: config.claudeTimeoutMs,
-        macroTimeoutMs: config.claudeMacroTimeoutMs,
-        serverFallback: config.claudeServerFallback
-      });
+const claudeOptions = {
+  model: config.claudeModel,
+  effort: config.claudeEffort,
+  timeoutMs: config.claudeTimeoutMs,
+  macroTimeoutMs: config.claudeMacroTimeoutMs,
+  serverFallback: config.claudeServerFallback
+};
+// Standard fuer alle Nutzer: der Schluessel des Servers. Er steht nur in der Konfiguration und erscheint nirgends.
+const generator = config.anthropicApiKey === undefined ? null : new ClaudePlanGenerator(new Anthropic({ apiKey: config.anthropicApiKey }), claudeOptions);
+// Wer in der App einen eigenen Schluessel hinterlegt, plant damit (nur fuer seine Anfrage, nie gespeichert).
+const generatorFor = (apiKey: string) => new ClaudePlanGenerator(new Anthropic({ apiKey }), claudeOptions);
 
 // Budgets ueber alle Plaene (jeder kostet einen Claude-Aufruf): eines je Nutzer und eines fuer den ganzen Server.
 const budget = new GenerationBudget(config.maxGenerationsTotalPerHour, config.maxGenerationsTotalPerDay);
@@ -86,6 +87,7 @@ const storeFor = (user: string): DayPlanStoreV2 => {
 const usersFile = path.join(config.dataDir, USERS_FILE);
 const planService = new MultiPlanService({
   generator,
+  generatorFor,
   store: storeFor,
   budget,
   userBudgets,

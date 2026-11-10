@@ -985,3 +985,12 @@
 "Die Vorlage füllt Disziplinen und Strecken vor. Danach kannst du alles ändern." = "テンプレートで種目と距離があらかじめ入力されます。その後すべて変更できます。";
 "Wettkampf entfernen" = "レースを削除";
 "Als Hauptziel tauscht er mit deinem Ziel: Ein bisheriges Ziel mit Tag wird dann ein weiterer Wettkampf mit kurzem Zuspitzen." = "メイン目標にすると今の目標と入れ替わります。日付のある以前の目標は、短いテーパーありのその他のレースになります。";
+"Das ist kein Claude-API-Schlüssel. Er beginnt mit sk-ant-." = "これは Claude API キーではありません。sk-ant- で始まります。";
+"Dein eigener Claude-Schlüssel funktioniert nicht. Prüf ihn in den Einstellungen oder entferne ihn, dann plant dein Coach wieder wie gewohnt." = "ご自身の Claude キーが使えません。設定で確認するか削除してください。削除すると、コーチはいつも通りプランを作成します。";
+"Eigener Schlüssel aktiv" = "自分のキーを使用中";
+"Eigenen Schlüssel entfernen" = "自分のキーを削除";
+"sk-ant-…" = "sk-ant-…";
+"Eigenen Schlüssel verwenden" = "自分のキーを使う";
+"Claude-Schlüssel" = "Claude キー";
+"Deine Pläne laufen über dein Anthropic-Konto, ohne die Stunden- und Tageslimits. Entfernst du den Schlüssel, plant dein Coach wieder mit dem Schlüssel von PeakSmith." = "プランはあなたの Anthropic アカウントで作成され、1時間・1日あたりの上限はありません。キーを削除すると、コーチは再び PeakSmith のキーでプランを作成します。";
+"Nicht nötig: Dein Coach plant mit dem Schlüssel von PeakSmith. Wer möchte, kann einen eigenen Claude-API-Schlüssel (console.anthropic.com) eintragen; dann laufen die Pläne über das eigene Anthropic-Konto. Er bleibt im Schlüsselbund dieses iPhones und geht nur mit deinen Plananfragen an den Server, der ihn nicht speichert." = "設定は不要です。コーチは PeakSmith のキーでプランを作成します。ご希望なら、自分の Claude API キー（console.anthropic.com）を入力できます。その場合、プランは自分の Anthropic アカウントで作成されます。キーはこの iPhone のキーチェーンに保存され、プランのリクエストと一緒にサーバーへ送られるだけで、サーバーには保存されません。";

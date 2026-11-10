@@ -10,7 +10,7 @@ export function createLogger(config: Config, destination?: DestinationStream): L
     {
       level: config.logLevel,
       redact: {
-        paths: ["req.headers.authorization", 'req.headers["x-api-key"]'],
+        paths: ["req.headers.authorization", 'req.headers["x-api-key"]', 'req.headers["x-anthropic-api-key"]'],
         censor: "[redacted]"
       }
     },
