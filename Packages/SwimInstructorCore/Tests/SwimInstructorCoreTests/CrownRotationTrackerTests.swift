@@ -79,11 +79,11 @@ final class CrownRotationTrackerTests: XCTestCase {
 
     func testIdleResetClearsTheProgress() {
         var tracker = CrownRotationTracker()
-        _ = tracker.moved(to: CrownRotationTracker.upIsPositive ? 2 : -2, isLocked: false, at: at(0))
-        XCTAssertEqual(tracker.progress(isLocked: false), 2.0 / unlocked, accuracy: 0.0001)
+        _ = tracker.moved(to: CrownRotationTracker.upIsPositive ? 4 : -4, isLocked: false, at: at(0))
+        XCTAssertEqual(tracker.progress(isLocked: false), 4.0 / unlocked, accuracy: 0.0001)
 
         tracker.resetIfIdle(at: at(0.5))
-        XCTAssertEqual(abs(tracker.travel), 2)
+        XCTAssertEqual(abs(tracker.travel), 4)
 
         tracker.resetIfIdle(at: at(CrownRotationTracker.idleReset + 1))
         XCTAssertEqual(tracker.travel, 0)
@@ -93,11 +93,21 @@ final class CrownRotationTrackerTests: XCTestCase {
 
     func testProgressIsRelativeToTheThresholdAndStopsAtOne() {
         var tracker = CrownRotationTracker()
-        _ = tracker.moved(to: CrownRotationTracker.upIsPositive ? 2 : -2, isLocked: true, at: at(0))
+        _ = tracker.moved(to: CrownRotationTracker.upIsPositive ? 4 : -4, isLocked: true, at: at(0))
 
-        XCTAssertEqual(tracker.progress(isLocked: true), 2.0 / locked, accuracy: 0.0001)
-        XCTAssertEqual(tracker.progress(isLocked: false), 2.0 / unlocked, accuracy: 0.0001)
+        XCTAssertEqual(tracker.progress(isLocked: true), 4.0 / locked, accuracy: 0.0001)
+        XCTAssertEqual(tracker.progress(isLocked: false), 4.0 / unlocked, accuracy: 0.0001)
         XCTAssertEqual(CrownRotationTracker().progress(isLocked: false), 0)
+    }
+
+    func testAPressOnTheCrownShowsNoBar() {
+        // Ein Druck dreht die Crown ein, zwei Einheiten mit: zählt, zeigt aber keinen Balken.
+        var tracker = CrownRotationTracker()
+        _ = tracker.moved(to: CrownRotationTracker.upIsPositive ? 2 : -2, isLocked: false, at: at(0))
+
+        XCTAssertEqual(abs(tracker.travel), 2)
+        XCTAssertEqual(tracker.progress(isLocked: false), 0)
+        XCTAssertEqual(tracker.progress(isLocked: true), 0)
     }
 
     func testResetByTheViewIsNotCountedAsRotation() {

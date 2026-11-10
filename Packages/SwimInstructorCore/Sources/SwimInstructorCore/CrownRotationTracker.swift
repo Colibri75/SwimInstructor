@@ -37,6 +37,9 @@ public struct CrownRotationTracker: Equatable, Sendable {
     public static let settleTime: TimeInterval = 0.8
     /// Sprünge über diesen Wert sind das Zurücksetzen der Crown durch die Ansicht, keine Drehung.
     public static let resetJump = 25.0
+    /// Erst ab so viel Drehung erscheint der Balken: Ein Druck auf die Crown dreht sie oft ein, zwei Einheiten mit,
+    /// das ist keine Drehung und soll keinen Balken zeigen.
+    public static let visibleTravel = 3.0
     /// Wenn "nach oben drehen" bei dieser Uhr negative Werte liefert: hier auf `false` stellen.
     public static let upIsPositive = true
 
@@ -62,9 +65,10 @@ public struct CrownRotationTracker: Equatable, Sendable {
         return (travel > 0) == Self.upIsPositive ? .next : .previous
     }
 
-    /// Fortschritt von 0 bis 1 für die Anzeige.
+    /// Fortschritt von 0 bis 1 für die Anzeige; 0, solange die Crown kaum bewegt ist (`visibleTravel`).
     public func progress(isLocked: Bool) -> Double {
-        min(abs(travel) / Self.threshold(isLocked: isLocked), 1)
+        guard abs(travel) >= Self.visibleTravel else { return 0 }
+        return min(abs(travel) / Self.threshold(isLocked: isLocked), 1)
     }
 
     /// Neuer Wert der Crown. Weit genug in eine Richtung gedreht: die Richtung; der Zähler steht

@@ -100,7 +100,7 @@ private struct StepBlock: View {
                     .minimumScaleFactor(0.7)
             }
             Text(ProgressFormatting.line(status))
-                .font(compact ? .caption.monospacedDigit() : .footnote.monospacedDigit())
+                .font(compact ? .system(size: 18, weight: .semibold, design: .rounded).monospacedDigit() : .footnote.monospacedDigit())
                 .foregroundStyle(Theme.ember)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -166,7 +166,7 @@ private struct WorkoutMetricsView: View {
             VStack(alignment: .leading, spacing: 2) {
                 // Zeit, Puls und Tempo liest man unterwegs: groß, der Plan darunter kleiner.
                 Text(PlanFormatting.elapsed(workoutManager.elapsedTime(at: context.date)))
-                    .font(.system(size: 40, weight: .semibold, design: .rounded).monospacedDigit())
+                    .font(.system(size: 36, weight: .semibold, design: .rounded).monospacedDigit())
                     .foregroundStyle(workoutManager.phase == .paused ? Color.orange : Color.yellow)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
@@ -176,12 +176,12 @@ private struct WorkoutMetricsView: View {
                         .foregroundStyle(.red)
                         .accessibilityLabel("Puls")
                     Text(metrics.heartRate.map { "\(Int($0.rounded()))" } ?? "--")
-                        .font(.system(size: 30, weight: .semibold, design: .rounded).monospacedDigit())
+                        .font(.system(size: 28, weight: .semibold, design: .rounded).monospacedDigit())
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                     Spacer(minLength: 2)
                     Text(LiveFieldFormatting.value(profile.primaryField, metrics: metrics) ?? "--")
-                        .font(.system(size: 30, weight: .semibold, design: .rounded).monospacedDigit())
+                        .font(.system(size: 28, weight: .semibold, design: .rounded).monospacedDigit())
                         .foregroundStyle(.cyan)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
@@ -190,15 +190,16 @@ private struct WorkoutMetricsView: View {
                         .foregroundStyle(.secondary)
                 }
                 .accessibilityElement(children: .combine)
-                StepBlock(status: status, compact: true)
-                Spacer(minLength: 0)
+                // Strecke (beim Schwimmen auch Bahnen) groß: Man liest sie im Wasser mit einem kurzen Blick.
                 let secondary = profile.secondaryFields.compactMap { LiveFieldFormatting.text($0, metrics: metrics) }
                 if !secondary.isEmpty {
                     Text(secondary.joined(separator: " · "))
-                        .font(.caption2.monospacedDigit())
+                        .font(.system(size: 26, weight: .semibold, design: .rounded).monospacedDigit())
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                 }
+                StepBlock(status: status, compact: true)
+                Spacer(minLength: 0)
                 ControlStatusLine()
             }
             .frame(maxWidth: .infinity, alignment: .leading)

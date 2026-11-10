@@ -154,9 +154,10 @@ final class WorkoutManager: NSObject, ObservableObject {
                     self.countdownRemaining = remaining
                     // Die letzten Sekunden geben jede Sekunde einen Impuls, am Ende der Start.
                     if remaining == 0 {
+                        // Kurz: Der erste Abschnitt meldet sich gleich danach selbst kräftig (`workStarted`).
                         WKInterfaceDevice.current().play(.start)
                     } else if remaining <= TrainingTimers.warningSeconds {
-                        WKInterfaceDevice.current().play(.click)
+                        Haptics.secondTick()
                     }
                 }
                 if remaining == 0 { break }
@@ -366,16 +367,21 @@ final class WorkoutManager: NSObject, ObservableObject {
             case .workStarted:
                 segmentStartDate = Date()
                 lastWarning = nil
-                WKInterfaceDevice.current().play(manual == .previous ? .directionDown : (manual == nil ? .start : .directionUp))
+                // Von selbst (Strecke oder Zeit erreicht): kräftig und mehrmals, das muss man im Wasser spüren.
+                if let manual {
+                    Haptics.manualChange(forward: manual == .next)
+                } else {
+                    Haptics.workStarts()
+                }
             case let .workEnded(segment):
                 if segment.unit.step.isTestEffort {
                     addSegmentMarker(from: segmentStartDate, to: Date())
                 }
             case .restStarted:
                 lastWarning = nil
-                WKInterfaceDevice.current().play(.stop)
+                Haptics.restStarts()
             case .completed:
-                WKInterfaceDevice.current().play(.success)
+                Haptics.completed()
             }
             announce(event)
         }
@@ -399,7 +405,7 @@ final class WorkoutManager: NSObject, ObservableObject {
         }
         guard let seconds, seconds > 0, seconds <= TrainingTimers.warningSeconds, seconds != lastWarning else { return }
         lastWarning = seconds
-        WKInterfaceDevice.current().play(.click)
+        Haptics.secondTick()
     }
 
     /// Rundenmarke für einen Testabschnitt: erscheint in Health als Abschnitt mit eigener Zeit.
