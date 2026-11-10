@@ -66,7 +66,8 @@ Je eine Einheit, danach in der Fitness-App Strecke, Karte und Herzfrequenz prüf
       wenn seine Strecke geschwommen ist; Pause zeigt "Pause 0:30" und zählt herunter; Crown plus Seitentaste pausiert;
       Workout steht in Health als Beckenschwimmen mit Bahnen
 - [ ] **Im Wasser spürbar und lesbar:** Satzwechsel vibriert dreimal kräftig, Pause zweimal, auch beim Schwimmen
-      deutlich zu spüren; Strecke und Bahnen groß unter Puls und Tempo; ein Druck auf die Crown zeigt keinen Balken,
+      deutlich zu spüren; Werte-Seite füllt das Display: Meter bis zum Wechsel am größten, Beschreibung zweizeilig,
+      Strecke und Bahnen groß, Puls kleiner; ein Druck auf die Crown zeigt keinen Balken,
       erst Drehen füllt ihn
 - [ ] **Trocken (zu Hause):** "Nächster Satz" auf der Steuerseite; Crown lange nach oben: Balken füllt sich, wechselt
 - [ ] **Laufen draußen, Intervalle:** GPS-Strecke und Karte, Pace stimmt mit der Fitness-App, Ansagen zu den Wechseln

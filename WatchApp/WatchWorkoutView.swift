@@ -100,7 +100,7 @@ private struct StepBlock: View {
                     .minimumScaleFactor(0.7)
             }
             Text(ProgressFormatting.line(status))
-                .font(compact ? .system(size: 18, weight: .semibold, design: .rounded).monospacedDigit() : .footnote.monospacedDigit())
+                .font(.system(size: compact ? 18 : 22, weight: .bold, design: .rounded).monospacedDigit())
                 .foregroundStyle(Theme.ember)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -121,7 +121,7 @@ private struct StepBlock: View {
                 if !unit.step.instructions.isEmpty {
                     // Plan-Seite: die ganze Anleitung.
                     Text(unit.step.instructions)
-                        .font(.footnote)
+                        .font(.body)
                         .foregroundStyle(Color.primary)
                         .lineLimit(10)
                         .minimumScaleFactor(0.8)
@@ -162,49 +162,129 @@ private struct WorkoutMetricsView: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let status = workoutManager.status(at: context.date)
-            let profile = workoutManager.recordingProfile
-            VStack(alignment: .leading, spacing: 2) {
-                // Zeit, Puls und Tempo liest man unterwegs: groß, der Plan darunter kleiner.
-                Text(PlanFormatting.elapsed(workoutManager.elapsedTime(at: context.date)))
-                    .font(.system(size: 36, weight: .semibold, design: .rounded).monospacedDigit())
-                    .foregroundStyle(workoutManager.phase == .paused ? Color.orange : Color.yellow)
+            // Schriften nach der Höhe des Displays: Auf jeder Uhrgröße füllt die Seite den Bildschirm.
+            GeometryReader { geometry in
+                let height = geometry.size.height
+                VStack(alignment: .leading, spacing: 0) {
+                    timeAndPulse(at: context.date, height: height)
+                    Spacer(minLength: 0)
+                    // Was jetzt zu tun ist, am größten: die Meter (oder Zeit) bis zum Wechsel, in der Pause die Restzeit.
+                    Text(ProgressFormatting.remaining(status))
+                        .font(Self.font(height * 0.2, .bold))
+                        .foregroundStyle(remainingColor(status))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                    description(status, height: height)
+                    Spacer(minLength: 0)
+                    paceAndDistance(height: height)
+                    ControlStatusLine()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            }
+        }
+        .ignoresSafeArea(edges: .bottom)
+        .modifier(CrownSectionControl(isActive: isCurrentPage))
+    }
+
+    private static func font(_ size: CGFloat, _ weight: Font.Weight) -> Font {
+        .system(size: size, weight: weight, design: .rounded).monospacedDigit()
+    }
+
+    /// Zeit groß links, Puls kleiner rechts.
+    private func timeAndPulse(at date: Date, height: CGFloat) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
+            Text(PlanFormatting.elapsed(workoutManager.elapsedTime(at: date)))
+                .font(Self.font(height * 0.15, .semibold))
+                .foregroundStyle(workoutManager.phase == .paused ? Color.orange : Color.yellow)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+            Spacer(minLength: 2)
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Image(systemName: "heart.fill")
+                    .font(.system(size: height * 0.06))
+                    .foregroundStyle(.red)
+                    .accessibilityHidden(true)
+                Text(metrics.heartRate.map { "\(Int($0.rounded()))" } ?? "--")
+                    .font(Self.font(height * 0.1, .semibold))
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Image(systemName: "heart.fill")
-                        .font(.system(size: 18))
-                        .foregroundStyle(.red)
-                        .accessibilityLabel("Puls")
-                    Text(metrics.heartRate.map { "\(Int($0.rounded()))" } ?? "--")
-                        .font(.system(size: 28, weight: .semibold, design: .rounded).monospacedDigit())
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                    Spacer(minLength: 2)
-                    Text(LiveFieldFormatting.value(profile.primaryField, metrics: metrics) ?? "--")
-                        .font(.system(size: 28, weight: .semibold, design: .rounded).monospacedDigit())
-                        .foregroundStyle(.cyan)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                    Text(LiveFieldFormatting.unit(profile.primaryField))
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                }
-                .accessibilityElement(children: .combine)
-                // Strecke (beim Schwimmen auch Bahnen) groß: Man liest sie im Wasser mit einem kurzen Blick.
-                let secondary = profile.secondaryFields.compactMap { LiveFieldFormatting.text($0, metrics: metrics) }
-                if !secondary.isEmpty {
-                    Text(secondary.joined(separator: " · "))
-                        .font(.system(size: 26, weight: .semibold, design: .rounded).monospacedDigit())
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                }
-                StepBlock(status: status, compact: true)
-                Spacer(minLength: 0)
-                ControlStatusLine()
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Puls")
         }
-        .modifier(CrownSectionControl(isActive: isCurrentPage))
+    }
+
+    /// Der Schritt in Worten: Nummer und Name, Wiederholung, Hilfsmittel und der Kurztext des Plans (zwei Zeilen). In der
+    /// Pause, was danach kommt.
+    @ViewBuilder
+    private func description(_ status: ProgressStatus, height: CGFloat) -> some View {
+        switch status {
+        case let .work(unit, _, _):
+            let title = [ProgressFormatting.stepTitle(unit, stepCount: workoutManager.progress.stepCount), ProgressFormatting.repetition(unit)]
+                .compactMap { $0 }
+                .joined(separator: " · ")
+            Text(title)
+                .font(Self.font(height * 0.085, .semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+            if !unit.step.equipment.isEmpty {
+                Label(PlanFormatting.equipment(unit.step.equipment), systemImage: "backpack")
+                    .font(.system(size: height * 0.075, weight: .medium, design: .rounded))
+                    .foregroundStyle(.cyan)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
+            Text(ProgressFormatting.cue(unit))
+                .font(.system(size: height * 0.095, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
+                .lineLimit(2)
+                .minimumScaleFactor(0.6)
+        case let .rest(_, next?, _):
+            Text("Danach: \(next.step.name)")
+                .font(Self.font(height * 0.085, .semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+            Text(ProgressFormatting.cue(next))
+                .font(.system(size: height * 0.095, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
+                .lineLimit(2)
+                .minimumScaleFactor(0.6)
+        default:
+            EmptyView()
+        }
+    }
+
+    /// Tempo und Strecke (beim Schwimmen auch Bahnen) unten in einer Zeile.
+    private func paceAndDistance(height: CGFloat) -> some View {
+        let profile = workoutManager.recordingProfile
+        let secondary = profile.secondaryFields.compactMap { LiveFieldFormatting.text($0, metrics: metrics) }
+        return HStack(alignment: .firstTextBaseline, spacing: 4) {
+            Text(LiveFieldFormatting.value(profile.primaryField, metrics: metrics) ?? "--")
+                .font(Self.font(height * 0.09, .semibold))
+                .foregroundStyle(.cyan)
+            Text(LiveFieldFormatting.unit(profile.primaryField))
+                .font(.system(size: height * 0.05))
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 2)
+            if !secondary.isEmpty {
+                // Wie weit man schon ist: größer als das Tempo.
+                Text(secondary.joined(separator: " · "))
+                    .font(Self.font(height * 0.12, .semibold))
+            }
+        }
+        .lineLimit(1)
+        .minimumScaleFactor(0.5)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func remainingColor(_ status: ProgressStatus) -> Color {
+        switch status {
+        case .rest, .completed: return Theme.spark
+        case .work: return Theme.ember
+        case .noUnits: return .white
+        }
     }
 }
 
