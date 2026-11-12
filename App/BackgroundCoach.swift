@@ -156,7 +156,8 @@ final class BackgroundCoach: ObservableObject {
     // MARK: - Ein Durchgang
 
     /// Health lesen, nach neuen Einheiten fragen, morgens den Plan für heute anstoßen, nach erledigtem Training den Plan
-    /// für morgen holen und die Morgen-Mitteilung stellen. Ist die App offen, macht das Heute selbst.
+    /// für morgen holen und die Morgen-Mitteilung stellen. Ist die App offen, läuft kein Durchgang: Dort entsteht ein neuer
+    /// Plan nur auf Tipp (Runterziehen liest nur Health).
     func run() async {
         guard !isRunning, UIApplication.shared.applicationState != .active else { return }
         // Bei gesperrtem iPhone gibt Health nichts heraus.

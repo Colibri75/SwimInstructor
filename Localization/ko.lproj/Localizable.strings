@@ -196,7 +196,7 @@
 "Der Plan für heute wurde im Plan-Tab geändert." = "오늘 계획이 계획 탭에서 변경됐어요.";
 "Der Plan legt Training nur auf deine Trainingstage und bleibt unter der Zeit des Tages. Mit einer festen Sportart gibt es an dem Tag nur diese. Änderungen gelten ab der nächsten Abstimmung der 14 Tage, der Gesamtplan bleibt." = "계획은 훈련일에만 훈련을 넣고, 그날의 시간을 넘기지 않아요. 종목을 고정하면 그날은 그 종목만 해요. 변경 사항은 다음 14일 조정부터 적용되고, 전체 계획은 그대로예요.";
 "Der Plan mit allen Schritten und Ergänzungen." = "모든 단계와 보강 운동이 포함된 계획.";
-"Der Plan nutzt nur, was hier an ist. Mit Rolle oder Laufband plant er bei Unwetter drinnen. Mit Zugang zu Freiwasser plant er dort, wenn es warm genug ist, vor allem vor einem Ziel im Freiwasser. Die Auswahl gilt ab dem nächsten Plan (zum Aktualisieren auf Heute nach unten ziehen). Ohne Auswahl plant dein Coach ganz ohne Hilfsmittel." = "계획은 여기서 켠 것만 사용해요. 실내 자전거나 트레드밀이 있으면 악천후에 실내 훈련을 계획해요. 오픈워터를 이용할 수 있으면 물이 충분히 따뜻할 때, 특히 오픈워터 목표를 앞두고 그곳에서 훈련을 계획해요. 선택은 다음 계획부터 적용돼요(오늘 화면을 아래로 당겨 새로고침). 아무것도 선택하지 않으면 코치는 장비 없이 계획해요.";
+"Der Plan nutzt nur, was hier an ist. Mit Rolle oder Laufband plant er bei Unwetter drinnen. Mit Zugang zu Freiwasser plant er dort, wenn es warm genug ist, vor allem vor einem Ziel im Freiwasser. Die Auswahl gilt ab dem nächsten Plan. Ohne Auswahl plant dein Coach ganz ohne Hilfsmittel." = "계획은 여기서 켠 것만 사용해요. 실내 자전거나 트레드밀이 있으면 악천후에 실내 훈련을 계획해요. 오픈워터를 이용할 수 있으면 물이 충분히 따뜻할 때, 특히 오픈워터 목표를 앞두고 그곳에서 훈련을 계획해요. 선택은 다음 계획부터 적용돼요. 아무것도 선택하지 않으면 코치는 장비 없이 계획해요.";
 "Der Plan von heute, wie im Tab Aktuell." = "오늘 탭과 같은 오늘의 계획.";
 "Der Server hat das Token abgelehnt. Prüfe es in den Einstellungen." = "서버가 토큰을 거부했어요. 설정에서 확인해 주세요.";
 "Der Server hat die Trainingsdaten abgelehnt (%@)." = "서버가 훈련 데이터를 거부했어요(%@).";

@@ -196,7 +196,7 @@
 "Der Plan für heute wurde im Plan-Tab geändert." = "今日のプランはプランタブで変更されました。";
 "Der Plan legt Training nur auf deine Trainingstage und bleibt unter der Zeit des Tages. Mit einer festen Sportart gibt es an dem Tag nur diese. Änderungen gelten ab der nächsten Abstimmung der 14 Tage, der Gesamtplan bleibt." = "プランはトレーニング日にだけトレーニングを入れ、その日の時間内に収めます。種目を固定した日はその種目のみになります。変更は次回の14日間の調整から適用され、全体プランはそのままです。";
 "Der Plan mit allen Schritten und Ergänzungen." = "すべてのステップと補強を含むプラン。";
-"Der Plan nutzt nur, was hier an ist. Mit Rolle oder Laufband plant er bei Unwetter drinnen. Mit Zugang zu Freiwasser plant er dort, wenn es warm genug ist, vor allem vor einem Ziel im Freiwasser. Die Auswahl gilt ab dem nächsten Plan (zum Aktualisieren auf Heute nach unten ziehen). Ohne Auswahl plant dein Coach ganz ohne Hilfsmittel." = "プランはここでオンにしたものだけを使います。ローラー台やトレッドミルがあれば、悪天候時は屋内で計画します。オープンウォーターが使える場合は、十分に暖かいときにそこで計画します（特にオープンウォーターでの目標の前）。選択は次のプランから適用されます（「今日」で下に引いて更新）。何も選ばなければ、コーチは器具なしで計画します。";
+"Der Plan nutzt nur, was hier an ist. Mit Rolle oder Laufband plant er bei Unwetter drinnen. Mit Zugang zu Freiwasser plant er dort, wenn es warm genug ist, vor allem vor einem Ziel im Freiwasser. Die Auswahl gilt ab dem nächsten Plan. Ohne Auswahl plant dein Coach ganz ohne Hilfsmittel." = "プランはここでオンにしたものだけを使います。ローラー台やトレッドミルがあれば、悪天候時は屋内で計画します。オープンウォーターが使える場合は、十分に暖かいときにそこで計画します（特にオープンウォーターでの目標の前）。選択は次のプランから適用されます。何も選ばなければ、コーチは器具なしで計画します。";
 "Der Plan von heute, wie im Tab Aktuell." = "今日のプラン（「今日」タブと同じ）。";
 "Der Server hat das Token abgelehnt. Prüfe es in den Einstellungen." = "サーバーがトークンを拒否しました。設定で確認してください。";
 "Der Server hat die Trainingsdaten abgelehnt (%@)." = "サーバーがトレーニングデータを拒否しました（%@）。";

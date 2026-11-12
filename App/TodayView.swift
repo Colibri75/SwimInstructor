@@ -86,8 +86,6 @@ struct TodayView: View {
             coach.requestPermission()
             await loader.refreshIfNeeded()
         }
-        // Training erledigt: den Plan für morgen gleich holen (einmal je Vorgabe, er wird morgen der Tagesplan).
-        .task(id: tomorrowPreviewKey) { await loadTomorrowIfNeeded() }
         .onChange(of: todayDone) { _, done in
             if done { showsToday = false }
             coach.updateGlance()
@@ -381,21 +379,8 @@ struct TodayView: View {
 
     // MARK: - Morgen
 
-    /// Ändert sich, wenn ein Plan für morgen fällig wird: Training erledigt, Vorgabe für morgen geändert, Health gelesen.
-    private var tomorrowPreviewKey: String {
-        guard showsTomorrow else { return "" }
-        let date = tomorrowKey
-        return "\(date)|\(loader.canPreview(date))|\(loader.dayPlan(on: date) != nil)|\(loader.reading != nil)"
-    }
-
-    /// Holt die Vorschau für morgen, wenn es Einheiten gibt und noch keine passende da ist. Nach einem Fehler nur auf Tipp.
-    private func loadTomorrowIfNeeded() async {
-        let date = tomorrowKey
-        guard showsTomorrow, loader.dayPlan(on: date) == nil, loader.canPreview(date), loader.previewError?.date != date else { return }
-        await loader.loadPreview(for: date)
-    }
-
     /// Der Plan für morgen: die Vorschau mit allen Schritten. Morgen wird sie der Tagesplan, solange die Vorgabe gleich bleibt.
+    /// Erstellt wird sie nur auf Tipp, nie von selbst (auch nicht, wenn Runterziehen das Training von heute nachliest).
     @ViewBuilder
     private var tomorrowSections: some View {
         let date = tomorrowKey
@@ -411,6 +396,7 @@ struct TodayView: View {
                 } label: {
                     Label("Plan für morgen holen", systemImage: "list.bullet.rectangle")
                 }
+                .buttonStyle(.ember)
                 .disabled(loader.loadingPreviewDate != nil || loader.reading == nil)
             } else if let entry = weekLoader.day(on: date), entry.isRestDay || entry.isUnavailable {
                 Text("Morgen ist kein Training geplant. Erhol dich gut.")

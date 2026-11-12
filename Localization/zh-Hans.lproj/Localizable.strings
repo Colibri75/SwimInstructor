@@ -196,7 +196,7 @@
 "Der Plan für heute wurde im Plan-Tab geändert." = "今天的计划已在“计划”标签页中更改。";
 "Der Plan legt Training nur auf deine Trainingstage und bleibt unter der Zeit des Tages. Mit einer festen Sportart gibt es an dem Tag nur diese. Änderungen gelten ab der nächsten Abstimmung der 14 Tage, der Gesamtplan bleibt." = "计划只会把训练安排在你的训练日，且不超过当天的可用时间。若指定了固定运动项目，当天只安排该项目。更改从下一次 14 天计划调整起生效，总体计划不变。";
 "Der Plan mit allen Schritten und Ergänzungen." = "包含所有步骤和补充内容的计划。";
-"Der Plan nutzt nur, was hier an ist. Mit Rolle oder Laufband plant er bei Unwetter drinnen. Mit Zugang zu Freiwasser plant er dort, wenn es warm genug ist, vor allem vor einem Ziel im Freiwasser. Die Auswahl gilt ab dem nächsten Plan (zum Aktualisieren auf Heute nach unten ziehen). Ohne Auswahl plant dein Coach ganz ohne Hilfsmittel." = "计划只使用这里开启的项目。有骑行台或跑步机时，恶劣天气会安排室内训练。能去公开水域时，若水温足够会安排在那里，尤其是在公开水域目标之前。选择从下一个计划起生效（在“今日”页向下拉即可更新）。若未选择，你的教练将完全不使用辅助器材。";
+"Der Plan nutzt nur, was hier an ist. Mit Rolle oder Laufband plant er bei Unwetter drinnen. Mit Zugang zu Freiwasser plant er dort, wenn es warm genug ist, vor allem vor einem Ziel im Freiwasser. Die Auswahl gilt ab dem nächsten Plan. Ohne Auswahl plant dein Coach ganz ohne Hilfsmittel." = "计划只使用这里开启的项目。有骑行台或跑步机时，恶劣天气会安排室内训练。能去公开水域时，若水温足够会安排在那里，尤其是在公开水域目标之前。选择从下一个计划起生效。若未选择，你的教练将完全不使用辅助器材。";
 "Der Plan von heute, wie im Tab Aktuell." = "今天的计划，与“今日”标签页中相同。";
 "Der Server hat das Token abgelehnt. Prüfe es in den Einstellungen." = "服务器拒绝了令牌。请在设置中检查。";
 "Der Server hat die Trainingsdaten abgelehnt (%@)." = "服务器拒绝了训练数据（%@）。";
