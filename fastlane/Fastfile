@@ -15,8 +15,22 @@ platform :ios do
     end
   end
 
+  # Apple nimmt ab April 2027 nur noch Builds mit dem iOS-27-SDK an (ITMS-90725). Bricht früh und verständlich ab,
+  # wenn der Runner ein älteres Xcode als Standard hat, statt einen Build zu liefern, den Apple später ablehnt.
+  MINIMUM_IOS_SDK = 27
+
+  private_lane :ensure_ios_sdk do
+    version = sh("xcrun", "--sdk", "iphoneos", "--show-sdk-version", log: false).strip
+    UI.message("Xcode: #{sh('xcodebuild', '-version', log: false).lines.first&.strip}, iOS-SDK #{version}")
+    if version.split(".").first.to_i < MINIMUM_IOS_SDK
+      UI.user_error!("iOS-SDK #{version} ist zu alt, mindestens #{MINIMUM_IOS_SDK} nötig. Runner mit Xcode " \
+                     "#{MINIMUM_IOS_SDK} nehmen oder DEVELOPER_DIR / xcode-select auf Xcode #{MINIMUM_IOS_SDK} setzen.")
+    end
+  end
+
   desc "Run the unit test suite"
   lane :test do
+    ensure_ios_sdk
     # generate_project doubles as a project.yml validation smoke test.
     generate_project
 
@@ -89,6 +103,7 @@ platform :ios do
   desc "Regenerate the App Store provisioning profiles of all targets"
   lane :profiles do
     setup_ci if is_ci
+    ensure_ios_sdk
 
     app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_KEY_ID"],

@@ -29,9 +29,12 @@ concurrency:
 permissions:
   contents: read
 
+# Runner: Standard ist GitHubs Xcode-27-Image (Apple verlangt ab April 2027 das iOS-27-SDK, ITMS-90725).
+# Für einen eigenen Mac-Runner o. ä. die Repo-Variable IOS_RUNNER setzen (Settings > Secrets and variables >
+# Actions > Variables), z. B. self-hosted. Die Lanes prüfen selbst, dass mindestens das iOS-27-SDK baut.
 jobs:
   test:
-    runs-on: macos-latest
+    runs-on: ${{ vars.IOS_RUNNER || 'xcode-27' }}
     steps:
       - uses: actions/checkout@v5
 
@@ -49,7 +52,7 @@ jobs:
   beta:
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: macos-latest
+    runs-on: ${{ vars.IOS_RUNNER || 'xcode-27' }}
     # Immer nur ein Upload gleichzeitig: Zwei Läufe kurz hintereinander berechneten sonst dieselbe
     # TestFlight-Build-Nummer, und der zweite scheiterte mit "Redundant Binary Upload".
     concurrency:
