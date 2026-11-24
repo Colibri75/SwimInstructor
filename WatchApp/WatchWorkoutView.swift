@@ -455,6 +455,14 @@ private struct WorkoutControlsView: View {
 struct WatchSummaryView: View {
     @EnvironmentObject private var workoutManager: WorkoutManager
     let saved: Bool
+    /// Die Anstrengung, die gerade eingestellt ist; `effortChosen`, sobald du sie mit Crown oder Knopf gewählt hast.
+    @State private var effort = 5.0
+    @State private var effortChosen = false
+
+    /// Ob "Fertig" noch eine Bewertung speichert.
+    private var savesEffortOnDone: Bool {
+        saved && workoutManager.canRateEffort && workoutManager.savedEffort == nil && effortChosen
+    }
 
     private var metrics: LiveWorkoutMetrics { workoutManager.metrics }
 
@@ -481,29 +489,49 @@ struct WatchSummaryView: View {
                         .padding(.top, 4)
                 }
                 if saved, workoutManager.canRateEffort {
-                    EffortRatingBlock()
+                    EffortRatingBlock(effort: $effort, chosen: $effortChosen)
                         .padding(.top, 4)
                 }
                 Text(saved ? String(localized: "In Health gespeichert. Das iPhone berücksichtigt die Einheit beim nächsten Plan.") : (workoutManager.errorMessage ?? String(localized: "Nicht in Health gespeichert.")))
                     .font(.footnote)
                     .foregroundStyle(saved ? Color.secondary : Color.red)
                     .padding(.top, 4)
-                Button("Fertig") {
-                    workoutManager.reset()
+                // Ein Knopf für alles: speichert die gewählte Anstrengung (falls gewählt) und schließt.
+                Button(workoutManager.isSavingEffort ? "Speichert …" : "Fertig") {
+                    Task {
+                        if savesEffortOnDone {
+                            await workoutManager.saveEffort(Int(effort.rounded()))
+                            // Nicht gespeichert: Der Fehler steht oben, die Bewertung bleibt zum nächsten Versuch.
+                            guard workoutManager.savedEffort != nil else { return }
+                        }
+                        workoutManager.reset()
+                    }
                 }
+                .tint(Theme.ember)
+                .disabled(workoutManager.isSavingEffort)
                 .padding(.top, 4)
             }
         }
     }
 }
 
-/// Nach dem Ende: Wie anstrengend war es? 1 bis 10 mit der Crown oder den Knöpfen, gespeichert als eigene Bewertung in
-/// Health. Das iPhone nimmt sie für die Trainingslast und schlägt sie in "Wie war's?" vor.
+/// Nach dem Ende: Wie anstrengend war es? 1 bis 10 mit der Crown oder den Knöpfen. "Fertig" darunter speichert sie als
+/// eigene Bewertung in Health; ohne Wahl (Anzeige "–") bleibt die Einheit unbewertet. Das iPhone nimmt sie für die
+/// Trainingslast und fragt dann nicht mehr "Wie war's?".
 private struct EffortRatingBlock: View {
     @EnvironmentObject private var workoutManager: WorkoutManager
-    @State private var effort = 5.0
+    @Binding var effort: Double
+    @Binding var chosen: Bool
 
     private var value: Int { Int(effort.rounded()) }
+
+    private func change(by step: Double) {
+        // Der erste Tipp wählt den angezeigten Wert, erst danach geht es weiter.
+        if chosen {
+            effort = min(max(effort.rounded() + step, 1), 10)
+        }
+        chosen = true
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -516,47 +544,45 @@ private struct EffortRatingBlock: View {
                     .font(.headline)
                 HStack {
                     Button {
-                        effort = max(effort.rounded() - 1, 1)
+                        change(by: -1)
                     } label: {
                         Image(systemName: "minus")
                     }
                     .frame(width: 40)
                     .accessibilityLabel("Weniger")
                     VStack(spacing: 0) {
-                        Text("\(value)")
+                        Text(chosen ? "\(value)" : "–")
                             .font(.title.weight(.heavy))
                             .monospacedDigit()
-                        Text(SessionFeedback.effortLabel(value))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                        if chosen {
+                            Text(SessionFeedback.effortLabel(value))
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     .frame(maxWidth: .infinity)
                     .focusable()
                     .digitalCrownRotation($effort, from: 1, through: 10, by: 1, sensitivity: .low, isContinuous: false, isHapticFeedbackEnabled: true)
+                    .onChange(of: effort) { _, _ in chosen = true }
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel("Anstrengung")
-                    .accessibilityValue("\(value) von 10, \(SessionFeedback.effortLabel(value))")
+                    .accessibilityValue(chosen ? "\(value) von 10, \(SessionFeedback.effortLabel(value))" : "–")
                     // Mit VoiceOver nach oben oder unten wischen ändert den Wert wie die Crown.
                     .accessibilityAdjustableAction { direction in
                         switch direction {
-                        case .increment: effort = min(effort.rounded() + 1, 10)
-                        case .decrement: effort = max(effort.rounded() - 1, 1)
+                        case .increment: change(by: 1)
+                        case .decrement: change(by: -1)
                         @unknown default: break
                         }
                     }
                     Button {
-                        effort = min(effort.rounded() + 1, 10)
+                        change(by: 1)
                     } label: {
                         Image(systemName: "plus")
                     }
                     .frame(width: 40)
                     .accessibilityLabel("Mehr")
                 }
-                Button(workoutManager.isSavingEffort ? "Speichert …" : "Sichern") {
-                    Task { await workoutManager.saveEffort(value) }
-                }
-                .tint(Theme.ember)
-                .disabled(workoutManager.isSavingEffort)
             }
         }
     }
