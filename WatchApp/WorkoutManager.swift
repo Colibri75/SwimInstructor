@@ -292,6 +292,9 @@ final class WorkoutManager: NSObject, ObservableObject {
 
     // MARK: - Anstrengung
 
+    /// Freies Training: eine Einheit ohne Schritte, also ohne Plan zum Abarbeiten.
+    var isFreeWorkout: Bool { progress.units.isEmpty }
+
     /// Ob nach dem Ende nach der Anstrengung gefragt wird: ab watchOS 11 und nur für ein gespeichertes Workout.
     var canRateEffort: Bool {
         guard #available(watchOS 11.0, *) else { return false }
