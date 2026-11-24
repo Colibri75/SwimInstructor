@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   profiles:
-    runs-on: macos-latest
+    runs-on: ${{ vars.IOS_RUNNER || 'xcode-27' }}
     steps:
       - uses: actions/checkout@v5
 
