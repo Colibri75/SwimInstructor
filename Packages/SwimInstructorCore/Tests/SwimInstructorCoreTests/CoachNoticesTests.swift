@@ -36,6 +36,15 @@ final class CoachNoticesTests: XCTestCase {
         XCTAssertTrue(notice.body.hasPrefix("Laufen, 42 min."), notice.body)
     }
 
+    func testTheFeedbackQuestionWaitsForARatingOnTheWatch() {
+        let end = TestFixtures.now
+        XCTAssertEqual(CoachNotices.feedbackDelay(after: end, now: end), 600)
+        XCTAssertEqual(CoachNotices.feedbackDelay(after: end, now: end.addingTimeInterval(240)), 360)
+        XCTAssertEqual(CoachNotices.feedbackDelay(after: end, now: end.addingTimeInterval(3_600)), 1, "längst vorbei: gleich")
+        XCTAssertTrue(CoachNotices.isFeedbackID(CoachNotices.feedbackID(for: UUID())))
+        XCTAssertFalse(CoachNotices.isFeedbackID(CoachNotices.morningID(for: "2026-10-01")))
+    }
+
     func testTheMorningNoticeComesAtTheChosenTimeOnlyWhileItIsAhead() throws {
         let preferences = NotificationPreferences(morningHour: 6, morningMinute: 30)
         let fire = try XCTUnwrap(CoachNotices.morningDate(for: "2026-10-01", preferences: preferences, now: TestFixtures.now, calendar: TestFixtures.utc))

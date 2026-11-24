@@ -12,8 +12,11 @@ struct WatchWorkoutView: View {
                 .tag(0)
             WorkoutMetricsView(isCurrentPage: page == 1)
                 .tag(1)
-            WorkoutPlanView(isCurrentPage: page == 2)
-                .tag(2)
+            // Freies Training hat keinen Plan: keine Plan-Seite.
+            if !workoutManager.isFreeWorkout {
+                WorkoutPlanView(isCurrentPage: page == 2)
+                    .tag(2)
+            }
         }
         .tabViewStyle(.page)
         .onChange(of: workoutManager.phase) { _, _ in
@@ -165,25 +168,94 @@ private struct WorkoutMetricsView: View {
             // Schriften nach der Höhe des Displays: Auf jeder Uhrgröße füllt die Seite den Bildschirm.
             GeometryReader { geometry in
                 let height = geometry.size.height
-                VStack(alignment: .leading, spacing: 0) {
-                    timeAndPulse(at: context.date, height: height)
-                    Spacer(minLength: 0)
-                    // Was jetzt zu tun ist, am größten: die Meter (oder Zeit) bis zum Wechsel, in der Pause die Restzeit.
-                    Text(ProgressFormatting.remaining(status))
-                        .font(Self.font(height * 0.2, .bold))
-                        .foregroundStyle(remainingColor(status))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                    description(status, height: height)
-                    Spacer(minLength: 0)
-                    paceAndDistance(height: height)
-                    ControlStatusLine()
+                if workoutManager.isFreeWorkout {
+                    freeWorkout(at: context.date, height: height)
+                } else {
+                    guided(status, at: context.date, height: height)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
         }
         .ignoresSafeArea(edges: .bottom)
         .modifier(CrownSectionControl(isActive: isCurrentPage))
+    }
+
+    /// Freies Training: nur die Werte, so groß wie möglich. Zeit und Strecke oben, darunter Tempo und Puls, dann was die
+    /// Sportart sonst misst (beim Schwimmen die Bahnen).
+    private func freeWorkout(at date: Date, height: CGFloat) -> some View {
+        let profile = workoutManager.recordingProfile
+        let distanceField = profile.secondaryFields.first
+        let others = profile.secondaryFields.dropFirst().compactMap { LiveFieldFormatting.text($0, metrics: metrics) }
+        return VStack(alignment: .leading, spacing: 0) {
+            Text(PlanFormatting.elapsed(workoutManager.elapsedTime(at: date)))
+                .font(Self.font(height * 0.22, .semibold))
+                .foregroundStyle(workoutManager.phase == .paused ? Color.orange : Color.yellow)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+            Spacer(minLength: 0)
+            if let distanceField {
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                    Text(LiveFieldFormatting.value(distanceField, metrics: metrics) ?? "--")
+                        .font(Self.font(height * 0.22, .bold))
+                    Text(LiveFieldFormatting.unit(distanceField))
+                        .font(.system(size: height * 0.08, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .accessibilityElement(children: .combine)
+                Spacer(minLength: 0)
+            }
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(LiveFieldFormatting.value(profile.primaryField, metrics: metrics) ?? "--")
+                    .font(Self.font(height * 0.13, .semibold))
+                    .foregroundStyle(.cyan)
+                Text(LiveFieldFormatting.unit(profile.primaryField))
+                    .font(.system(size: height * 0.055))
+                    .foregroundStyle(.secondary)
+                Spacer(minLength: 2)
+                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: height * 0.07))
+                        .foregroundStyle(.red)
+                        .accessibilityHidden(true)
+                    Text(metrics.heartRate.map { "\(Int($0.rounded()))" } ?? "--")
+                        .font(Self.font(height * 0.13, .semibold))
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Puls")
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
+            if !others.isEmpty {
+                Spacer(minLength: 0)
+                Text(others.joined(separator: " · "))
+                    .font(Self.font(height * 0.1, .semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+            }
+            Spacer(minLength: 0)
+            ControlStatusLine()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    /// Geführte Einheit: was jetzt zu tun ist, am größten, darüber Zeit und Puls, darunter Tempo und Strecke.
+    private func guided(_ status: ProgressStatus, at date: Date, height: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            timeAndPulse(at: date, height: height)
+            Spacer(minLength: 0)
+            // Was jetzt zu tun ist, am größten: die Meter (oder Zeit) bis zum Wechsel, in der Pause die Restzeit.
+            Text(ProgressFormatting.remaining(status))
+                .font(Self.font(height * 0.2, .bold))
+                .foregroundStyle(remainingColor(status))
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+            description(status, height: height)
+            Spacer(minLength: 0)
+            paceAndDistance(height: height)
+            ControlStatusLine()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     private static func font(_ size: CGFloat, _ weight: Font.Weight) -> Font {
@@ -360,11 +432,13 @@ private struct WorkoutControlsView: View {
                             .accessibilityHidden(true)
                     }
                 }
-                Button {
-                    workoutManager.advanceSection()
-                } label: {
-                    Label("Nächster Schritt", systemImage: "forward.end.fill")
-                        .font(.footnote)
+                if !workoutManager.isFreeWorkout {
+                    Button {
+                        workoutManager.advanceSection()
+                    } label: {
+                        Label("Nächster Schritt", systemImage: "forward.end.fill")
+                            .font(.footnote)
+                    }
                 }
                 ControlStatusLine()
             }

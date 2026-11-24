@@ -101,16 +101,28 @@ final class BackgroundCoach: ObservableObject {
         if let sleep = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
             observe(sleep, name: "Neue Nacht")
         }
+        // Auf der Watch bewertet: die Frage "Wie war's?" zur Einheit zurückziehen, auch wenn sie schon da ist.
+        if #available(iOS 18.0, *) {
+            observe(HKQuantityType(.workoutEffortScore), name: "Neue Bewertung") { coach in
+                await coach.withdrawRatedFeedback()
+            }
+        }
     }
 
-    private func observe(_ type: HKSampleType, name: String) {
+    private func observe(
+        _ type: HKSampleType,
+        name: String,
+        work: @escaping @MainActor (BackgroundCoach) async -> Void = { await $0.run() }
+    ) {
         let query = HKObserverQuery(sampleType: type, predicate: nil) { [weak self] _, completion, error in
             guard error == nil else {
                 completion()
                 return
             }
             Task { @MainActor in
-                await self?.runWithBackgroundTime(name: name)
+                if let self {
+                    await self.runWithBackgroundTime(name: name) { await work(self) }
+                }
                 completion()
             }
         }
@@ -137,13 +149,13 @@ final class BackgroundCoach: ObservableObject {
     }
 
     /// Für das Wecken durch Health: um die halbe Minute bitten, die iOS dafür gibt.
-    private func runWithBackgroundTime(name: String) async {
+    private func runWithBackgroundTime(name: String, work: () async -> Void) async {
         if backgroundTask == .invalid {
             backgroundTask = UIApplication.shared.beginBackgroundTask(withName: name) { [weak self] in
                 Task { @MainActor in self?.endBackgroundTime() }
             }
         }
-        await run()
+        await work()
         endBackgroundTime()
     }
 
@@ -168,7 +180,9 @@ final class BackgroundCoach: ObservableObject {
         await loader.readHealth()
         guard let reading = loader.reading else { return }
         let now = Date()
-        notifyNewWorkouts(reading.allWorkouts, now: now)
+        await notifyNewWorkouts(reading.allWorkouts, now: now)
+        // Die Bewertung kann nach der Frage angekommen sein (etwa bei gesperrtem iPhone).
+        await withdrawRatedFeedback()
 
         let today = weekLoader.todayKey
         defer {
@@ -260,17 +274,67 @@ final class BackgroundCoach: ObservableObject {
 
     // MARK: - Mitteilungen
 
-    /// "Wie war's?" für Einheiten der letzten Stunden ohne Rückmeldung, je Einheit einmal.
-    private func notifyNewWorkouts(_ workouts: [Workout], now: Date) {
+    /// "Wie war's?" für Einheiten der letzten Stunden ohne Rückmeldung, je Einheit einmal. Nicht für Einheiten, die du
+    /// auf der Watch schon bewertet hast; die Frage kommt darum frühestens `CoachNotices.feedbackDelay` nach dem Ende.
+    private func notifyNewWorkouts(_ workouts: [Workout], now: Date) async {
         guard preferences.afterWorkout else { return }
         let fresh = feedbackBook.pending(workouts: workouts, now: now)
             .filter { now.timeIntervalSince($0.endDate) <= Self.feedbackWindow }
         for workout in fresh {
             let notice = CoachNotices.feedback(for: workout)
+            if await hasOwnRating(start: workout.startDate, end: workout.endDate) {
+                log.markSent(notice.id)
+                withdraw(notice.id)
+                continue
+            }
             guard !log.wasSent(notice.id) else { continue }
             log.markSent(notice.id)
-            post(notice, at: nil)
+            post(
+                notice,
+                after: CoachNotices.feedbackDelay(after: workout.endDate, now: now),
+                userInfo: [Self.workoutStartKey: workout.startDate.timeIntervalSince1970, Self.workoutEndKey: workout.endDate.timeIntervalSince1970]
+            )
         }
+    }
+
+    private static let workoutStartKey = "workoutStart"
+    private static let workoutEndKey = "workoutEnd"
+
+    /// Neue Bewertung in Health: Fragen zu Einheiten, die jetzt bewertet sind, zurückziehen (geplant oder schon da).
+    private func withdrawRatedFeedback() async {
+        guard UIApplication.shared.isProtectedDataAvailable else { return }
+        let pending = await center.pendingNotificationRequests()
+        let delivered = await center.deliveredNotifications().map(\.request)
+        for request in pending + delivered where CoachNotices.isFeedbackID(request.identifier) {
+            guard let start = request.content.userInfo[Self.workoutStartKey] as? TimeInterval,
+                  let end = request.content.userInfo[Self.workoutEndKey] as? TimeInterval else { continue }
+            if await hasOwnRating(start: Date(timeIntervalSince1970: start), end: Date(timeIntervalSince1970: end)) {
+                withdraw(request.identifier)
+            }
+        }
+    }
+
+    /// Ob es zur Einheit eine eigene Bewertung gibt (Watch oder Fitness-App), nicht nur Apples Schätzung.
+    private func hasOwnRating(start: Date, end: Date) async -> Bool {
+        guard #available(iOS 18.0, *) else { return false }
+        let predicate = HKQuery.predicateForSamples(
+            withStart: start.addingTimeInterval(-1),
+            end: end.addingTimeInterval(1),
+            options: [.strictStartDate, .strictEndDate]
+        )
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.quantitySample(type: HKQuantityType(.workoutEffortScore), predicate: predicate)],
+            sortDescriptors: [],
+            limit: 1
+        )
+        let samples = (try? await descriptor.result(for: healthStore)) ?? []
+        return !samples.isEmpty
+    }
+
+    /// Nimmt eine Frage zurück: geplant und in der Mitteilungszentrale.
+    func withdraw(_ id: String) {
+        center.removePendingNotificationRequests(withIdentifiers: [id])
+        center.removeDeliveredNotifications(withIdentifiers: [id])
     }
 
     /// Steht der Plan für morgen fest, kommt er morgen zur eingestellten Uhrzeit; sonst keine Morgen-Mitteilung.
@@ -286,16 +350,25 @@ final class BackgroundCoach: ObservableObject {
     }
 
     private func post(_ notice: CoachNotice, at date: Date?) {
-        let content = UNMutableNotificationContent()
-        content.title = notice.title
-        content.body = notice.body
-        content.sound = .default
         let trigger = date.map {
             UNCalendarNotificationTrigger(
                 dateMatching: Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: $0),
                 repeats: false
             )
         }
+        post(notice, trigger: trigger)
+    }
+
+    private func post(_ notice: CoachNotice, after delay: TimeInterval, userInfo: [String: Any]) {
+        post(notice, trigger: UNTimeIntervalNotificationTrigger(timeInterval: max(delay, 1), repeats: false), userInfo: userInfo)
+    }
+
+    private func post(_ notice: CoachNotice, trigger: UNNotificationTrigger?, userInfo: [String: Any] = [:]) {
+        let content = UNMutableNotificationContent()
+        content.title = notice.title
+        content.body = notice.body
+        content.sound = .default
+        content.userInfo = userInfo
         center.add(UNNotificationRequest(identifier: notice.id, content: content, trigger: trigger)) { _ in }
     }
 }

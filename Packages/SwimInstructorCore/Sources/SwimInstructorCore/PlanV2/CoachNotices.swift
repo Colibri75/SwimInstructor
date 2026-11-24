@@ -21,6 +21,18 @@ public enum CoachNotices {
     /// Kennung der Frage nach einer Einheit: eine je Einheit.
     public static func feedbackID(for workoutID: UUID) -> String { "feedback-\(workoutID.uuidString)" }
 
+    /// Ob eine Mitteilung die Frage nach einer Einheit ist.
+    public static func isFeedbackID(_ id: String) -> Bool { id.hasPrefix("feedback-") }
+
+    /// So lange nach dem Ende einer Einheit kommt "Wie war's?" frühestens: Die Bewertung auf der Watch landet erst nach
+    /// dem Workout in Health. Wer dort schon bewertet hat, bekommt keine Frage mehr.
+    public static let feedbackDelay: TimeInterval = 10 * 60
+
+    /// Wie lange die Frage nach einer Einheit, die `end` zu Ende ging, ab `now` noch wartet (mindestens eine Sekunde).
+    public static func feedbackDelay(after end: Date, now: Date) -> TimeInterval {
+        max(feedbackDelay - now.timeIntervalSince(end), 1)
+    }
+
     /// "Dein Plan für heute steht" mit den Einheiten des Tags, `nil` an einem Tag ohne Einheiten und Blöcke.
     public static func morningPlan(_ plan: DayPlanV2Response, registry: SportRegistry = .standard) -> CoachNotice? {
         guard let summary = planSummary(plan.plan, registry: registry) else { return nil }

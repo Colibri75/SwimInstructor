@@ -77,6 +77,8 @@ struct TodayView: View {
             .sheet(item: $feedbackWorkout) { workout in
                 SessionFeedbackSheet(workout: workout) { feedback in
                     feedbackBook.record(feedback)
+                    // Schon beantwortet: Die Mitteilung "Wie war's?" dazu braucht es nicht mehr.
+                    coach.withdraw(CoachNotices.feedbackID(for: feedback.workoutID))
                     // Beschwerden oder eine sehr harte Einheit: Die nächsten 14 Tage und heute passen sich sofort an.
                     Task { await loader.refreshIfNeeded() }
                 }
