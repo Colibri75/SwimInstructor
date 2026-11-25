@@ -10,10 +10,14 @@ struct RootView: View {
 
     @EnvironmentObject private var loader: MultiSportTodayLoader
     @EnvironmentObject private var consent: AIDataConsent
+    @EnvironmentObject private var router: NotificationRouter
 
     private let onboardingStore: OnboardingStoring
     @State private var selection = Tab.today
     @State private var onboardingDone: Bool
+    /// Die ganze Nachricht deines Coachs, nach dem Tipp auf ihre Mitteilung.
+    @State private var shownMessage: CoachMessage?
+    private let messages: CoachMessageStoring = UserDefaultsCoachMessageStore()
     @AppStorage(Appearance.storageKey) private var appearance = Appearance.standard
 
     init(onboardingStore: OnboardingStoring = UserDefaultsOnboardingStore()) {
@@ -62,6 +66,15 @@ struct RootView: View {
                 .tabItem { Label("Verlauf", systemImage: "clock.arrow.circlepath") }
                 .tag(Tab.history)
         }
+        // Getippte Mitteilung: das Passende öffnen, auch wenn sie die App erst gestartet hat.
+        .onAppear { open(router.pending) }
+        .onChange(of: router.pending) { _, route in open(route) }
+        .sheet(item: $shownMessage) { message in
+            CoachMessageView(message: message) {
+                shownMessage = nil
+                selection = .week
+            }
+        }
         // Vor der ersten Plananfrage ohne Einwilligung (auch nach dem Update): einmal je Start fragen.
         .sheet(isPresented: $consent.isPromptPresented, onDismiss: {
             if !consent.isGranted { consent.decline() }
@@ -69,6 +82,28 @@ struct RootView: View {
             AIConsentSheet {
                 // Die gesperrte Planung nachholen.
                 Task { await loader.refreshIfNeeded() }
+            }
+        }
+    }
+
+    /// "Wie war's?" und der Plan am Morgen führen nach Aktuell (die Bewertung öffnet dort `TodayView`), eine Nachricht
+    /// deines Coachs erscheint ganz.
+    private func open(_ route: NotificationRoute?) {
+        guard let route else { return }
+        switch route {
+        case .today:
+            selection = .today
+            router.finish()
+        case .feedback:
+            // `TodayView` öffnet die Bewertung, sobald Health gelesen ist, und erledigt die Route.
+            selection = .today
+        case let .message(id):
+            router.finish()
+            if let message = messages.message(id: id) {
+                shownMessage = message
+            } else {
+                // Eine Mitteilung von vor dieser Version: Ihre Nachricht ist nicht gespeichert.
+                selection = .week
             }
         }
     }

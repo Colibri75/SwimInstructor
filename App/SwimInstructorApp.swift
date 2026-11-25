@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 import SwimInstructorCore
 
 @main
@@ -21,9 +22,14 @@ struct SwimInstructorApp: App {
     @StateObject private var calendarProvider: CalendarAvailabilityProvider
     @StateObject private var coach: BackgroundCoach
     @StateObject private var consent: AIDataConsent
+    @StateObject private var notificationRouter: NotificationRouter
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        // Vor dem Ende des Starts: Auch ein Tipp auf eine Mitteilung, der die App erst startet, kommt an.
+        let notificationRouter = NotificationRouter.shared
+        UNUserNotificationCenter.current().delegate = notificationRouter
+        _notificationRouter = StateObject(wrappedValue: notificationRouter)
         let healthKitManager = HealthKitManager()
         let settings = BackendSettings()
         // Ohne Einwilligung in die Datenweitergabe (Server, Anthropic) geht keine Plananfrage hinaus.
@@ -125,6 +131,8 @@ struct SwimInstructorApp: App {
                 await macroLoader.ensureCurrent(snapshot: reading.snapshot)
                 // Läuft nebenher; danach stimmt `onReviewed` die Tage neu ab.
                 reviewRunner?.startIfDue(reading: reading)
+                // Ist die Abstimmung schon im Hintergrund unterwegs (morgens), auf sie warten statt neu zu fragen.
+                await BackgroundPlanFetcher.shared.waitForPendingWeek()
                 let today = PlanFormatting.isoDay(Date())
                 await weekLoader.refreshDaily(
                     wishes: wishStore.wish(for: today),
@@ -200,7 +208,15 @@ struct SwimInstructorApp: App {
             loader: loader,
             weekLoader: weekLoader,
             feedbackBook: feedbackBook,
-            planClient: { [weak settings] in settings?.planClient(consent: consent) }
+            planClient: { [weak settings] in settings?.planClient(consent: consent) },
+            // Die 14 Tage im Hintergrund nur, wenn der Gesamtplan steht und keine Fortschreibung fällig ist: Beides
+            // macht das Öffnen, und danach stimmen sich die Tage ohnehin neu ab. Derselbe Stand wie beim Öffnen.
+            replanStamp: { [weak macroLoader] in
+                guard let macroLoader, macroLoader.isCurrent,
+                      macroLoader.pendingReviewReason(pause: pauseStore.pendingReviewReport()) == nil else { return nil }
+                return "\(macroLoader.currentGoalKey)|\(macroLoader.revisionStamp)"
+            },
+            todayWish: { wishStore.wish(for: PlanFormatting.isoDay(Date())) }
         )
         coach.start()
         _coach = StateObject(wrappedValue: coach)
@@ -228,13 +244,14 @@ struct SwimInstructorApp: App {
                 .environmentObject(calendarProvider)
                 .environmentObject(coach)
                 .environmentObject(consent)
+                .environmentObject(notificationRouter)
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { coach.didEnterBackground() }
         }
-        // iOS weckt die App, weil die Antwort auf den Plan für heute da ist (`BackgroundDayPlanFetcher`).
-        .backgroundTask(.urlSession(BackgroundDayPlanFetcher.sessionID)) {
-            await BackgroundDayPlanFetcher.shared.handleEvents()
+        // iOS weckt die App, weil die Antwort auf einen Plan da ist (`BackgroundPlanFetcher`).
+        .backgroundTask(.urlSession(BackgroundPlanFetcher.sessionID)) {
+            await BackgroundPlanFetcher.shared.handleEvents()
         }
     }
 }

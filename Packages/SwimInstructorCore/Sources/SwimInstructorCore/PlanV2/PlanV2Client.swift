@@ -401,8 +401,33 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
     }
 
     public func fetchWeekPlanV2(_ request: WeekPlanV2Request) async throws -> WeekPlanV2Response {
-        // 14 Tage brauchen beim Server das längere Zeitlimit des Gesamtplans.
-        try await postV2(path: "v1/plan/week", timeout: request.days > 7 ? Self.macroTimeout : Self.planTimeout, body: WeekBody(
+        try await postV2(path: Self.weekPath, timeout: Self.weekTimeout(request), body: Self.weekBody(request))
+    }
+
+    /// Dieselbe Anfrage wie `fetchWeekPlanV2`, als fertiger `URLRequest` samt Body: für eine Übertragung im
+    /// Hintergrund (die 14 Tage brauchen bis zu zwei Minuten). Ohne Einwilligung keine.
+    public func weekPlanV2URLRequest(_ request: WeekPlanV2Request) async throws -> URLRequest {
+        try await postRequest(
+            path: Self.weekPath,
+            body: try AthleteStateSnapshot.jsonEncoder().encode(Self.weekBody(request)),
+            timeout: Self.weekTimeout(request)
+        )
+    }
+
+    /// Liest die Antwort auf `weekPlanV2URLRequest` wie `fetchWeekPlanV2`.
+    public static func decodeWeekPlanV2(data: Data, statusCode: Int) throws -> WeekPlanV2Response {
+        try decodeV2(data: data, statusCode: statusCode)
+    }
+
+    private static let weekPath = "v1/plan/week"
+
+    /// 14 Tage brauchen beim Server das längere Zeitlimit des Gesamtplans.
+    private static func weekTimeout(_ request: WeekPlanV2Request) -> TimeInterval {
+        request.days > 7 ? macroTimeout : planTimeout
+    }
+
+    private static func weekBody(_ request: WeekPlanV2Request) -> WeekBody {
+        WeekBody(
             planVersion: Self.planVersion,
             snapshot: request.snapshot,
             fromDate: request.fromDate,
@@ -420,7 +445,7 @@ extension PlanAPIClient: DayPlanV2Providing, WeekPlanV2Providing, MacroPlanV2Pro
             supplements: request.extras.supplements.flatMap { $0.isEmpty ? nil : $0 },
             location: request.extras.location,
             availability: request.extras.availability.isEmpty ? nil : Array(request.extras.availability.prefix(14))
-        ))
+        )
     }
 
     public func fetchMacroPlanV2(_ request: MacroPlanV2Request) async throws -> MacroPlanV2Response {
