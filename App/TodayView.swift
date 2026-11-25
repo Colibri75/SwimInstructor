@@ -12,6 +12,7 @@ struct TodayView: View {
     @EnvironmentObject private var feedbackBook: SessionFeedbackBook
     @EnvironmentObject private var layouts: ScreenLayouts
     @EnvironmentObject private var coach: BackgroundCoach
+    @EnvironmentObject private var router: NotificationRouter
     @Environment(\.scenePhase) private var scenePhase
     @State private var showsSettings = false
     @State private var wishDraft = ""
@@ -88,6 +89,11 @@ struct TodayView: View {
             coach.requestPermission()
             await loader.refreshIfNeeded()
         }
+        // Tipp auf "Wie war's?": die Bewertung der Einheit öffnen, sobald Health gelesen ist.
+        .onAppear { openFeedbackFromNotification() }
+        .onChange(of: router.pending) { _, _ in openFeedbackFromNotification() }
+        .onChange(of: loader.reading?.snapshot.generatedAt) { _, _ in openFeedbackFromNotification() }
+        .onChange(of: loader.isLoading) { _, _ in openFeedbackFromNotification() }
         .onChange(of: todayDone) { _, done in
             if done { showsToday = false }
             coach.updateGlance()
@@ -458,6 +464,19 @@ struct TodayView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+
+    /// Nach dem Tipp auf "Wie war's?": die Einheit der Mitteilung suchen und ihre Bewertung öffnen. Ohne gelesenes Health
+    /// wartet die Route; ist die Einheit nicht (mehr) da oder schon bewertet, bleibt es bei Aktuell.
+    private func openFeedbackFromNotification() {
+        guard case let .feedback(start, end)? = router.pending else { return }
+        guard let reading = loader.reading else { return }
+        let workout = reading.allWorkouts.first { abs($0.startDate.timeIntervalSince(start)) < 2 && abs($0.endDate.timeIntervalSince(end)) < 2 }
+        // Gelesen, bevor die Einheit in Health war: auf das nächste Lesen warten (beim Öffnen liest Aktuell neu).
+        if workout == nil, reading.snapshot.generatedAt < end, loader.isLoading || scenePhase != .active { return }
+        router.finish()
+        guard let workout, !feedbackBook.entries.contains(where: { $0.workoutID == workout.id }) else { return }
+        feedbackWorkout = workout
     }
 
     /// Einheiten von gestern und heute ohne Rückmeldung: Ein Tipp öffnet "Wie war's?".

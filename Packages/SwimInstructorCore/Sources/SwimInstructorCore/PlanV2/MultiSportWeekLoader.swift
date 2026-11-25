@@ -183,6 +183,31 @@ public final class MultiSportWeekLoader: ObservableObject {
         }
         needsConfiguration = false
 
+        let (request, replan) = makeRequest(context: context, wishes: wishes, reason: reason, signalKey: nil, marker: "")
+
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let response = try await provider.fetchWeekPlanV2(request)
+            apply(response, fromDate: replan.fromDate, through: replan.through, keep: Set(replan.keep))
+            // Neu geplante Tage einer gemeldeten Pause bekommen gleich ihre Markierung.
+            syncPause(notify: false)
+            error = nil
+            return true
+        } catch {
+            self.error = error.localizedDescription
+            return false
+        }
+    }
+
+    /// Die Anfrage für die nächsten 14 Tage ab heute und was nach der Antwort gilt (Zeitraum, feste Tage, Anlass).
+    private func makeRequest(
+        context: PlanningContext,
+        wishes: String?,
+        reason: ReplanReason,
+        signalKey: String?,
+        marker: String
+    ) -> (WeekPlanV2Request, BackgroundReplan) {
         syncPause(notify: false)
         let pause = pauseProvider()
         let fromDate = todayKey
@@ -214,19 +239,59 @@ public final class MultiSportWeekLoader: ObservableObject {
             extras: extrasProvider(dates)
         )
 
-        isLoading = true
-        defer { isLoading = false }
-        do {
-            let response = try await provider.fetchWeekPlanV2(request)
-            apply(response, fromDate: fromDate, through: through, keep: Set(fixed))
-            // Neu geplante Tage einer gemeldeten Pause bekommen gleich ihre Markierung.
-            syncPause(notify: false)
-            error = nil
-            return true
-        } catch {
-            self.error = error.localizedDescription
-            return false
+        let replan = BackgroundReplan(
+            fromDate: fromDate, through: through, keep: fixed, reason: reason, signalKey: signalKey, marker: marker
+        )
+        return (request, replan)
+    }
+
+    // MARK: - Im Hintergrund
+
+    /// Die tägliche Abstimmung (oder eine Anpassung außer der Reihe) als Anfrage für eine Übertragung im Hintergrund,
+    /// bevor du die App öffnest. `nil`, wenn heute schon abgestimmt ist und kein neuer Anlass vorliegt, Health noch nicht
+    /// gelesen ist oder gerade eine Abstimmung läuft. Die Antwort nimmt `acceptBackgroundReplan` an.
+    public func backgroundReplanRequest(wishes: String? = nil, stamp: String = "") -> (request: WeekPlanV2Request, replan: BackgroundReplan)? {
+        guard !isLoading, let context = contextProvider() else { return nil }
+        syncPause(notify: false)
+        let marker = "\(todayKey)|\(stamp)"
+        let signal = pendingAdaptation()
+        guard dailyMarker.lastDay() != marker || signal != nil else { return nil }
+        let (request, replan) = makeRequest(
+            context: context, wishes: wishes, reason: signal?.reason ?? .daily, signalKey: signal?.key, marker: marker
+        )
+        return (request, replan)
+    }
+
+    /// Übernimmt die im Hintergrund geholten 14 Tage wie `refreshDaily` und meldet, was sich an den nächsten Tagen
+    /// geändert hat. Verworfen wird die Antwort, wenn sie nicht von heute ist, die Abstimmung inzwischen schon in der App
+    /// lief oder dort gerade läuft. Tage, die du inzwischen geändert hast oder die feststehen, bleiben.
+    @discardableResult
+    public func acceptBackgroundReplan(_ response: WeekPlanV2Response, replan: BackgroundReplan) -> PlanChangeReport? {
+        guard !isLoading, replan.fromDate == todayKey else { return nil }
+        if let key = replan.signalKey {
+            guard !adaptationMarker.handled().contains(key) else { return nil }
+        } else {
+            guard dailyMarker.lastDay() != replan.marker else { return nil }
         }
+        let dates = weekCalendar.dates(from: replan.fromDate, count: Self.windowDays)
+        let before = dates.map { day(on: $0) }
+        let keep = Set(replan.keep).union(fixedDates(in: dates, reason: replan.reason))
+        apply(response, fromDate: replan.fromDate, through: replan.through, keep: keep)
+        syncPause(notify: false)
+        error = nil
+        dailyMarker.setLastDay(replan.marker)
+        if let key = replan.signalKey {
+            adaptationMarker.markHandled(key)
+            lastAdaptation = AdaptationSignal(reason: replan.reason, key: key)
+        }
+        return PlanChangeReport.make(
+            dates: dates,
+            before: before,
+            after: dates.map { day(on: $0) },
+            reason: replan.reason,
+            rationale: response.plan.rationale,
+            registry: registry
+        )
     }
 
     /// Einmal am Tag, beim ersten Öffnen: die nächsten 14 Tage neu abstimmen. Schlägt es fehl, gilt der Tag nicht als

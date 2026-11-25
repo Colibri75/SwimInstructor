@@ -918,4 +918,85 @@ final class MultiSportWeekLoaderTests: XCTestCase {
         XCTAssertEqual(loader.day(on: "2026-10-05")?.isRestDay, true)
         XCTAssertEqual(loader.day(on: "2026-10-02")?.isPause, false)
     }
+
+    // MARK: - Im Hintergrund
+
+    private func contractResponse() throws -> WeekPlanV2Response {
+        let data = try RepoPaths.contractData("wire/plan-v2-week-response.json")
+        return try PlanCoding.jsonDecoder().decode(WeekPlanV2Response.self, from: data)
+    }
+
+    func testTheBackgroundReplanIsAskedOncePerDayAndSetsTheMarker() throws {
+        let marker = MemoryMarker()
+        let loader = makeLoader(provider: nil, marker: marker)
+
+        let ahead = try XCTUnwrap(loader.backgroundReplanRequest(wishes: "lieber locker", stamp: "ziel"))
+        XCTAssertEqual(ahead.request.reason, .daily)
+        XCTAssertEqual(ahead.request.wishes, "lieber locker")
+        XCTAssertEqual(ahead.request.fromDate, "2026-09-30")
+        XCTAssertEqual(ahead.replan.marker, "2026-09-30|ziel")
+        XCTAssertNil(ahead.replan.signalKey)
+
+        let report = try XCTUnwrap(loader.acceptBackgroundReplan(try contractResponse(), replan: ahead.replan))
+        XCTAssertEqual(marker.marker, "2026-09-30|ziel")
+        XCTAssertEqual(loader.day(on: "2026-10-02")?.sessions.first?.sport, .bike)
+        // Vorher gab es keine Tage: neu geplant, nichts geändert, keine Mitteilung.
+        XCTAssertTrue(report.changes.isEmpty)
+        XCTAssertFalse(report.isWorthTelling)
+
+        // Erledigt: keine zweite Anfrage, dieselbe Antwort noch einmal zählt nicht.
+        XCTAssertNil(loader.backgroundReplanRequest(stamp: "ziel"))
+        XCTAssertNil(loader.acceptBackgroundReplan(try contractResponse(), replan: ahead.replan))
+    }
+
+    func testABackgroundAnswerIsDroppedWhenTheAppAlreadyReplanned() async throws {
+        let provider = FakeProvider()
+        let marker = MemoryMarker()
+        let loader = makeLoader(provider: provider, marker: marker)
+
+        let ahead = try XCTUnwrap(loader.backgroundReplanRequest(stamp: "ziel"))
+        // Inzwischen geöffnet: Die App hat selbst abgestimmt.
+        await loader.refreshDaily(stamp: "ziel")
+
+        XCTAssertNil(loader.acceptBackgroundReplan(try contractResponse(), replan: ahead.replan))
+        XCTAssertEqual(provider.requests.count, 1)
+    }
+
+    func testTheBackgroundReplanReportsChangedDaysAndKeepsEditsMadeMeanwhile() throws {
+        let marker = MemoryMarker()
+        marker.marker = "2026-09-30|ziel"
+        let adaptation = MemoryAdaptationMarker()
+        let loader = makeLoader(store: MemoryStore([WeekLoaderV2Data.currentWeek()]), provider: nil, marker: marker, adaptation: adaptation)
+
+        // Gestern ist eine Einheit ausgefallen: Anlass außer der Reihe, obwohl heute schon abgestimmt ist.
+        let ahead = try XCTUnwrap(loader.backgroundReplanRequest(stamp: "ziel"))
+        XCTAssertEqual(ahead.request.reason, .missed)
+        XCTAssertNotNil(ahead.replan.signalKey)
+
+        // Während die Anfrage unterwegs ist, legt der Athlet Freitag von Hand auf Ruhe.
+        loader.setRest("2026-10-02")
+        let report = try XCTUnwrap(loader.acceptBackgroundReplan(try contractResponse(), replan: ahead.replan))
+
+        XCTAssertEqual(loader.day(on: "2026-10-02")?.isRestDay, true, "von Hand geändert: bleibt")
+        XCTAssertEqual(loader.lastAdaptation?.reason, .missed)
+        XCTAssertEqual(adaptation.keys.count, 1)
+        XCTAssertTrue(report.isWorthTelling)
+        XCTAssertEqual(report.reason, .missed)
+        XCTAssertEqual(report.changes.map(\.date), ["2026-09-30", "2026-10-01", "2026-10-03", "2026-10-04"])
+        XCTAssertEqual(report.changes.first?.before, "Schwimmen · 1.500 m, Laufen · 40 min")
+        XCTAssertEqual(report.changes.first?.after, "Ruhetag")
+        XCTAssertEqual(report.changes[1].after, "Schwimmen · 1.500 m, Mobilität")
+        XCTAssertFalse(report.rationale.isEmpty)
+
+        // Derselbe Anlass kommt nicht zweimal.
+        XCTAssertNil(loader.backgroundReplanRequest(stamp: "ziel"))
+    }
+
+    func testAnAnswerFromYesterdayIsDropped() throws {
+        let loader = makeLoader(provider: nil)
+        let replan = BackgroundReplan(fromDate: "2026-09-29", through: "2026-10-12", keep: [], reason: .daily, signalKey: nil, marker: "2026-09-29|")
+
+        XCTAssertNil(loader.acceptBackgroundReplan(try contractResponse(), replan: replan))
+        XCTAssertTrue(loader.weeks.isEmpty)
+    }
 }
