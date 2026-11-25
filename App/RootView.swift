@@ -17,6 +17,8 @@ struct RootView: View {
     @State private var onboardingDone: Bool
     /// Die ganze Nachricht deines Coachs, nach dem Tipp auf ihre Mitteilung.
     @State private var shownMessage: CoachMessage?
+    /// "Weg zum Ziel", nach dem Tipp auf die Wochenbilanz.
+    @State private var showsCourse = false
     private let messages: CoachMessageStoring = UserDefaultsCoachMessageStore()
     @AppStorage(Appearance.storageKey) private var appearance = Appearance.standard
 
@@ -75,6 +77,16 @@ struct RootView: View {
                 selection = .week
             }
         }
+        .sheet(isPresented: $showsCourse) {
+            NavigationStack {
+                GoalCourseView()
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Fertig") { showsCourse = false }
+                        }
+                    }
+            }
+        }
         // Vor der ersten Plananfrage ohne Einwilligung (auch nach dem Update): einmal je Start fragen.
         .sheet(isPresented: $consent.isPromptPresented, onDismiss: {
             if !consent.isGranted { consent.decline() }
@@ -97,6 +109,10 @@ struct RootView: View {
         case .feedback:
             // `TodayView` öffnet die Bewertung, sobald Health gelesen ist, und erledigt die Route.
             selection = .today
+        case .course:
+            router.finish()
+            selection = .today
+            showsCourse = true
         case let .message(id):
             router.finish()
             if let message = messages.message(id: id) {

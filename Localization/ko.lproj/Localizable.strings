@@ -1045,3 +1045,5 @@
 "Noch keine Nachrichten. Hier stehen die Anpassungen deines Plans und die Fortschreibungen des Gesamtplans, sobald dein Coach etwas meldet." = "아직 메시지가 없어요. 코치가 알려 줄 내용이 생기면 계획 조정과 전체 계획 업데이트가 여기에 표시돼요.";
 "Wenn dein Coach den Plan anpasst" = "코치가 계획을 조정할 때";
 "Morgens stimmt dein Coach im Hintergrund die nächsten 14 Tage ab und holt deinen Plan für heute; er kommt zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Ändert sich an den nächsten Tagen spürbar etwas, sagt er dir, was und warum. Nach einer Einheit fragt er, wie es war. Ein Tipp auf eine Mitteilung öffnet das Passende. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt." = "매일 아침 코치가 백그라운드에서 다음 14일을 조정하고 오늘 계획을 가져와요. 선택한 시간에 도착하고 '오늘'에 바로 표시돼요. 앞으로 며칠 동안 눈에 띄게 바뀌는 것이 있으면 무엇이 왜 바뀌었는지 알려 줘요. 운동 후에는 어땠는지 물어봐요. 알림을 탭하면 해당 화면이 열려요. 앱이 백그라운드에서 언제 작동할지는 iOS가 정해요. 잘 안 되면 평소처럼 열 때 '오늘'에서 계획을 세워요.";
+"Wochenbilanz: %@" = "주간 결산: %@";
+"Wochenbilanz am Montag" = "월요일 주간 결산";

@@ -248,6 +248,7 @@ struct SettingsView: View {
             }
             Toggle("Nach dem Training fragen", isOn: notificationBinding(\.afterWorkout))
             Toggle("Wenn dein Coach den Plan anpasst", isOn: notificationBinding(\.planChanges))
+            Toggle("Wochenbilanz am Montag", isOn: notificationBinding(\.weeklyCourse))
             NavigationLink("Nachrichten deines Coachs") {
                 CoachMessagesView()
             }

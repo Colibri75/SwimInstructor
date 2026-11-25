@@ -169,7 +169,7 @@ final class CoachNoticesTests: XCTestCase {
     func testEveryNoticeCarriesItsRoute() throws {
         let start = TestFixtures.now
         let end = start.addingTimeInterval(1_800)
-        for route in [NotificationRoute.today, .feedback(start: start, end: end), .message(id: "plan-changed-2026-10-01")] {
+        for route in [NotificationRoute.today, .feedback(start: start, end: end), .message(id: "plan-changed-2026-10-01"), .course] {
             XCTAssertEqual(NotificationRoute(identifier: "egal", userInfo: route.userInfo), route)
         }
     }
@@ -192,7 +192,7 @@ final class CoachNoticesTests: XCTestCase {
         let old = Data(#"{"morningPlan":false,"afterWorkout":true,"morningHour":6,"morningMinute":15}"#.utf8)
         let preferences = try JSONDecoder().decode(NotificationPreferences.self, from: old)
 
-        XCTAssertEqual(preferences, NotificationPreferences(morningPlan: false, afterWorkout: true, planChanges: true, morningHour: 6, morningMinute: 15))
+        XCTAssertEqual(preferences, NotificationPreferences(morningPlan: false, afterWorkout: true, planChanges: true, weeklyCourse: true, morningHour: 6, morningMinute: 15))
     }
 
     func testTheMessageStoreKeepsTheNewestAndReplacesByID() {
@@ -226,5 +226,15 @@ final class CoachNoticesTests: XCTestCase {
         XCTAssertEqual(message.body, "Du liegst gut im Plan.")
         XCTAssertEqual(message.details, ["Mehr Rad im Oktober", "Laufen gedeckelt"])
         XCTAssertEqual(message.rationale, "Weiter so.")
+    }
+
+    func testTheWeeklyCourseNoticeNamesTheStatusAndTheSentence() throws {
+        let course = GoalCourse(status: .trainMore, percent: 65, weekStarts: ["2026-09-21"], sports: [], weeks: [])
+        let notice = try XCTUnwrap(CoachNotices.weeklyCourse(course, weekStart: "2026-09-28"))
+
+        XCTAssertEqual(notice.id, "weekly-course-2026-09-28")
+        XCTAssertEqual(notice.title, "Wochenbilanz: Etwas zu wenig")
+        XCTAssertEqual(notice.body, course.sentence())
+        XCTAssertNil(CoachNotices.weeklyCourse(GoalCourse(status: .noData, percent: nil, weekStarts: [], sports: [], weeks: []), weekStart: "2026-09-28"))
     }
 }
