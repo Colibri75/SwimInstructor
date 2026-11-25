@@ -10,14 +10,16 @@ import SwimInstructorCore
 final class MacroReviewRunner: ObservableObject {
     private let macroLoader: MultiSportMacroLoader
     private let pauseStore: PauseReportStoring
+    private let messages: CoachMessageStoring
     /// Nach einer Fortschreibung: die nächsten 14 Tage und den Tag neu abstimmen.
     var onReviewed: (@MainActor () async -> Void)?
     private var task: Task<Void, Never>?
     private var backgroundTask = UIBackgroundTaskIdentifier.invalid
 
-    init(macroLoader: MultiSportMacroLoader, pauseStore: PauseReportStoring) {
+    init(macroLoader: MultiSportMacroLoader, pauseStore: PauseReportStoring, messages: CoachMessageStoring = UserDefaultsCoachMessageStore()) {
         self.macroLoader = macroLoader
         self.pauseStore = pauseStore
+        self.messages = messages
     }
 
     /// Startet die Fortschreibung, wenn eine fällig ist und gerade keine läuft. Kehrt sofort zurück.
@@ -52,12 +54,16 @@ final class MacroReviewRunner: ObservableObject {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
     }
 
+    /// Die Mitteilung zeigt nur den Anfang der Bilanz; die ganze Nachricht liegt in der App (Antippen öffnet sie).
     private func notify(_ review: MacroReview) {
+        let message = CoachNotices.macroReviewMessage(review, at: Date())
+        messages.save(message)
         let content = UNMutableNotificationContent()
-        content.title = String(localized: "Gesamtplan fortgeschrieben")
-        content.body = review.summary.isEmpty ? review.reason.title : review.summary
+        content.title = message.title
+        content.body = message.body
         content.sound = .default
-        let request = UNNotificationRequest(identifier: "macro-review-\(review.weekStart)", content: content, trigger: nil)
+        content.userInfo = NotificationRoute.message(id: message.id).userInfo
+        let request = UNNotificationRequest(identifier: message.id, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request) { _ in }
     }
 }

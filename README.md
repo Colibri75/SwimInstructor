@@ -50,11 +50,15 @@ Eine weitere Sportart: [Neue Sportart hinzufügen](docs/neue-sportart.md) (acht 
   Stelle). Bei deutlichen oder starken Beschwerden, einer sehr harten Einheit (ab 8 von 10) oder einer ausgefallenen
   Einheit plant die App die 14 Tage außer der Reihe neu; der Server bremst die betroffene Sportart.
 - **Coach im Hintergrund:** Landet eine Einheit in Health, fragt eine Mitteilung "Wie war's?"; ist das Training des Tages
-  erledigt, holt die App den Plan für morgen schon im Hintergrund. Fehlt morgens (ab 4 Uhr) der Plan für heute, stößt
-  die App ihn im Hintergrund mit der letzten Nacht an, sobald iOS ihr Zeit gibt und das iPhone entsperrt ist (auch wenn
-  der Schlaf von der Watch ankommt); die Anfrage läuft als Hintergrund-Übertragung weiter (`App/BackgroundDayPlanFetcher.swift`).
-  Der Plan kommt morgens zur eingestellten Uhrzeit als Mitteilung, und Aktuell zeigt ihn sofort (`App/BackgroundCoach.swift`,
-  Einstellungen "Mitteilungen"). Ein Ruhetag laut Plan braucht keinen Aufruf an den Coach. Nach dem Ende einer
+  erledigt, holt die App den Plan für morgen schon im Hintergrund. Morgens (ab 4 Uhr) stimmt die App im Hintergrund
+  zuerst die nächsten 14 Tage ab und holt danach den Plan für heute mit der letzten Nacht, sobald iOS ihr Zeit gibt und
+  das iPhone entsperrt ist (auch wenn der Schlaf von der Watch ankommt); beide Anfragen laufen als Hintergrund-Übertragung
+  weiter (`App/BackgroundPlanFetcher.swift`). Ändert die Abstimmung die nächsten 7 Tage spürbar (oder gab es Beschwerden,
+  eine sehr harte Einheit, einen Ausfall), meldet eine Mitteilung was und warum; die ganze Nachricht steht in der App
+  (`PlanChangeReport`, `CoachMessage`). Der Plan kommt morgens zur eingestellten Uhrzeit als Mitteilung, und Aktuell
+  zeigt ihn sofort (`App/BackgroundCoach.swift`, Einstellungen "Mitteilungen"). Ein Tipp auf eine Mitteilung öffnet das
+  Passende (`App/NotificationRouter.swift`): "Wie war's?" die Bewertung der Einheit, die übrigen die ganze Nachricht
+  deines Coachs oder Aktuell. Ein Ruhetag laut Plan braucht keinen Aufruf an den Coach. Nach dem Ende einer
   Einheit fragt die Watch nach der Anstrengung (1 bis 10) und speichert sie in Health.
 - **Widget und Komplikation:** "Nächste Einheit" auf Home- und Sperrbildschirm des iPhones und auf dem Zifferblatt
   (`Widgets/`, `WatchWidgets/`, gemeinsam `WidgetsShared/`). App und Watch schreiben den Stand (`PlanGlance`) in die

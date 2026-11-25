@@ -247,10 +247,14 @@ struct SettingsView: View {
                 DatePicker("Uhrzeit", selection: morningTimeBinding, displayedComponents: .hourAndMinute)
             }
             Toggle("Nach dem Training fragen", isOn: notificationBinding(\.afterWorkout))
+            Toggle("Wenn dein Coach den Plan anpasst", isOn: notificationBinding(\.planChanges))
+            NavigationLink("Nachrichten deines Coachs") {
+                CoachMessagesView()
+            }
         } header: {
             Text("Mitteilungen")
         } footer: {
-            Text("Ist dein Training erledigt, holt dein Coach im Hintergrund schon den Plan für morgen. Er kommt dann morgens zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Nach einer Einheit fragt er, wie es war. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt.")
+            Text("Morgens stimmt dein Coach im Hintergrund die nächsten 14 Tage ab und holt deinen Plan für heute; er kommt zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Ändert sich an den nächsten Tagen spürbar etwas, sagt er dir, was und warum. Nach einer Einheit fragt er, wie es war. Ein Tipp auf eine Mitteilung öffnet das Passende. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt.")
         }
     }
 

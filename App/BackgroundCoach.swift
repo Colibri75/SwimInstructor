@@ -7,12 +7,13 @@ import SwimInstructorCore
 
 /// Der Coach arbeitet, ohne dass die App offen ist: Landet eine Einheit oder die Nacht in Health (Health weckt die App) oder
 /// gibt iOS der App Zeit im Hintergrund, liest er Health neu, fragt mit einer Mitteilung "Wie war's?" und holt nach
-/// erledigtem Training den Plan für morgen. Fehlt morgens der Plan für heute, holt er ihn mit der letzten Nacht. Steht der
-/// Plan, kommt er morgens zur eingestellten Uhrzeit als Mitteilung, und Heute zeigt ihn beim Öffnen sofort.
+/// erledigtem Training den Plan für morgen. Morgens stimmt er zuerst die nächsten 14 Tage ab (meldet, was sich spürbar
+/// geändert hat und warum) und holt danach den Plan für heute mit der letzten Nacht. Steht der Plan, kommt er morgens zur
+/// eingestellten Uhrzeit als Mitteilung, und Aktuell zeigt ihn beim Öffnen sofort.
 ///
 /// Grenzen von iOS: Health lässt sich nur bei entsperrtem iPhone lesen, und wann die App im Hintergrund Zeit bekommt,
-/// entscheidet das System. Der Plan für heute braucht länger als diese Zeit; die Anfrage läuft darum als Übertragung im
-/// Hintergrund weiter (`BackgroundDayPlanFetcher`). Klappt es nicht, plant Heute beim Öffnen wie bisher.
+/// entscheidet das System. Beide Pläne brauchen länger als diese Zeit; die Anfragen laufen darum als Übertragung im
+/// Hintergrund weiter (`BackgroundPlanFetcher`). Klappt es nicht, plant Aktuell beim Öffnen wie bisher.
 @MainActor
 final class BackgroundCoach: ObservableObject {
     static let refreshTaskID = "com.kellner.SwimInstructor.coach"
@@ -23,6 +24,7 @@ final class BackgroundCoach: ObservableObject {
     /// So oft je Tag höchstens (ein Versuch kann an der Verbindung scheitern).
     static let todayAheadAttempts = 2
     private static let todayAheadKey = "coach.todayAhead"
+    private static let replanKey = "coach.replanAhead"
 
     @Published private(set) var preferences: NotificationPreferences
 
@@ -32,7 +34,10 @@ final class BackgroundCoach: ObservableObject {
     private let preferencesStore: NotificationPreferencesStoring
     private let log: NoticeLogging
     private let planClient: @MainActor () -> PlanAPIClient?
-    private let fetcher = BackgroundDayPlanFetcher.shared
+    private let replanStamp: @MainActor () -> String?
+    private let todayWish: @MainActor () -> String?
+    private let messages: CoachMessageStoring
+    private let fetcher = BackgroundPlanFetcher.shared
     private let defaults = UserDefaults.standard
     private let healthStore = HKHealthStore()
     private let center = UNUserNotificationCenter.current()
@@ -46,10 +51,16 @@ final class BackgroundCoach: ObservableObject {
         weekLoader: MultiSportWeekLoader,
         feedbackBook: SessionFeedbackBook,
         planClient: @escaping @MainActor () -> PlanAPIClient?,
+        replanStamp: @escaping @MainActor () -> String?,
+        todayWish: @escaping @MainActor () -> String?,
+        messages: CoachMessageStoring = UserDefaultsCoachMessageStore(),
         preferencesStore: NotificationPreferencesStoring = UserDefaultsNotificationPreferencesStore(),
         log: NoticeLogging = UserDefaultsNoticeLog()
     ) {
         self.planClient = planClient
+        self.replanStamp = replanStamp
+        self.todayWish = todayWish
+        self.messages = messages
         self.loader = loader
         self.weekLoader = weekLoader
         self.feedbackBook = feedbackBook
@@ -67,7 +78,8 @@ final class BackgroundCoach: ObservableObject {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: Self.refreshTaskID, using: nil) { [weak self] task in
             Task { @MainActor in self?.handle(task) }
         }
-        fetcher.onDelivery = { [weak self] plan, target in self?.receiveTodayAhead(plan, target: target) }
+        fetcher.onDayDelivery = { [weak self] plan, target in self?.receiveTodayAhead(plan, target: target) }
+        fetcher.onWeekDelivery = { [weak self] plan, replan in self?.receiveReplan(plan, replan: replan) }
         observeHealth()
         scheduleRefresh()
     }
@@ -87,7 +99,7 @@ final class BackgroundCoach: ObservableObject {
     func save(_ preferences: NotificationPreferences) {
         self.preferences = preferences
         preferencesStore.save(preferences)
-        if preferences.morningPlan || preferences.afterWorkout { requestPermission() }
+        if preferences.morningPlan || preferences.afterWorkout || preferences.planChanges { requestPermission() }
         scheduleMorningNotice()
     }
 
@@ -189,6 +201,8 @@ final class BackgroundCoach: ObservableObject {
             scheduleMorningNotice()
             updateGlance()
         }
+        // Morgens zuerst die 14 Tage: Der Plan für heute richtet sich danach und folgt auf ihre Antwort.
+        if await requestReplan(now: now) { return }
         await requestTodayAhead(now: now, workouts: reading.allWorkouts)
         // Erledigt oder heute nichts geplant (Ruhetag, keine Zeit): den Plan für morgen holen.
         let nothingToday = weekLoader.day(on: today).map { $0.sessions.isEmpty || $0.isUnavailable } ?? true
@@ -200,6 +214,73 @@ final class BackgroundCoach: ObservableObject {
         }
     }
 
+    // MARK: - Die nächsten 14 Tage vorab
+
+    /// Ab 4 Uhr, bevor du die App öffnest: Ist die tägliche Abstimmung der 14 Tage fällig (oder gibt es einen Anlass
+    /// außer der Reihe), die Anfrage an iOS abgeben. Nicht, solange der Gesamtplan neu entstehen oder fortgeschrieben
+    /// werden muss: Das macht das Öffnen, und danach stimmen sich die Tage ohnehin neu ab. `true`, wenn sie unterwegs ist.
+    private func requestReplan(now: Date) async -> Bool {
+        let today = weekLoader.todayKey
+        guard Calendar.current.component(.hour, from: now) >= Self.todayAheadFromHour,
+              attempts(Self.replanKey, on: today) < Self.todayAheadAttempts,
+              let stamp = replanStamp(),
+              let ahead = weekLoader.backgroundReplanRequest(wishes: todayWish(), stamp: stamp),
+              let client = planClient() else { return false }
+        guard !(await fetcher.hasPendingRequest()) else { return true }
+        do {
+            let request = try await client.weekPlanV2URLRequest(ahead.request)
+            try fetcher.start(request, replan: ahead.replan)
+            countAttempt(Self.replanKey, on: today)
+            return true
+        } catch {
+            // Ohne Einwilligung oder Konfiguration stimmt Aktuell beim Öffnen ab.
+            return false
+        }
+    }
+
+    /// Die Antwort auf die 14 Tage: übernehmen, eine spürbare Änderung melden und gleich den Plan für heute holen.
+    private func receiveReplan(_ plan: WeekPlanV2Response?, replan: BackgroundReplan) {
+        guard let plan, let report = weekLoader.acceptBackgroundReplan(plan, replan: replan) else { return }
+        updateGlance()
+        notifyPlanChange(report, date: replan.fromDate)
+        guard UIApplication.shared.applicationState != .active else { return }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            await self.runWithBackgroundTime(name: "Plan für heute") {
+                // iOS kann die App nur für die Antwort neu gestartet haben: Dann fehlt der gelesene Zustand.
+                if self.loader.reading == nil, UIApplication.shared.isProtectedDataAvailable { await self.loader.readHealth() }
+                guard let reading = self.loader.reading else { return }
+                await self.requestTodayAhead(now: Date(), workouts: reading.allWorkouts)
+                self.scheduleMorningNotice()
+            }
+        }
+    }
+
+    /// "Dein Coach hat deinen Plan angepasst": nur bei einer spürbaren Änderung oder einem Anlass außer der Reihe,
+    /// nicht bei offener App (dort steht es in Aktuell). Nachts wartet sie bis zur Uhrzeit des Morgenplans.
+    private func notifyPlanChange(_ report: PlanChangeReport, date: String) {
+        guard preferences.planChanges,
+              UIApplication.shared.applicationState != .active,
+              let notice = CoachNotices.planChanged(report, on: date, calendar: weekCalendar) else { return }
+        let now = Date()
+        messages.save(CoachNotices.planChangedMessage(report, notice: notice, at: now, calendar: weekCalendar))
+        post(
+            notice,
+            trigger: CoachNotices.morningDate(for: date, preferences: preferences, now: now).map(Self.calendarTrigger),
+            route: .message(id: notice.id)
+        )
+    }
+
+    private func attempts(_ key: String, on date: String) -> Int {
+        let parts = (defaults.string(forKey: key) ?? "").split(separator: "|")
+        guard parts.count == 2, parts[0] == date else { return 0 }
+        return Int(parts[1]) ?? 0
+    }
+
+    private func countAttempt(_ key: String, on date: String) {
+        defaults.set("\(date)|\(attempts(key, on: date) + 1)", forKey: key)
+    }
+
     // MARK: - Plan für heute vorab
 
     /// Morgens, bevor du die App öffnest: Fehlt der Plan für heute, die Anfrage mit dem frisch gelesenen Zustand an iOS
@@ -207,7 +288,7 @@ final class BackgroundCoach: ObservableObject {
     private func requestTodayAhead(now: Date, workouts: [Workout]) async {
         let today = weekLoader.todayKey
         guard Calendar.current.component(.hour, from: now) >= Self.todayAheadFromHour,
-              todayAheadAttempts(on: today) < Self.todayAheadAttempts,
+              attempts(Self.todayAheadKey, on: today) < Self.todayAheadAttempts,
               !isTrainingDone(today, workouts: workouts, now: now),
               let ahead = loader.todayAheadRequest(),
               let client = planClient() else { return }
@@ -216,16 +297,10 @@ final class BackgroundCoach: ObservableObject {
         do {
             let request = try await client.dayPlanV2URLRequest(ahead.request)
             try fetcher.start(request, target: ahead.target)
-            defaults.set("\(today)|\(todayAheadAttempts(on: today) + 1)", forKey: Self.todayAheadKey)
+            countAttempt(Self.todayAheadKey, on: today)
         } catch {
             // Ohne Einwilligung oder Konfiguration plant Heute beim Öffnen und fragt dort nach.
         }
-    }
-
-    private func todayAheadAttempts(on date: String) -> Int {
-        let parts = (defaults.string(forKey: Self.todayAheadKey) ?? "").split(separator: "|")
-        guard parts.count == 2, parts[0] == date else { return 0 }
-        return Int(parts[1]) ?? 0
     }
 
     /// Die Antwort auf den Plan für heute: als Plan von heute bereitlegen, Widget auffrischen und melden.
@@ -236,7 +311,7 @@ final class BackgroundCoach: ObservableObject {
               UIApplication.shared.applicationState != .active,
               let notice = CoachNotices.morningPlan(plan) else { return }
         // Vor der eingestellten Uhrzeit dann, danach sofort.
-        post(notice, at: CoachNotices.morningDate(for: plan.date, preferences: preferences, now: Date()))
+        post(notice, at: CoachNotices.morningDate(for: plan.date, preferences: preferences, now: Date()), route: .today)
     }
 
     /// Alles, was heute geplant war, ist gemacht (wie in Aktuell).
@@ -291,14 +366,11 @@ final class BackgroundCoach: ObservableObject {
             log.markSent(notice.id)
             post(
                 notice,
-                after: CoachNotices.feedbackDelay(after: workout.endDate, now: now),
-                userInfo: [Self.workoutStartKey: workout.startDate.timeIntervalSince1970, Self.workoutEndKey: workout.endDate.timeIntervalSince1970]
+                trigger: UNTimeIntervalNotificationTrigger(timeInterval: CoachNotices.feedbackDelay(after: workout.endDate, now: now), repeats: false),
+                route: .feedback(start: workout.startDate, end: workout.endDate)
             )
         }
     }
-
-    private static let workoutStartKey = "workoutStart"
-    private static let workoutEndKey = "workoutEnd"
 
     /// Neue Bewertung in Health: Fragen zu Einheiten, die jetzt bewertet sind, zurückziehen (geplant oder schon da).
     private func withdrawRatedFeedback() async {
@@ -306,9 +378,8 @@ final class BackgroundCoach: ObservableObject {
         let pending = await center.pendingNotificationRequests()
         let delivered = await center.deliveredNotifications().map(\.request)
         for request in pending + delivered where CoachNotices.isFeedbackID(request.identifier) {
-            guard let start = request.content.userInfo[Self.workoutStartKey] as? TimeInterval,
-                  let end = request.content.userInfo[Self.workoutEndKey] as? TimeInterval else { continue }
-            if await hasOwnRating(start: Date(timeIntervalSince1970: start), end: Date(timeIntervalSince1970: end)) {
+            guard case let .feedback(start, end)? = NotificationRoute(identifier: request.identifier, userInfo: request.content.userInfo) else { continue }
+            if await hasOwnRating(start: start, end: end) {
                 withdraw(request.identifier)
             }
         }
@@ -346,29 +417,27 @@ final class BackgroundCoach: ObservableObject {
               let plan = loader.dayPlan(on: tomorrow),
               let notice = CoachNotices.morningPlan(plan),
               let date = CoachNotices.morningDate(for: tomorrow, preferences: preferences, now: Date()) else { return }
-        post(notice, at: date)
+        post(notice, at: date, route: .today)
     }
 
-    private func post(_ notice: CoachNotice, at date: Date?) {
-        let trigger = date.map {
-            UNCalendarNotificationTrigger(
-                dateMatching: Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: $0),
-                repeats: false
-            )
-        }
-        post(notice, trigger: trigger)
+    private func post(_ notice: CoachNotice, at date: Date?, route: NotificationRoute) {
+        post(notice, trigger: date.map(Self.calendarTrigger), route: route)
     }
 
-    private func post(_ notice: CoachNotice, after delay: TimeInterval, userInfo: [String: Any]) {
-        post(notice, trigger: UNTimeIntervalNotificationTrigger(timeInterval: max(delay, 1), repeats: false), userInfo: userInfo)
+    private static func calendarTrigger(_ date: Date) -> UNNotificationTrigger {
+        UNCalendarNotificationTrigger(
+            dateMatching: Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date),
+            repeats: false
+        )
     }
 
-    private func post(_ notice: CoachNotice, trigger: UNNotificationTrigger?, userInfo: [String: Any] = [:]) {
+    /// Ohne Auslöser sofort. Die Route sagt der App, was sie beim Antippen zeigt (`NotificationRouter`).
+    private func post(_ notice: CoachNotice, trigger: UNNotificationTrigger?, route: NotificationRoute) {
         let content = UNMutableNotificationContent()
         content.title = notice.title
         content.body = notice.body
         content.sound = .default
-        content.userInfo = userInfo
+        content.userInfo = route.userInfo
         center.add(UNNotificationRequest(identifier: notice.id, content: content, trigger: trigger)) { _ in }
     }
 }
