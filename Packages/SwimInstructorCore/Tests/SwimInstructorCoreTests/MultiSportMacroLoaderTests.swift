@@ -616,6 +616,7 @@ final class MultiSportMacroLoaderTests: XCTestCase {
         XCTAssertEqual(review.reason, .scheduled)
         XCTAssertEqual(review.weekStart, "2026-09-28")
         XCTAssertEqual(review.summary, "Schwimmen 96 % erfüllt, Radfahren 88 %, Laufen 70 %. In der zweiten Woche fielen zwei Läufe aus.")
+        XCTAssertEqual(review.advice, "Du bist beim Schwimmen und Rad auf Kurs. Beim Laufen fehlt etwas: Halte die zwei Läufe pro Woche, mehr ist nicht nötig.")
         let request = try XCTUnwrap(provider.reviewRequests.first)
         XCTAssertEqual(request.reason, .scheduled)
         XCTAssertNil(request.pause)

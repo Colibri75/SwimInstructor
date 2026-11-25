@@ -186,7 +186,7 @@ ${SNAPSHOT_AND_RULES}
 ${MACRO_RULES}
 
 ## Ausgabe
-Antworte ausschließlich im vorgegebenen JSON-Format und auf Deutsch. ${BLOCKS_OUTPUT} Plane den ganzen Zeitraum ab der laufenden Woche in Abschnitten, auch wo sich nichts ändert; die laufende Woche übernimmst du unverändert. summary ist die Bilanz in zwei, drei Sätzen mit Prozentzahlen je Sportart (z. B. "Schwimmen 96 % erfüllt, Laufen 70 %, zweimal krank"). changes nennt jede Änderung gegenüber dem bisherigen Plan in einem kurzen Satz (höchstens acht). Die rationale hat höchstens fünf Sätze.`;
+Antworte ausschließlich im vorgegebenen JSON-Format und auf Deutsch. ${BLOCKS_OUTPUT} Plane den ganzen Zeitraum ab der laufenden Woche in Abschnitten, auch wo sich nichts ändert; die laufende Woche übernimmst du unverändert. summary ist die Bilanz in zwei, drei Sätzen mit Prozentzahlen je Sportart (z. B. "Schwimmen 96 % erfüllt, Laufen 70 %, zweimal krank"). advice ist dein Rat direkt an den Athleten in ein, zwei Sätzen in der Du-Form: ob er auf Kurs zu seinem Ziel ist, ob er so weitermachen, mehr oder weniger trainieren soll und worauf es jetzt ankommt (z. B. "Du bist auf Kurs. Lass den langen Lauf am Sonntag nicht ausfallen, mehr Umfang ist nicht nötig."). Rate nie zu mehr, als die Grenzen erlauben, und nach Krankheit oder Verletzung nie zum Nachholen. changes nennt jede Änderung gegenüber dem bisherigen Plan in einem kurzen Satz (höchstens acht). Die rationale hat höchstens fünf Sätze.`;
 
 // --- Bausteine der Nutzernachricht ---
 

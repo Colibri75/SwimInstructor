@@ -250,7 +250,7 @@ describe("contracts/wire, Plan", () => {
   it("antwortet auf /v1/plan/macro/review mit genau den Feldern des Vertrags", async () => {
     const before = contract("wire/plan-v2-macro-response.json");
     const fixture = contract("wire/plan-v2-review-response.json");
-    const raw = { rationale: fixture.plan.rationale, summary: fixture.summary, changes: fixture.changes, blocks: rawBlocks(fixture.plan.weeks) };
+    const raw = { rationale: fixture.plan.rationale, summary: fixture.summary, advice: fixture.advice, changes: fixture.changes, blocks: rawBlocks(fixture.plan.weeks) };
     await expectContract("wire/plan-v2-review-response.json", appWith(generated(raw)), "/v1/plan/macro/review", {
       plan_version: 2,
       snapshot: near,

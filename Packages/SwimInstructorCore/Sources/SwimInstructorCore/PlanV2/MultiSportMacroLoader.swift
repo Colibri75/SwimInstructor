@@ -304,7 +304,8 @@ public final class MultiSportMacroLoader: ObservableObject {
                 summary: response.summary ?? "",
                 changes: response.changes ?? [],
                 adjustments: response.adjustments,
-                feedback: response.feedback
+                feedback: response.feedback,
+                advice: response.advice
             )
             let fresh = response.macroPlan(goalKey: current.goalKey, feedbackRounds: current.feedbackRounds)
             var merged = keepingPastWeeks(of: current, in: keepingCurrentWeek(fresh))

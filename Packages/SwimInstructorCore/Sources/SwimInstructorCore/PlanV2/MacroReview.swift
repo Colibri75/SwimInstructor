@@ -28,8 +28,10 @@ public struct MacroReview: Codable, Equatable, Sendable {
     public let changes: [String]
     public let adjustments: [String]
     public let feedback: String?
+    /// Rat des Coaches: auf Kurs, mehr oder weniger trainieren, worauf achten. Fehlt bei älteren Fortschreibungen.
+    public let advice: String?
 
-    public init(reviewedAt: Date, weekStart: String, reason: MacroReviewReason, summary: String, changes: [String], adjustments: [String] = [], feedback: String? = nil) {
+    public init(reviewedAt: Date, weekStart: String, reason: MacroReviewReason, summary: String, changes: [String], adjustments: [String] = [], feedback: String? = nil, advice: String? = nil) {
         self.reviewedAt = reviewedAt
         self.weekStart = weekStart
         self.reason = reason
@@ -37,6 +39,7 @@ public struct MacroReview: Codable, Equatable, Sendable {
         self.changes = changes
         self.adjustments = adjustments
         self.feedback = feedback
+        self.advice = advice
     }
 }
 

@@ -238,6 +238,8 @@ public struct MacroPlanV2Response: Decodable, Equatable, Sendable {
     public let feedback: String?
     /// Nur bei der Fortschreibung: die Bilanz der letzten Wochen.
     public let summary: String?
+    /// Nur bei der Fortschreibung: der Rat an den Athleten (auf Kurs, mehr, weniger).
+    public let advice: String?
     /// Nur bei der Fortschreibung: der Anlass.
     public let reason: MacroReviewReason?
 
