@@ -216,7 +216,12 @@ struct SwimInstructorApp: App {
                       macroLoader.pendingReviewReason(pause: pauseStore.pendingReviewReport()) == nil else { return nil }
                 return "\(macroLoader.currentGoalKey)|\(macroLoader.revisionStamp)"
             },
-            todayWish: { wishStore.wish(for: PlanFormatting.isoDay(Date())) }
+            todayWish: { wishStore.wish(for: PlanFormatting.isoDay(Date())) },
+            // Die Wochenbilanz rechnet wie die Karte "Auf Kurs zum Ziel?" in Aktuell.
+            courseProvider: { [weak macroLoader, weak loader] in
+                guard let macroLoader, let loader else { return nil }
+                return GoalCourseSource.course(macroLoader: macroLoader, todayLoader: loader)
+            }
         )
         coach.start()
         _coach = StateObject(wrappedValue: coach)

@@ -36,6 +36,7 @@ final class BackgroundCoach: ObservableObject {
     private let planClient: @MainActor () -> PlanAPIClient?
     private let replanStamp: @MainActor () -> String?
     private let todayWish: @MainActor () -> String?
+    private let courseProvider: @MainActor () -> GoalCourse?
     private let messages: CoachMessageStoring
     private let fetcher = BackgroundPlanFetcher.shared
     private let defaults = UserDefaults.standard
@@ -53,6 +54,7 @@ final class BackgroundCoach: ObservableObject {
         planClient: @escaping @MainActor () -> PlanAPIClient?,
         replanStamp: @escaping @MainActor () -> String?,
         todayWish: @escaping @MainActor () -> String?,
+        courseProvider: @escaping @MainActor () -> GoalCourse?,
         messages: CoachMessageStoring = UserDefaultsCoachMessageStore(),
         preferencesStore: NotificationPreferencesStoring = UserDefaultsNotificationPreferencesStore(),
         log: NoticeLogging = UserDefaultsNoticeLog()
@@ -60,6 +62,7 @@ final class BackgroundCoach: ObservableObject {
         self.planClient = planClient
         self.replanStamp = replanStamp
         self.todayWish = todayWish
+        self.courseProvider = courseProvider
         self.messages = messages
         self.loader = loader
         self.weekLoader = weekLoader
@@ -99,7 +102,7 @@ final class BackgroundCoach: ObservableObject {
     func save(_ preferences: NotificationPreferences) {
         self.preferences = preferences
         preferencesStore.save(preferences)
-        if preferences.morningPlan || preferences.afterWorkout || preferences.planChanges { requestPermission() }
+        if preferences.morningPlan || preferences.afterWorkout || preferences.planChanges || preferences.weeklyCourse { requestPermission() }
         scheduleMorningNotice()
     }
 
@@ -195,6 +198,7 @@ final class BackgroundCoach: ObservableObject {
         await notifyNewWorkouts(reading.allWorkouts, now: now)
         // Die Bewertung kann nach der Frage angekommen sein (etwa bei gesperrtem iPhone).
         await withdrawRatedFeedback()
+        notifyWeeklyCourse(now: now)
 
         let today = weekLoader.todayKey
         defer {
@@ -269,6 +273,23 @@ final class BackgroundCoach: ObservableObject {
             trigger: CoachNotices.morningDate(for: date, preferences: preferences, now: now).map(Self.calendarTrigger),
             route: .message(id: notice.id)
         )
+    }
+
+    // MARK: - Wochenbilanz
+
+    /// Montags (oder dienstags, wenn iOS am Montag keine Zeit gab): ob du auf Kurs zum Ziel bist, einmal je Woche, zur
+    /// Uhrzeit des Morgenplans. Antippen öffnet "Weg zum Ziel".
+    private func notifyWeeklyCourse(now: Date) {
+        let calendar = Calendar.current
+        // Gregorianisch: 2 ist Montag, 3 Dienstag.
+        guard preferences.weeklyCourse,
+              [2, 3].contains(calendar.component(.weekday, from: now)),
+              calendar.component(.hour, from: now) >= Self.todayAheadFromHour,
+              let course = courseProvider(),
+              let notice = CoachNotices.weeklyCourse(course, weekStart: weekLoader.currentWeekStart),
+              !log.wasSent(notice.id) else { return }
+        log.markSent(notice.id)
+        post(notice, at: CoachNotices.morningDate(for: weekLoader.todayKey, preferences: preferences, now: now), route: .course)
     }
 
     private func attempts(_ key: String, on date: String) -> Int {

@@ -1045,3 +1045,5 @@
 "Noch keine Nachrichten. Hier stehen die Anpassungen deines Plans und die Fortschreibungen des Gesamtplans, sobald dein Coach etwas meldet." = "还没有消息。一旦教练有新情况，计划调整和总体计划的更新都会显示在这里。";
 "Wenn dein Coach den Plan anpasst" = "教练调整计划时";
 "Morgens stimmt dein Coach im Hintergrund die nächsten 14 Tage ab und holt deinen Plan für heute; er kommt zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Ändert sich an den nächsten Tagen spürbar etwas, sagt er dir, was und warum. Nach einer Einheit fragt er, wie es war. Ein Tipp auf eine Mitteilung öffnet das Passende. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt." = "每天早上，你的教练会在后台调整接下来 14 天并获取今天的计划；它会在你选择的时间送达，“今日”会立即显示。如果接下来几天有明显变化，教练会告诉你改了什么以及原因。训练结束后，教练会问你感觉如何。点按通知会打开对应页面。App 何时能在后台运行由 iOS 决定；如果不行，“今日”会像往常一样在打开时制定计划。";
+"Wochenbilanz: %@" = "每周总结：%@";
+"Wochenbilanz am Montag" = "周一发送每周总结";

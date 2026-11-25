@@ -100,6 +100,21 @@ public enum CoachNotices {
         )
     }
 
+    /// Kennung der Wochenbilanz: eine je Woche (Montag der neuen Woche).
+    public static func weeklyCourseID(for weekStart: String) -> String { "weekly-course-\(weekStart)" }
+
+    /// Die Wochenbilanz am Montag: "Wochenbilanz: Auf Kurs" und der Satz zum Stand. `nil`, solange es noch keine volle
+    /// Woche mit Plan gibt.
+    public static func weeklyCourse(_ course: GoalCourse, weekStart: String, registry: SportRegistry = .standard) -> CoachNotice? {
+        guard course.status != .noData, course.percent != nil else { return nil }
+        let status = course.status.title
+        return CoachNotice(
+            id: weeklyCourseID(for: weekStart),
+            title: String(localized: "Wochenbilanz: \(status)"),
+            body: course.sentence(registry: registry)
+        )
+    }
+
     /// Kennung der Mitteilung nach einer Fortschreibung des Gesamtplans.
     public static func macroReviewID(for weekStart: String) -> String { "macro-review-\(weekStart)" }
 
@@ -133,13 +148,16 @@ public struct NotificationPreferences: Codable, Equatable, Sendable {
     public var afterWorkout: Bool
     /// Hat dein Coach die nächsten Tage im Hintergrund spürbar geändert: was und warum.
     public var planChanges: Bool
+    /// Montags: ob du auf Kurs zum Ziel bist.
+    public var weeklyCourse: Bool
     public var morningHour: Int
     public var morningMinute: Int
 
-    public init(morningPlan: Bool = true, afterWorkout: Bool = true, planChanges: Bool = true, morningHour: Int = 7, morningMinute: Int = 0) {
+    public init(morningPlan: Bool = true, afterWorkout: Bool = true, planChanges: Bool = true, weeklyCourse: Bool = true, morningHour: Int = 7, morningMinute: Int = 0) {
         self.morningPlan = morningPlan
         self.afterWorkout = afterWorkout
         self.planChanges = planChanges
+        self.weeklyCourse = weeklyCourse
         self.morningHour = min(max(morningHour, 0), 23)
         self.morningMinute = min(max(morningMinute, 0), 59)
     }
@@ -152,13 +170,14 @@ public struct NotificationPreferences: Codable, Equatable, Sendable {
             morningPlan: try container.decodeIfPresent(Bool.self, forKey: .morningPlan) ?? standard.morningPlan,
             afterWorkout: try container.decodeIfPresent(Bool.self, forKey: .afterWorkout) ?? standard.afterWorkout,
             planChanges: try container.decodeIfPresent(Bool.self, forKey: .planChanges) ?? standard.planChanges,
+            weeklyCourse: try container.decodeIfPresent(Bool.self, forKey: .weeklyCourse) ?? standard.weeklyCourse,
             morningHour: try container.decodeIfPresent(Int.self, forKey: .morningHour) ?? standard.morningHour,
             morningMinute: try container.decodeIfPresent(Int.self, forKey: .morningMinute) ?? standard.morningMinute
         )
     }
 
     private enum CodingKeys: String, CodingKey {
-        case morningPlan, afterWorkout, planChanges, morningHour, morningMinute
+        case morningPlan, afterWorkout, planChanges, weeklyCourse, morningHour, morningMinute
     }
 
     public static let standard = NotificationPreferences()
@@ -228,6 +247,8 @@ public enum NotificationRoute: Equatable, Sendable {
     case feedback(start: Date, end: Date)
     /// Eine gespeicherte Nachricht deines Coachs ganz zeigen (`CoachMessageStoring`).
     case message(id: String)
+    /// "Weg zum Ziel": ob du auf Kurs bist (Wochenbilanz).
+    case course
 
     public static let routeKey = "route"
     public static let workoutStartKey = "workoutStart"
@@ -243,6 +264,8 @@ public enum NotificationRoute: Equatable, Sendable {
             return [Self.routeKey: "feedback", Self.workoutStartKey: start.timeIntervalSince1970, Self.workoutEndKey: end.timeIntervalSince1970]
         case let .message(id):
             return [Self.routeKey: "message", Self.messageKey: id]
+        case .course:
+            return [Self.routeKey: "course"]
         }
     }
 
@@ -260,6 +283,8 @@ public enum NotificationRoute: Equatable, Sendable {
         case "message":
             guard let id = userInfo[Self.messageKey] as? String else { return nil }
             self = .message(id: id)
+        case "course":
+            self = .course
         default:
             if CoachNotices.isFeedbackID(identifier), let start, let end {
                 self = .feedback(start: start, end: end)

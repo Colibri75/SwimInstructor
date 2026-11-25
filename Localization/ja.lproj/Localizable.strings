@@ -1045,3 +1045,5 @@
 "Noch keine Nachrichten. Hier stehen die Anpassungen deines Plans und die Fortschreibungen des Gesamtplans, sobald dein Coach etwas meldet." = "まだメッセージはありません。コーチから連絡があると、プランの調整や全体プランの更新がここに表示されます。";
 "Wenn dein Coach den Plan anpasst" = "コーチがプランを調整したとき";
 "Morgens stimmt dein Coach im Hintergrund die nächsten 14 Tage ab und holt deinen Plan für heute; er kommt zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Ändert sich an den nächsten Tagen spürbar etwas, sagt er dir, was und warum. Nach einer Einheit fragt er, wie es war. Ein Tipp auf eine Mitteilung öffnet das Passende. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt." = "毎朝、コーチがバックグラウンドで次の14日間を調整し、今日のプランを用意します。選んだ時刻に届き、「今日」にすぐ表示されます。今後数日に目立った変更があれば、何をなぜ変えたかをお知らせします。セッション後には、どうだったかを尋ねます。通知をタップすると該当する画面が開きます。アプリがバックグラウンドで動けるタイミングはiOSが決めます。うまくいかない場合は、これまでどおり開いたときに「今日」がプランを作成します。";
+"Wochenbilanz: %@" = "週間レポート：%@";
+"Wochenbilanz am Montag" = "月曜日に週間レポート";
