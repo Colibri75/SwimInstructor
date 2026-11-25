@@ -1047,3 +1047,34 @@
 "Morgens stimmt dein Coach im Hintergrund die nächsten 14 Tage ab und holt deinen Plan für heute; er kommt zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Ändert sich an den nächsten Tagen spürbar etwas, sagt er dir, was und warum. Nach einer Einheit fragt er, wie es war. Ein Tipp auf eine Mitteilung öffnet das Passende. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt." = "हर सुबह आपके कोच बैकग्राउंड में अगले 14 दिन तय करते हैं और आज का प्लान लाते हैं; यह आपके चुने समय पर आता है और \"आज\" में तुरंत दिखता है। अगर आने वाले दिनों में कुछ साफ़ बदलता है, तो वे बताते हैं क्या और क्यों। सेशन के बाद वे पूछते हैं कि कैसा रहा। सूचना पर टैप करने से सही स्क्रीन खुलती है। ऐप बैकग्राउंड में कब काम करे, यह iOS तय करता है; अगर नहीं हो पाता, तो \"आज\" खोलने पर हमेशा की तरह प्लान बनाता है।";
 "Wochenbilanz: %@" = "साप्ताहिक हिसाब: %@";
 "Wochenbilanz am Montag" = "सोमवार को साप्ताहिक हिसाब";
+
+/* Zielprognose */
+"Aus deiner CSS-Pace %@ /100 m" = "आपकी CSS पेस %@ /100 m से";
+"Aus deinem üblichen Tempo %@ /100 m" = "आपकी सामान्य पेस %@ /100 m से";
+"Aus deinem Schwellentempo %@ /km" = "आपकी थ्रेशोल्ड पेस %@ /km से";
+"Aus deiner Bestzeit über %@ (%@)" = "%@ पर आपके सर्वश्रेष्ठ समय (%@) से";
+"Aus deinem üblichen Tempo %@ /km" = "आपकी सामान्य पेस %@ /km से";
+"Aus deinen schnellsten längeren Fahrten der letzten Wochen (%@)" = "पिछले हफ़्तों की आपकी सबसे तेज़ लंबी राइड्स से (%@)";
+"Aus deinem Durchschnittstempo %@" = "आपकी औसत गति %@ से";
+"Zielzeit schon drin" = "लक्ष्य समय पहले से पहुँच में";
+"Fast da" = "लगभग पहुँच गए";
+"Noch %@" = "%@ बाकी";
+"Deine Zielzeit ist heute schon drin. Jetzt geht es darum, fit an den Start zu kommen." = "आपका लक्ष्य समय आज ही पहुँच में है। अब ज़रूरी है कि आप फ़िट होकर स्टार्ट पर पहुँचें।";
+"Du bist nah an deiner Zielzeit. Mit dem Plan bis zum Zieltag ist sie gut erreichbar." = "आप अपने लक्ष्य समय के करीब हैं। लक्ष्य दिवस तक योजना के साथ यह आसानी से हासिल हो सकता है।";
+"Am meisten Zeit holst du beim %@." = "सबसे ज़्यादा समय आप %@ में बचा सकते हैं।";
+"Für eine Prognose fehlen noch Leistungswerte. Trag sie im Leistungsprofil ein oder mach einen Test." = "पूर्वानुमान के लिए अभी प्रदर्शन मान कम हैं। उन्हें प्रदर्शन प्रोफ़ाइल में दर्ज करें या टेस्ट करें।";
+"Die Prognose zeigt, was heute ungefähr drin wäre." = "पूर्वानुमान दिखाता है कि आज आप लगभग क्या कर सकते हैं।";
+"Zielprognose" = "लक्ष्य पूर्वानुमान";
+"Welche Zeit heute drin wäre, je Disziplin gegen die Zielzeit." = "आज आप कितना समय निकाल सकते हैं, हर डिसिप्लिन में लक्ष्य समय के मुक़ाबले।";
+"Prognose heute" = "आज का पूर्वानुमान";
+"Ziel %@" = "लक्ष्य %@";
+"Wechsel (geschätzt)" = "ट्रांज़िशन (अनुमानित)";
+"Eine grobe Schätzung aus deinem Leistungsprofil, deinem Startniveau und deinen Radfahrten in Health, so wie du heute in Form bist. Nach jedem Test wird sie genauer." = "आपकी प्रदर्शन प्रोफ़ाइल, शुरुआती स्तर और Health में आपकी राइड्स से आज की फ़ॉर्म के आधार पर एक मोटा अनुमान। हर टेस्ट के बाद यह और सटीक होता है।";
+"Für ein Fitnessziel ohne Strecke gibt es keine Zielprognose." = "बिना दूरी वाले फ़िटनेस लक्ष्य के लिए कोई लक्ष्य पूर्वानुमान नहीं है।";
+"Zielzeit %@" = "लक्ष्य समय %@";
+"Schneller als deine Zielzeit" = "आपके लक्ष्य समय से तेज़";
+"Noch %@ bis zur Zielzeit" = "लक्ष्य समय तक %@ बाकी";
+"Noch offen" = "अभी खुला";
+"Es fehlt ein Leistungswert. Trag ihn im Leistungsprofil ein oder mach einen Test." = "एक प्रदर्शन मान कम है। उसे प्रदर्शन प्रोफ़ाइल में दर्ज करें या टेस्ट करें।";
+"So bleiben" = "ऐसे ही रखें";
+"Mehr oder weniger trainieren?" = "ज़्यादा या कम ट्रेनिंग?";

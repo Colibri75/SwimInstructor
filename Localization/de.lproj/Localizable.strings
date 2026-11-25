@@ -1047,3 +1047,34 @@
 "Morgens stimmt dein Coach im Hintergrund die nächsten 14 Tage ab und holt deinen Plan für heute; er kommt zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Ändert sich an den nächsten Tagen spürbar etwas, sagt er dir, was und warum. Nach einer Einheit fragt er, wie es war. Ein Tipp auf eine Mitteilung öffnet das Passende. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt." = "Morgens stimmt dein Coach im Hintergrund die nächsten 14 Tage ab und holt deinen Plan für heute; er kommt zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Ändert sich an den nächsten Tagen spürbar etwas, sagt er dir, was und warum. Nach einer Einheit fragt er, wie es war. Ein Tipp auf eine Mitteilung öffnet das Passende. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt.";
 "Wochenbilanz: %@" = "Wochenbilanz: %@";
 "Wochenbilanz am Montag" = "Wochenbilanz am Montag";
+
+/* Zielprognose */
+"Aus deiner CSS-Pace %@ /100 m" = "Aus deiner CSS-Pace %@ /100 m";
+"Aus deinem üblichen Tempo %@ /100 m" = "Aus deinem üblichen Tempo %@ /100 m";
+"Aus deinem Schwellentempo %@ /km" = "Aus deinem Schwellentempo %@ /km";
+"Aus deiner Bestzeit über %@ (%@)" = "Aus deiner Bestzeit über %@ (%@)";
+"Aus deinem üblichen Tempo %@ /km" = "Aus deinem üblichen Tempo %@ /km";
+"Aus deinen schnellsten längeren Fahrten der letzten Wochen (%@)" = "Aus deinen schnellsten längeren Fahrten der letzten Wochen (%@)";
+"Aus deinem Durchschnittstempo %@" = "Aus deinem Durchschnittstempo %@";
+"Zielzeit schon drin" = "Zielzeit schon drin";
+"Fast da" = "Fast da";
+"Noch %@" = "Noch %@";
+"Deine Zielzeit ist heute schon drin. Jetzt geht es darum, fit an den Start zu kommen." = "Deine Zielzeit ist heute schon drin. Jetzt geht es darum, fit an den Start zu kommen.";
+"Du bist nah an deiner Zielzeit. Mit dem Plan bis zum Zieltag ist sie gut erreichbar." = "Du bist nah an deiner Zielzeit. Mit dem Plan bis zum Zieltag ist sie gut erreichbar.";
+"Am meisten Zeit holst du beim %@." = "Am meisten Zeit holst du beim %@.";
+"Für eine Prognose fehlen noch Leistungswerte. Trag sie im Leistungsprofil ein oder mach einen Test." = "Für eine Prognose fehlen noch Leistungswerte. Trag sie im Leistungsprofil ein oder mach einen Test.";
+"Die Prognose zeigt, was heute ungefähr drin wäre." = "Die Prognose zeigt, was heute ungefähr drin wäre.";
+"Zielprognose" = "Zielprognose";
+"Welche Zeit heute drin wäre, je Disziplin gegen die Zielzeit." = "Welche Zeit heute drin wäre, je Disziplin gegen die Zielzeit.";
+"Prognose heute" = "Prognose heute";
+"Ziel %@" = "Ziel %@";
+"Wechsel (geschätzt)" = "Wechsel (geschätzt)";
+"Eine grobe Schätzung aus deinem Leistungsprofil, deinem Startniveau und deinen Radfahrten in Health, so wie du heute in Form bist. Nach jedem Test wird sie genauer." = "Eine grobe Schätzung aus deinem Leistungsprofil, deinem Startniveau und deinen Radfahrten in Health, so wie du heute in Form bist. Nach jedem Test wird sie genauer.";
+"Für ein Fitnessziel ohne Strecke gibt es keine Zielprognose." = "Für ein Fitnessziel ohne Strecke gibt es keine Zielprognose.";
+"Zielzeit %@" = "Zielzeit %@";
+"Schneller als deine Zielzeit" = "Schneller als deine Zielzeit";
+"Noch %@ bis zur Zielzeit" = "Noch %@ bis zur Zielzeit";
+"Noch offen" = "Noch offen";
+"Es fehlt ein Leistungswert. Trag ihn im Leistungsprofil ein oder mach einen Test." = "Es fehlt ein Leistungswert. Trag ihn im Leistungsprofil ein oder mach einen Test.";
+"So bleiben" = "So bleiben";
+"Mehr oder weniger trainieren?" = "Mehr oder weniger trainieren?";

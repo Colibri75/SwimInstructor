@@ -56,6 +56,7 @@ struct GoalCourseSection: View {
                 if !course.sports.isEmpty {
                     GoalCourseSportRows(course: course)
                 }
+                GoalForecastLine()
                 if let review = plan.reviews.last, let change = review.changes.first {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Was sich zuletzt geändert hat")
@@ -241,6 +242,10 @@ struct GoalCourseView: View {
                     GoalCourseHeader(course: course, plan: plan, weeksUntilGoal: macroLoader.weeksUntilGoal, isOpenEnded: macroLoader.isOpenEnded)
                 }
                 .cardRows()
+                GoalForecastSection()
+                    .cardRows()
+                GoalCourseAdviceSection(course: course)
+                    .cardRows()
                 chartSection(course)
                     .cardRows()
                 numbersSection(course)

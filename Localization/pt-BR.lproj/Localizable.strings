@@ -1047,3 +1047,34 @@
 "Morgens stimmt dein Coach im Hintergrund die nächsten 14 Tage ab und holt deinen Plan für heute; er kommt zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Ändert sich an den nächsten Tagen spürbar etwas, sagt er dir, was und warum. Nach einer Einheit fragt er, wie es war. Ein Tipp auf eine Mitteilung öffnet das Passende. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt." = "Toda manhã seu coach ajusta em segundo plano os próximos 14 dias e busca seu plano de hoje; ele chega no horário escolhido e Hoje o mostra na hora. Se algo mudar de forma perceptível nos próximos dias, ele diz o quê e por quê. Depois de um treino, ele pergunta como foi. Tocar em uma notificação abre a tela correspondente. O iOS decide quando o app pode trabalhar em segundo plano; se não der certo, Hoje planeja ao abrir, como de costume.";
 "Wochenbilanz: %@" = "Balanço da semana: %@";
 "Wochenbilanz am Montag" = "Balanço da semana na segunda-feira";
+
+/* Zielprognose */
+"Aus deiner CSS-Pace %@ /100 m" = "Pelo seu ritmo CSS %@ /100 m";
+"Aus deinem üblichen Tempo %@ /100 m" = "Pelo seu ritmo habitual %@ /100 m";
+"Aus deinem Schwellentempo %@ /km" = "Pelo seu ritmo de limiar %@ /km";
+"Aus deiner Bestzeit über %@ (%@)" = "Pelo seu recorde em %@ (%@)";
+"Aus deinem üblichen Tempo %@ /km" = "Pelo seu ritmo habitual %@ /km";
+"Aus deinen schnellsten längeren Fahrten der letzten Wochen (%@)" = "Pelos seus pedais longos mais rápidos das últimas semanas (%@)";
+"Aus deinem Durchschnittstempo %@" = "Pela sua velocidade média %@";
+"Zielzeit schon drin" = "Tempo-alvo já ao alcance";
+"Fast da" = "Quase lá";
+"Noch %@" = "Faltam %@";
+"Deine Zielzeit ist heute schon drin. Jetzt geht es darum, fit an den Start zu kommen." = "Seu tempo-alvo já está ao alcance hoje. Agora o importante é chegar em forma à largada.";
+"Du bist nah an deiner Zielzeit. Mit dem Plan bis zum Zieltag ist sie gut erreichbar." = "Você está perto do seu tempo-alvo. Com o plano até o dia do objetivo, ele é bem alcançável.";
+"Am meisten Zeit holst du beim %@." = "Onde você mais ganha tempo é em %@.";
+"Für eine Prognose fehlen noch Leistungswerte. Trag sie im Leistungsprofil ein oder mach einen Test." = "Para uma previsão ainda faltam valores de desempenho. Informe-os no perfil de desempenho ou faça um teste.";
+"Die Prognose zeigt, was heute ungefähr drin wäre." = "A previsão mostra mais ou menos o que você conseguiria hoje.";
+"Zielprognose" = "Previsão do objetivo";
+"Welche Zeit heute drin wäre, je Disziplin gegen die Zielzeit." = "Que tempo você faria hoje, por modalidade em relação ao tempo-alvo.";
+"Prognose heute" = "Previsão de hoje";
+"Ziel %@" = "Meta %@";
+"Wechsel (geschätzt)" = "Transições (estimadas)";
+"Eine grobe Schätzung aus deinem Leistungsprofil, deinem Startniveau und deinen Radfahrten in Health, so wie du heute in Form bist. Nach jedem Test wird sie genauer." = "Uma estimativa aproximada a partir do seu perfil de desempenho, do seu nível inicial e dos seus pedais no Saúde, conforme a sua forma de hoje. Ela fica mais precisa a cada teste.";
+"Für ein Fitnessziel ohne Strecke gibt es keine Zielprognose." = "Não há previsão para um objetivo de condicionamento sem distância.";
+"Zielzeit %@" = "Tempo-alvo %@";
+"Schneller als deine Zielzeit" = "Mais rápido que o seu tempo-alvo";
+"Noch %@ bis zur Zielzeit" = "Faltam %@ para o tempo-alvo";
+"Noch offen" = "Em aberto";
+"Es fehlt ein Leistungswert. Trag ihn im Leistungsprofil ein oder mach einen Test." = "Falta um valor de desempenho. Informe-o no perfil de desempenho ou faça um teste.";
+"So bleiben" = "Manter assim";
+"Mehr oder weniger trainieren?" = "Treinar mais ou menos?";
