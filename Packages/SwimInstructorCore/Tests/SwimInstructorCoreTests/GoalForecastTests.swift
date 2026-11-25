@@ -5,7 +5,7 @@ import XCTest
 final class GoalForecastTests: XCTestCase {
     private let forecaster = GoalForecaster(calendar: TestFixtures.utc)
 
-    private func goal(_ kind: GoalKind = .race, _ disciplines: [TrainingGoal.Discipline]) -> TrainingGoal {
+    private func goal(_ kind: GoalKind, _ disciplines: [TrainingGoal.Discipline]) -> TrainingGoal {
         TrainingGoal(kind: kind, disciplines: disciplines, targetDate: TestFixtures.date(daysAgo: -60, hour: 8), trainingDaysPerWeek: 5, weeklyHours: 8, emphasis: [])
     }
 
@@ -34,17 +34,17 @@ final class GoalForecastTests: XCTestCase {
             ride(daysAgo: 80, minutes: 60, kilometers: 38) // zu alt
         ]
         let forecast = try XCTUnwrap(forecaster.forecast(
-            goal: goal(olympic), value: { values["\($0.rawValue)|\($1.rawValue)"] }, startingLevels: [], workouts: rides, now: TestFixtures.now
+            goal: goal(.race, olympic), value: { values["\($0.rawValue)|\($1.rawValue)"] }, startingLevels: [], workouts: rides, now: TestFixtures.now
         ))
 
         let swim = forecast.disciplines[0], bike = forecast.disciplines[1], run = forecast.disciplines[2]
         // 15 × (112 + 2 s Aufschlag für 1500 m).
         XCTAssertEqual(swim.predictedSeconds, 1_710)
-        XCTAssertEqual(swim.basis, .criticalSwimSpeed(112))
+        XCTAssertEqual(swim.basis, GoalForecast.Basis.criticalSwimSpeed(112))
         XCTAssertEqual(swim.verdict, "Zielzeit schon drin")
         // Schnitt der zwei schnellsten Fahrten 30,5 km/h, im Wettkampf 6 % schneller.
         XCTAssertEqual(bike.predictedSeconds, 4_454)
-        XCTAssertEqual(bike.basis, .recentRides(30.5))
+        XCTAssertEqual(bike.basis, GoalForecast.Basis.recentRides(30.5))
         // Riegel von einer Stunde auf Schwelle, nach dem Rad 5 % langsamer.
         XCTAssertEqual(run.predictedSeconds, 3_447)
         XCTAssertEqual(run.verdict, "Noch 2 min")
@@ -66,7 +66,7 @@ final class GoalForecastTests: XCTestCase {
 
         XCTAssertNil(forecast.transitionSeconds)
         XCTAssertEqual(forecast.disciplines[0].predictedSeconds, 3_127)
-        XCTAssertEqual(forecast.disciplines[0].basis, .bestTime(meters: 5_000, seconds: 1_500))
+        XCTAssertEqual(forecast.disciplines[0].basis, GoalForecast.Basis.bestTime(meters: 5_000, seconds: 1_500))
         XCTAssertEqual(forecast.sentence(registry: TestFixtures.triathlon), "Am meisten Zeit holst du beim Laufen.")
     }
 
@@ -77,11 +77,11 @@ final class GoalForecastTests: XCTestCase {
         ))
 
         XCTAssertEqual(forecast.disciplines[0].predictedSeconds, 3_104)
-        XCTAssertEqual(forecast.disciplines[0].basis, .runPace(360))
+        XCTAssertEqual(forecast.disciplines[0].basis, GoalForecast.Basis.runPace(360))
     }
 
     func testMissingValuesLeaveTheDisciplineOpen() throws {
-        let target = goal([
+        let target = goal(.race, [
             .init(sport: .swim, distanceMeters: 1_500, targetDurationSeconds: 1_740),
             .init(sport: .bike, distanceMeters: 40_000)
         ])
@@ -91,7 +91,7 @@ final class GoalForecastTests: XCTestCase {
 
         XCTAssertNil(forecast.disciplines[0].predictedSeconds)
         XCTAssertEqual(forecast.disciplines[1].predictedSeconds, 4_852)
-        XCTAssertEqual(forecast.disciplines[1].basis, .rideSpeed(28))
+        XCTAssertEqual(forecast.disciplines[1].basis, GoalForecast.Basis.rideSpeed(28))
         XCTAssertNil(forecast.predictedTotal)
         XCTAssertNil(forecast.targetTotal)
         XCTAssertEqual(forecast.sentence(registry: TestFixtures.triathlon), "Für eine Prognose fehlen noch Leistungswerte. Trag sie im Leistungsprofil ein oder mach einen Test.")
