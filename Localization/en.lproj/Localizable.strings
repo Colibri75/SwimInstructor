@@ -1047,3 +1047,34 @@
 "Morgens stimmt dein Coach im Hintergrund die nächsten 14 Tage ab und holt deinen Plan für heute; er kommt zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Ändert sich an den nächsten Tagen spürbar etwas, sagt er dir, was und warum. Nach einer Einheit fragt er, wie es war. Ein Tipp auf eine Mitteilung öffnet das Passende. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt." = "Each morning your coach tunes the next 14 days in the background and fetches your plan for today; it arrives at the time you chose, and Today shows it right away. If something changes noticeably in the coming days, your coach tells you what and why. After a session, your coach asks how it went. Tapping a notification opens the matching screen. iOS decides when the app may work in the background; if that doesn't work, Today plans when you open it, as usual.";
 "Wochenbilanz: %@" = "Weekly review: %@";
 "Wochenbilanz am Montag" = "Weekly review on Monday";
+
+/* Zielprognose */
+"Aus deiner CSS-Pace %@ /100 m" = "Based on your CSS pace %@ /100 m";
+"Aus deinem üblichen Tempo %@ /100 m" = "Based on your usual pace %@ /100 m";
+"Aus deinem Schwellentempo %@ /km" = "Based on your threshold pace %@ /km";
+"Aus deiner Bestzeit über %@ (%@)" = "Based on your best time over %@ (%@)";
+"Aus deinem üblichen Tempo %@ /km" = "Based on your usual pace %@ /km";
+"Aus deinen schnellsten längeren Fahrten der letzten Wochen (%@)" = "Based on your fastest longer rides of recent weeks (%@)";
+"Aus deinem Durchschnittstempo %@" = "Based on your average speed %@";
+"Zielzeit schon drin" = "Goal time already within reach";
+"Fast da" = "Almost there";
+"Noch %@" = "%@ to go";
+"Deine Zielzeit ist heute schon drin. Jetzt geht es darum, fit an den Start zu kommen." = "Your goal time is already within reach today. Now it's about getting to the start fit.";
+"Du bist nah an deiner Zielzeit. Mit dem Plan bis zum Zieltag ist sie gut erreichbar." = "You're close to your goal time. With the plan up to your goal day it's well within reach.";
+"Am meisten Zeit holst du beim %@." = "You'll gain the most time in %@.";
+"Für eine Prognose fehlen noch Leistungswerte. Trag sie im Leistungsprofil ein oder mach einen Test." = "A forecast still needs performance values. Enter them in your performance profile or do a test.";
+"Die Prognose zeigt, was heute ungefähr drin wäre." = "The forecast shows roughly what you could do today.";
+"Zielprognose" = "Goal forecast";
+"Welche Zeit heute drin wäre, je Disziplin gegen die Zielzeit." = "What time you could do today, per discipline against your goal time.";
+"Prognose heute" = "Forecast today";
+"Ziel %@" = "Goal %@";
+"Wechsel (geschätzt)" = "Transitions (estimated)";
+"Eine grobe Schätzung aus deinem Leistungsprofil, deinem Startniveau und deinen Radfahrten in Health, so wie du heute in Form bist. Nach jedem Test wird sie genauer." = "A rough estimate from your performance profile, your starting level and your rides in Health, based on your form today. It gets more accurate after every test.";
+"Für ein Fitnessziel ohne Strecke gibt es keine Zielprognose." = "There's no goal forecast for a fitness goal without a distance.";
+"Zielzeit %@" = "Goal time %@";
+"Schneller als deine Zielzeit" = "Faster than your goal time";
+"Noch %@ bis zur Zielzeit" = "%@ to your goal time";
+"Noch offen" = "Still open";
+"Es fehlt ein Leistungswert. Trag ihn im Leistungsprofil ein oder mach einen Test." = "A performance value is missing. Enter it in your performance profile or do a test.";
+"So bleiben" = "Keep it";
+"Mehr oder weniger trainieren?" = "Train more or less?";

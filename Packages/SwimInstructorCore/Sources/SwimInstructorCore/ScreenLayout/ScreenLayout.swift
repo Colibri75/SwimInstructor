@@ -74,8 +74,8 @@ public enum LayoutScreen: String, CaseIterable, Codable, Sendable {
                               summary: String(localized: "Deine Kacheln mit Kennzahlen.")),
                 LayoutSection(id: "week", title: String(localized: "Diese Woche"), symbol: "calendar",
                               summary: String(localized: "Stand der Woche und Erholung.")),
-                LayoutSection(id: "goal", title: String(localized: "Dein Ziel"), symbol: "flag",
-                              summary: String(localized: "Ziel, Abstand und Pace."))
+                LayoutSection(id: "goal", title: String(localized: "Zielprognose"), symbol: "flag",
+                              summary: String(localized: "Welche Zeit heute drin wäre, je Disziplin gegen die Zielzeit."))
             ]
         case .history:
             return [

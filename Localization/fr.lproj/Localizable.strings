@@ -1047,3 +1047,34 @@
 "Morgens stimmt dein Coach im Hintergrund die nächsten 14 Tage ab und holt deinen Plan für heute; er kommt zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Ändert sich an den nächsten Tagen spürbar etwas, sagt er dir, was und warum. Nach einer Einheit fragt er, wie es war. Ein Tipp auf eine Mitteilung öffnet das Passende. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt." = "Chaque matin, ton coach ajuste en arrière-plan les 14 prochains jours et prépare ton plan du jour ; il arrive à l’heure choisie et Aujourd’hui l’affiche tout de suite. Si quelque chose change nettement les jours suivants, il te dit quoi et pourquoi. Après une séance, il te demande comment c’était. Toucher une notification ouvre l’écran correspondant. iOS décide quand l’app peut travailler en arrière-plan ; sinon, Aujourd’hui planifie à l’ouverture comme d’habitude.";
 "Wochenbilanz: %@" = "Bilan de la semaine : %@";
 "Wochenbilanz am Montag" = "Bilan de la semaine le lundi";
+
+/* Zielprognose */
+"Aus deiner CSS-Pace %@ /100 m" = "D'après ton allure CSS %@ /100 m";
+"Aus deinem üblichen Tempo %@ /100 m" = "D'après ton allure habituelle %@ /100 m";
+"Aus deinem Schwellentempo %@ /km" = "D'après ton allure au seuil %@ /km";
+"Aus deiner Bestzeit über %@ (%@)" = "D'après ton record sur %@ (%@)";
+"Aus deinem üblichen Tempo %@ /km" = "D'après ton allure habituelle %@ /km";
+"Aus deinen schnellsten längeren Fahrten der letzten Wochen (%@)" = "D'après tes sorties longues les plus rapides de ces dernières semaines (%@)";
+"Aus deinem Durchschnittstempo %@" = "D'après ta vitesse moyenne %@";
+"Zielzeit schon drin" = "Temps visé déjà atteignable";
+"Fast da" = "Presque";
+"Noch %@" = "Encore %@";
+"Deine Zielzeit ist heute schon drin. Jetzt geht es darum, fit an den Start zu kommen." = "Ton temps visé est déjà atteignable aujourd'hui. Il s'agit maintenant d'arriver en forme au départ.";
+"Du bist nah an deiner Zielzeit. Mit dem Plan bis zum Zieltag ist sie gut erreichbar." = "Tu es proche de ton temps visé. Avec le plan jusqu'au jour J, il est tout à fait atteignable.";
+"Am meisten Zeit holst du beim %@." = "C'est en %@ que tu gagneras le plus de temps.";
+"Für eine Prognose fehlen noch Leistungswerte. Trag sie im Leistungsprofil ein oder mach einen Test." = "Il manque encore des valeurs de performance pour une prévision. Saisis-les dans ton profil de performance ou fais un test.";
+"Die Prognose zeigt, was heute ungefähr drin wäre." = "La prévision montre à peu près ce que tu pourrais faire aujourd'hui.";
+"Zielprognose" = "Prévision d'objectif";
+"Welche Zeit heute drin wäre, je Disziplin gegen die Zielzeit." = "Le temps que tu pourrais faire aujourd'hui, par discipline face à ton temps visé.";
+"Prognose heute" = "Prévision du jour";
+"Ziel %@" = "Objectif %@";
+"Wechsel (geschätzt)" = "Transitions (estimées)";
+"Eine grobe Schätzung aus deinem Leistungsprofil, deinem Startniveau und deinen Radfahrten in Health, so wie du heute in Form bist. Nach jedem Test wird sie genauer." = "Une estimation grossière à partir de ton profil de performance, de ton niveau de départ et de tes sorties vélo dans Health, selon ta forme du jour. Elle devient plus précise après chaque test.";
+"Für ein Fitnessziel ohne Strecke gibt es keine Zielprognose." = "Il n'y a pas de prévision pour un objectif de forme sans distance.";
+"Zielzeit %@" = "Temps visé %@";
+"Schneller als deine Zielzeit" = "Plus rapide que ton temps visé";
+"Noch %@ bis zur Zielzeit" = "Encore %@ jusqu'au temps visé";
+"Noch offen" = "Encore ouvert";
+"Es fehlt ein Leistungswert. Trag ihn im Leistungsprofil ein oder mach einen Test." = "Il manque une valeur de performance. Saisis-la dans ton profil de performance ou fais un test.";
+"So bleiben" = "Rester ainsi";
+"Mehr oder weniger trainieren?" = "T'entraîner plus ou moins ?";

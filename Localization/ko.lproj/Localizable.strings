@@ -1047,3 +1047,34 @@
 "Morgens stimmt dein Coach im Hintergrund die nächsten 14 Tage ab und holt deinen Plan für heute; er kommt zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Ändert sich an den nächsten Tagen spürbar etwas, sagt er dir, was und warum. Nach einer Einheit fragt er, wie es war. Ein Tipp auf eine Mitteilung öffnet das Passende. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt." = "매일 아침 코치가 백그라운드에서 다음 14일을 조정하고 오늘 계획을 가져와요. 선택한 시간에 도착하고 '오늘'에 바로 표시돼요. 앞으로 며칠 동안 눈에 띄게 바뀌는 것이 있으면 무엇이 왜 바뀌었는지 알려 줘요. 운동 후에는 어땠는지 물어봐요. 알림을 탭하면 해당 화면이 열려요. 앱이 백그라운드에서 언제 작동할지는 iOS가 정해요. 잘 안 되면 평소처럼 열 때 '오늘'에서 계획을 세워요.";
 "Wochenbilanz: %@" = "주간 결산: %@";
 "Wochenbilanz am Montag" = "월요일 주간 결산";
+
+/* Zielprognose */
+"Aus deiner CSS-Pace %@ /100 m" = "CSS 페이스 %@ /100 m 기준";
+"Aus deinem üblichen Tempo %@ /100 m" = "평소 페이스 %@ /100 m 기준";
+"Aus deinem Schwellentempo %@ /km" = "역치 페이스 %@ /km 기준";
+"Aus deiner Bestzeit über %@ (%@)" = "%@ 최고 기록(%@) 기준";
+"Aus deinem üblichen Tempo %@ /km" = "평소 페이스 %@ /km 기준";
+"Aus deinen schnellsten längeren Fahrten der letzten Wochen (%@)" = "최근 몇 주간 가장 빠른 장거리 라이딩(%@) 기준";
+"Aus deinem Durchschnittstempo %@" = "평균 속도 %@ 기준";
+"Zielzeit schon drin" = "목표 시간 이미 가능";
+"Fast da" = "거의 다 왔어요";
+"Noch %@" = "%@ 남음";
+"Deine Zielzeit ist heute schon drin. Jetzt geht es darum, fit an den Start zu kommen." = "오늘 이미 목표 시간이 가능한 상태예요. 이제 좋은 컨디션으로 출발선에 서는 게 중요해요.";
+"Du bist nah an deiner Zielzeit. Mit dem Plan bis zum Zieltag ist sie gut erreichbar." = "목표 시간에 가까워요. 목표일까지 계획대로 하면 충분히 달성할 수 있어요.";
+"Am meisten Zeit holst du beim %@." = "%@에서 가장 많은 시간을 줄일 수 있어요.";
+"Für eine Prognose fehlen noch Leistungswerte. Trag sie im Leistungsprofil ein oder mach einen Test." = "예측에 필요한 퍼포먼스 값이 아직 부족해요. 퍼포먼스 프로필에 입력하거나 테스트를 해 보세요.";
+"Die Prognose zeigt, was heute ungefähr drin wäre." = "예측은 오늘 대략 낼 수 있는 기록을 보여줘요.";
+"Zielprognose" = "목표 예측";
+"Welche Zeit heute drin wäre, je Disziplin gegen die Zielzeit." = "오늘 낼 수 있는 기록을 종목별로 목표 시간과 비교해요.";
+"Prognose heute" = "오늘 예측";
+"Ziel %@" = "목표 %@";
+"Wechsel (geschätzt)" = "바꿈 시간(추정)";
+"Eine grobe Schätzung aus deinem Leistungsprofil, deinem Startniveau und deinen Radfahrten in Health, so wie du heute in Form bist. Nach jedem Test wird sie genauer." = "퍼포먼스 프로필, 시작 수준, 건강 앱의 라이딩 기록을 바탕으로 오늘 컨디션 기준으로 대략 추정한 값이에요. 테스트할 때마다 더 정확해져요.";
+"Für ein Fitnessziel ohne Strecke gibt es keine Zielprognose." = "거리가 없는 피트니스 목표에는 목표 예측이 없어요.";
+"Zielzeit %@" = "목표 시간 %@";
+"Schneller als deine Zielzeit" = "목표 시간보다 빠름";
+"Noch %@ bis zur Zielzeit" = "목표 시간까지 %@ 남음";
+"Noch offen" = "미정";
+"Es fehlt ein Leistungswert. Trag ihn im Leistungsprofil ein oder mach einen Test." = "퍼포먼스 값이 없어요. 퍼포먼스 프로필에 입력하거나 테스트를 해 보세요.";
+"So bleiben" = "그대로 유지";
+"Mehr oder weniger trainieren?" = "더 할까요, 덜 할까요?";

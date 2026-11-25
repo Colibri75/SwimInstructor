@@ -1047,3 +1047,34 @@
 "Morgens stimmt dein Coach im Hintergrund die nächsten 14 Tage ab und holt deinen Plan für heute; er kommt zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Ändert sich an den nächsten Tagen spürbar etwas, sagt er dir, was und warum. Nach einer Einheit fragt er, wie es war. Ein Tipp auf eine Mitteilung öffnet das Passende. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt." = "Ogni mattina il tuo coach adatta in background i prossimi 14 giorni e prepara il piano di oggi; arriva all’ora scelta e Oggi lo mostra subito. Se nei prossimi giorni cambia qualcosa in modo evidente, ti dice cosa e perché. Dopo una sessione ti chiede com’è andata. Toccare una notifica apre la schermata giusta. È iOS a decidere quando l’app può lavorare in background; se non funziona, Oggi pianifica all’apertura come sempre.";
 "Wochenbilanz: %@" = "Bilancio settimanale: %@";
 "Wochenbilanz am Montag" = "Bilancio settimanale il lunedì";
+
+/* Zielprognose */
+"Aus deiner CSS-Pace %@ /100 m" = "Dal tuo passo CSS %@ /100 m";
+"Aus deinem üblichen Tempo %@ /100 m" = "Dal tuo passo abituale %@ /100 m";
+"Aus deinem Schwellentempo %@ /km" = "Dal tuo passo di soglia %@ /km";
+"Aus deiner Bestzeit über %@ (%@)" = "Dal tuo record su %@ (%@)";
+"Aus deinem üblichen Tempo %@ /km" = "Dal tuo passo abituale %@ /km";
+"Aus deinen schnellsten längeren Fahrten der letzten Wochen (%@)" = "Dalle tue uscite lunghe più veloci delle ultime settimane (%@)";
+"Aus deinem Durchschnittstempo %@" = "Dalla tua velocità media %@";
+"Zielzeit schon drin" = "Tempo obiettivo già alla portata";
+"Fast da" = "Quasi";
+"Noch %@" = "Ancora %@";
+"Deine Zielzeit ist heute schon drin. Jetzt geht es darum, fit an den Start zu kommen." = "Il tuo tempo obiettivo è già alla portata oggi. Ora si tratta di arrivare in forma al via.";
+"Du bist nah an deiner Zielzeit. Mit dem Plan bis zum Zieltag ist sie gut erreichbar." = "Sei vicino al tuo tempo obiettivo. Con il piano fino al giorno obiettivo è ben raggiungibile.";
+"Am meisten Zeit holst du beim %@." = "Il tempo maggiore lo guadagni nel %@.";
+"Für eine Prognose fehlen noch Leistungswerte. Trag sie im Leistungsprofil ein oder mach einen Test." = "Per una previsione mancano ancora valori di prestazione. Inseriscili nel profilo prestazioni o fai un test.";
+"Die Prognose zeigt, was heute ungefähr drin wäre." = "La previsione mostra più o meno cosa potresti fare oggi.";
+"Zielprognose" = "Previsione obiettivo";
+"Welche Zeit heute drin wäre, je Disziplin gegen die Zielzeit." = "Che tempo potresti fare oggi, per disciplina rispetto al tempo obiettivo.";
+"Prognose heute" = "Previsione di oggi";
+"Ziel %@" = "Obiettivo %@";
+"Wechsel (geschätzt)" = "Cambi (stimati)";
+"Eine grobe Schätzung aus deinem Leistungsprofil, deinem Startniveau und deinen Radfahrten in Health, so wie du heute in Form bist. Nach jedem Test wird sie genauer." = "Una stima approssimativa dal tuo profilo prestazioni, dal livello di partenza e dalle uscite in bici in Salute, in base alla tua forma di oggi. Diventa più precisa dopo ogni test.";
+"Für ein Fitnessziel ohne Strecke gibt es keine Zielprognose." = "Per un obiettivo di forma senza distanza non c'è una previsione.";
+"Zielzeit %@" = "Tempo obiettivo %@";
+"Schneller als deine Zielzeit" = "Più veloce del tempo obiettivo";
+"Noch %@ bis zur Zielzeit" = "Ancora %@ al tempo obiettivo";
+"Noch offen" = "Ancora aperto";
+"Es fehlt ein Leistungswert. Trag ihn im Leistungsprofil ein oder mach einen Test." = "Manca un valore di prestazione. Inseriscilo nel profilo prestazioni o fai un test.";
+"So bleiben" = "Restare così";
+"Mehr oder weniger trainieren?" = "Allenarsi di più o di meno?";

@@ -183,6 +183,14 @@ ohne Wochen mit mindestens 3 Tagen gemeldeter Pause; Sportarten nach geplanten M
 150 %. Ab 80 % und keine Sportart unter 60 % "Auf Kurs", über 120 % "Mehr als geplant", sonst "Etwas zu wenig". Die
 Karte steht oben in "Aktuell" (Bereich `course`), dahinter "Weg zum Ziel" mit der Linie geplant gegen trainiert.
 
+**Zielprognose** (`GoalForecaster`, nur in der App): Zeit, die heute über die Strecken des Ziels drin wäre. Schwimmen aus
+der CSS-Pace (Aufschlag je Strecke −1 bis +5 s/100 m, Freiwasser +2), sonst übliches Tempo des Startniveaus − 4 s. Rad
+aus dem Schnitt der zwei schnellsten Fahrten ab 45 min der letzten 8 Wochen, sonst Durchschnittstempo des Startniveaus,
+im Wettkampf je nach Strecke 0 bis 8 % schneller (FTP allein reicht ohne Gewicht nicht). Laufen aus dem Schwellentempo
+(eine Stunde, Riegel 1,06), sonst nächstgelegene Bestzeit, sonst übliches Tempo / 1,15; nach dem Rad 5 bis 12 %
+langsamer. Bei Wettkämpfen mit mehreren Disziplinen 3 bis 12 min Wechsel. Steht im Dashboard (Bereich `goal`), in
+"Weg zum Ziel" und als Zeile auf der Karte in "Aktuell"; beim Fitnessziel gibt es keine.
+
 **Gemeldete Pause in den Tagen:** Unabhängig von ihrer Länge geht die zuletzt gemeldete Pause als `reported_pause`
 (Art, erster und letzter Tag, `to` fehlt bei einer laufenden) im Snapshot mit, solange sie kommt, läuft oder höchstens 7
 Tage vorbei ist. In der App werden ihre Tage zu Tagen ohne Zeit ("Gemeldete Pause", `PlannedDay.isPause`); endet die

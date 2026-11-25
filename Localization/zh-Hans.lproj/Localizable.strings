@@ -1047,3 +1047,34 @@
 "Morgens stimmt dein Coach im Hintergrund die nächsten 14 Tage ab und holt deinen Plan für heute; er kommt zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Ändert sich an den nächsten Tagen spürbar etwas, sagt er dir, was und warum. Nach einer Einheit fragt er, wie es war. Ein Tipp auf eine Mitteilung öffnet das Passende. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt." = "每天早上，你的教练会在后台调整接下来 14 天并获取今天的计划；它会在你选择的时间送达，“今日”会立即显示。如果接下来几天有明显变化，教练会告诉你改了什么以及原因。训练结束后，教练会问你感觉如何。点按通知会打开对应页面。App 何时能在后台运行由 iOS 决定；如果不行，“今日”会像往常一样在打开时制定计划。";
 "Wochenbilanz: %@" = "每周总结：%@";
 "Wochenbilanz am Montag" = "周一发送每周总结";
+
+/* Zielprognose */
+"Aus deiner CSS-Pace %@ /100 m" = "根据你的 CSS 配速 %@ /100 米";
+"Aus deinem üblichen Tempo %@ /100 m" = "根据你的常规配速 %@ /100 米";
+"Aus deinem Schwellentempo %@ /km" = "根据你的阈值配速 %@ /公里";
+"Aus deiner Bestzeit über %@ (%@)" = "根据你 %@ 的最佳成绩（%@）";
+"Aus deinem üblichen Tempo %@ /km" = "根据你的常规配速 %@ /公里";
+"Aus deinen schnellsten längeren Fahrten der letzten Wochen (%@)" = "根据你最近几周最快的长距离骑行（%@）";
+"Aus deinem Durchschnittstempo %@" = "根据你的平均速度 %@";
+"Zielzeit schon drin" = "目标时间已可达成";
+"Fast da" = "快到了";
+"Noch %@" = "还差 %@";
+"Deine Zielzeit ist heute schon drin. Jetzt geht es darum, fit an den Start zu kommen." = "今天你的目标时间已可达成。现在的关键是以良好状态站上起点。";
+"Du bist nah an deiner Zielzeit. Mit dem Plan bis zum Zieltag ist sie gut erreichbar." = "你离目标时间很近了。按计划练到目标日，完全可以达成。";
+"Am meisten Zeit holst du beim %@." = "你在%@上能节省最多时间。";
+"Für eine Prognose fehlen noch Leistungswerte. Trag sie im Leistungsprofil ein oder mach einen Test." = "预测还缺少运动表现数值。请在运动表现档案中填写或做一次测试。";
+"Die Prognose zeigt, was heute ungefähr drin wäre." = "预测大致显示你今天能达到的水平。";
+"Zielprognose" = "目标预测";
+"Welche Zeit heute drin wäre, je Disziplin gegen die Zielzeit." = "你今天大约能达到的时间，按项目与目标时间对比。";
+"Prognose heute" = "今日预测";
+"Ziel %@" = "目标 %@";
+"Wechsel (geschätzt)" = "换项（估算）";
+"Eine grobe Schätzung aus deinem Leistungsprofil, deinem Startniveau und deinen Radfahrten in Health, so wie du heute in Form bist. Nach jedem Test wird sie genauer." = "根据你的运动表现档案、起始水平以及健康 App 中的骑行记录粗略估算，基于你今天的状态。每次测试后都会更准确。";
+"Für ein Fitnessziel ohne Strecke gibt es keine Zielprognose." = "没有距离的健身目标不提供目标预测。";
+"Zielzeit %@" = "目标时间 %@";
+"Schneller als deine Zielzeit" = "比目标时间更快";
+"Noch %@ bis zur Zielzeit" = "距离目标时间还差 %@";
+"Noch offen" = "待定";
+"Es fehlt ein Leistungswert. Trag ihn im Leistungsprofil ein oder mach einen Test." = "缺少一项运动表现数值。请在运动表现档案中填写或做一次测试。";
+"So bleiben" = "保持现状";
+"Mehr oder weniger trainieren?" = "多练还是少练？";

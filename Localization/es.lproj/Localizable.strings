@@ -1047,3 +1047,34 @@
 "Morgens stimmt dein Coach im Hintergrund die nächsten 14 Tage ab und holt deinen Plan für heute; er kommt zur gewählten Uhrzeit, und Aktuell zeigt ihn sofort. Ändert sich an den nächsten Tagen spürbar etwas, sagt er dir, was und warum. Nach einer Einheit fragt er, wie es war. Ein Tipp auf eine Mitteilung öffnet das Passende. Wann die App im Hintergrund arbeiten darf, entscheidet iOS; klappt es nicht, plant Aktuell beim Öffnen wie gewohnt." = "Cada mañana tu coach ajusta en segundo plano los próximos 14 días y prepara tu plan de hoy; llega a la hora elegida y Hoy lo muestra al instante. Si algo cambia de forma notable en los próximos días, te dice qué y por qué. Después de una sesión, te pregunta qué tal fue. Al tocar una notificación se abre la pantalla correspondiente. iOS decide cuándo puede trabajar la app en segundo plano; si no funciona, Hoy planifica al abrirla como siempre.";
 "Wochenbilanz: %@" = "Balance semanal: %@";
 "Wochenbilanz am Montag" = "Balance semanal el lunes";
+
+/* Zielprognose */
+"Aus deiner CSS-Pace %@ /100 m" = "Según tu ritmo CSS %@ /100 m";
+"Aus deinem üblichen Tempo %@ /100 m" = "Según tu ritmo habitual %@ /100 m";
+"Aus deinem Schwellentempo %@ /km" = "Según tu ritmo de umbral %@ /km";
+"Aus deiner Bestzeit über %@ (%@)" = "Según tu mejor marca en %@ (%@)";
+"Aus deinem üblichen Tempo %@ /km" = "Según tu ritmo habitual %@ /km";
+"Aus deinen schnellsten längeren Fahrten der letzten Wochen (%@)" = "Según tus salidas largas más rápidas de las últimas semanas (%@)";
+"Aus deinem Durchschnittstempo %@" = "Según tu velocidad media %@";
+"Zielzeit schon drin" = "Tiempo objetivo ya al alcance";
+"Fast da" = "Casi";
+"Noch %@" = "Faltan %@";
+"Deine Zielzeit ist heute schon drin. Jetzt geht es darum, fit an den Start zu kommen." = "Tu tiempo objetivo ya está al alcance hoy. Ahora se trata de llegar en forma a la salida.";
+"Du bist nah an deiner Zielzeit. Mit dem Plan bis zum Zieltag ist sie gut erreichbar." = "Estás cerca de tu tiempo objetivo. Con el plan hasta el día objetivo es bien alcanzable.";
+"Am meisten Zeit holst du beim %@." = "Donde más tiempo ganas es en %@.";
+"Für eine Prognose fehlen noch Leistungswerte. Trag sie im Leistungsprofil ein oder mach einen Test." = "Para una previsión faltan valores de rendimiento. Introdúcelos en tu perfil de rendimiento o haz un test.";
+"Die Prognose zeigt, was heute ungefähr drin wäre." = "La previsión muestra más o menos lo que podrías hacer hoy.";
+"Zielprognose" = "Previsión del objetivo";
+"Welche Zeit heute drin wäre, je Disziplin gegen die Zielzeit." = "Qué tiempo podrías hacer hoy, por disciplina frente a tu tiempo objetivo.";
+"Prognose heute" = "Previsión de hoy";
+"Ziel %@" = "Objetivo %@";
+"Wechsel (geschätzt)" = "Transiciones (estimadas)";
+"Eine grobe Schätzung aus deinem Leistungsprofil, deinem Startniveau und deinen Radfahrten in Health, so wie du heute in Form bist. Nach jedem Test wird sie genauer." = "Una estimación aproximada a partir de tu perfil de rendimiento, tu nivel inicial y tus salidas en bici en Health, según tu forma de hoy. Se vuelve más precisa con cada test.";
+"Für ein Fitnessziel ohne Strecke gibt es keine Zielprognose." = "No hay previsión para un objetivo de forma física sin distancia.";
+"Zielzeit %@" = "Tiempo objetivo %@";
+"Schneller als deine Zielzeit" = "Más rápido que tu tiempo objetivo";
+"Noch %@ bis zur Zielzeit" = "Faltan %@ para tu tiempo objetivo";
+"Noch offen" = "Pendiente";
+"Es fehlt ein Leistungswert. Trag ihn im Leistungsprofil ein oder mach einen Test." = "Falta un valor de rendimiento. Introdúcelo en tu perfil de rendimiento o haz un test.";
+"So bleiben" = "Seguir así";
+"Mehr oder weniger trainieren?" = "¿Entrenar más o menos?";

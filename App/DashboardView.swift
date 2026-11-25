@@ -48,7 +48,7 @@ struct DashboardView: View {
                             }
                             .cardRows()
                         case "goal":
-                            GoalSection(snapshot: reading.snapshot)
+                            GoalForecastSection(showsLink: true)
                                 .cardRows()
                         default:
                             EmptyView()
@@ -95,61 +95,6 @@ struct DashboardView: View {
             Text("Statistik")
         } footer: {
             Text("Tippen: Details mit allen Werten. Kacheln hinzufügen, ändern, entfernen und sortieren: \"Bereiche anpassen\" unten.")
-        }
-    }
-}
-
-// MARK: - Ziel
-
-private struct GoalSection: View {
-    let snapshot: AthleteStateSnapshot
-
-    private var goal: AthleteStateSnapshot.GoalSummary { snapshot.goal }
-
-    var body: some View {
-        Section("Dein Ziel") {
-            LabeledContent("Ziel") {
-                Text("\(PlanFormatting.meters(Int(goal.distanceMeters))) in \(Int(goal.targetDurationSeconds / 60)) min")
-            }
-            LabeledContent("Bis zum Ziel") {
-                Text("\(goal.daysUntilGoal) Tage")
-            }
-            VStack(alignment: .leading, spacing: 6) {
-                let longest = snapshot.volume.longestSessionMeters
-                ProgressView(value: min(longest, goal.distanceMeters), total: goal.distanceMeters)
-                Text("Längste Einheit (4 Wochen): \(PlanFormatting.meters(Int(longest))) von \(PlanFormatting.meters(Int(goal.distanceMeters)))")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-            .accessibilityElement(children: .combine)
-            paceRow
-        }
-    }
-
-    @ViewBuilder
-    private var paceRow: some View {
-        if let pace = snapshot.pace.recentPaceSecondsPerHundredMeters {
-            LabeledContent("Pace (4 Wochen)") {
-                Text("\(PlanFormatting.pace(pace)) /100 m")
-            }
-            if let gap = snapshot.pace.gapToTargetSecondsPerHundredMeters {
-                Text(gap > 0
-                     ? "Zielpace \(PlanFormatting.pace(goal.targetPaceSecondsPerHundredMeters)): noch \(Int(gap.rounded())) s pro 100 m zu langsam."
-                     : "Zielpace \(PlanFormatting.pace(goal.targetPaceSecondsPerHundredMeters)) erreicht.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-            if let trend = snapshot.pace.trendSecondsPerHundredMeters, trend != 0 {
-                Text(trend < 0
-                     ? "Gegenüber den 4 Wochen davor \(Int(abs(trend).rounded())) s pro 100 m schneller."
-                     : "Gegenüber den 4 Wochen davor \(Int(trend.rounded())) s pro 100 m langsamer.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-        } else {
-            Text("Für die Pace fehlen Einheiten mit Strecke in den letzten 4 Wochen.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
         }
     }
 }
