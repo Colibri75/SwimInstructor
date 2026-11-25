@@ -199,6 +199,8 @@ export interface ReviewInput {
 export interface ReviewResult extends MacroResultV2 {
   /** Die Bilanz der letzten Wochen, auf Deutsch. */
   summary: string;
+  /** Der Rat an den Athleten: auf Kurs, mehr, weniger, worauf achten. */
+  advice: string;
   changes: string[];
   reason: ReviewReason;
   /** Das Feedback zur Fortschreibung, so wie der Server es gelesen hat; fehlt ohne Feedback. */
@@ -490,6 +492,7 @@ export class MultiPlanService {
       .filter((change) => change !== "")
       .slice(0, MULTI_RULES.maxChanges);
     const summary = generated.data.summary.trim().slice(0, MULTI_RULES.maxSummaryLength);
+    const advice = generated.data.advice.trim().slice(0, MULTI_RULES.maxSummaryLength);
     this.logGenerated("review", generated.meta, sanitized.adjustments.length, { weeks: sanitized.plan.weeks.length, changes: changes.length, reason: input.reason, actualWeeks: input.actual.length });
     return {
       goalDay: context.goalDay,
@@ -497,6 +500,7 @@ export class MultiPlanService {
       plan: sanitized.plan,
       adjustments: sanitized.adjustments,
       summary,
+      advice,
       changes,
       reason: input.reason,
       ...(feedback !== undefined ? { feedback } : {})

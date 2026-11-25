@@ -176,6 +176,13 @@ Wochen danach. Jede Fortschreibung hängt als `MacroReview` am Plan; danach geht
 (`canGiveFeedback`). Ein Fehlschlag lässt den Plan stehen; versucht wird höchstens einmal am Tag je Anlass. Nach einer
 Fortschreibung stimmt die App die 14 Tage neu ab und meldet sich mit einer Mitteilung.
 
+**Auf Kurs zum Ziel?** Zur Fortschreibung schreibt Claude außerdem einen Rat an den Athleten (`advice`: auf Kurs, mehr
+oder weniger trainieren, worauf achten), der am `MacroReview` hängt. Die Ampel selbst rechnet die App ohne Server
+(`GoalCourseEvaluator`): die letzten bis zu 4 abgeschlossenen Wochen des Gesamtplans ohne die Erstellungswoche und
+ohne Wochen mit mindestens 3 Tagen gemeldeter Pause; Sportarten nach geplanten Minuten gewichtet, je Sportart höchstens
+150 %. Ab 80 % und keine Sportart unter 60 % "Auf Kurs", über 120 % "Mehr als geplant", sonst "Etwas zu wenig". Die
+Karte steht oben in "Aktuell" (Bereich `course`), dahinter "Weg zum Ziel" mit der Linie geplant gegen trainiert.
+
 **Gemeldete Pause in den Tagen:** Unabhängig von ihrer Länge geht die zuletzt gemeldete Pause als `reported_pause`
 (Art, erster und letzter Tag, `to` fehlt bei einer laufenden) im Snapshot mit, solange sie kommt, läuft oder höchstens 7
 Tage vorbei ist. In der App werden ihre Tage zu Tagen ohne Zeit ("Gemeldete Pause", `PlannedDay.isPause`); endet die

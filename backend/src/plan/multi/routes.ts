@@ -278,6 +278,7 @@ function reviewResponse(result: ReviewResult) {
   return {
     ...macroResponse(result),
     summary: result.summary,
+    advice: result.advice,
     changes: result.changes,
     reason: result.reason,
     ...(result.feedback !== undefined ? { feedback: result.feedback } : {})

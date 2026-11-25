@@ -632,7 +632,7 @@ const reviewInput = (extra: Partial<ReviewInput> = {}): ReviewInput => ({
   ...extra
 });
 
-const reviewRaw = (summary = "Schwimmen 90 % erfüllt.", changes: string[] = ["Rad etwas mehr"]): MacroReviewRaw => ({ ...goodMacro(), summary, changes });
+const reviewRaw = (summary = "Schwimmen 90 % erfüllt.", changes: string[] = ["Rad etwas mehr"]): MacroReviewRaw => ({ ...goodMacro(), summary, advice: "So weitermachen.", changes });
 
 describe("MultiPlanService.reviewMacro", () => {
   it("schreibt den Gesamtplan mit Bilanz und Aenderungen fort", async () => {
@@ -641,7 +641,7 @@ describe("MultiPlanService.reviewMacro", () => {
 
     const result = await service.reviewMacro(reviewInput({ feedback: "  mehr Rad " }));
 
-    expect(result).toMatchObject({ goalDay: GOAL_DAY, generatedAt: NOW_ISO, summary: "Schwimmen 90 % erfüllt.", changes: ["Rad etwas mehr"], reason: "scheduled", feedback: "mehr Rad" });
+    expect(result).toMatchObject({ goalDay: GOAL_DAY, generatedAt: NOW_ISO, summary: "Schwimmen 90 % erfüllt.", advice: "So weitermachen.", changes: ["Rad etwas mehr"], reason: "scheduled", feedback: "mehr Rad" });
     expect(result.plan.weeks[0].week_start).toBe(WEEKS[0]);
     const [system, user, schema, options] = complete.mock.calls[0];
     expect(system).toBe(MULTI_REVIEW_SYSTEM_PROMPT);

@@ -23,6 +23,8 @@ public enum LayoutScreen: String, CaseIterable, Codable, Sendable {
         switch self {
         case .today:
             return [
+                LayoutSection(id: "course", title: String(localized: "Auf Kurs zum Ziel?"), symbol: "flag.checkered",
+                              summary: String(localized: "Ampel, Rat deines Coaches und Plan gegen Ist der letzten Wochen.")),
                 LayoutSection(id: "watchResult", title: String(localized: "Testergebnis von der Watch"), symbol: "applewatch",
                               summary: String(localized: "Erscheint, wenn ein Test von der Watch auf Bestätigung wartet."), isRequired: true),
                 LayoutSection(id: "adaptation", title: String(localized: "Hinweis auf Anpassungen"), symbol: "arrow.triangle.2.circlepath",

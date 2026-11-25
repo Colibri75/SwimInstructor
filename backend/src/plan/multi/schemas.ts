@@ -151,6 +151,7 @@ export const MacroRevisionSchema = z.object({
 
 export const MacroReviewSchema = z.object({
   summary: z.string().describe("Bilanz der letzten Wochen in zwei, drei Sätzen auf Deutsch: Plan gegen Ist je Sportart in Prozent, Auffälligkeiten wie Pause oder Krankheit"),
+  advice: z.string().describe("Rat an den Athleten in ein, zwei Sätzen auf Deutsch, in der Du-Form: Ist er auf Kurs zu seinem Ziel, soll er so weitermachen, mehr oder weniger trainieren, und worauf kommt es jetzt an"),
   rationale: z.string().describe("Begründung des fortgeschriebenen Gesamtplans auf Deutsch, höchstens fünf Sätze"),
   changes: z.array(z.string()).describe("Was sich gegenüber dem bisherigen Plan ändert, ein Punkt je Änderung, höchstens acht, auf Deutsch"),
   blocks: z.array(MacroBlockRawSchema).describe("Die Abschnitte von der laufenden Woche bis zur Zielwoche, in zeitlicher Reihenfolge")

@@ -108,6 +108,9 @@ struct TodayView: View {
     @ViewBuilder
     private func todaySection(_ id: String) -> some View {
         switch id {
+        case "course":
+            GoalCourseSection()
+                .cardRows()
         case "watchResult":
             watchResultSection
                 .cardRows()

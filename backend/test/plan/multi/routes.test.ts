@@ -368,7 +368,7 @@ describe("POST /v1/plan/macro/revise", () => {
 });
 
 describe("POST /v1/plan/macro/review", () => {
-  const review = (changes: string[], summary = "Schwimmen 80 % erfüllt.") => ({ ...goodMacro(), changes, summary });
+  const review = (changes: string[], summary = "Schwimmen 80 % erfüllt.") => ({ ...goodMacro(), changes, summary, advice: "  Du bist auf Kurs. " });
 
   it("liefert den fortgeschriebenen Plan mit Bilanz, Aenderungen, Anlass und Feedback", async () => {
     const complete = claude(review(["  Schwimmen vom Ist aus steigern ", ""], "  Schwimmen 80 % erfüllt.  "));
@@ -383,6 +383,7 @@ describe("POST /v1/plan/macro/review", () => {
       plan_version: 2,
       goal_day: GOAL_DAY,
       summary: "Schwimmen 80 % erfüllt.",
+      advice: "Du bist auf Kurs.",
       changes: ["Schwimmen vom Ist aus steigern"],
       reason: "pause",
       feedback: "Knie zwickt"
